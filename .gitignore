@@ -1,0 +1,15 @@
+# ignore out folder and sub-folder
+out/
+
+# ignore dynamicaly generated header files in App folder
+app/variant_cm4_stm32l4/prog/MyVariant.h
+app/variant_cm4_stm32l4/prog/ramLoader.h
+app/variant_cm4_stm32l4/prog/romLoader.h
+
+# ignore dynamically generated UV(Keil µVision) files
+*uv/
+# except the following files
+uv/Micrium_Project.uvoptx
+uv/Micrium_Project.uvprojx
+uv/Micrium_Project_path.ini
+uv/JLinkSettings.ini
