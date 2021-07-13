@@ -53,3 +53,13 @@ version_revision = 3
 #version_build    = 4711
 dbus_target_node = 0x$(dbus_node_address)0
 release_note     = "Make short hint for this release"
+
+
+# uVision ini file generator:
+# make target: uvision_gen_ini
+preproc_file            += uvision_gen_ini
+uvision_gen_ini_copt     = -undef -imacros $(varHeader)
+uvision_gen_ini_template = ./uv/Templates/uvision_template.ini
+uvision_gen_ini_output   = ./uv/ThreadX_Project_path.ini
+uvision_gen_ini_defines  = ELF_LOCATION=\"..\\$(subst /,\\,$(dwarf_file))\"
+

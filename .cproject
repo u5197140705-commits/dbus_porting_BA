@@ -96,6 +96,14 @@
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
+			<target name="uvision_gen_ini" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments>project=variant_cm4_stm32l4 auto_dep=false -B</buildArguments>
+				<buildTarget>uvision_gen_ini</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
 		</buildTargets>
 	</storageModule>
 </cproject>

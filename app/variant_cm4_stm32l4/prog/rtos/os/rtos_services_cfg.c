@@ -36,6 +36,10 @@
 /**************************************************************************************************/
 /* LOCAL DEFINITIONS                                                                              */
 /**************************************************************************************************/
+#ifdef RTOS_TRACING_ENABLED
+#define RTOS_TRACE_BUFFER_SIZE (RTOS_NUMBER_OF_TRACE_EVENTS * 32)  /* Trace buffer size. Each event requires 32 byte. */
+uint8_t RTOS_traceBuffer[RTOS_TRACE_BUFFER_SIZE];
+#endif
 
 /**************************************************************************************************/
 /* LOCAL TYPE DEFINITIONS                                                                         */
@@ -44,6 +48,10 @@
 /**************************************************************************************************/
 /* LOCAL FUNCTION DECLARATIONS                                                                    */
 /**************************************************************************************************/
+#ifdef RTOS_TRACING_ENABLED
+static uint16_t RTOS_enableTraceLogging(void);
+#endif
+
 static uint16_t RTOS_createThreads(void);
 static uint16_t RTOS_createTimers(void);
 static uint16_t RTOS_createMutexes(void);
@@ -100,6 +108,28 @@ CHAR RTOS_name_THR_Idle[5] = "Idle";
 /**************************************************************************************************/
 /* LOCAL FUNCTION DEFINITIONS                                                                     */
 /**************************************************************************************************/
+
+#ifdef RTOS_TRACING_ENABLED
+/*!
+ *  \brief      A function for enabling RTOS trace logging.
+ *
+ *  \param      void
+ *
+ *  \return     uint16_t status
+ *
+ *  \details    The tx_application_define calls this function.
+ */
+static uint16_t RTOS_enableTraceLogging(void)
+{
+    uint16_t status = 0U;
+
+    status = (uint16_t)tx_trace_enable(&RTOS_traceBuffer, RTOS_TRACE_BUFFER_SIZE, RTOS_NUMBER_OF_TRACE_OBJECTS);
+
+    return status;
+}
+#endif
+
+
 /*!
  *  \brief      A function for creating threads during ThreadX setup process.
  *
@@ -298,6 +328,10 @@ void tx_application_define(const VOID *first_unused_memory)
     (void)unused_var;   // To avoid MISRA Warning
 
     uint16_t overall_status = 0U;
+
+#ifdef RTOS_TRACING_ENABLED
+    overall_status += RTOS_enableTraceLogging();
+#endif
 
 #ifdef REAL_TIME_DISPATCHER
     overall_status += RTD_createOSservices();

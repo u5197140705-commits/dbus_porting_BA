@@ -19,11 +19,21 @@ rtos_present = TRUE
 #USER CONFIG: Select RTOS
 os_micrium_present              = FALSE
 os_threadx_present              = TRUE
+#USER CONFIG: OS tracing supported only by ThreadX
+os_tracing_enable               = TRUE
 
 ifeq ($(os_threadx_present), TRUE)
     #USER CONFIG: Select ThreadX Version
     os_threadx_v57              = FALSE
     os_threadx_v58              = TRUE
+endif
+
+ifeq ($(os_threadx_present), TRUE)
+    ifeq ($(os_threadx_v58), TRUE)
+        ifeq ($(os_tracing_enable), TRUE)
+            defines += RTOS_TRACING_ENABLED
+        endif
+    endif
 endif
 
 ifeq ($(os_micrium_present), TRUE)

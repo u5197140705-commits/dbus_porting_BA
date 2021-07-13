@@ -283,6 +283,7 @@ const uint8_t RTD_number_of_interrupts = (uint8_t)(sizeof(RTD_ISRFunctionsList)/
 /* Import mutexes created in other modules here */
 extern RTOS_MUTEX mutex_BAL;
 extern RTOS_MUTEX mutex_CCCM;
+extern RTOS_MUTEX mutex_CCPO;
 
 
 /***************************************************************************************************
@@ -303,6 +304,7 @@ const RTOS_MUTEX* RTD_MutexList[] =
     &mutex_BAL,
 #ifdef CCSS
     &mutex_CCCM,
+    &mutex_CCPO,
 #endif
 
     /*! place your mutexes here */

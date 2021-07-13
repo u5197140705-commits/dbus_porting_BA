@@ -110,8 +110,10 @@
 #endif
 
 #ifdef RTOS
+static CHAR BAL_cMutexName[4] = "BAL";
 RTOS_MUTEX mutex_BAL =
 {
+    .mutex_name = BAL_cMutexName,
     .priority_inheritance = true,
 };
 #endif

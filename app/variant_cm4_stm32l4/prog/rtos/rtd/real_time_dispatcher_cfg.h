@@ -292,6 +292,17 @@ typedef enum RTD_ModuleIDs
 
 
 /***************************************************************************************************
+ * CONFIG: RTOS TRACING
+ * *************************************************************************************************
+ * \brief: 	If needed, activate the RTOS tracing here.
+ ***************************************************************************************************/
+#ifdef RTOS_TRACING_ENABLED
+#define RTOS_NUMBER_OF_TRACE_EVENTS     500     //< Defines the number of events that can be buffered.
+#define RTOS_NUMBER_OF_TRACE_OBJECTS    40      //< The number of ThreadX objects to keep in the trace registry. This allows for displaying objects names, instead of just addresses.
+#endif
+
+
+/***************************************************************************************************
  * *************************************************************************************************
  * DEBUG CONFIGURATIONS
  * *************************************************************************************************

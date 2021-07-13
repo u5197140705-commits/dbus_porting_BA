@@ -9,7 +9,10 @@ app/variant_cm4_stm32l4/prog/romLoader.h
 # ignore dynamically generated UV(Keil µVision) files
 *uv/
 # except the following files
-uv/Micrium_Project.uvoptx
-uv/Micrium_Project.uvprojx
-uv/Micrium_Project_path.ini
+uv/ThreadX_Project.uvoptx
+uv/ThreadX_Project.uvprojx
+uv/ThreadX_Project_path.ini
 uv/JLinkSettings.ini
+uv/Gen_project_path_ini.bat
+uv/Templates/uvision_template.ini
+
