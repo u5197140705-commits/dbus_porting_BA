@@ -39,26 +39,18 @@ MEMORY
 #ifdef RAM2_START
   RAM2 (rwx) : ORIGIN = RAM2_START, LENGTH = RAM2_SIZE
 #endif
+
 #ifdef FWU_FLEX_PARTITION_START
   FLEX_PARTITION (rx) : ORIGIN = FWU_FLEX_PARTITION_START, LENGTH = FWU_FLEX_PARTITION_SIZE
 #endif
-#ifdef SIGNATURE_STRUCT_SIZE
-  SIGNATURE (rx): ORIGIN = ROM1_END +1 - SIGNATURE_STRUCT_SIZE, LENGTH = SIGNATURE_STRUCT_SIZE
-#endif
 
+#ifdef FWU_OTP_MEMORY_START_ADDRESS
+  OTP_MEMORY (rx) : ORIGIN = FWU_OTP_MEMORY_START_ADDRESS, LENGTH = FWU_OTP_MEMORY_SIZE
+#endif
 }
 
 SECTIONS
 {
-#ifdef SIGNATURE_STRUCT_SIZE
-// Signature Region
-    .signature :
-    {
-        KEEP(*(.FWU_SIGNATURE))
-    } > SIGNATURE
-#endif
-
-
 #ifdef need_fixed_vectors
     .boot1 :
     {
@@ -83,6 +75,13 @@ SECTIONS
     } > FLEX_PARTITION
 #endif
 
+#ifdef FWU_OTP_MEMORY_START_ADDRESS
+    .fwu_otp_memory :
+    {
+        KEEP(*(.FWU_OTP_MEMORY))
+    } > OTP_MEMORY
+#endif
+
     .text :
     {
 #ifdef need_ModuleHeader
@@ -93,7 +92,13 @@ SECTIONS
 #endif
         KEEP(*(.vectorsCore))
         KEEP(*(.vectors))
+      #if defined(APP_VARIANT)
+        *(EXCLUDE_FILE(*intflash_*.o) .text*)
+      #elif defined(COPY_FLASH_DRV_TO_RAM)
+        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o) .text*)
+      #else
         *(.text*)
+      #endif
 
         KEEP(*(.init))
         KEEP(*(.fini))
@@ -112,8 +117,13 @@ SECTIONS
         *(SORT(.dtors.*))
         *(.dtors)
 
+      #if defined(APP_VARIANT)
+        *(EXCLUDE_FILE(*intflash_*.o) .rodata*)
+      #elif defined(COPY_FLASH_DRV_TO_RAM)
+        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o) .rodata*)
+      #else
         *(.rodata*)
-
+      #endif
         KEEP(*(.eh_frame*))
     } > ROM1
 
@@ -172,6 +182,17 @@ SECTIONS
         PROVIDE_HIDDEN (__fini_array_end = .);
 
         . = ALIGN(4);
+    #if defined(APP_VARIANT) || defined(COPY_FLASH_DRV_TO_RAM)
+        // Flash routines to be loaded into RAM
+        *(.text.DRVIF_*)
+        *(.rodata.DRVIF_*)
+        *(.text.ABSIF_*)
+      #if defined(COPY_FLASH_DRV_TO_RAM)
+        *(.text.MEMDRV_*)
+        *(.text.HWDT_*)
+      #endif
+        . = ALIGN(4);
+    #endif
         /* All data end */
         __data_end__ = .;
 
@@ -204,7 +225,7 @@ SECTIONS
 
     /* Set stack top to end of RAM1, and stack limit move down by
      * size of stack_dummy section */
-    __StackTop = ORIGIN(RAM1) + LENGTH(RAM1);
+    __StackTop = ORIGIN(RAM1) + LENGTH(RAM1) - STACK_MAGIC_SIZE;
     __StackLimit = __StackTop - SIZEOF(.stack_dummy);
     PROVIDE(__stack = __StackTop);
 

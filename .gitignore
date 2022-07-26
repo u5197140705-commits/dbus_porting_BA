@@ -2,17 +2,50 @@
 out/
 
 # ignore dynamicaly generated header files in App folder
+app/variant_cm0p_stm32g0/prog/build_date.h
+app/variant_cm0p_stm32g0/prog/build_version.h
+app/variant_cm0p_stm32g0/prog/MyVariant.h
+app/variant_cm0p_stm32g0/prog/ramLoader.h
+app/variant_cm0p_stm32g0/prog/romLoader.h
+app/variant_cm4_stm32l4/prog/build_date.h
+app/variant_cm4_stm32l4/prog/build_version.h
 app/variant_cm4_stm32l4/prog/MyVariant.h
 app/variant_cm4_stm32l4/prog/ramLoader.h
 app/variant_cm4_stm32l4/prog/romLoader.h
+app/variant_cm7_mkv56f1/prog/build_date.h
+app/variant_cm7_mkv56f1/prog/build_version.h
+app/variant_cm7_mkv56f1/prog/MyVariant.h
+app/variant_cm7_mkv56f1/prog/ramLoader.h
+app/variant_cm7_mkv56f1/prog/romLoader.h
+app/variant_cm33_ra4/prog/build_date.h
+app/variant_cm33_ra4/prog/build_version.h
+app/variant_cm33_ra4/prog/MyVariant.h
+app/variant_cm33_ra4/prog/ramLoader.h
+app/variant_cm33_ra4/prog/romLoader.h
 
 # ignore dynamically generated UV(Keil µVision) files
 *uv/
 # except the following files
-uv/ThreadX_Project.uvoptx
-uv/ThreadX_Project.uvprojx
-uv/ThreadX_Project_path.ini
-uv/JLinkSettings.ini
-uv/Gen_project_path_ini.bat
+uv/rtos_dev_tx.uvmpw
+uv/variant_cm0p_stm32g0/ThreadX_cm0p_stm32g0.uvoptx
+uv/variant_cm0p_stm32g0/ThreadX_cm0p_stm32g0.uvprojx
+uv/variant_cm0p_stm32g0/ThreadX_path.ini
+uv/variant_cm0p_stm32g0/JLinkSettings.ini
+uv/variant_cm0p_stm32g0/Gen_project_path_ini.bat
+uv/variant_cm4_stm32l4/ThreadX_cm4_stm32l4.uvoptx
+uv/variant_cm4_stm32l4/ThreadX_cm4_stm32l4.uvprojx
+uv/variant_cm4_stm32l4/ThreadX_path.ini
+uv/variant_cm4_stm32l4/JLinkSettings.ini
+uv/variant_cm4_stm32l4/Gen_project_path_ini.bat
+uv/variant_cm7_mkv56f1/ThreadX_cm7_mkv56f1.uvoptx
+uv/variant_cm7_mkv56f1/ThreadX_cm7_mkv56f1.uvprojx
+uv/variant_cm7_mkv56f1/ThreadX_path.ini
+uv/variant_cm7_mkv56f1/JLinkSettings.ini
+uv/variant_cm7_mkv56f1/Gen_project_path_ini.bat
+uv/variant_cm33_ra4/ThreadX_cm33_ra4.uvoptx
+uv/variant_cm33_ra4/ThreadX_cm33_ra4.uvprojx
+uv/variant_cm33_ra4/ThreadX_path.ini
+uv/variant_cm33_ra4/JLinkSettings.ini
+uv/variant_cm33_ra4/Gen_project_path_ini.bat
 uv/Templates/uvision_template.ini
 

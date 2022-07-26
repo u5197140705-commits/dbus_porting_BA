@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<ProjectWorkspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_mpw.xsd">
+
+  <SchemaVersion>1.0</SchemaVersion>
+
+  <Header>### uVision Project, (C) Keil Software</Header>
+
+  <WorkspaceName>WorkSpace</WorkspaceName>
+
+  <project>
+    <PathAndName>.\variant_cm0p_stm32g0\ThreadX_cm0p_stm32g0.uvprojx</PathAndName>
+    <NodeIsActive>1</NodeIsActive>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_cm4_stm32l4\ThreadX_cm4_stm32l4.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_cm7_mkv56f1\ThreadX_cm7_mkv56f1.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_cm33_ra4\ThreadX_cm33_ra4.uvprojx</PathAndName>
+  </project>
+
+</ProjectWorkspace>
