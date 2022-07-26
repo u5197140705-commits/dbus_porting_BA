@@ -22,18 +22,6 @@
     It will be processed by a C-Preprocessor before interpreted by the linker
  */
 
-#ifdef SIGNATURE_STRUCT_SIZE
-// Signature Region
-LR_FWU_SIGNATURE ROM1_END + 1 - SIGNATURE_STRUCT_SIZE
-{
-    ER_FWU_SIGNATURE ROM1_END + 1 - SIGNATURE_STRUCT_SIZE
-    {
-        *(FWU_SIGNATURE)
-    }
-}
-#endif
-
-
 #ifdef need_fixed_vectors
 LR_BOOT ROOT_REGION
 {
@@ -52,6 +40,16 @@ LR_FWU0 ROOT_REGION +0x10
     {
         *(FWU_DATA_ANCHOR, +FIRST)
         *(FWU_OPT_BYTES)
+    }
+}
+#endif
+
+#ifdef FWU_OTP_MEMORY_START_ADDRESS
+LR_OTP FWU_OTP_MEMORY_START_ADDRESS FWU_OTP_MEMORY_SIZE
+{
+    ER_OTP FWU_OTP_MEMORY_START_ADDRESS FWU_OTP_MEMORY_SIZE
+    {
+        *(FWU_OTP_MEMORY)
     }
 }
 #endif
@@ -102,11 +100,15 @@ LR_ROM ROM1_START ROM1_SIZE
         *(.init_array)                          // needed for C++
         .ANY1 (+RO)
     }
-#ifdef APP_VARIANT
-    // region for flash routines, if used in application
+#if defined(APP_VARIANT) || defined(COPY_FLASH_DRV_TO_RAM)
+    // Flash driver and routines used by flash driver placed before stack at end of RAM 
     ER_ROM_FLDRV RAM1_END + 1 - STACKSIZE - FLASH_DRIVER_SIZE FLASH_DRIVER_SIZE
     {
         *intflash_*.o (+RO)
+    #if defined(COPY_FLASH_DRV_TO_RAM)
+        *mem_drv.o (+RO)
+        *hwdt01.o (+RO)
+    #endif
     }
 #endif
 }
@@ -128,8 +130,10 @@ LR_RAM +0
     {
         *(UNINIT_DATA)	
     }
+    ER_FLASH_ROUTINES (RAM1_START + FWU_SHARED_DATA_SIZE + UNINIT_DATA_SIZE)
+#else
+    ER_FLASH_ROUTINES (RAM1_START + FWU_SHARED_DATA_SIZE)
 #endif
-    ER_FLASH_ROUTINES +0
     {
         *(FLASH_ROUTINES)
     }
@@ -154,7 +158,7 @@ LR_RAM +0
 // Stack Region
 LR_STACK RAM1_END + 1 - STACKSIZE
 {
-    ARM_LIB_STACK RAM1_END + 1 EMPTY - STACKSIZE
+    ARM_LIB_STACK RAM1_END + 1 - STACK_MAGIC_SIZE EMPTY - (STACKSIZE - STACK_MAGIC_SIZE)
     {
     }
 }

@@ -51,6 +51,9 @@
 
 /* VARIABLES ******************************************************************************************/
 
+/*lint -esym(552,*ucPortRemapConfig*) Warning 552: external variable 'xx' not accessed */
+/*lint -esym(9003,*ucPortRemapConfig*) could define global variable 'xx' within function xx [MISRA 2012 Rule 8.9, advisory] */
+
 /* Variable HCCT<unit>_ucPortRemapConfig<channel> holds port remapping configuration needed for HCCTx_bGetPinx */
 uchar HCCT0_ucPortRemapConfig0;
 uchar HCCT0_ucPortRemapConfig1;

@@ -1,0 +1,17 @@
+; Option bytes settings for STM32G05xxx, STM32G07xxx and STM32G08xxx
+1FFF7800 AA FE FF FF ; User and read protection value
+1FFF7804 55 01 00 00 ; User and read protection value inverted
+1FFF7808 FF 00 00 00 ; PCR OP1A start
+1FFF780C 00 FF FF FF ; PCR OP1A start inverted
+1FFF7810 00 00 00 00 ; PCR OP1A end
+1FFF7814 FF FF FF FF ; PCR OP1A end inverted
+1FFF7818 3F 00 00 00 ; Write protection A
+1FFF781C C0 FF FF FF ; Write protection A inverted
+1FFF7820 3F 00 00 00 ; Write protection B
+1FFF7824 C0 FF FF FF ; Write protection B inverted
+1FFF7828 FF 00 00 00 ; PCR OP1B start
+1FFF782C 00 FF FF FF ; PCR OP1B start inverted
+1FFF7830 00 00 00 00 ; PCR OP1B end
+1FFF7834 FF FF FF FF ; PCR OP1B end inverted
+1FFF7870 00 00 00 00 ; Security value
+1FFF7874 FF FF FF FF ; Security value inverted

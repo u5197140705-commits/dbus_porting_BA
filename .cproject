@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
-		<cconfiguration id="0.1546852624">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.1546852624" moduleId="org.eclipse.cdt.core.settings" name="Default">
+		<cconfiguration id="0.856072945">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.856072945" moduleId="org.eclipse.cdt.core.settings" name="Default">
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -14,20 +14,20 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration buildProperties="" description="" id="0.1546852624" name="Default" parent="org.eclipse.cdt.build.core.prefbase.cfg">
-					<folderInfo id="0.1546852624." name="/" resourcePath="">
-						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.1226730267" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
-							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.1226730267.1209391538" name=""/>
-							<builder id="org.eclipse.cdt.build.core.settings.default.builder.866113465" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.1094482682" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.2028863668" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1365798584" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+				<configuration buildProperties="" description="" id="0.856072945" name="Default" parent="org.eclipse.cdt.build.core.prefbase.cfg">
+					<folderInfo id="0.856072945." name="/" resourcePath="">
+						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.1555108704" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
+							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.1555108704.1282408707" name=""/>
+							<builder id="org.eclipse.cdt.build.core.settings.default.builder.1340510535" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.1025170913" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.1323282048" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1707796205" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.1691812425" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.533290940" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.20104924" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1959341022" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.1053801420" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
-								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1870013302" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.948104587" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1858137138" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
@@ -37,68 +37,240 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="rtos_dev_tx.null.524650249" name="rtos_dev_tx"/>
+		<project id="rtos_dev_tx.null.856082388" name="rtos_dev_tx"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="0.1546852624">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="0.856072945">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
 		<buildTargets>
-			<target name="all -j" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="all -j" path="app/variant_cm4_stm32l4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments>project=variant_cm4_stm32l4</buildArguments>
+				<buildArguments/>
 				<buildTarget>all -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
-			<target name="clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="clean" path="app/variant_cm4_stm32l4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments>project=variant_cm4_stm32l4</buildArguments>
+				<buildArguments/>
 				<buildTarget>clean</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
-			<target name="init" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="init" path="app/variant_cm4_stm32l4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments>project=variant_cm4_stm32l4</buildArguments>
+				<buildArguments/>
 				<buildTarget>init</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
-			<target name="-j" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="-j" path="app/variant_cm4_stm32l4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments>project=variant_cm4_stm32l4</buildArguments>
+				<buildArguments/>
 				<buildTarget>-j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
-			<target name="JFlash" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="JFlash" path="app/variant_cm4_stm32l4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments>project=variant_cm4_stm32l4</buildArguments>
+				<buildArguments/>
 				<buildTarget>JFlash</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
-			<target name="link" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="link -j -B" path="app/variant_cm4_stm32l4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments>project=variant_cm4_stm32l4</buildArguments>
-				<buildTarget>link</buildTarget>
+				<buildArguments/>
+				<buildTarget>link -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
 			</target>
-			<target name="uvision_gen_ini" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="uvision_gen_ini" path="app/variant_cm4_stm32l4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments>project=variant_cm4_stm32l4 auto_dep=false -B</buildArguments>
+				<buildArguments>auto_dep=false -B</buildArguments>
+				<buildTarget>uvision_gen_ini</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="all -j" path="app/variant_cm33_ra4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>all -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="clean" path="app/variant_cm33_ra4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>clean</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="init" path="app/variant_cm33_ra4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>init</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="-j" path="app/variant_cm33_ra4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>-j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="JFlash" path="app/variant_cm33_ra4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>JFlash</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="link -j -B" path="app/variant_cm33_ra4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>link -j -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="uvision_gen_ini" path="app/variant_cm33_ra4" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments>auto_dep=false -B</buildArguments>
+				<buildTarget>uvision_gen_ini</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="all -j" path="app/variant_cm7_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>all -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="clean" path="app/variant_cm7_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>clean</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="init" path="app/variant_cm7_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>init</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="-j" path="app/variant_cm7_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>-j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="JFlash" path="app/variant_cm7_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>JFlash</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="link -j -B" path="app/variant_cm7_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>link -j -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="uvision_gen_ini" path="app/variant_cm7_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments>auto_dep=false -B</buildArguments>
+				<buildTarget>uvision_gen_ini</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="all -j" path="app/variant_cm0p_stm32g0" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>all -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="clean" path="app/variant_cm0p_stm32g0" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>clean</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="init" path="app/variant_cm0p_stm32g0" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>init</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="-j" path="app/variant_cm0p_stm32g0" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>-j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="JFlash" path="app/variant_cm0p_stm32g0" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>JFlash</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="link -j -B" path="app/variant_cm0p_stm32g0" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>link -j -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+			<target name="uvision_gen_ini" path="app/variant_cm0p_stm32g0" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments>auto_dep=false -B</buildArguments>
 				<buildTarget>uvision_gen_ini</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>

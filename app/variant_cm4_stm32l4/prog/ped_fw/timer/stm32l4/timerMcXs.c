@@ -24,7 +24,7 @@
 /* INCLUDES                                                                   */
 /******************************************************************************/
 #include "bsh_stdinc.h"
-#include "libtypes.h"
+#include "LibTypes.h"
 #include "timerlib.h"
 #include "processor.h"
 

@@ -21,7 +21,7 @@
  *             one specific UART channel.
  *
  *   \details  The mapping layer provides the implementation of the following mapping functions
- *     \li DBM_GPIO_SetBreakPinState(BOOL)
+ *     \li DBM_GPIO_SetBreakPinState(bool)
  *     \li DBM_GPIO_SetBreakPinModeOutput(void)
  *     \li DBM_GPIO_SetBreakPinModeAlternateFunction(void)
  */
@@ -52,7 +52,7 @@
 #endif
 
 
-#include "libtypes.h"
+#include "LibTypes.h"
 #include "dbusmapping.h"
 #include "hsup.h"
 #include "huart.h"
@@ -77,9 +77,10 @@
 /******************************************************************************/
 
 #ifndef DBUS2_NO_BREAK_FUNCTIONALITY
-void DBM_GPIO_SetBreakPinState(BOOL pinState)
+void DBM_GPIO_SetBreakPinState(bool pinState)
 {
-    DBM_GPIO_FUNC_ARG(DBUS_BREAK_PIN, _vSetPort, pinState);
+    uint8_t ucPinState = (pinState != false) ? HDIO_ON : HDIO_OFF;
+    DBM_GPIO_FUNC_ARG(DBUS_BREAK_PIN, _vSetPort, ucPinState);
 }
 
 void DBM_GPIO_SetBreakPinModeOutput(void)

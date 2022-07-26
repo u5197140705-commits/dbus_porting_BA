@@ -13,6 +13,8 @@
 #*******************************************************************************
 
 # build type (DEVELOP / RELEASE)
+# For more details refer to file common/build/help/make_variables.md
+# or run 'make help' and click on the link 'List of variables' in main help page
 build_type    ?= DEVELOP
 
 
@@ -52,12 +54,6 @@ fwu_flex_partition_used = DISABLED
 # functional safety settings (ENABLED / DISABLED)
 feature_functional_safety ?= DISABLED
 
-# ---------- security stuff -----------------
-# compilation contains approve flag if set (true / false)
-auto_approved_flag     ?= true
-# approve flag will be flashed by application if set (true / false)
-set_approved_flag      ?= true
-# --------- end security stuff ---------------
 
 # global definitions
 defines += 
