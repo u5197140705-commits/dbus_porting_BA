@@ -1,0 +1,17 @@
+{
+    "baud": "96",
+    "comp": [],
+    "compiler": "armclang",
+    "dbus_rx": "100",
+    "dbus_tx": "101",
+    "derivat": "R7FA4M2AD3CFP",
+    "ext_comp": [],
+    "fwu": "FWU1",
+    "macros": [],
+    "node": "1",
+    "platform": "ra4",
+    "project": "variant_ra4m2",
+    "scheduler": "rtos",
+    "uart": "0",
+    "variant": "MyVariant"
+}

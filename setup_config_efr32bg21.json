@@ -1,0 +1,17 @@
+{
+    "baud": "96",
+    "comp": [],
+    "compiler": "gccArm",
+    "dbus_rx": "A6",
+    "dbus_tx": "A5",
+    "derivat": "EFR32BG21A010F1024IM32",
+    "ext_comp": [],
+    "fwu": "FWU1",
+    "macros": [],
+    "node": "1",
+    "platform": "efr32xg21",
+    "project": "variant_efr32bg21",
+    "scheduler": "rtos",
+    "uart": "0",
+    "variant": "MyVariant"
+}

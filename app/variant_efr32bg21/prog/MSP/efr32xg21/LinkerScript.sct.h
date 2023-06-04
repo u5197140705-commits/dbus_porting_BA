@@ -1,0 +1,194 @@
+/*******************************************************************************
+ *  Copyright (c) 2017 BSH Hausgeraete GmbH,
+ *  Carl-Wery-Str. 34, 81739 Munich, Germany, www.bsh-group.de
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are protected by international copyright laws.
+ *  Please contact copyright holder for licensing information.
+ *
+ *******************************************************************************
+ *  PROJECT           Generic SW / SiLabs EFR32xG21
+ ******************************************************************************/
+
+
+
+
+/******************************************************************************/
+/* DOCUMENTATION                                                              */
+/******************************************************************************/
+/*
+    This is a Keil-Arm scatter file template for platform EFR32xG21.
+    It will be processed by a C-Preprocessor before interpreted by the linker
+ */
+
+/*
+   If fixed position of SW_version within application is needed, calculation of its size 
+   must be done in the <variant>.mak file and corresponding segment must be added there.
+   See sw_version.c.
+   
+   EXAMPLE:
+   
+#ifdef APP_SWVERSION_ADDR
+LR_FWU_APP_SWVERSION APP_SWVERSION_ADDR APP_SWVERSION_SIZE
+{
+    ER_APP_SWVERSION +0 APP_SWVERSION_SIZE
+    {
+        *(APP_SWVERSION)
+    }
+}
+#endif
+*/
+
+#ifdef APP_VARIANT
+    #ifdef DMODULE_PRESENT
+        #include "dmc/LinkerScriptData.h"
+    #endif
+#endif
+
+
+#ifdef need_fixed_vectors
+LR_BOOT ROOT_REGION
+{
+    ER_FIXED_VECTORS ROOT_REGION
+    {
+        *(vectorsFixed)
+    }
+}
+#endif
+
+// Special regions for firmware update
+#ifdef REMOTE_FIRMWARE_UPDATE
+LR_FWU0 ROOT_REGION +0x10
+{
+    ER_FWU_DATA_ANCHOR +0
+    {
+        *(FWU_DATA_ANCHOR, +FIRST)
+        *(FWU_OPT_BYTES)
+    }
+}
+#endif
+
+#ifdef FWU_OTP_MEMORY_START_ADDRESS
+LR_OTP FWU_OTP_MEMORY_START_ADDRESS FWU_OTP_MEMORY_SIZE
+{
+    ER_OTP FWU_OTP_MEMORY_START_ADDRESS FWU_OTP_MEMORY_SIZE
+    {
+        *(FWU_OTP_MEMORY)
+    }
+}
+#endif
+
+#ifdef FWU_FLEX_PARTITION_USED
+// separated Flex-Partition table
+LR_FWU1 FWU_FLEX_PARTITION_START FWU_FLEX_PARTITION_SIZE
+{
+    ER_FWU_FLEX_PARTITION +0 FWU_FLEX_PARTITION_SIZE
+    {
+        *(FWU_FLEX_PARTITION_HEADER, +FIRST)
+        *(FWU_FLEX_PARTITION)
+    }
+}
+#endif
+
+
+#ifdef need_ModuleHeader
+LR_FWU_SW_MODULE_HEADER ROM1_START VTOR_ALIGN
+{
+    ER_FWU_SW_MODULE_HEADER +0 VTOR_ALIGN-ANY_CONTINGENCY
+    {
+        *(FWU_SW_MODULE_HEADER, +FIRST)
+        .ANY2 (+RO)
+    }
+}
+#endif
+
+
+#ifdef need_ModuleHeader
+LR_ROM ROM1_START+VTOR_ALIGN ROM1_SIZE-VTOR_ALIGN
+#else
+LR_ROM ROM1_START ROM1_SIZE
+#endif
+{
+    ER_VECTOTS +0 VECTOR_TABLE_SIZE
+    {
+        *(vectorsCore, +FIRST)
+        *(vectors)
+    }
+#ifdef need_ModuleHeader
+    ER_ROM +0 ROM1_SIZE-VTOR_ALIGN-VECTOR_TABLE_SIZE
+#else
+    ER_ROM +0 ROM1_SIZE-VECTOR_TABLE_SIZE
+#endif
+    {
+        .ANY1 (+RO)
+    }
+#ifdef FLASHDRV_IN_RAM
+    ER_ROM_FLDRV RAM1_END - 0x2000 +1 
+    {
+        *intflash_drv.o (+RO)
+    }
+#endif
+}
+
+
+
+#ifdef NO_RAM_INIT
+LR_RAM TRASH_AREA_START // put the initializer to trash
+#else
+LR_RAM +0
+#endif
+{
+    ER_FWU_SHARED_DATA (RAM1_START) UNINIT
+    {
+        * (FWU_SHARED_DATA)
+    }
+#if defined(APP_VARIANT)
+    ER_UNINIT_DATA (RAM1_START + FWU_SHARED_DATA_SIZE) UNINIT
+    {
+        * (UNINIT_DATA)	
+    }
+    ER_FLASH_ROUTINES (RAM1_START + FWU_SHARED_DATA_SIZE + UNINIT_DATA_SIZE)
+#else
+    ER_FLASH_ROUTINES (RAM1_START + FWU_SHARED_DATA_SIZE)
+#endif
+    {
+        *(FLASH_ROUTINES)
+    }
+    ER_RW +0
+    {
+        * (+RW)
+    }
+    ER_ZI +0
+    {
+        * (+ZI)
+    }
+
+    // Include all timer segments
+    #include "timer/timer_seg.h"
+
+    ARM_LIB_HEAP +0  EMPTY HEAPSIZE
+    {
+    }
+}
+
+
+// Stack Region
+#ifndef FUNCTIONAL_SAFETY_STACK_CHECK_ACTIVE
+LR_STACK RAM1_END + 1 - STACKSIZE
+{
+    ARM_LIB_STACK RAM1_END + 1 - STACK_MAGIC_SIZE EMPTY - (STACKSIZE - STACK_MAGIC_SIZE)
+    {
+    }
+}
+#else
+LR_STACK RAM1_END + 1 - STACKSIZE {
+
+    ARM_LIB_STACK RAM1_END + 1 - STACK_MAGIC_SIZE EMPTY - (STACKSIZE - STACK_MAGIC_SIZE)
+    {
+    }
+}
+#endif
+
+// Throw link exception if LR_RAM overlaps the stack
+// Note: In exception message  '>' used in stead of '<' (linker issue)
+ScatterAssert(RAM1_END - RAM1_START + 1 > STACKSIZE + ImageLength(LR_RAM))

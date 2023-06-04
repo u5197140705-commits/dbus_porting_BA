@@ -1,0 +1,25 @@
+; Option bytes settings for STM32G4 Dual bank Flash mode
+1FFF7800 AA F8 EF FB ; RDP:8bit, USERopt:24bit
+1FFF7804 55 07 10 04 ; nRDP:8bit, nUSERopt:24bit
+1FFF7808 FF FF FF FF ; PCROP1_STRT:15bit, Unused:17bit
+1FFF780C 00 00 00 00 ; nPCROP1_STRT:15bit, Unused:17bit
+1FFF7810 00 00 FF 00 ; PCROP1_END:15bit, Unused:16bit, PCROP_RDP:1bit
+1FFF7814 FF FF 00 FF ; nPCROP1_END:15bit, Unused:16bit, nPCROP_RDP:1bit
+1FFF7818 FF FF 00 FF ; WRP1A_STRT:7bit, Unused:9bit, WRP1A_END:7bit, Unused:9bit
+1FFF781C 00 00 FF 00 ; nWRP1A_STRT:7bit, Unused:9bit, nWRP1A_END:7bit, Unused:9bit
+1FFF7820 FF FF 00 FF ; WRP1B_STRT:7bit, Unused:9bit, WRP1B_END:7bit, Unused:9bit
+1FFF7824 00 00 FF 00 ; nWRP1B_STRT:7bit, Unused:9bit, nWRP1B_END:7bit, Unused:9bit
+1FFF7828 00 FF 00 FF ; SEC_SIZE1:8bit, Unused:8bit, BOOT_LOCK:1bit, Unused:15bit
+1FFF782C FF 00 FF 00 ; nSEC_SIZE1:8bit, Unused:8bit, nBOOT_LOCK:1bit, Unused:15bit
+
+; Second Flash bank (cannot be programmed by ST-Link, but RAM-Loader)
+;1FFFF808 FF FF FF FF ; PCROP2_STRT:15bit, Unused:17bit
+;1FFFF80C 00 00 00 00 ; nPCROP2_STRT:15bit, Unused:17bit
+;1FFFF810 00 00 FF 00 ; PCROP2_END:15bit, Unused:17bit
+;1FFFF814 FF FF 00 FF ; nPCROP2_END:15bit, Unused:17bit
+;1FFFF818 FF FF 00 FF ; WRP2A_STRT:7bit, Unused:9bit, WRP2A_END:7bit, Unused:9bit
+;1FFFF81C 00 00 FF 00 ; nWRP2A_STRT:7bit, Unused:9bit, nWRP2A_END:7bit, Unused:9bit
+;1FFFF820 FF FF 00 FF ; WRP2B_STRT:7bit, Unused:9bit, WRP2B_END:7bit, Unused:9bit
+;1FFFF824 00 00 FF 00 ; nWRP2B_STRT:7bit, Unused:9bit, nWRP2B_END:7bit, Unused:9bit
+;1FFFF828 00 FF 00 FF ; SEC_SIZE2:8bit, Unused:24bit
+;1FFFF82C FF 00 FF 00 ; nSEC_SIZE2:8bit, Unused:24bit

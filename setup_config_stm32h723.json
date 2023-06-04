@@ -1,0 +1,17 @@
+{
+    "baud": "96",
+    "comp": [],
+    "compiler": "armclang",
+    "dbus_rx": "B7",
+    "dbus_tx": "B6",
+    "derivat": "STM32H723ZG",
+    "ext_comp": [],
+    "fwu": "FWU1",
+    "macros": [],
+    "node": "1",
+    "platform": "stm32h7",
+    "project": "variant_stm32h723",
+    "scheduler": "rtos",
+    "uart": "0",
+    "variant": "MyVariant"
+}

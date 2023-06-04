@@ -1,1 +1,0 @@
-{"derivat": "STM32G071CB", "dbus_rx": "A3", "dbus_tx": "A2", "macros": [], "variant": "MyVariant", "fwu": "FWU1", "compiler": "keilArm", "ext_comp": [], "baud": "96", "comp": [], "node": "1", "platform": "STM32G0", "scheduler": "rtos", "project": "variant_cm0p_stm32g0", "uart": "1"}

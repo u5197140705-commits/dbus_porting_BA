@@ -1,59 +1,58 @@
 # rtos_dev_tx
-Repo for Developing and Testing the RTOS (ThreadX only) with Framework
+Repo for Developing and Testing the RTOS with Framework.
+
+---
 
 ### Command to get complete project
-git clone https://production.github.bshg.com/RealTimeOS/rtos_dev_tx.git --recurse-submodules
+git clone https://production.github.bshg.com/RealTimeOS/rtos_ref_project.git --recurse-submodules
 
-### For Eclipse  
-1.In Project Explorer ==>Importe the project
-
-2.Select ==> Existing projects in workspace
+---
 
 ### Option selected on setup uitility
 
-variant_cm0p_stm32g0 |  -
---------------- | --------------------
-Project name    | variant_cm0p_stm32g0
-Default Variant | myVariant
-Platform        | STM32G0
-Derivative      | STM32G071CB
-Compiler        | keilArm
-FirmwareUpdate  | FWU1
-Os/Schedulers   | rtos
+|                 | stm32g071         | efr32bg21              | ra4m2         | stm32g474         | stm32l471         | stm32h723         | mkv56f1         |
+| :-------------- | :---------------- | :--------------------- | :------------ | :---------------- | :---------------- | :---------------- | :-------------- |
+| Project name    | variant_stm32g071 | variant_efr32bg21      | variant_ra4m2 | variant_stm32g474 | variant_stm32l471 | variant_stm32h723 | variant_mkv56f1 |
+| Default Variant | myVariant         | myVariant              | myVariant     | MyVariant         | myVariant         | myVariant         | myVariant       |
+| Platform        | STM32G0           | efr32xg21              | ra4           | STM32G4           | STM32L4           | stm32h7           | mkv5x           |
+| Derivative      | STM32G071CB       | EFR32BG21A010F1024IM32 | R7FA4M2AD3CFP | STM32G474VE       | STM32L471VE       | STM32H723ZG       | MKV56F1M0VLL24  |
+| Compiler        | armclang          | gccArm                 | armclang      | armclang          | armclang          | armclang          | armclang        |
+| FirmwareUpdate  | FWU1              | FWU1                   | FWU1          | FWU1              | FWU1              | FWU1              | FWU1            |
+| Os/Schedulers   | rtos              | rtos                   | rtos          | rtos              | rtos              | rtos              | rtos            |
+| Cortex          | **M0+**           | **M33**                | **M33**       | **M4**            | **M4**            | **M7**            | **M7**          |
 
-variant_cm4_stm32l4 |  -
---------------- | --------------------
-Project name    | variant_cm4_stm32l4
-Default Variant | myVariant
-Platform        | STM32L4
-Derivative      | STM32L471VE
-Compiler        | keilArm
-FirmwareUpdate  | FWU1
-Os/Schedulers   | rtos
-
-variant_cm7_mkv56f1 |  -
---------------- | --------------------
-Project name    | variant_cm7_mkv56f1
-Default Variant | myVariant
-Platform        | mkv5x
-Derivative      | MKV56F1M0VLL24
-Compiler        | armclang
-FirmwareUpdate  | FWU1
-Os/Schedulers   | rtos
-
-variant_cm33_ra4 |  -
---------------- | --------------------
-Project name    | variant_cm33_ra4
-Default Variant | myVariant
-Platform        | ra4
-Derivative      | R7FA4M2AD3CFP
-Compiler        | armclang
-FirmwareUpdate  | FWU1
-Os/Schedulers   | rtos
-
+---
 
 ### To compile the project(s) in cmd
-make project=variant_cm0p_stm32g0 all -j  
-make project=variant_cm4_stm32l4 all -j  
-make project=variant_cm7_mkv56f1 all -j  
-make project=variant_cm33_ra4 all -j  
+make project=variant_stm32g071 all -j  
+make project=variant_efr32bg21 all -j  
+make project=variant_ra4m2 all -j  
+make project=variant_stm32g474 all -j  
+make project=variant_stm32l471 all -j  
+make project=variant_stm32h723 all -j  
+make project=variant_mkv56f1 all -j  
+
+---
+
+### Eclipse support: 
+A preconfigured Eclipse project is part of this repository.  
+To add the project into Eclipse please follow the steps below:
+1. Inside Project Explorer ==> Import  
+2. Select ==> Existing Project into Workspace
+3. Select the root directory from rtos_ref_project 
+4. Finish 
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
