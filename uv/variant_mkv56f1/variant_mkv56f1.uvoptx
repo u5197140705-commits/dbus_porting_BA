@@ -140,11 +140,6 @@
           <WinNumber>1</WinNumber>
           <ItemText>RTD_TimeMonitor,0x0A</ItemText>
         </Ww>
-        <Ww>
-          <count>2</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>RTOS_traceBuffer</ItemText>
-        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
