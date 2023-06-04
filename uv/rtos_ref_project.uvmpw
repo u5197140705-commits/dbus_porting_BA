@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<ProjectWorkspace xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_mpw.xsd">
+
+  <SchemaVersion>1.0</SchemaVersion>
+
+  <Header>### uVision Project, (C) Keil Software</Header>
+
+  <WorkspaceName>WorkSpace</WorkspaceName>
+
+  <project>
+    <PathAndName>.\variant_efr32bg21\variant_efr32bg21.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_mkv56f1\variant_mkv56f1.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_ra4m2\variant_ra4m2.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_stm32g071\variant_stm32g071.uvprojx</PathAndName>
+    <NodeIsActive>1</NodeIsActive>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_stm32g474\variant_stm32g474.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_stm32h723\variant_stm32h723.uvprojx</PathAndName>
+  </project>
+
+  <project>
+    <PathAndName>.\variant_stm32l471\variant_stm32l471.uvprojx</PathAndName>
+  </project>
+
+</ProjectWorkspace>
