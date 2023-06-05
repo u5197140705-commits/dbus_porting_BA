@@ -166,6 +166,7 @@ typedef uint8_t Terror;
 /** Derivative specific error definition (different from uint8_t) */
 typedef DBM_DERIVATIVE_SPECIFIC_ERROR_TYPE Terror;
 #endif
+
 #ifdef __DBM_DBUS_MAPPING_LOCK_TX_DISABLE
 /*
 The following section is used for Renesas adaptation:
@@ -186,7 +187,8 @@ the overlaying layer the tx interrupt seems to be disabled..*/
 #define DBM_UART_TX_EVENT_DURING_LOCK_STATE  2
 static uint8_t DBM_UART_ucTxDisabled = 0U;
 static bool DBM_UART_bTxEventAlreadyEnabled = 0U;
-#endif
+#endif //__DBM_DBUS_MAPPING_LOCK_TX_DISABLE
+
 #ifdef __DBM_DBUS_MAPPING_LOCK_RX_DISABLE
 /*
 The following section is used for necessary Renesas adaptation:
@@ -221,7 +223,8 @@ static uint8_t DBM_UART_ucRxData;
     the rx interrupt is locked, according to the state of DBM_UART_ucRxDisabled.
 */
 static uint8_t DBM_UART_ucRxError;
-#endif
+#endif // __DBM_DBUS_MAPPING_LOCK_RX_DISABLE
+
 
 #ifndef __DBM_EXCLUDE_ERROR_COUNTERS
 /** Please note that the following error counters are incremented when the UART reports an error. After 256 times the value will be 0 again, unless e.g. EDITH or application resets the values */
@@ -554,7 +557,6 @@ bool DBM_UART_bIsRxOnGoing(void)
        DBM_INT_ClearIrq();        // Clear interrupt to avoid delay time after break
        return true;
    }
-
    else
    {
         DBM_DISABLE_INT();
@@ -563,7 +565,6 @@ bool DBM_UART_bIsRxOnGoing(void)
                //Clear pending interrupt.
                //This implementation is only to avoid collisions on DBus
                DBM_INT_ClearIrq();
-
                DBM_ENABLE_INT();
                return true;
         }
@@ -645,7 +646,7 @@ void DBM_UART_vHandleTxEvent(void)
 #endif
 }
 /************************************************************************/
-void DBM_UART_vSetBaudRate(uint8_t ucIndex, uint16_t uiBaudRate)
+void DBM_PERIPH_vSetBaudRate(uint8_t ucIndex, uint16_t uiBaudRate)
 {
 #ifdef DBM_MCAL
     (void)ucIndex;

@@ -54,7 +54,9 @@
 #include "utility.h"
 #include "dbuspresentation.h"
 
-
+#ifdef DBGX_INCLUDED
+#include "debug_extended/dbus/dbgx_msg_lists.h"
+#endif
 
 #ifdef TENG_INCLUDED 
 #include "testengine/teng_msgsrv.h"
@@ -139,6 +141,10 @@ const TbusObjectTable BAL_tBusObject[] = {
  /* Example: {0x1, (const TbusReceiveObject *) BAL_tReceiveObject_Subsystem_A, (const TbusTransmitObject *) BAL_tTransmitObject_Subsystem_X, &BAL_ucNumberOfElementsInSubsystem_X, &BAL_ucTransmitFlagSubsystem_X} */
 #ifdef CCSS
  ,{CCCMTD_SUBSYS, (const void *)CCCMTD_RxObject, (const void *)CCCMTD_TxObject, &CCCMTD_NumberOfTxObjects, CCCMTD_TxFlags}
+#endif
+#ifdef DBGX_INCLUDED
+ /* debug_extended DBus message subsystem */
+ ,{DBGX_SUBSYSTEM_ID, DBGX_tReceiveObject, DBGX_tTransmitObject, &DBGX_numberOfElementsInSubsystem, DBGX_transmitFlags}
 #endif
 #ifdef TENG_INCLUDED
    TENG_BAL_BUSOBJ_ENTRY

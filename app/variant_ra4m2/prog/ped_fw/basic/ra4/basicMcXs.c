@@ -41,6 +41,12 @@
 
 /*lint -save -e923 */
 /******************************************************************************/
+/* PRIVATE DEFINITIONS                                                        */
+/******************************************************************************/
+#define BASIC_SRAM_PRCR_KEY                      (0x78U)
+#define BASIC_SRAM_UNLOCK                        (((BASIC_SRAM_PRCR_KEY) << 1U) | 0x1U)
+#define BASIC_SRAM_LOCK                          ((BASIC_SRAM_PRCR_KEY) << 1U)
+/******************************************************************************/
 /* PRIVATE FUNCTION DECLARATIONS                                              */
 /******************************************************************************/
 void BASIC_vInitClock(void);
@@ -194,4 +200,49 @@ static void BASIC_pmsarInit(void)
     R_BSP_RegisterProtectEnable(BSP_REG_PROTECT_SAR);
 #endif // FSP_PRIV_TZ_USE_SECURE_REGS
 }
+
+void BASIC_vEccInit(void) {
+    /* First step: Initialize RAM1 for ECC check */
+    volatile const uint32_t *wp;
+    volatile uint32_t *rp;
+    rp = (uint32_t*)RAM1_PHY_START;
+    wp = (uint32_t*)RAM1_PHY_START;
+    while((uint32_t)rp <= (uint32_t)(RAM1_PHY_END - (RAM1_PHY_SIZE / 2)))  // Initialize RAM1 for ECC check (available only for the first half of RAM1)
+    { 
+        *rp = *wp;
+        *rp++;
+        *wp++;
+    }
+
+    /* Second step: Configure ECC and parity check */
+    R_SRAM->SRAMPRCR = BASIC_SRAM_UNLOCK; // enable write access for SRAM control regs
+    R_SRAM->ECCPRCR  = BASIC_SRAM_UNLOCK; // enable write access for ECC control regs
+
+    R_SRAM->ECCMODE = (uint8_t)R_SRAM_ECCMODE_ECCMOD_Msk; // enable ECC check
+    R_SRAM->PARIOAD_b.OAD = 0u; // cause an NMI on Parity error
+    R_SRAM->ECCOAD_b.OAD  = 0u; // cause an NMI on ECC error
+    R_SRAM->ECC1STSEN_b.E1STSEN = (uint8_t)R_SRAM_ECC1STSEN_E1STSEN_Msk; // enable 1-bit ECC error update
+
+    rp = (uint32_t*)RAM1_PHY_START;
+    wp = (uint32_t*)RAM1_PHY_START;
+    while((uint32_t)rp <= (uint32_t)RAM1_PHY_END)  // Initialize RAM1 for parity check
+    { 
+        *rp = *wp;
+        *rp++;
+        *wp++;
+    }
+
+    R_SRAM->ECC2STS = 0u; //reset ECC 2-Bit Error Status
+    R_SRAM->ECC1STS = 0u; //reset ECC 1-Bit Error Status
+
+    R_SRAM->SRAMPRCR = BASIC_SRAM_LOCK; // disable write access for SRAM control regs
+    R_SRAM->ECCPRCR  = BASIC_SRAM_LOCK; // disable write access for ECC control regs
+
+    R_ICU->NMICLR_b.RECCCLR = 1u; //Clear the NMI SRAM ECC flag
+    R_ICU->NMICLR_b.RPECLR  = 1u; //Clear the NMI SRAM Parity flag
+
+    R_ICU->NMIER_b.RECCEN = 1u; //Enable the NMI SRAM ECC interrupt
+    R_ICU->NMIER_b.RPEEN  = 1u; //Enable the NMI SRAM Parity interrupt
+}
+
 /*lint -restore */

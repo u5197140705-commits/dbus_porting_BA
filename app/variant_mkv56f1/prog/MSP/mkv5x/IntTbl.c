@@ -190,3 +190,127 @@ const ITBL_fptr SYMBOL_USED ITBL_peripheralVectors[]   =
    ITBL_vSpuriousIsr                ,     //120             136                 0x0220
 };
 SDEF_SetSegmentConst_Default()
+
+/* Function's task is to set the interrupt priorities according to the user's needs, different from the default settings.
+ * If necessary, uncomment the relevant lines and set the required interrupt priorities
+ */
+void ITBL_setCustomInterruptPriority(void)
+{
+    /* Cortex-M4 settable interrupts */
+    //NVIC_SetPriority(MemoryManagement_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(BusFault_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(UsageFault_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(SVCall_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(DebugMonitor_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(PendSV_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(SysTick_IRQn, PRIORITY_HIGH);
+    /* Peripheral interrupts */
+    //NVIC_SetPriority(DMA0_DMA16_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA1_DMA17_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA2_DMA18_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA3_DMA19_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA4_DMA20_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA5_DMA21_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA6_DMA22_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA7_DMA23_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA8_DMA24_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA9_DMA25_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA10_DMA26_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA11_DMA27_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA12_DMA28_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA13_DMA29_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA14_DMA30_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA15_DMA31_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DMA_Error_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(MCM_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(FTFE_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Read_Collision_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PMC_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(LLWU_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(WDOG_EWM_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(TRNG0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(I2C0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(I2C1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(SPI0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(SPI1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART5_RX_TX_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART5_ERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART0_RX_TX_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART0_ERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART1_RX_TX_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART1_ERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART2_RX_TX_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART2_ERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(ADC0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(HSADC_ERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(HSADC0_CCA_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CMP0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CMP1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(FTM0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(FTM1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART3_RX_TX_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART3_ERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART4_RX_TX_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(UART4_ERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PIT0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PIT1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PIT2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PIT3_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PDB0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(FTM2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(XBARA_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PDB1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(DAC0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(MCG_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(LPTMR0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PORTA_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PORTB_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PORTC_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PORTD_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PORTE_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(SPI2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(ENC_COMPARE_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(ENC_HOME_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(ENC_WDOG_SAB_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(ENC_INDEX_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CMP2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(FTM3_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(HSADC0_CCB_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(HSADC1_CCA_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN0_ORed_Message_buffer_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN0_Bus_Off_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN0_Error_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN0_Tx_Warning_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN0_Rx_Warning_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN0_Wake_Up_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_CMP0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_RELOAD0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_CMP1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_RELOAD1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_CMP2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_RELOAD2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_CMP3_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_RELOAD3_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_CAP_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_RERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM0_FAULT_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CMP3_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(HSADC1_CCB_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN1_ORed_Message_buffer_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN1_Bus_Off_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN1_Error_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN1_Tx_Warning_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN1_Rx_Warning_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(CAN1_Wake_Up_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_CMP0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_RELOAD0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_CMP1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_RELOAD1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_CMP2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_RELOAD2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_CMP3_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_RELOAD3_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_CAP_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_RERR_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(PWM1_FAULT_IRQn, PRIORITY_MEDIUM);
+}

@@ -57,7 +57,7 @@
 // <i> bootloader will only allow applications to increment its version x times. Bootloader can be upgraded thenceforth
 // <i> to allow applications to increment its version again. This option is not applicable on the devices with Secure
 // <i> Element configured to perform full page lock.
-#define BOOTLOADER_ROLLBACK_PROTECTION                    1
+#define BOOTLOADER_ROLLBACK_PROTECTION                    0
 
 // <o BOOTLOADER_ROLLBACK_PROTECTION_MINIMUM_VERSION> Minimum application version allowed
 // <i> Default: 0

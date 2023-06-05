@@ -29,20 +29,25 @@
 CORE_VECTORS_SIZE = 0x10;
 MEMORY
 {
-#if RELOC_ADDR != 0
-    #ifdef need_fixed_vectors
-        ROM0 (rx) :  ORIGIN = ROOT_REGION, LENGTH = CORE_VECTORS_SIZE // 4 vectors
-        ROM_ANCHOR (rx) : ORIGIN = ROOT_REGION+0x10, LENGTH = 0x10   // 3 vectors + 4 FWU opt. bytes
-    #endif
-    ROM1 (rx) : ORIGIN = ROOT_REGION + CORE_VECTORS_SIZE,  LENGTH = ROM1_SIZE
+#ifdef need_fixed_vectors
+    ROM0 (rx) :  ORIGIN = ROOT_REGION, LENGTH = CORE_VECTORS_SIZE // 4 vectors
+    ROM_ANCHOR (rx) : ORIGIN = ROOT_REGION+0x10, LENGTH = 0x10    // 3 vectors + 4 FWU opt. bytes
+#endif
+#if ROOT_REGION == ROM1_START
+    ROM1 (rx) : ORIGIN = ROOT_REGION + 0x20, LENGTH = ROM1_SIZE - 0x20
 #else
-    ROM1 (rx) :  ORIGIN = ROOT_REGION,  LENGTH = ROM1_SIZE
+    ROM1 (rx) :  ORIGIN = ROM1_START,  LENGTH = ROM1_SIZE
 #endif
     RAM1 (rwx) : ORIGIN = RAM1_START, LENGTH = RAM1_SIZE
     RAM2 (rwx) : ORIGIN = RAM2_START, LENGTH = RAM2_SIZE
 #ifdef FWU_FLEX_PARTITION_START
     FLEX_PARTITION (rx) : ORIGIN = FWU_FLEX_PARTITION_START, LENGTH = FWU_FLEX_PARTITION_SIZE
 #endif
+
+#ifdef FWU_OTP_MEMORY_START_ADDRESS
+  OTP_MEMORY (rx) : ORIGIN = FWU_OTP_MEMORY_START_ADDRESS, LENGTH = FWU_OTP_MEMORY_SIZE
+#endif
+
     DATA_FLASH (rx) : ORIGIN = DATA_FLASH_START, LENGTH = DATA_FLASH_SIZE
 /* OPTION-SETTING MEMORY AREA will be flashed by patching together with option_bytes.eep file */
 }

@@ -93,15 +93,3 @@ void DBM_GPIO_SetBreakPinModeAlternateFunction(void)
     DBM_GPIO_FUNC_ARG(DBUS_BREAK_PIN, _vSetModePort, HDIO_ALTERNATE_FUNCTION);
 }
 #endif
-
-/**
- * Function called by data link layer for inserting a delay before the Acknowledge
- * in order to prevent generation of RxInterrupt immediately after the last sample
- * of the Stop bit has been performed (by single sampling this is around the middle of the bit).
- * Runtime of RxInterupt is not considered
- */
-void DBM_vACK_Delay(void)
-{
-    HSUP_vNop();
-}
-

@@ -18,7 +18,6 @@
 #include "dbuspresentation_update.h"
 #include "dbusdll.h"
 #include "dbusmapping.h"
-#include "huart.h"
 #include "hsup.h"
 
 
@@ -50,6 +49,10 @@ const enum DBPL_BaudRate DBPL_uDefaultBaudRate=DBPL_Baud125000;
 const enum DBPL_BaudRate DBPL_uDefaultBaudRate=DBPL_Baud230400;
 #elif (DBUS_DEFAULT_BAUDRATE==2500)
 const enum DBPL_BaudRate DBPL_uDefaultBaudRate=DBPL_Baud250000;
+#elif (DBUS_DEFAULT_BAUDRATE==5000)
+const enum DBPL_BaudRate DBPL_uDefaultBaudRate=DBPL_Baud500000;
+#elif (DBUS_DEFAULT_BAUDRATE==10000)
+const enum DBPL_BaudRate DBPL_uDefaultBaudRate=DBPL_Baud1000000;
 #endif
 
 #if defined(DBUS2_UPDATE)||defined(DBUS2_UPDATE_HSI)
@@ -75,6 +78,9 @@ SDEF_SetSegmentRW_Default()
 #define IS_UPDATE_POSSIBLE             0U
 #endif
 
+#ifdef DBM_DBUSCAN
+static const enum DBPL_BaudRate baud_lookup_table[]={DBPL_Baud9600,DBPL_Baud19200,DBPL_Baud38400,DBPL_Baud57600,DBPL_Baud125000,DBPL_Baud250000,DBPL_Baud500000,DBPL_Baud1000000};
+#else
 static const enum DBPL_BaudRate baud_lookup_table[]={DBPL_Baud9600,DBPL_Baud19200,DBPL_Baud38400,DBPL_Baud57600,DBPL_Baud115200,DBPL_Baud125000};
 /*lint -esym(9003,bit_time_lookup_table ) readability not better when in block scope */
 static const enum DBPL_BitTimingUs bit_time_lookup_table[]=
@@ -83,6 +89,7 @@ static const enum DBPL_BitTimingUs bit_time_lookup_table[]=
     DBPL_BitTimingUs38400,  DBPL_BitTimingUs57600,
     DBPL_BitTimingUs115200, DBPL_BitTimingUs125000
 };
+#endif // DBM_DBUSCAN
 
 bool DBPL_bIsUpdateModePossible(void)
 {
@@ -123,7 +130,7 @@ bool DBPL_bIsRequestedBaudValid(uint16_t baud)
     bool ret=false;
     uint8_t numOfElements=((uint8_t)sizeof(baud_lookup_table)/(uint8_t)sizeof(enum DBPL_BaudRate));
     for(i=0;i<numOfElements;i++)
-    {   /*lint -e{662} no out of bound access here! */
+    {   /*lint -e{661,662} no out of bound access here! */
         if(baud==(uint16_t)baud_lookup_table[i])
         {
             ret=true;
@@ -142,26 +149,28 @@ void DBPL_vConfigureBaudrate(uint16_t baud)
 {
     if(DBPL_bIsRequestedBaudValid(baud))
     {
-
 #if defined(REMOTE_FIRMWARE_UPDATE)
         BMDAT_setBaudRate(baud);
 #endif
-        DBM_UART_vSetBaudRate(DLL_ucGetStandardUartConfigIndex(),baud);
+        DBM_PERIPH_vSetBaudRate(DLL_ucGetStandardUartConfigIndex(), baud);
     }
 }
 
+#ifndef DBM_DBUSCAN
 uint16_t DBPL_uGetUsBitTimeForBaudRate(uint16_t baud)
 {
     uint8_t numOfElements=((uint8_t)sizeof(bit_time_lookup_table)/(uint8_t)sizeof(enum DBPL_BitTimingUs));
     for(uint8_t i=0;i<numOfElements;i++)
-    {
+    {   /*lint -e{661,662} no out of bound access here! */
         if(baud==(uint16_t)baud_lookup_table[i])
         {
+            /*lint -e{661,662} no out of bound access here! */
             return (uint16_t)bit_time_lookup_table[i];
         }
     }
     return 0U;
 }
+#endif // DBM_DBUSCAN
 
 void DBPL_vSetBaudRateTimer(uint16_t baudRateTime)
 {

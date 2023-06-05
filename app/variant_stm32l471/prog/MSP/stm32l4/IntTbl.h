@@ -28,8 +28,19 @@ extern "C" {
 #endif
 
 #include "IntTblArmCM.h"
+#include "int_prio.h"
 
 /*lint -esym(526,*IRQHandler,*IrqHandler,*_vIsrHandle*) Warning 526: symbol 'xx' is not defined */
+
+/* uncomment if necessary */
+//#define PRIORITY_HIGH    INT_PRIO_0
+//#define PRIORITY_MEDIUM  INT_PRIO_7
+//#define PRIORITY_LOW     INT_PRIO_13
+#if defined(RTOS)
+#define PRIORITY_RTOS_SERVICES_LOW     INT_PRIO_14
+#define PRIORITY_RTOS_SERVICES_LOWEST  INT_PRIO_15    /* Reserved for RTOS only */
+#define RTOS_SVCALL_IRQN_NAME          SVCall_IRQn
+#endif
 
 /* Platform specific IRQs */
 extern void WWDG_IRQHandler(void);
@@ -123,6 +134,7 @@ extern void HTIM8_vIsrHandleTimerEvent(void) ;
 extern void HTIM15_vIsrHandleTimerEvent(void);
 extern void HTIM17_vIsrHandleTimerEvent(void);
  
+extern void ITBL_setCustomInterruptPriority   (void);
 
 #ifdef __cplusplus
 }

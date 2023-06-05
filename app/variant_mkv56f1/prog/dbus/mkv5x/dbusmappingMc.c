@@ -68,29 +68,45 @@
 */ #define DBUS_BREAK_PIN A9
 #endif
 
+#ifdef DBM_DBUSCAN
+    #define DBM_MCAL /* use MCAL with DBusCAN here */
+#endif
 
 #include "LibTypes.h"
 #include "dbusmapping.h"
 #include "hsup.h"
-#include "huart.h"
 //#ifdef __DBM_USE_IRQ_FOR_IDLE_DETECTION
 #include "hint.h"
 //#endif
 #ifndef DBUS2_NO_BREAK_FUNCTIONALITY
 #include "hdio.h"
 #endif
+#ifdef DBM_MCAL
+#include "mcal/mcal_includes.h"
+#include "mcal_channels.h"
+#endif
+
 
 /******************************************************************************/
-/* PRIVATE FUNCTION DECLARATIONS AND PRIVATE MACRO FUNCTION DEFINITIONS       */
+/* PRIVATE DATA AND AND PRIVATE MACRO FUNCTION DEFINITIONS                    */
 /******************************************************************************/
 
 /*lint -e9023 -e9024 -e9026 -e2666 #/## usage, function like macro */
 
 #ifndef DBUS2_NO_BREAK_FUNCTIONALITY
-/* Macro definition for calling HDIO functions to map wake up pin (DBUS_BREAK_PIN) */
-#define DBM_GPIO_WRP(channel, function)             HDIO ##function ##channel
-#define DBM_GPIO_FUNC_ARG(channel, function, arg)   DBM_GPIO_WRP(channel, function)(arg)
+
+#ifndef DBM_MCAL
+    /* Macro definition for calling HDIO functions to map wake up pin (DBUS_BREAK_PIN) */
+    #define DBM_GPIO_WRP(channel, function)             HDIO ##function ##channel
+    #define DBM_GPIO_FUNC_ARG(channel, function, arg)   DBM_GPIO_WRP(channel, function)(arg)
+#else
+#ifndef DBM_BREAK_MDIO_CHANNEL
+    #define DBM_BREAK_MDIO_CHANNEL    MDIOA3  // default definition
 #endif
+    static const struct MDIO_Channel *DBM_MDIO_breakChannel = &DBM_BREAK_MDIO_CHANNEL;
+#endif // DBM_MCAL
+
+#endif // DBUS2_NO_BREAK_FUNCTIONALITY
 
 #ifdef __DBM_USE_IRQ_FOR_IDLE_DETECTION
 
@@ -149,34 +165,34 @@ bool DBM_INT_bGetPin(void)
     return DBM_INT_FUNC(DBUS_HINT_CHANNEL,_bGetPin);
 }
 
-#endif
+#endif // __DBM_USE_IRQ_FOR_IDLE_DETECTION
 
 #ifndef DBUS2_NO_BREAK_FUNCTIONALITY
 void DBM_GPIO_SetBreakPinState(bool pinState)
 {
+#ifdef DBM_MCAL
+    ((pinState != false) ? MDIO_set(DBM_MDIO_breakChannel) : MDIO_reset(DBM_MDIO_breakChannel));
+#else
     uint8_t ucPinState = (pinState != false) ? HDIO_ON : HDIO_OFF;
     DBM_GPIO_FUNC_ARG(DBUS_BREAK_PIN, _vSetPort, ucPinState);
+#endif
 }
 
 void DBM_GPIO_SetBreakPinModeOutput(void)
 {
+#ifdef DBM_MCAL
+    (void)MDIO_configure(DBM_MDIO_breakChannel, &MDIO_OUTPUT);
+#else
     DBM_GPIO_FUNC_ARG(DBUS_BREAK_PIN, _vSetModePort, HDIO_OUTPUT);
+#endif
 }
 
 void DBM_GPIO_SetBreakPinModeAlternateFunction(void)
 {
+#ifdef DBM_MCAL
+    (void)MDIO_configure(DBM_MDIO_breakChannel, &MDIO_ALTERNATE_FUNCTION);
+#else
     DBM_GPIO_FUNC_ARG(DBUS_BREAK_PIN, _vSetModePort, HDIO_ALTERNATE_FUNCTION);
-}
 #endif
-
-/**
- * Function called by data link layer for inserting a delay before the Acknowledge
- * in order to prevent generation of RxInterrupt immediately after the last sample
- * of the Stop bit has been performed (by single sampling this is around the middle of the bit).
- * Runtime of RxInterupt is not considered
- */
-void DBM_vACK_Delay(void)
-{
-    HSUP_vNop();
 }
-
+#endif // DBUS2_NO_BREAK_FUNCTIONALITY

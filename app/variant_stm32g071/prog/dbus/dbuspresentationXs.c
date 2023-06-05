@@ -392,7 +392,7 @@ void DBPL_vPowerResurgeNotificationHasBeenReceived(uint8_t sender)
     (void)sender;
 }
 
-void DBPL_vNotifyNonDelivarablePowerMessage(uint16_t msgId)
+void DBPL_vNotifyNonDeliverablePowerMessage(uint16_t msgId)
 {
     (void)msgId;
 }

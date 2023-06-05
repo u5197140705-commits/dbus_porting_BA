@@ -150,9 +150,7 @@ static void BASIC_initLfxo(void)
 
 static void BASIC_deviceInitNvic(void)
 {
-#if defined(RTOS)
-    INTP_setApplicationPriority(); // set NVIC priority to default
-#endif
+    /* interrupts priorities already set in ITBL_vResetHandler */
 }
 
 static void BASIC_hfxoManagerInitHardware(void)

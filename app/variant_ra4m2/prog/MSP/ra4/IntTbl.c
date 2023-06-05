@@ -168,3 +168,116 @@ static const ITBL_fptr SYMBOL_USED ITBL_peripheralVectors[]   =
     ITBL_vSpuriousIsr               ,  //   95          102           0x01BC
 };
 SDEF_SetSegmentConst_Default()
+
+/* Function's task is to set the interrupt priorities according to the user's needs, different from the default settings.
+ * If necessary, uncomment the relevant lines and set the required interrupt priorities
+ */
+void ITBL_setCustomInterruptPriority(void)
+{
+    /* Cortex-M23 settable interrupts */
+    //NVIC_SetPriority(MemoryManagement_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(BusFault_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(UsageFault_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(SecureFault_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(SVCall_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(DebugMonitor_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(PendSV_IRQn, PRIORITY_HIGH);
+    //NVIC_SetPriority(SysTick_IRQn, PRIORITY_HIGH);
+    /* Peripheral interrupts */
+    //NVIC_SetPriority(Position_0_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_1_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_2_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_3_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_4_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_5_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_6_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_7_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_8_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_9_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_10_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_11_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_12_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_13_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_14_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_15_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_16_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_17_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_18_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_19_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_20_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_21_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_22_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_23_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_24_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_25_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_26_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_27_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_28_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_29_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_30_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_31_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_32_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_33_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_34_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_35_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_36_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_37_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_38_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_39_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_40_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_41_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_42_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_43_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_44_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_45_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_46_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_47_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_48_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_49_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_50_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_51_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_52_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_53_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_54_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_55_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_56_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_57_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_58_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_59_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_60_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_61_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_62_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_63_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_64_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_65_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_66_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_67_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_68_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_69_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_70_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_71_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_72_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_73_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_74_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_75_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_76_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_77_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_78_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_79_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_80_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_81_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_82_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_83_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_84_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_85_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_86_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_87_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_88_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_89_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_90_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_91_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_92_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_93_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_94_IRQn, PRIORITY_MEDIUM);
+    //NVIC_SetPriority(Position_95_IRQn, PRIORITY_LOW);
+}

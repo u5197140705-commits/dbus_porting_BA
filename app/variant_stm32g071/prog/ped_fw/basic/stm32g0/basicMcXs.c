@@ -25,10 +25,8 @@
 /******************************************************************************/
 #include "bsh_stdinc.h"
 #include <stdint.h>
-#include "std_lib/std_symbol.h"
 #include "basic.h"
 #include "processor.h"
-#include "SegmentDef.h"
 #ifdef APP_VARIANT
 #include "hadc.h"
 #endif
@@ -39,7 +37,7 @@
 #include "FuncSafe/fs_psm.h"
 #endif
 
-#if defined(MCAL_MPCM_INCLUDED)
+#if defined(MCAL_INCLUDED)
 #include "mcal/mcal_includes.h"
 #include "mcal/mcal_assert.h"
 #endif

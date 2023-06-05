@@ -36,8 +36,19 @@ extern "C" {
 #include "bsh_stdinc.h"
 #include "IntTblArmCM.h"
 #include "processor.h" /* declarations of ISR */
+#include "int_prio.h"
 
 /*lint -esym(526,*_HandleEvent) Warning 526: symbol 'xx' is not defined */
+
+/* uncomment if necessary */
+//#define PRIORITY_HIGH    INT_PRIO_0
+//#define PRIORITY_MEDIUM  INT_PRIO_7
+//#define PRIORITY_LOW     INT_PRIO_13
+#if defined(RTOS)
+#define PRIORITY_RTOS_SERVICES_LOW     INT_PRIO_14
+#define PRIORITY_RTOS_SERVICES_LOWEST  INT_PRIO_15    /* Reserved for RTOS only */
+#define RTOS_SVCALL_IRQN_NAME          SVCall_IRQn
+#endif
 
 /* Axivion Next Line MisraC2012-8.11: "Array declaration with unknown size" */
 extern const ITBL_fptr ITBL_peripheralVectors[];
@@ -56,6 +67,8 @@ extern void HUART1_ISR_RX_HandleEvent(void);      /**< USART1_RX IRQ Handler */
 extern void HUART1_ISR_TX_HandleEvent(void);      /**< USART1_TX IRQ Handler */
 extern void HUART2_ISR_RX_HandleEvent(void);      /**< USART2_RX IRQ Handler */
 extern void HUART2_ISR_TX_HandleEvent(void);      /**< USART2_TX IRQ Handler */
+
+extern void ITBL_setCustomInterruptPriority(void);
 
 #ifdef __cplusplus
 }

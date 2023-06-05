@@ -39,7 +39,18 @@ extern "C" {
 #include "bsh_stdinc.h"
 #include "IntTblArmCM.h"
 #include "vector_data.h"
+#include "int_prio.h"
 
+
+/* uncomment if necessary */
+//#define PRIORITY_HIGH    INT_PRIO_0
+//#define PRIORITY_MEDIUM  INT_PRIO_7
+//#define PRIORITY_LOW     INT_PRIO_13
+#if defined(RTOS)
+#define PRIORITY_RTOS_SERVICES_LOW     INT_PRIO_14
+#define PRIORITY_RTOS_SERVICES_LOWEST  INT_PRIO_15    /* Reserved for RTOS only */
+#define RTOS_SVCALL_IRQN_NAME          SVCall_IRQn
+#endif
 
 /* Function defined in the HUART module - huart01i.obj */
 extern void USART0_RX_IRQHandler(void);
@@ -124,6 +135,8 @@ extern void EXTI12_IRQHandler(void);
 extern void EXTI13_IRQHandler(void);
 extern void EXTI14_IRQHandler(void);
 extern void EXTI15_IRQHandler(void);
+
+extern void ITBL_setCustomInterruptPriority(void);
 
 #ifdef __cplusplus
 }

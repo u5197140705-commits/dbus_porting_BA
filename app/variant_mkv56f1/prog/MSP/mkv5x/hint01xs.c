@@ -32,8 +32,11 @@
 /******************************************************************************/
 /* PRIVATE DEFINITIONS                                                        */
 /******************************************************************************/
-/*lint -e9023 -e9024 -e9026 #/## usage, function like macro */
+#ifndef DBUS_IDLE_PORT
+    #define DBUS_IDLE_PORT    A  // default definition
+#endif
 
+/*lint -e9023 -e9024 -e9026 #/## usage, function like macro */
 #define _HINT_ATCONFIG_PORT(port)    HINT_MAP_TO_PORT##port
 #define HINT_ATCONFIG_PORT(port)    _HINT_ATCONFIG_PORT(port)
 #define HINT_DBUS_MAPPING    HINT_ATCONFIG_PORT(DBUS_IDLE_PORT)
