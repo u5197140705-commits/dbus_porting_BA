@@ -44,15 +44,17 @@ To add the project into Eclipse please follow the steps below:
 
 ---
 
+### Debugging support:
 
+Preconfigured **Keil uVison** and **Segger Ozone** projects are part ot this repository.  
+The locations are:
+* **./uv** for Keil uVision and 
+* **./ozone** for Segger Ozone 
 
+---
 
+### Simple automatisation support:
 
+There are some batch files inside **./helper** folder for compiling, linking, linting or axivion-checkeing for all standard projects at once.
 
-
-
-
-
-
-
-
+---
