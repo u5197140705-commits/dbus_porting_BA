@@ -1,4 +1,4 @@
-# rtos_dev_tx
+# rtos_ref_project
 Repo for Developing and Testing the RTOS with Framework.
 
 ---
