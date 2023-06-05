@@ -1,0 +1,17 @@
+{
+    "baud": "96",
+    "comp": [],
+    "compiler": "armclang",
+    "dbus_rx": "A15",
+    "dbus_tx": "A14",
+    "derivat": "MKV56F1M0VLL24",
+    "ext_comp": [],
+    "fwu": "FWU1",
+    "macros": [],
+    "node": "1",
+    "platform": "mkv5x",
+    "project": "variant_mkv56f1",
+    "scheduler": "rtos",
+    "uart": "0",
+    "variant": "MyVariant"
+}

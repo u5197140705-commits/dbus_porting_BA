@@ -1,1 +1,0 @@
-{"dbus_tx": "A9", "macros": [], "ext_comp": [], "scheduler": "rtos", "node": "1", "project": "variant_cm4_stm32l4", "comp": [], "variant": "MyVariant", "platform": "STM32L4", "baud": "96", "fwu": "FWU1", "derivat": "STM32L471VE", "dbus_rx": "A10", "compiler": "keilArm", "uart": "0"}

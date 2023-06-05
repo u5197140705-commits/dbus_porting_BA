@@ -1,0 +1,17 @@
+{
+    "baud": "96",
+    "comp": [],
+    "compiler": "armclang",
+    "dbus_rx": "A10",
+    "dbus_tx": "A9",
+    "derivat": "STM32G474VE",
+    "ext_comp": [],
+    "fwu": "FWU1",
+    "macros": [],
+    "node": "1",
+    "platform": "STM32G4",
+    "project": "variant_stm32g474",
+    "scheduler": "rtos",
+    "uart": "0",
+    "variant": "MyVariant"
+}
