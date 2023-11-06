@@ -1,7 +1,7 @@
 
 [submodule "common"]
 	path = common
-	url = https://production.github.bshg.com/Generic/Framework.git
+	url = ../../Generic/Framework.git
 [submodule "ext/rtos"]
 	path = ext/rtos
-	url = https://production.github.bshg.com/RealTimeOS/rtos.git
+	url = ../rtos.git
