@@ -4,7 +4,7 @@ Repo for Developing and Testing the RTOS with Framework.
 ---
 
 ### Command to get complete project
-git clone https://production.github.bshg.com/RealTimeOS/rtos_ref_project.git --recurse-submodules
+git clone https://github-bshg.boschdevcloud.com/RealTimeOS/rtos_ref_project.git --recurse-submodules
 
 ---
 
