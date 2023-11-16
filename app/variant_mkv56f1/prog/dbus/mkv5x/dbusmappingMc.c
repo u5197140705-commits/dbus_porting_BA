@@ -68,10 +68,6 @@
 */ #define DBUS_BREAK_PIN A9
 #endif
 
-#ifdef DBM_DBUSCAN
-    #define DBM_MCAL /* use MCAL with DBusCAN here */
-#endif
-
 #include "LibTypes.h"
 #include "dbusmapping.h"
 #include "hsup.h"

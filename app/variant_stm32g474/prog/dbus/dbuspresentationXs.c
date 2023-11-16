@@ -82,10 +82,11 @@ static bool MOD_bGetId(uint8_t ucMemoryModule, uint16_t *puiIdAddress);
 #ifndef LSW_DBPL_MINIMAL_IMPLEMENTATION
 /**
  ModuleDict (data type: TbusModuleTable) is a table where the different read/write/id-functions are found, depending on the current memory module.
+    NOTE: DO NOT REMOVE default memory module 0, it is used in cases when invalid memory module or no memory module is provided by user. 
 */
 const TbusModuleTable DBPL_tModuleDict[] = {
 /*  Module, ReadFunction, WriteFunction, IdFunction, Blocksize */
-       {0, MOD_bRead, MOD_bWrite, MOD_bGetId, 1}      //!<Access to memory module 0
+       {0, MOD_bRead, MOD_bWrite, MOD_bGetId, 1}      //!<Access to memory module 0 (mandatory, do not remove, access functions can be adapted if needed)
       ,{1, MOD_bRead, MOD_bWrite, MOD_bGetId, 16}     //!<Access to memory module 1
 //      ,{2, MOD_bRead, MOD_bWrite, MOD_bGetId, 1}    //!<Access to memory module 2
 //      ,{9, MOD_bRead, MOD_bWrite, MOD_bGetId, 32}   //!<Access to memory module 9

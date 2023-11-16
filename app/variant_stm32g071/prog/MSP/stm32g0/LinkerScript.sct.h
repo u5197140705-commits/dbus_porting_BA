@@ -115,6 +115,7 @@ LR_ROM ROM1_START ROM1_SIZE
     #if defined(COPY_FLASH_DRV_TO_RAM)
         *mem_drv.o (+RO)
         *hwdt01.o (+RO)
+        *mwdt*.o (+RO)
     #endif
     }
 #endif

@@ -62,8 +62,9 @@ defines +=
 
 
 # global build settings
-
 rtos=TRUE
+core_stubfiles=core_cm4.c
+register_stubfile=STM32L4x1.c
 
 ifeq ($(FW_update_type),FWU4)
     # start of GBL image in external flash

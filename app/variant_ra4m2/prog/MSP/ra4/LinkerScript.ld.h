@@ -100,7 +100,7 @@ SECTIONS
       #if defined(APP_VARIANT)
         *(EXCLUDE_FILE(*intflash_*.o) .text*)
       #elif defined(COPY_FLASH_DRV_TO_RAM)
-        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o) .text*)
+        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o *mwdt*.o) .text*)
       #else
         *(.text*)
       #endif
@@ -124,7 +124,7 @@ SECTIONS
       #if defined(APP_VARIANT)
         *(EXCLUDE_FILE(*intflash_*.o) .rodata*)
       #elif defined(COPY_FLASH_DRV_TO_RAM)
-        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o) .rodata*)
+        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o *mwdt*.o) .rodata*)
       #else
         *(.rodata*)
       #endif
@@ -141,7 +141,7 @@ SECTIONS
       #if defined(APP_VARIANT)
         *(EXCLUDE_FILE(*intflash_*.o) .text*)
       #elif defined(COPY_FLASH_DRV_TO_RAM)
-        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o) .text*)
+        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o *mwdt*.o) .text*)
       #else
         *(.text*)
       #endif
@@ -164,7 +164,7 @@ SECTIONS
       #if defined(APP_VARIANT)
         *(EXCLUDE_FILE(*intflash_*.o) .rodata*)
       #elif defined(COPY_FLASH_DRV_TO_RAM)
-        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o) .rodata*)
+        *(EXCLUDE_FILE(*intflash_*.o *mem_drv.o *hwdt01.o *mwdt*.o) .rodata*)
       #else
         *(.rodata*)
       #endif
@@ -233,6 +233,7 @@ SECTIONS
       #if defined(COPY_FLASH_DRV_TO_RAM)
         *(.text.MEMDRV_*)
         *(.text.HWDT_*)
+        *(.text.MWDT_*)
       #endif
         . = ALIGN(4);
     #endif        /* All data end */

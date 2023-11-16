@@ -61,7 +61,6 @@ defines +=
 
 
 # global build settings
-
 rtos=TRUE
 
 ifeq ($(FW_update_type),FWU4)

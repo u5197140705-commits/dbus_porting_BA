@@ -123,11 +123,16 @@ LR_ROM  ROM1_START + VECTOR_TABLE_SIZE  ROM1_SIZE - VECTOR_TABLE_SIZE
         *(.init_array)                          // needed for C++
         .ANY0 (+RO)
     }
-#ifdef APP_VARIANT
+#if defined(APP_VARIANT) || defined(COPY_FLASH_DRV_TO_RAM)
     // region for flash routines, if used in application
     ER_ROM_FLDRV RAM1_END + 1 - STACKSIZE - FLASH_DRIVER_SIZE FLASH_DRIVER_SIZE
     {
         *intflash_*.o (+RO)
+    #if defined(COPY_FLASH_DRV_TO_RAM)
+        *mem_drv.o (+RO)
+        *hwdt01.o (+RO)
+        *mwdt*.o (+RO)        
+    #endif
     }
 #endif
 }

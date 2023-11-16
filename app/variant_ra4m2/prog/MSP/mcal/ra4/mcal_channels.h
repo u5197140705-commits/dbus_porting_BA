@@ -38,6 +38,8 @@ extern "C" {
 /******************************************************************************/
 
 #include "BSH_stdinc.h"
+#include "processor.h"
+#include "features.h"
 #include "mcal/mcal_includes.h"
 #include "mcal/mcal.h"
 

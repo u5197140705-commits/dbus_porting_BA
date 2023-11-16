@@ -89,7 +89,6 @@ __DBM_EXCLUDE_ERROR_COUNTERS
 #include "mapping.h"
 #endif
 #include "hsup.h"
-#include "huart.h"
 #include "timerlib.h" //Circulating timer.
 #ifdef LSW_DBUS_MAPPING_INCLUDE_FUNCSAFE
 /* FSF_vIsrDoEntry() and FSF_vIsrDoExit() */
@@ -103,9 +102,12 @@ __DBM_EXCLUDE_ERROR_COUNTERS
 /*lint -e774  -e731 -e835 -e587  Infos occurring for queries, not critical.*/
 
 #include "dbusmapping.h"
+
 #ifdef DBM_MCAL
 #include "mcal/mcal_includes.h"
 #include "mcal_channels.h"
+#else 
+#include "huart.h"
 #endif
 
 
@@ -459,19 +461,19 @@ bool DBM_UART_bIsRxError(void)
    if (tError != 0U)
    {
       /* NB! Break, Overrun and Framing-error variables are not limited at 255, these counters may overflow, and start at 0 again. */
-      if ((tError & DBM_UART_NOISE_ERROR) != 0U)   //lint !e587 !e774 always evaluates to False, but only for derivatives which does not support noise error
+      if ((tError & (Terror)DBM_UART_NOISE_ERROR) != 0U)   //lint !e587 !e774 always evaluates to False, but only for derivatives which does not support noise error
       {
          DBM_UART_ulNoiseCounter++;
       }
-      if ((tError & DBM_UART_RX_OVERRUN_ERROR) != 0U)
+      if ((tError & (Terror)DBM_UART_RX_OVERRUN_ERROR) != 0U)
       {
          DBM_UART_ucOverrunErrorCounter++;
       }
-      if ((tError & DBM_UART_FRAMING_ERROR) != 0U)
+      if ((tError & (Terror)DBM_UART_FRAMING_ERROR) != 0U)
       {
          DBM_UART_ulFramingErrorCounter++;
          /* A break also forces a framing error, hence it is adequate to check this only when framing error occurred. */
-         #if defined(HUART_RX_BREAK)
+         #if defined(DBM_UART_RX_BREAK)
          if ((DBM_UART_ucGetStatus() & DBM_UART_RX_BREAK) != 0U)
          {
             DBM_UART_ulBreakCounter++;
@@ -575,7 +577,11 @@ bool DBM_UART_bIsRxOnGoing(void)
         }
    }
 #else
-   return DBM_MAP_UART(DBUS_UART_CHANNEL, _bIsRxOnGoing)();
+    #ifdef DBM_MCAL
+        return MUART_isRxOngoing(DBM_UART_dbusChannel);
+    #else
+        return DBM_MAP_UART(DBUS_UART_CHANNEL, _bIsRxOnGoing)();
+    #endif //DBM_MCAL
 #endif
 }
 /************************************************************************/

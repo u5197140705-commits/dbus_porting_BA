@@ -120,6 +120,12 @@ void HCCT0_vPortRemap0(void)
 //   HDIO_vSetModePortC8(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC8(HDIO_ALTERNATE_FUNCTION_2);
 //   HCCT0_ucPortRemapConfig0 = 1;
+
+   /* HCCT0_CH0 - TIM1_CH1 - option 3: PE9 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE9(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE9(HDIO_ALTERNATE_FUNCTION_1);
+//   HCCT0_ucPortRemapConfig0 = 2;
 }
 
 void HCCT0_vPortRemap1(void)
@@ -141,6 +147,12 @@ void HCCT0_vPortRemap1(void)
 //   HDIO_vSetModePortC9(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC9(HDIO_ALTERNATE_FUNCTION_2);
 //   HCCT0_ucPortRemapConfig1 = 2;
+
+   /* HCCT0_CH1 - TIM1_CH2 - option 4: PE11 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE11(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE11(HDIO_ALTERNATE_FUNCTION_1);
+//   HCCT0_ucPortRemapConfig1 = 3;
 }
 
 void HCCT1_vPortRemap0(void)
@@ -161,7 +173,13 @@ void HCCT1_vPortRemap0(void)
 //   HDIO_vEnablePortC();
 //   HDIO_vSetModePortC10(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC10(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT0_ucPortRemapConfig1 = 2;
+//   HCCT1_ucPortRemapConfig0 = 2;
+
+   /* HCCT1_CH0 - TIM1_CH3 - option 4: PE13 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE13(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE13(HDIO_ALTERNATE_FUNCTION_1);
+//   HCCT1_ucPortRemapConfig0 = 3;
 }
 
 void HCCT1_vPortRemap1(void)
@@ -176,7 +194,13 @@ void HCCT1_vPortRemap1(void)
 //   HDIO_vEnablePortC();
 //   HDIO_vSetModePortC11(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC11(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT0_ucPortRemapConfig1 = 1;
+//   HCCT1_ucPortRemapConfig1 = 1;
+
+   /* HCCT1_CH1 - TIM1_CH4 - option 3: PE14 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE14(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE14(HDIO_ALTERNATE_FUNCTION_1);
+//   HCCT1_ucPortRemapConfig1 = 2;
 }
 
 void HCCT2_vPortRemap0(void)
@@ -224,7 +248,7 @@ void HCCT2_vPortRemap1(void)
 //   HDIO_vEnablePortC();
 //   HDIO_vSetModePortC5(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC5(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT2_ucPortRemapConfig0 = 2;
+//   HCCT2_ucPortRemapConfig1 = 2;
 }
 
 void HCCT3_vPortRemap0(void)
@@ -245,7 +269,7 @@ void HCCT3_vPortRemap0(void)
 //   HDIO_vEnablePortC();
 //   HDIO_vSetModePortC6(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC6(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT2_ucPortRemapConfig0 = 2;
+//   HCCT3_ucPortRemapConfig0 = 2;
 }
 
 void HCCT3_vPortRemap1(void)
@@ -266,7 +290,7 @@ void HCCT3_vPortRemap1(void)
 //   HDIO_vEnablePortC();
 //   HDIO_vSetModePortC7(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC7(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT2_ucPortRemapConfig0 = 2;
+//   HCCT3_ucPortRemapConfig1 = 2;
 }
 
 void HCCT4_vPortRemap0(void)
@@ -288,6 +312,12 @@ void HCCT4_vPortRemap0(void)
 //   HDIO_vSetModePortC6(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC6(HDIO_ALTERNATE_FUNCTION_1);
 //   HCCT4_ucPortRemapConfig0 = 2;
+
+   /* HCCT4_CH0 - TIM3_CH1 - option 4: PE3 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE3(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE3(HDIO_ALTERNATE_FUNCTION_1);
+//   HCCT4_ucPortRemapConfig0 = 3;
 }
 
 void HCCT4_vPortRemap1(void)
@@ -309,6 +339,12 @@ void HCCT4_vPortRemap1(void)
 //   HDIO_vSetModePortC7(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC7(HDIO_ALTERNATE_FUNCTION_1);
 //   HCCT4_ucPortRemapConfig1 = 2;
+
+   /* HCCT4_CH1 - TIM3_CH2 - option 4: PE4 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE4(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE4(HDIO_ALTERNATE_FUNCTION_1);
+//   HCCT4_ucPortRemapConfig1 = 3;
 }
 
 void HCCT5_vPortRemap0(void)
@@ -324,6 +360,12 @@ void HCCT5_vPortRemap0(void)
 //   HDIO_vSetModePortC8(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC8(HDIO_ALTERNATE_FUNCTION_1);
 //   HCCT5_ucPortRemapConfig0 = 1;
+
+   /* HCCT5_CH0 - TIM3_CH3 - option 3: PE5 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE5(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE5(HDIO_ALTERNATE_FUNCTION_1);
+//   HCCT5_ucPortRemapConfig0 = 2;
 }
 
 void HCCT5_vPortRemap1(void)
@@ -339,6 +381,12 @@ void HCCT5_vPortRemap1(void)
 //   HDIO_vSetModePortC9(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC9(HDIO_ALTERNATE_FUNCTION_1);
 //   HCCT5_ucPortRemapConfig1 = 1;
+
+   /* HCCT5_CH1 - TIM3_CH4 - option 3: PE6 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE6(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE6(HDIO_ALTERNATE_FUNCTION_1);
+//   HCCT5_ucPortRemapConfig1 = 2;
 }
 
 void HCCT19_vPortRemap0(void)
@@ -358,7 +406,7 @@ void HCCT19_vPortRemap0(void)
    /* HCCT19_CH0 - TIM14_CH1 - option 3: PB1 */
 //   HDIO_vEnablePortB();
 //   HDIO_vSetModePortB1(HDIO_ALTERNATE_FUNCTION);
-//   HDIO_vSetAlternateFunctionB1(HDIO_ALTERNATE_FUNCTION_1);
+//   HDIO_vSetAlternateFunctionB1(HDIO_ALTERNATE_FUNCTION_0);
 //   HCCT19_ucPortRemapConfig0 = 2;
 
    /* HCCT19_CH0 - TIM14_CH1 - option 4: PC12 */
@@ -366,6 +414,12 @@ void HCCT19_vPortRemap0(void)
 //   HDIO_vSetModePortC12(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC12(HDIO_ALTERNATE_FUNCTION_2);
 //   HCCT19_ucPortRemapConfig0 = 3;
+
+   /* HCCT19_CH0 - TIM14_CH1 - option 5: PF0 */
+//   HDIO_vEnablePortF();
+//   HDIO_vSetModePortF0(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionF0(HDIO_ALTERNATE_FUNCTION_2);
+//   HCCT19_ucPortRemapConfig0 = 4;
 }
 
 void HCCT20_vPortRemap0(void)
@@ -387,6 +441,12 @@ void HCCT20_vPortRemap0(void)
 //   HDIO_vSetModePortC1(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC1(HDIO_ALTERNATE_FUNCTION_2);
 //   HCCT20_ucPortRemapConfig0 = 2;
+
+   /* HCCT20_CH0 - TIM15_CH1 - option 4: PF12 */
+//   HDIO_vEnablePortF();
+//   HDIO_vSetModePortF12(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionF12(HDIO_ALTERNATE_FUNCTION_0);
+//   HCCT20_ucPortRemapConfig0 = 3;
 }
 
 void HCCT20_vPortRemap1(void)
@@ -408,6 +468,12 @@ void HCCT20_vPortRemap1(void)
 //   HDIO_vSetModePortC2(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionC2(HDIO_ALTERNATE_FUNCTION_2);
 //   HCCT20_ucPortRemapConfig1 = 2;
+
+   /* HCCT20_CH1 - TIM15_CH2 - option 4: PF13 */
+//   HDIO_vEnablePortF();
+//   HDIO_vSetModePortF13(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionF13(HDIO_ALTERNATE_FUNCTION_0);
+//   HCCT20_ucPortRemapConfig1 = 3;
 }
 
 void HCCT21_vPortRemap0(void)
@@ -429,6 +495,12 @@ void HCCT21_vPortRemap0(void)
 //   HDIO_vSetModePortD0(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionD0(HDIO_ALTERNATE_FUNCTION_2);
 //   HCCT21_ucPortRemapConfig0 = 2;
+
+   /* HCCT21_CH0 - TIM16_CH1 - option 4: PE0 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE0(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE0(HDIO_ALTERNATE_FUNCTION_0);
+//   HCCT21_ucPortRemapConfig0 = 3;
 }
 
 void HCCT22_vPortRemap0(void)
@@ -443,12 +515,19 @@ void HCCT22_vPortRemap0(void)
 //   HDIO_vEnablePortB();
 //   HDIO_vSetModePortB9(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionB9(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT21_ucPortRemapConfig0 = 1;
+//   HCCT22_ucPortRemapConfig0 = 1;
 //
+
    /* HCCT22_CH0 - TIM17_CH1 - option 3: PD1 */
 //   HDIO_vEnablePortD();
 //   HDIO_vSetModePortD1(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionD1(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT21_ucPortRemapConfig0 = 2;
+//   HCCT22_ucPortRemapConfig0 = 2;
+
+   /* HCCT22_CH0 - TIM17_CH1 - option 4: PE1 */
+//   HDIO_vEnablePortE();
+//   HDIO_vSetModePortE1(HDIO_ALTERNATE_FUNCTION);
+//   HDIO_vSetAlternateFunctionE1(HDIO_ALTERNATE_FUNCTION_0);
+//   HCCT22_ucPortRemapConfig0 = 3;
 }
 

@@ -40,7 +40,6 @@
 /* INCLUDES                                                                   */
 /******************************************************************************/
 #include "bsh_stdinc.h"
-#include "huart.h"
 #include "LibTypes.h"
 #include "bustypes.h"
 #include "dbusdll.h"

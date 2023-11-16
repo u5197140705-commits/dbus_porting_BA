@@ -212,7 +212,7 @@ const TtimerConfig TIM_ptTimer16Config[] ={
            {&TIM_uc16Start10,      2},  // 2min
            {&TIM_uc16Start11,      5},  // 10min
            {&TIM_uc16Start12,      2},  // 20min
-           {(uchar*)(&TIM_uc16End),0}   //lint !e926  tested to work correctly        do not change, internal use and endmark of last segment
+           {&TIM_uc16End,          0}   // do not change, internal use and endmark of last segment
 };
 
 /******************************************************************************/

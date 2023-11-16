@@ -118,7 +118,7 @@
 #ifdef OS_THREADX
    #define RTOS_DRIVE_MODE                 RTOS_PERFORMANCE_MODE
 #else /* OS_MICRIUM */
-   #define RTOS_DRIVE_MODE                 RTOS_PERFORMANCE_MODE
+   #define RTOS_DRIVE_MODE                 RTOS_ECO_MODE
 #endif
 
 

@@ -248,22 +248,23 @@ EXAMPLE SW_version part 2:
     {
         __end__ = .;
         end = __end__;
-        *(.heap*)
+        . += HEAPSIZE;
         __HeapLimit = .;
     } > RAM1
 
-    /* .stack_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of stack sections, and assign
-     * values to stack symbols later */
-    .stack_dummy :
+
+    /* Set stack limit */
+    __StackLimit = (ORIGIN(RAM1) + LENGTH(RAM1)) - STACKSIZE;
+    
+    /* .stack section doesn't contain any symbols. It is only
+     * used to reserve memory for stack, and assign values to
+     * stack symbols later. It sets stack top to end of RAM1 */
+    .stack __StackLimit :
     {
-        *(.stack)
+        . += (STACKSIZE - STACK_MAGIC_SIZE) ;
+        __StackTop = .;
     } > RAM1
 
-    /* Set stack top to end of RAM1, and stack limit move down by
-     * size of stack_dummy section */
-    __StackTop = ORIGIN(RAM1) + LENGTH(RAM1) - STACK_MAGIC_SIZE;
-    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
     PROVIDE(__stack = __StackTop);
     
     /* Check if data + heap + stack exceeds RAM1 limit */

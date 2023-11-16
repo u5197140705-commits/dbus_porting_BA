@@ -59,8 +59,8 @@ ifeq ($(rtos_present), TRUE)
     # */
     systicks_per_second = 1000
 
-    # USER CONFIG: FLASH DRIVER
-    rtos_flash_driver_present = FALSE
+    # USER CONFIG: Micrium FLASH DRIVER
+    micrium_flash_driver_present = FALSE
 
     # USER CONFIG: RTOS Debug Mode
     rtos_debug_mode_present = TRUE

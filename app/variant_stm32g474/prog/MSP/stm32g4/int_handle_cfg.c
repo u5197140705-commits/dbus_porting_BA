@@ -75,7 +75,7 @@ SYMBOL_IRQ void UART5_IRQHandler(void)
   #ifdef MCAL_MUART_INCLUDED
     MUART_IRQ_Handler(MUART5_IRQ_INDEX);
   #endif
-    HUART3_ISR_HandleEvent();
+    HUART4_ISR_HandleEvent();
 }
 
 SYMBOL_IRQ void LPUART1_IRQHandler(void)

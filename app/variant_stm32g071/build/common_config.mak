@@ -60,8 +60,8 @@ defines +=
 
 
 # global build settings
-
 rtos=TRUE
+core_stubfiles=core_cm0plus.c
 
 ifeq ($(FW_update_type),FWU4)
     # start of GBL image in external flash

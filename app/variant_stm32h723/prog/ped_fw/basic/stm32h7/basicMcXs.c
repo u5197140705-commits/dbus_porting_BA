@@ -534,6 +534,26 @@ static void BASIC_vCofigureMpuRegion(struct MPU_RegionConfig const* config);
 #define  FLASH_OPTKEYR_KEY_1         (0x08192A3BU)
 #define  FLASH_OPTKEYR_KEY_2         (0x4C5D6E7FU)
 
+/* Flash register masks for option bytes configuration */
+#define  OB_CHANGE_FLASH_OPTSR_CUR_MASK     (FLASH_OPTSR_PRG_IO_HSLV_MASK | FLASH_OPTSR_PRG_SECURITY_MASK | FLASH_OPTSR_PRG_ST_RAM_SIZE_MASK | FLASH_OPTSR_PRG_FZ_IWDG_SDBY_MASK |\
+                                             FLASH_OPTSR_PRG_FZ_IWDG_STOP_MASK | FLASH_OPTSR_PRG_RDP_MASK | FLASH_OPTSR_PRG_NRST_STBY_D1_MASK |\
+                                             FLASH_OPTSR_PRG_NRST_STOP_D1_MASK | FLASH_OPTSR_PRG_IWDG1_HW_MASK | FLASH_OPTSR_PRG_BOR_LEV_MASK)
+#define  OB_CHANGE_FLASH_OPTSR2_CUR_MASK    (FLASH_OPTSR2_PRG_CPUFREQ_BOOST_MASK | FLASH_OPTSR2_PRG_TCM_AXI_SHARED_MASK)
+#define  OB_CHANGE_FLASH_BOOT_CURR_MASK     (FLASH_BOOT_PRGR_BOOT_ADD1_MASK | FLASH_BOOT_PRGR_BOOT_ADD0_MASK)
+#define  OB_CHANGE_FLASH_PRAR_CUR1_MASK     (FLASH_PRAR_PRG1_DMEP1_MASK | FLASH_PRAR_PRG1_PROT_AREA_END1_MASK | FLASH_PRAR_PRG1_PROT_AREA_START1_MASK)
+#define  OB_CHANGE_FLASH_SCAR_CUR1_MASK     (FLASH_SCAR_PRG1_DMES1_MASK | FLASH_SCAR_PRG1_SEC_AREA_END1_MASK | FLASH_SCAR_PRG1_SEC_AREA_START1_MASK)
+#define  OB_CHANGE_FLASH_WPSN_CUR1R_MASK    (FLASH_WPSN_PRG1R_WRPSN1_MASK)
+
+struct OB_Config
+{
+    uint32_t optsrPrgReg;
+    uint32_t optsr2PrgReg;
+    uint32_t bootPrgReg;
+    uint32_t prarPrgReg;
+    uint32_t scarPrgReg;
+    uint32_t wpsnPrgReg;
+};
+
 /** \brief Unlocks flash register configuration */
 static void BASIC_vUnlockFlashConfig(void);
 /** \brief Locks flash register configuration */
@@ -543,9 +563,11 @@ static void BASIC_vUnlockObConfig(void);
 /** \brief Locks option bytes configuration */
 static void BASIC_vLockObConfig(void);
 /** \brief Configures option bytes */
-static void BASIC_vConfigureOb(void);
+static void BASIC_vConfigureOb(struct OB_Config const* obConfig);
+/** \brief Ensures only option bytes are changed and reserved bits are preserved */
+static void BASIC_vPrepareObValues(struct OB_Config *obConfig);
 /** \brief Checks if there is difference in option bytes configuration */
-static bool BASIC_bIsObConfigChange(void);
+static bool BASIC_bIsObConfigChange(struct OB_Config *obConfig);
 #endif// APP_VARIANT && ENABLE_OPTION_BYTES_CONFIG
 
 
@@ -658,9 +680,15 @@ void BASIC_vConfigPlatform(void)
 #ifdef APP_VARIANT
 #ifdef ENABLE_OPTION_BYTES_CONFIG
     /* Option Bytes Configuration*/
-    if(BASIC_bIsObConfigChange())
+    struct OB_Config obConfig;
+    
+    if(BASIC_bIsObConfigChange(&obConfig))
     {
-        BASIC_vConfigureOb();
+        /* Ensure no OPTCHANGEERR flag is set */
+        if((FLASH_OPTSR_CUR & FLASH_OPTSR_CUR_OPTCHANGEERR_MASK) == 0U)
+        {
+            BASIC_vConfigureOb(&obConfig);
+        }
     } 
 #endif// ENABLE_OPTION_BYTES_CONFIG
 
@@ -852,17 +880,17 @@ static void BASIC_vLockObConfig(void)
     FLASH_OPTCR |= FLASH_OPTCR_OPTLOCK_MASK;
 }
 
-static void BASIC_vConfigureOb(void)
+static void BASIC_vConfigureOb(struct OB_Config const* obConfig)
 {
     BASIC_vUnlockFlashConfig();
     BASIC_vUnlockObConfig();
 
-    FLASH_OPTSR_PRG  = FLASH_OPTSR_PRG_VALUE;
-    FLASH_OPTSR2_PRG = FLASH_OPTSR2_PRG_VALUE;
-    FLASH_BOOT_PRGR  = FLASH_BOOT_PRGR_VALUE;
-    FLASH_PRAR_PRG1  = FLASH_PRAR_PRG1_VALUE;
-    FLASH_SCAR_PRG1  = FLASH_SCAR_PRG1_VALUE;
-    FLASH_WPSN_PRG1R = FLASH_WPSN_PRG1R_VALUE;
+    FLASH_OPTSR_PRG  = obConfig->optsrPrgReg;
+    FLASH_OPTSR2_PRG = obConfig->optsr2PrgReg;
+    FLASH_BOOT_PRGR  = obConfig->bootPrgReg;
+    FLASH_PRAR_PRG1  = obConfig->prarPrgReg;
+    FLASH_SCAR_PRG1  = obConfig->scarPrgReg;
+    FLASH_WPSN_PRG1R = obConfig->wpsnPrgReg;
 
     /* Launch Option Bytes configuration */
     FLASH_OPTCR |= FLASH_OPTCR_OPTSTART_MASK;
@@ -874,14 +902,35 @@ static void BASIC_vConfigureOb(void)
     BASIC_vLockFlashConfig();
 }
 
-static bool BASIC_bIsObConfigChange(void)
+static void BASIC_vPrepareObValues(struct OB_Config *obConfig)
 {
-    if(FLASH_OPTSR_CUR  != FLASH_OPTSR_PRG_VALUE){return true;};
-    if(FLASH_OPTSR2_CUR != FLASH_OPTSR2_PRG_VALUE){return true;};
-    if(FLASH_BOOT_CURR  != FLASH_BOOT_PRGR_VALUE){return true;};
-    if(FLASH_PRAR_CUR1  != FLASH_PRAR_PRG1_VALUE){return true;};
-    if(FLASH_SCAR_CUR1  != FLASH_SCAR_PRG1_VALUE){return true;};
-    if(FLASH_WPSN_CUR1R != FLASH_WPSN_PRG1R_VALUE){return true;};
+    /* Ensuring only option bytes change */
+    obConfig->optsrPrgReg = FLASH_OPTSR_PRG_VALUE & OB_CHANGE_FLASH_OPTSR_CUR_MASK;
+    obConfig->optsr2PrgReg = FLASH_OPTSR2_PRG_VALUE & OB_CHANGE_FLASH_OPTSR2_CUR_MASK;
+    obConfig->bootPrgReg = FLASH_BOOT_PRGR_VALUE & OB_CHANGE_FLASH_BOOT_CURR_MASK;
+    obConfig->prarPrgReg = FLASH_PRAR_PRG1_VALUE & OB_CHANGE_FLASH_PRAR_CUR1_MASK;
+    obConfig->scarPrgReg = FLASH_SCAR_PRG1_VALUE & OB_CHANGE_FLASH_SCAR_CUR1_MASK;
+    obConfig->wpsnPrgReg = FLASH_WPSN_PRG1R_VALUE & OB_CHANGE_FLASH_WPSN_CUR1R_MASK;
+
+    /* Preserving reserved bits values */
+    obConfig->optsrPrgReg |= (FLASH_OPTSR_CUR & (~OB_CHANGE_FLASH_OPTSR_CUR_MASK));
+    obConfig->optsr2PrgReg |= (FLASH_OPTSR2_CUR & (~OB_CHANGE_FLASH_OPTSR2_CUR_MASK));
+    obConfig->bootPrgReg |=  (FLASH_BOOT_CURR & (~OB_CHANGE_FLASH_BOOT_CURR_MASK));
+    obConfig->prarPrgReg |= (FLASH_PRAR_CUR1 & (~OB_CHANGE_FLASH_PRAR_CUR1_MASK));
+    obConfig->scarPrgReg |= (FLASH_SCAR_CUR1 & (~OB_CHANGE_FLASH_SCAR_CUR1_MASK));
+    obConfig->wpsnPrgReg |= (FLASH_WPSN_CUR1R & (~OB_CHANGE_FLASH_WPSN_CUR1R_MASK));
+
+}
+
+static bool BASIC_bIsObConfigChange(struct OB_Config *obConfig)
+{
+    BASIC_vPrepareObValues(obConfig);
+    if(FLASH_OPTSR_CUR  != obConfig->optsrPrgReg){return true;};
+    if(FLASH_OPTSR2_CUR != obConfig->optsr2PrgReg){return true;};
+    if(FLASH_BOOT_CURR  != obConfig->bootPrgReg){return true;};
+    if(FLASH_PRAR_CUR1  != obConfig->prarPrgReg){return true;};
+    if(FLASH_SCAR_CUR1  != obConfig->scarPrgReg){return true;};
+    if(FLASH_WPSN_CUR1R != obConfig->wpsnPrgReg){return true;};
     return false;
 }
 #endif// APP_VARIANT && ENABLE_OPTION_BYTES_CONFIG

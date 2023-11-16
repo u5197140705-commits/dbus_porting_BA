@@ -284,7 +284,7 @@ void HCCT2_vPortRemap1(void)
 //   HDIO_vEnablePortD();
 //   HDIO_vSetModePortD4(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionD4(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT2_ucPortRemapConfig0 = 2;
+//   HCCT2_ucPortRemapConfig1 = 2;
 }
 
 void HCCT3_vPortRemap0(void)
@@ -305,13 +305,13 @@ void HCCT3_vPortRemap0(void)
 //   HDIO_vEnablePortB();
 //   HDIO_vSetModePortB10(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionB10(HDIO_ALTERNATE_FUNCTION_1);
-//   HCCT2_ucPortRemapConfig0 = 2;
+//   HCCT3_ucPortRemapConfig0 = 2;
 
   /* HCCT3_CH0 - TIM2_CH3 - option 4: PD7 */
 //   HDIO_vEnablePortD();
 //   HDIO_vSetModePortD7(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionD7(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT2_ucPortRemapConfig0 = 3;
+//   HCCT3_ucPortRemapConfig0 = 3;
 }
 
 void HCCT3_vPortRemap1(void)
@@ -332,13 +332,13 @@ void HCCT3_vPortRemap1(void)
 //   HDIO_vEnablePortB();
 //   HDIO_vSetModePortB11(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionB11(HDIO_ALTERNATE_FUNCTION_1);
-//   HCCT2_ucPortRemapConfig0 = 2;
+//   HCCT3_ucPortRemapConfig1 = 2;
 
   /* HCCT3_CH0 - TIM2_CH4 - option 4: PD6 */
 //   HDIO_vEnablePortD();
 //   HDIO_vSetModePortD6(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionD6(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT2_ucPortRemapConfig0 = 3;
+//   HCCT3_ucPortRemapConfig1 = 3;
 }
 
 void HCCT4_vPortRemap0(void)
@@ -840,7 +840,7 @@ void HCCT23_vPortRemap0(void)
 //   HDIO_vEnablePortE();
 //   HDIO_vSetModePortF14(HDIO_ALTERNATE_FUNCTION);
 //   HDIO_vSetAlternateFunctionF14(HDIO_ALTERNATE_FUNCTION_2);
-//   HCCT23_ucPortRemapConfig1 = 2;
+//   HCCT23_ucPortRemapConfig0 = 2;
 }
 
 void HCCT23_vPortRemap1(void)
@@ -849,7 +849,7 @@ void HCCT23_vPortRemap1(void)
    HDIO_vEnablePortE();
    HDIO_vSetModePortE1(HDIO_ALTERNATE_FUNCTION);
    HDIO_vSetAlternateFunctionE1(HDIO_ALTERNATE_FUNCTION_6);
-   HCCT1_ucPortRemapConfig1 = 0;
+   HCCT23_ucPortRemapConfig1 = 0;
 
   /* HCCT23_CH1 - TIM20_CH4 - option 2: PF3 */
 //   HDIO_vEnablePortF();

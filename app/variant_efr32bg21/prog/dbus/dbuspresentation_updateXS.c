@@ -20,7 +20,6 @@
 #include "dbusmapping.h"
 #include "hsup.h"
 
-
 #if defined(DBUS2_UPDATE)||defined(DBUS2_UPDATE_HSI)
 #if defined(REMOTE_FIRMWARE_UPDATE)
 #include "firmware_update/BootManager/BootManagerSharedData.h"
@@ -58,10 +57,10 @@ const enum DBPL_BaudRate DBPL_uDefaultBaudRate=DBPL_Baud1000000;
 #if defined(DBUS2_UPDATE)||defined(DBUS2_UPDATE_HSI)
 
 SDEF_SetSegmentRW(TIMER16_10MS) // put it into segment TIMER8_10MS
-static volatile Ttimer16 DBPL_tBaudRateTimer;
+static Ttimer16 DBPL_tBaudRateTimer;
 
 SDEF_SetSegmentRW(TIMER8_10MS) // put it into segment TIMER8_10MS
-static volatile Ttimer8 DBPL_tResetTriggerTimer;
+static Ttimer8 DBPL_tResetTriggerTimer;
 SDEF_SetSegmentRW_Default()
 
 #ifdef VARIANT_PROGRAMMER
