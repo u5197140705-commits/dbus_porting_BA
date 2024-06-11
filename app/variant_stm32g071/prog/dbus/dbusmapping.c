@@ -95,12 +95,6 @@ __DBM_EXCLUDE_ERROR_COUNTERS
 #include "fSafe.h"
 #endif
 
-// switch off lint advisories for this file: #/## usage, function like macro
-/*lint -e9023 -e9024 */
-/*lint -e9026 Function-like macro... [MISRA 2012 Directive 4.9, advisory] */
-/*lint -e9032 [MISRA 2012 Rule 10.7, required], behaviour required here for EFR32 error macros definitions*/
-/*lint -e774  -e731 -e835 -e587  Infos occurring for queries, not critical.*/
-
 #include "dbusmapping.h"
 
 #ifdef DBM_MCAL
@@ -110,6 +104,11 @@ __DBM_EXCLUDE_ERROR_COUNTERS
 #include "huart.h"
 #endif
 
+// switch off lint advisories for this file: #/## usage, function like macro
+/*lint -e9023 -e9024 */
+/*lint -e9026 Function-like macro... [MISRA 2012 Directive 4.9, advisory] */
+/*lint -e9032 [MISRA 2012 Rule 10.7, required], behaviour required here for EFR32 error macros definitions*/
+/*lint -e774  -e731 -e835 -e587  Infos occurring for queries, not critical.*/
 
 #ifndef DBM_MCAL
 /*Macro definitions for building names of functions to map according to used channel (DBM_UART_CHANNEL)*/

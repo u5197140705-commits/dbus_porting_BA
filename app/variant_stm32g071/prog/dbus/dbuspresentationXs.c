@@ -53,8 +53,6 @@ If set: Memory module 1 will be defined as a array, which can be addressed start
 #include "LibTypes.h"
 #include "LibDefines.h"
 #include "bustypes.h"
-#include "SegmentDef.h"
-#include "timerlib.h"
 #include "dbuspresentation.h"
 #include "dbuspresentation_ecu_types.h"
 #include "dbuspresentation_production_types.h"
@@ -93,18 +91,6 @@ const TbusModuleTable DBPL_tModuleDict[] = {
 };
 #endif
 const uint8_t DBPL_ucNumberOfElements = (uint8_t)UTI_NELEMENTS(DBPL_tModuleDict); //!< A constant containing the number of elements in ModuleDict, i.e. how many memory modules are defined.
-
-/** \defgroup DBPL_Timers Timers used by presentation layer.
-
-The timer concept presently used for HC08 uses variables defined in special segments, which are decremented by the timer-library. If this does not work, an alternative solution must be worked out to supply the following timers. The way to put the variables into segments is done via <i>\#pragma</i>, which may not work for all compilers/processors.
-*/
-
-SDEF_SetSegmentRW(TIMER8_10MS)
-static Ttimer8 DBPL_tResetTimer;    //!<This is a timer, for keeping track of when to execute a reset (after the corresponding delay [10 ms]).
-
-SDEF_SetSegmentRW(TIMER8_2S)
-static Ttimer8 DBPL_tOfflineDelayTimer; //!< Timer, which keeps track of how long to stay offline [2s] - 0 has the meaning of: "until reset".
-SDEF_SetSegmentRW_Default()
 
 #ifndef ID
 #define DBUS2_ID "MyDummyId\0"
@@ -290,51 +276,23 @@ uint8_t DBPL_ucPossiblyChangeTimerBase(uint8_t ucBase)
 #endif
 /*
 The following functions are called directly by the library source. These functions constitute an interface to the application.
-
-Please modify (several functions are on default empty), when needed.
 */
 void DBPL_vGoOffline(void)
 {
-   /* Possibly notify the application, before entering offline mode. Possibly shut down actuators ... */
+   /* Possibly notify the application before entering offline mode. Possibly shut down actuators ... */
 }
 
-/*
-Interface to bootloader. Please inform bootloader that a large timeout (e.g. 5 s) should be used after reset, as a GoOffline message was received, hence a flashing procedure is expected.
-*/
 void DBPL_vEnterBootloaderMode(void)
 {
-#ifdef WIRED_FIRMWARE_UPDATE
+#if defined (WIRED_FIRMWARE_UPDATE)
     BMDAT_setMagicPattern(BMDAT_startBlAfterReset);
-#endif
-#ifdef BTM_FIRMWARE_UPDATE
+#elif defined (REMOTE_FIRMWARE_UPDATE)
+    BMDAT_setBootModule(MAL_BP2_LOADER_ID);
+#elif defined (BTM_FIRMWARE_UPDATE)
     GBTL_bootGromLoaderAfterReset();
 #endif
 
-}
-/* Timer functions */
-bool DBPL_bIsTimerDown(void)
-{
-   if ( (DBPL_tResetTimer == 0U) && (DBPL_tOfflineDelayTimer == 0U) )
-   {
-      return true;
-   }
-   else
-   {
-      return false;
-   }
-}
-
-void DBPL_vSetResetTimer(uint8_t ucValue)
-{
-#if defined (REMOTE_FIRMWARE_UPDATE)
-   BMDAT_setBootModule(MAL_BP2_LOADER_ID);
-#endif
-   DBPL_tResetTimer = ucValue;
-}
-
-void DBPL_vSetOfflineTimer(uint8_t ucValue)
-{
-   DBPL_tOfflineDelayTimer = ucValue;
+    /* Possibly notify the application before entering firmware update mode. Possibly shut down actuators ... */
 }
 
 /*lint -e{715,818} parameter no used if update disabled */

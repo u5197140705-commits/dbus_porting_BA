@@ -62,6 +62,7 @@ const uint8_t HI2C0_ucMaxWaitState = 0xFFu;
 #define SDA_PORT B
 
 #define RW_PIN   B13
+#define RW_PORT  B
 
 /* Note 9026: function like macro, Note 9024: usage of #/## */
 /*lint -save -e9024 -e9026 */
@@ -187,7 +188,7 @@ void HI2C0_vHandleEvent(void)
 void HI2C0_vInitPin(void)
 {
     HSUP_vDisableInt();
-    HDIO_vEnablePort(SDA_PORT);
+    HDIO_vEnablePort(RW_PORT);
     HDIO_vSetOpenDrainPushPullPort(RW_PIN, HDIO_PULL_NONE);
     HDIO_vSetSpeedPort(RW_PIN, HDIO_OUTPUT_MEDIUM_SPEED);
     HDIO_vSetPort(RW_PIN, 1u);

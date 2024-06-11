@@ -27,7 +27,9 @@
 #include "LibTypes.h"
 #include "timerlib.h"
 #include "processor.h"
-
+#ifdef MCAL_MPCM_INCLUDED
+#include "mcal/mpcm.h"
+#endif
 /*
     These macros ensure compatibility between Stm32G071xx and Stm32G081xx platforms.
 */
@@ -118,4 +120,15 @@ uint16 TIM_uiGetCircleMicroSeconds(void)
 
 #else
     #error "No valid peripheral TIMER is present. HW TIMER must be defined."
+#endif
+
+
+#ifdef MCAL_MPCM_INCLUDED
+void TIM_MpcmEventCallback(void *obj, uint32_t flags, const struct MCAL_EventResponse *eventResponse)
+{
+    (void) obj;
+    (void) flags;
+    (void) eventResponse;
+    // re-initialize timer after MPCM power mode change
+}
 #endif

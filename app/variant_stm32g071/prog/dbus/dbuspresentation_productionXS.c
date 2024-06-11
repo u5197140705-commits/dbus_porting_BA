@@ -126,6 +126,11 @@ enum DBPL_ProductionStatus DBPL_tReadTestStateRepairCnt(enum DBPL_TestState* con
     return DBPL_ProductionStatusOK;
 }
 
+void DBPL_vDoFactoryReset(void)
+{
+    /* Factory test data reset after testing (if needed). */
+}
+
 /*lint -e{818} In programmer second param could be const, but not in app!*/
 void DBPL_tGetUniqueIdReadResult(uint8_t maxReadableUniqueIdLen, struct DBPL_EcuUniqueIdReadResult* const result)
 {

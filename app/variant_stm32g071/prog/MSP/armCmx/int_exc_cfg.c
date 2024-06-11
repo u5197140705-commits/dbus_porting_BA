@@ -68,7 +68,7 @@ struct INT_StackFrame
     uint32_t LR;
     uint32_t PC;
     uint32_t xPSR;
-};
+} const *INT_StackFrame;
 
 
 /******************************************************************************/
@@ -87,7 +87,7 @@ static struct INT_StackFrame* INT_getStackFrame(void)
 /* INTERRUPT FUNCTIONS FOR FAULT HANDLING                                     */
 /******************************************************************************/
 
-void SpuriousIsr_Handler(uint32_t SpuriousInt)
+SYMBOL_IRQ SYMBOL_NO_RETURN void SpuriousIsr_Handler(uint32_t SpuriousInt)
 {
    /* in bits [9..0] of the SpuriousInt is spurious interrupt number
     * e.g. 0x13 is for Stm32f10XXX vector table RTC_IRQHandler() 
@@ -95,22 +95,17 @@ void SpuriousIsr_Handler(uint32_t SpuriousInt)
     * where 0x10 in subtraction represents IRQs offset
     */
     (void) SpuriousInt;
-    
+
     /* Endless loop - no return from spurious interrupt */
     for(;;) {}
 }
 
 
-SYMBOL_IRQ void HardFault_Handler(void)
+SYMBOL_IRQ SYMBOL_NO_RETURN void HardFault_Handler(void)
 {
-    static volatile struct INT_StackFrame *stackFrame;
-    
     /* Read stack frame */
-    stackFrame = INT_getStackFrame();
-    
-    /* Use stackFrame to suppress compiler warning */
-    stackFrame = stackFrame;
-    
+    INT_StackFrame = INT_getStackFrame();
+
     /* Endless loop - no return from fault */
     for(;;) {}
 }
@@ -118,46 +113,31 @@ SYMBOL_IRQ void HardFault_Handler(void)
 #if !defined(NO_ISR_SUPPORT)
 #if !defined(CORTEX_M0) && !defined(CORTEX_M0_PLUS) && !defined(CORTEX_M23)
 
-SYMBOL_IRQ void MemManage_Handler(void)
+SYMBOL_IRQ SYMBOL_NO_RETURN void MemManage_Handler(void)
 {
-    static volatile struct INT_StackFrame *stackFrame;
-    
     /* Read stack frame */
-    stackFrame = INT_getStackFrame();
-    
-    /* Use stackFrame to suppress compiler warning */
-    stackFrame = stackFrame;
-    
+    INT_StackFrame = INT_getStackFrame();
+      
     /* Endless loop - no return from fault */
     for(;;) {}
 }
 
 
-SYMBOL_IRQ void BusFault_Handler(void)
+SYMBOL_IRQ SYMBOL_NO_RETURN void BusFault_Handler(void)
 {
-    static volatile struct INT_StackFrame *stackFrame;
-    
     /* Read stack frame */
-    stackFrame = INT_getStackFrame();
-    
-    /* Use stackFrame to suppress compiler warning */
-    stackFrame = stackFrame;
-    
+    INT_StackFrame = INT_getStackFrame();
+
     /* Endless loop - no return from fault */
     for(;;) {}
 }
 
 
-SYMBOL_IRQ void UsageFault_Handler(void)
+SYMBOL_IRQ SYMBOL_NO_RETURN void UsageFault_Handler(void)
 {
-    static volatile struct INT_StackFrame *stackFrame;
-    
     /* Read stack frame */
-    stackFrame = INT_getStackFrame();
-    
-    /* Use stackFrame to suppress compiler warning */
-    stackFrame = stackFrame;
-    
+    INT_StackFrame = INT_getStackFrame();
+
     /* Endless loop - no return from fault */
     for(;;) {}
 }

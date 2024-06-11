@@ -13,7 +13,7 @@
 #*******************************************************************************
 
 # common components
-common_components = $(msp) dbus ped_fw firmware_update stack_monitor 
+common_components = $(msp) dbus ped_fw firmware_update stack_monitor sbus_abstraction/dbus sbus_abstraction/c_constellation sbus_abstraction/constellation sbus_abstraction/register_processing sbus_framework_access mem_utility debug_extended debug MSP/mcal schedulers_bm/scheduler 
 
 
 # list of included PED_FW subcomponents
@@ -21,7 +21,7 @@ common_components = $(msp) dbus ped_fw firmware_update stack_monitor
 
 
 # external components
-ext_components = rtos 
+ext_components = 
 
 
 # application specific components
@@ -58,13 +58,4 @@ release_note     = "Make short hint for this release"
 #Vectorcast_Related_variables
 dyntconfig_project_template_use   ?= FALSE
 dyntconfig_project_startup_use    ?= FALSE
-
-
-# uVision ini file generator:
-# make target: uvision_gen_ini
-preproc_file            += uvision_gen_ini
-uvision_gen_ini_copt     = -undef -imacros $(varHeader)
-uvision_gen_ini_template = ./uv/Templates/uvision_template.ini
-uvision_gen_ini_output   = ./uv/$(project)/project_path.ini
-uvision_gen_ini_defines  = ELF_LOCATION=\"..\\..\\$(subst /,\\,$(dwarf_file))\"
 

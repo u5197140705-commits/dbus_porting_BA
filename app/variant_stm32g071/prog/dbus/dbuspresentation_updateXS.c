@@ -21,15 +21,15 @@
 #include "hsup.h"
 
 #if defined(DBUS2_UPDATE)||defined(DBUS2_UPDATE_HSI)
-#if defined(REMOTE_FIRMWARE_UPDATE)
-#include "firmware_update/BootManager/BootManagerSharedData.h"
-#include "firmware_update/mal/moduleAdministration.h"
-#include "firmware_update/BootManager/BootManagerModule.h"
+    #if defined(REMOTE_FIRMWARE_UPDATE)
+        #include "firmware_update/BootManager/BootManagerSharedData.h"
+        #include "firmware_update/mal/moduleAdministration.h"
+        #include "firmware_update/BootManager/BootManagerModule.h"
+    #endif
 #endif
-#include "timerlib.h"
-#endif
+
 #if defined(DBUS2_PROD_MSG_IN_APP) || defined(REMOTE_FIRMWARE_UPDATE)
-#include "firmware_update/version/fwu_version.h"
+    #include "firmware_update/version/fwu_version.h"
 #endif
 
 #if (DBUS_DEFAULT_BAUDRATE==96)
@@ -55,13 +55,6 @@ const enum DBPL_BaudRate DBPL_uDefaultBaudRate=DBPL_Baud1000000;
 #endif
 
 #if defined(DBUS2_UPDATE)||defined(DBUS2_UPDATE_HSI)
-
-SDEF_SetSegmentRW(TIMER16_10MS) // put it into segment TIMER8_10MS
-static Ttimer16 DBPL_tBaudRateTimer;
-
-SDEF_SetSegmentRW(TIMER8_10MS) // put it into segment TIMER8_10MS
-static Ttimer8 DBPL_tResetTriggerTimer;
-SDEF_SetSegmentRW_Default()
 
 #ifdef VARIANT_PROGRAMMER
     #define UPDATE_TRANSITION_DELAY_10MS   0U
@@ -171,31 +164,6 @@ uint16_t DBPL_uGetUsBitTimeForBaudRate(uint16_t baud)
 }
 #endif // DBM_DBUSCAN
 
-void DBPL_vSetBaudRateTimer(uint16_t baudRateTime)
-{
-    DBPL_tBaudRateTimer=baudRateTime;
-}
-
-uint16_t DBPL_uiGetBaudRateTimer(void)
-{
-    return (uint16_t)DBPL_tBaudRateTimer;
-}
-
-bool DBPL_bHasBaudRateTimerElapsed(void)
-{
-    return (DBPL_tBaudRateTimer==0U)?true:false;
-}
-
-void DBPL_vSetResetTriggerTimer(uint8_t resetTriggerTime)
-{
-    DBPL_tResetTriggerTimer=resetTriggerTime;
-}
-
-bool DBPL_bHasResetTriggerTimerElapsed(void)
-{
-    return (DBPL_tResetTriggerTimer==0U)?true:false;
-}
-
 #else /*DBUS2_UPDATE or DBUS2_UPDATE_HSI*/
 
 bool DBPL_bIsUpdateModePossible(void)
@@ -240,39 +208,13 @@ uint16_t DBPL_uGetUsBitTimeForBaudRate(uint16_t baud)
     return 0U;
 }
 
-void DBPL_vSetBaudRateTimer(uint16_t baudRateTime)
-{
-    (void)baudRateTime;
-}
-
-uint16_t DBPL_uiGetBaudRateTimer(void)
-{
-    return 0U;
-}
-
-
-bool DBPL_bHasBaudRateTimerElapsed(void)
-{
-    return false;
-}
-
-void DBPL_vSetResetTriggerTimer(uint8_t resetTriggerTime)
-{
-    (void)resetTriggerTime;
-}
-
-bool DBPL_bHasResetTriggerTimerElapsed(void)
-{
-    return false;
-}
 #endif/*DBUS2_UPDATE or DBUS2_UPDATE_HSI*/
-
 
 
 #if (defined(DBUS2_UPDATE)||defined(DBUS2_UPDATE_HSI))&&defined(REMOTE_FIRMWARE_UPDATE)
 struct DBPL_EcuConfigReadResult DBPL_tGetEcuConfigReadResult(uint8_t objIdNumber)
 {   /* "partially initialized struct MisraC2012 9.3 required" other 2 elements initialized later */
-    struct DBPL_EcuConfigReadResult obj = {.identificationObject = {{{0}}}}; /*lint !e785 , C99 initialisation, all zero! */
+    struct DBPL_EcuConfigReadResult obj = {.identificationObject = {{{0}}}}; /*lint !e785 , C99 initialization, all zero! */
 #ifdef VARIANT_PROGRAMMER
     /* do not change settings for programmer */
     const uint8_t EcuConfigCount   = 1u; /* Programmer NOT updatable */
@@ -388,7 +330,7 @@ struct DBPL_SwSubmoduleReadResult DBPL_tGetSwSubmoduleReadResult(const uint8_t *
 /* FWU1 with fwu production messages enabled */
 struct DBPL_EcuConfigReadResult DBPL_tGetEcuConfigReadResult(uint8_t objIdNumber)
 {
-    struct DBPL_EcuConfigReadResult obj = {.identificationObject = {{{0}}}}; /* C99 initialization, all zero! */
+    struct DBPL_EcuConfigReadResult obj = {.identificationObject = {{{0}}}}; /*lint !e785 , C99 initialization, all zero! */
     const uint8_t EcuConfigCount = 1U;
     const struct FWU_hw_version_s  *hw_version;
     const struct FWU_sw_version_s  *sw_version;

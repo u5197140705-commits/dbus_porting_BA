@@ -48,7 +48,7 @@
 
 #define MAL_NO_BP2_OFFSET 0u
 /******************************************************************************/
-/* PUBLIC DATA DEFINTIONS                                                    */
+/* PUBLIC DATA DEFINITIONS                                                   */
 /******************************************************************************/
 /*lint -esym(9003,MEMDRV_driverTable) needed external (outside MEMDRV_getDriverTableSize!)*/
 /*lint -esym(552,MEMDRV_driverTable) is excessed (lintplus false positive)*/

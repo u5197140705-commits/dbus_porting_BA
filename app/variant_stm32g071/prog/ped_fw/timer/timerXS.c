@@ -60,7 +60,7 @@ typedef ulong Tclock;  ///< Type for circulating timer is 32 Bit
 
 
 /******************************************************************************/
-/* PRIVATE DATA DEFINTIONS                                                    */
+/* PRIVATE DATA DEFINITIONS                                                   */
 /******************************************************************************/
 SDEF_SetSegmentRW(START8_1)
 /** Prescaler of 8-bit timer segment 1 */

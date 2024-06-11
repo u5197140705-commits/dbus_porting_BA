@@ -1,17 +1,25 @@
 {
     "baud": "96",
-    "comp": [],
-    "compiler": "armclang",
+    "comp": [
+        "sbus",
+        "mem_utility",
+        "debug_extended",
+        "debug",
+        "MCAL"
+    ],
+    "compiler": "gccArm",
     "dbus_rx": "A3",
     "dbus_tx": "A2",
     "derivat": "STM32G071CB",
     "ext_comp": [],
     "fwu": "FWU1",
-    "macros": [],
+    "macros": [
+        "scheduler_config=auto"
+    ],
     "node": "1",
     "platform": "STM32G0",
     "project": "variant_stm32g071",
-    "scheduler": "rtos",
+    "scheduler": "new",
     "uart": "1",
     "variant": "MyVariant"
 }
