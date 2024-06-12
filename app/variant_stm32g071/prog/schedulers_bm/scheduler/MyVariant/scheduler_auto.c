@@ -32,10 +32,10 @@
 #include "watchdogtimer/watchdogtimer.h"
 #include "stack_monitor/stack_monitor.h"
 #include "sbus_framework_access/ssb_task.h"
-#include "atssb_handle_task.h"
 
 /* USER CODE BEGIN Include */
 /*! place your module includes here */
+#include "atssb_handle_task.h"
 /* USER CODE END Include */
 
 
@@ -87,7 +87,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
 
         /* USER CODE BEGIN ModulePriority */
         /*! place your project modules and their priorities here */
-        {MOD_SSBF, LOW_PRIORITY},
+        {MOD_ATSSB, LOW_PRIORITY},
         /* USER CODE END ModulePriority */
 
         {END_STAMP, PRIO_NONE}
@@ -111,7 +111,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
 
         /* USER CODE BEGIN TaskHandlers */
         /*! place your task handlers here */
-        [MOD_ATSSB] = ATSSB_handleTask,
+        [MOD_ATSSB] = ATSSB_handleTask
         /* USER CODE END TaskHandlers */
     },
 
