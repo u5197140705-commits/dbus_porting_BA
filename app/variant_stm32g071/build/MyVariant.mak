@@ -25,7 +25,7 @@ ext_components =
 
 
 # application specific components
-app_components = 
+app_components = ATSSB
 
 
 # translation units not related to a component
@@ -41,7 +41,7 @@ defines +=
 
 
 # additional search paths
-search_path += 
+search_path += $(app_path)/prog/ATSSB
 
 
 # Version settings (needed for ModuleHeader)
