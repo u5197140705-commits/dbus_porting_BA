@@ -41,13 +41,32 @@
 /* FUNCTION PROTOTYPES                                                        */
 /******************************************************************************/
 /**
+ * \brief   Callback for application data
+ *
+ * \param   eventToken      Contains Hub-Index and further elements according to
+ *                          ssbf_common_c.h, the following elements are relevant
+ *                          for for the loop results:
+ *                          -SSB_EVT_CLIENT_MASK
+ *                          -SSB_EVT_TYPE_MASK
+ *          eventDataPtr    Pointer to the data delivered (e.g. the loop results)
+ *          eventDataLen    Number of bytes delivered via eventDataPtr
+ *
+ * \return  none
+ */
+extern void ATSSB_doForHubCAPICallback(     uint16_t eventToken,
+                                            const uint8_t *eventDataPtr,
+                                            uint8_t eventDataLen );
+
+
+/**
  * \brief   Handletask for ATSSB
  *
  * \param   none
  *
  * \return  Taskstate
- *          -TASK_NOT_INITIALISED   //Handler not initialized
- *          -TASK_INITIALISED,      //Task initialized and in run state
+ *          -TASK_NOT_INITIALISED - Handler not initialized
+ *          -TASK_INITIALISED     - Task initialized and in run state
+ *
  */
 extern uint8_t ATSSB_handleTask(void);
 
