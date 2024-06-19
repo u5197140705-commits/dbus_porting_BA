@@ -27,6 +27,7 @@
 /* INCLUDES                                                                   */
 /******************************************************************************/
 #include "atssb_handle_task.h"
+#include "ssbf_common_c.h"
 
 
 /******************************************************************************/
@@ -47,12 +48,39 @@ static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
 /******************************************************************************/
 /* FUNCTIONS                                                                  */
 /******************************************************************************/
+void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
+                                    const uint8_t *eventDataPtr,
+                                    uint8_t eventDataLen )
+{
+    (void)*eventDataPtr;
+    (void)eventDataLen;
+
+    if( (eventToken & SSB_EVT_CLIENT_MASK) == SSB_EVT_CLIENT_0 )
+    {
+        if( (eventToken & SSB_EVT_TYPE_MASK) == SSB_EVT_LOOP_RESULTS )
+        {
+            //TODO: Add output datastream
+        }
+        else
+        {
+            //nothing to do for the moment
+        }
+    }
+    else
+    {
+        //nothing to do for the moment
+    }
+}
+
+
 uint8_t ATSSB_handleTask(void)
 {
     switch (ATSSB_taskState)
     {
         case TASK_NOT_INITIALISED:
         {
+            //TODO:add notification for callback function, e.g. notifyAPI( ATSSB_doForHubCAPICallback )
+
             ATSSB_taskState = TASK_INITIALISED; //TODO: Modify. Kept for now to prevent compiler warnings
             break;
         }
