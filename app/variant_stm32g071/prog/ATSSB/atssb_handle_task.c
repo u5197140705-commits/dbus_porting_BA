@@ -28,8 +28,7 @@
 /******************************************************************************/
 #include "atssb_handle_task.h"
 #include "ssbf_common_c.h"
-#include "timer/timerlib.h"
-#include "segmentdef.h"
+#include "system_timer.h"
 
 
 /******************************************************************************/
@@ -39,7 +38,7 @@
  * \brief   Time in which the callback from SSB stack is simulated
  *
  */
-#define ATSSB_CALLBACK_SIMUATION_TIME_X10MS     (uint8_t) 10  // 100ms
+#define ATSSB_CALLBACK_SIMUATION_TIME_MS        (uint8_t) 100  // 100ms
 
 
 /******************************************************************************/
@@ -54,18 +53,17 @@ const uint8_t ATSSB_callbackSimulationData[] =
 };
 
 /**
- * \brief   This timer variable is loaded and decreased in the dedicated
- *          timesteps
+ * \brief   control blocks for timer to simulate SSB callback
  *
  */
-SDEF_SetSegmentRW(TIMER8_10MS)
-static uint8_t ATSSB_callbackSimulationTimerId = 0u;
-SDEF_SetSegmentRW_Default()
+static struct STIM_Timer ATSSB_callbackSimulationTimer;
+static struct STDCB_Callback ATSSB_callbackSimulationTimerCb;
 
 /******************************************************************************/
 /* STATIC FUNCTION DECLARATIONS                                               */
 /******************************************************************************/
-static void ATSSB_simulateDatastream( void );
+static int32_t ATSSB_simulateDatastream(void *obj, uint32_t flags, int32_t data);
+
 
 /******************************************************************************/
 /* OBJECTS                                                                    */
@@ -75,14 +73,18 @@ static void ATSSB_simulateDatastream( void );
 /* STATIC FUNCTION DEFINITION                                                 */
 /******************************************************************************/
 /**
- * \brief   simulate callback call from SSB sw and sets dummy data
+ * \brief   This function is registrated in timer ATSSB_callbackSimulationTimer.
+ *          It simulates the callback from SSB sw and sets dummy data.
  *
- * \param   none
+ * \param   input from timerlib - usused
  *
- * \return  none
+ * \return  default return value - 0
  */
-static void ATSSB_simulateDatastream( void )
+static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data )
 {
+    (void)flags;
+    (void)data;
+
     uint16_t eventToken = 0u;
     uint8_t eventDataLen;
 
@@ -95,6 +97,8 @@ static void ATSSB_simulateDatastream( void )
     ATSSB_doForHubCAPICallback(     eventToken,
                                     ATSSB_callbackSimulationData,
                                     eventDataLen );
+
+    return 0;
 }
 
 
@@ -132,21 +136,23 @@ uint8_t ATSSB_handleTask(void)
     {
         case TASK_NOT_INITIALISED:
         {
-            TIM_vLoadTimer( ATSSB_callbackSimulationTimerId,
-                            ATSSB_CALLBACK_SIMUATION_TIME_X10MS );
+            //initialize and start timer to simulate SSB callback
+            (void)STIM_InitCallback(    &ATSSB_callbackSimulationTimerCb,
+                                        ATSSB_simulateDatastream,
+                                        NULL, STIM_STATUS_TRIGGERED);
+            (void)STIM_InitTimer(   &ATSSB_callbackSimulationTimer,
+                                    STIM_PROCESSING_INTERRUPT,
+                                    STIM_TIME_MS(ATSSB_CALLBACK_SIMUATION_TIME_MS),
+                                    STIM_MODE_PERIODIC,
+                                    true,
+                                    &ATSSB_callbackSimulationTimerCb);
 
             ATSSB_taskState = TASK_INITIALISED;
             break;
         }
         case TASK_INITIALISED:
         {
-            if( TIM_ucIsTimerDown(ATSSB_callbackSimulationTimerId) )
-            {
-                ATSSB_simulateDatastream();
-                TIM_vLoadTimer( ATSSB_callbackSimulationTimerId,
-                                ATSSB_CALLBACK_SIMUATION_TIME_X10MS );
-            }
-
+            //Nothing to do
             break;
         }
         default:
