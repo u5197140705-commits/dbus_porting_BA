@@ -28,6 +28,18 @@
 /******************************************************************************/
 #include "atssb_handle_task.h"
 #include "ssbf_common_c.h"
+#include "timer/timerlib.h"
+#include "segmentdef.h"
+
+
+/******************************************************************************/
+/* DEFINITIONS AND DECLARATIONS                                               */
+/******************************************************************************/
+/**
+ * \brief   Time in which the callback from SSB stack is simulated
+ *
+ */
+#define ATSSB_CALLBACK_SIMUATION_TIME_X10MS     (uint8_t) 10  // 100ms
 
 
 /******************************************************************************/
@@ -35,14 +47,55 @@
 /******************************************************************************/
 static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
 
+const uint8_t ATSSB_callbackSimulationData[] =
+{
+        0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA,
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
+};
+
+/**
+ * \brief   This timer variable is loaded and decreased in the dedicated
+ *          timesteps
+ *
+ */
+SDEF_SetSegmentRW(TIMER8_10MS)
+static uint8_t ATSSB_callbackSimulationTimerId = 0u;
+SDEF_SetSegmentRW_Default()
+
 /******************************************************************************/
 /* STATIC FUNCTION DECLARATIONS                                               */
 /******************************************************************************/
-
+static void ATSSB_simulateDatastream( void );
 
 /******************************************************************************/
 /* OBJECTS                                                                    */
 /******************************************************************************/
+
+/******************************************************************************/
+/* STATIC FUNCTION DEFINITION                                                 */
+/******************************************************************************/
+/**
+ * \brief   simulate callback call from SSB sw and sets dummy data
+ *
+ * \param   none
+ *
+ * \return  none
+ */
+static void ATSSB_simulateDatastream( void )
+{
+    uint16_t eventToken = 0u;
+    uint8_t eventDataLen;
+
+    eventToken |= SSB_EVT_CLIENT_0;
+    eventToken |= SSB_EVT_LOOP_RESULTS;
+
+    eventDataLen = (uint8_t)(sizeof(ATSSB_callbackSimulationData) /
+                             sizeof(ATSSB_callbackSimulationData[0]));
+
+    ATSSB_doForHubCAPICallback(     eventToken,
+                                    ATSSB_callbackSimulationData,
+                                    eventDataLen );
+}
 
 
 /******************************************************************************/
@@ -79,13 +132,21 @@ uint8_t ATSSB_handleTask(void)
     {
         case TASK_NOT_INITIALISED:
         {
-            //TODO:add notification for callback function, e.g. notifyAPI( ATSSB_doForHubCAPICallback )
+            TIM_vLoadTimer( ATSSB_callbackSimulationTimerId,
+                            ATSSB_CALLBACK_SIMUATION_TIME_X10MS );
 
-            ATSSB_taskState = TASK_INITIALISED; //TODO: Modify. Kept for now to prevent compiler warnings
+            ATSSB_taskState = TASK_INITIALISED;
             break;
         }
         case TASK_INITIALISED:
         {
+            if( TIM_ucIsTimerDown(ATSSB_callbackSimulationTimerId) )
+            {
+                ATSSB_simulateDatastream();
+                TIM_vLoadTimer( ATSSB_callbackSimulationTimerId,
+                                ATSSB_CALLBACK_SIMUATION_TIME_X10MS );
+            }
+
             break;
         }
         default:
