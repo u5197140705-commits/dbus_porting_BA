@@ -4,4 +4,4 @@
 	url = ../../Generic/Framework.git
 [submodule "ext/rtos"]
 	path = ext/rtos
-	url = ../rtos.git
+	url = ../../RealTimeOS/rtos.git

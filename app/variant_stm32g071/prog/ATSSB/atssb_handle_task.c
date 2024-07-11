@@ -28,6 +28,17 @@
 /******************************************************************************/
 #include "atssb_handle_task.h"
 #include "ssbf_common_c.h"
+#include "system_timer.h"
+
+
+/******************************************************************************/
+/* DEFINITIONS AND DECLARATIONS                                               */
+/******************************************************************************/
+/**
+ * \brief   Time in which the callback from SSB stack is simulated
+ *
+ */
+#define ATSSB_CALLBACK_SIMUATION_TIME_MS        (uint8_t) 100  // 100ms
 
 
 /******************************************************************************/
@@ -35,14 +46,60 @@
 /******************************************************************************/
 static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
 
+const uint8_t ATSSB_callbackSimulationData[] =
+{
+        0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA,
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
+};
+
+/**
+ * \brief   control blocks for timer to simulate SSB callback
+ *
+ */
+static struct STIM_Timer ATSSB_callbackSimulationTimer;
+static struct STDCB_Callback ATSSB_callbackSimulationTimerCb;
+
 /******************************************************************************/
 /* STATIC FUNCTION DECLARATIONS                                               */
 /******************************************************************************/
+static int32_t ATSSB_simulateDatastream(void *obj, uint32_t flags, int32_t data);
 
 
 /******************************************************************************/
 /* OBJECTS                                                                    */
 /******************************************************************************/
+
+/******************************************************************************/
+/* STATIC FUNCTION DEFINITION                                                 */
+/******************************************************************************/
+/**
+ * \brief   This function is registrated in timer ATSSB_callbackSimulationTimer.
+ *          It simulates the callback from SSB sw and sets dummy data.
+ *
+ * \param   input from timerlib - usused
+ *
+ * \return  default return value - 0
+ */
+static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data )
+{
+    (void)flags;
+    (void)data;
+
+    uint16_t eventToken = 0u;
+    uint8_t eventDataLen;
+
+    eventToken |= SSB_EVT_CLIENT_0;
+    eventToken |= SSB_EVT_LOOP_RESULTS;
+
+    eventDataLen = (uint8_t)(sizeof(ATSSB_callbackSimulationData) /
+                             sizeof(ATSSB_callbackSimulationData[0]));
+
+    ATSSB_doForHubCAPICallback(     eventToken,
+                                    ATSSB_callbackSimulationData,
+                                    eventDataLen );
+
+    return 0;
+}
 
 
 /******************************************************************************/
@@ -79,13 +136,23 @@ uint8_t ATSSB_handleTask(void)
     {
         case TASK_NOT_INITIALISED:
         {
-            //TODO:add notification for callback function, e.g. notifyAPI( ATSSB_doForHubCAPICallback )
+            //initialize and start timer to simulate SSB callback
+            (void)STIM_InitCallback(    &ATSSB_callbackSimulationTimerCb,
+                                        ATSSB_simulateDatastream,
+                                        NULL, STIM_STATUS_TRIGGERED);
+            (void)STIM_InitTimer(   &ATSSB_callbackSimulationTimer,
+                                    STIM_PROCESSING_INTERRUPT,
+                                    STIM_TIME_MS(ATSSB_CALLBACK_SIMUATION_TIME_MS),
+                                    STIM_MODE_PERIODIC,
+                                    true,
+                                    &ATSSB_callbackSimulationTimerCb);
 
-            ATSSB_taskState = TASK_INITIALISED; //TODO: Modify. Kept for now to prevent compiler warnings
+            ATSSB_taskState = TASK_INITIALISED;
             break;
         }
         case TASK_INITIALISED:
         {
+            //Nothing to do
             break;
         }
         default:
