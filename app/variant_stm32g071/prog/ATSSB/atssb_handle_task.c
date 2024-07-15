@@ -45,13 +45,7 @@
  * \brief   Data which can maximal transmitted at once
  *
  */
-#define ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX     (uint8_t) 28
-
-/**
- * \brief   Offset to match a unit8 value with a ascii character
- *
- */
-#define ATSSB_OFFSET_ASCCI                      (uint8_t) 0x30u
+#define ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX     (uint8_t) 25
 /******************************************************************************/
 /* STATIC VARIABLES                                                           */
 /******************************************************************************/
@@ -163,7 +157,7 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
             DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
                     "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
 
-            for( index = 0u; index < 3u; index++ ) //max 3 iterations to send 3x 28 bytes = 84 bytes
+            for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
             {
                 if( eventDataLen > ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX )
                 {
