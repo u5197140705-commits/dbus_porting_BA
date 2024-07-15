@@ -163,7 +163,7 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
             DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
                     "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
 
-            for( index = 0u; index < 3u; index++ ) //max 3 iterations to send 4x 21 bytes = 84 bytes
+            for( index = 0u; index < 3u; index++ ) //max 3 iterations to send 3x 28 bytes = 84 bytes
             {
                 if( eventDataLen > ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX )
                 {
