@@ -57,7 +57,7 @@ extern "C" {
 /******************************
 * Activation switch for the DbgAttributes */
 
-#define DBGX_USR_DBG_ATTRIBUTES_ENABLED
+//#define DBGX_USR_DBG_ATTRIBUTES_ENABLED
             /* Enable the debug attributes at the beginning of each api function */
             /* Defined:     Enabled */
             /* Not defined: Not enabled */

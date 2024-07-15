@@ -29,6 +29,7 @@
 #include "atssb_handle_task.h"
 #include "ssbf_common_c.h"
 #include "system_timer.h"
+#include "debug_extended/api_cfg.h"
 
 
 /******************************************************************************/
@@ -40,16 +41,41 @@
  */
 #define ATSSB_CALLBACK_SIMUATION_TIME_MS        (uint8_t) 100  // 100ms
 
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+#define ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX     (uint8_t) 21
 
+/**
+ * \brief   Offset to match a unit8 value with a ascii character
+ *
+ */
+#define ATSSB_OFFSET_ASCCI                      (uint8_t) 0x30u
 /******************************************************************************/
 /* STATIC VARIABLES                                                           */
 /******************************************************************************/
+/**
+ * \brief   state of handle task of this module
+ *
+ */
 static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
 
-const uint8_t ATSSB_callbackSimulationData[] =
+/**
+ * \brief   dummy testdata to send
+ *
+ */
+const uint8_t ATSSB_callbackSimulationData[] = //length 84
 {
-        0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA,
-        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
+        0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0,
+        0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1,
+        0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2, 0xf2,
+        0xf3, 0xf3, 0xf3, 0xf3, 0xf3, 0xf3, 0xf3, 0xf3, 0xf3, 0xf3,
+        0xf4, 0xf4, 0xf4, 0xf4, 0xf4, 0xf4, 0xf4, 0xf4, 0xf4, 0xf4,
+        0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5,
+        0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6,
+        0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7,
+        0xf8, 0xf8, 0xf8, 0xf8
 };
 
 /**
@@ -82,6 +108,7 @@ static int32_t ATSSB_simulateDatastream(void *obj, uint32_t flags, int32_t data)
  */
 static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data )
 {
+    (void)obj;
     (void)flags;
     (void)data;
 
@@ -109,14 +136,65 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
                                     const uint8_t *eventDataPtr,
                                     uint8_t eventDataLen )
 {
-    (void)*eventDataPtr;
-    (void)eventDataLen;
+    char str[3] = "0";
+    uint8_t index;
+    uint8_t eventDataLenTemp;
+    uint8_t *eventDataPtrTemp = (uint8_t*)eventDataPtr; //lint !e926 !e954 !e9005 convert in non-const done intentionally
 
     if( (eventToken & SSB_EVT_CLIENT_MASK) == SSB_EVT_CLIENT_0 )
     {
         if( (eventToken & SSB_EVT_TYPE_MASK) == SSB_EVT_LOOP_RESULTS )
         {
-            //TODO: Add output datastream
+            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+                    "*************************************************************************************");
+            /********************* eventToken *********************/
+            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+                    "ATSSB_doForHubCAPICallback: eventToken in hex:" );
+            DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
+                    eventToken,
+                    DBGX_UINT8_HEXADECIMAL      );
+
+            /********************* eventDataLen *******************/
+            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+                    "ATSSB_doForHubCAPICallback: eventDataLen:" );
+            DBGX_logInt_INFO_SCN_SSB_CBACK_APP(
+                    eventDataLen,
+                    DBGX_UINT8_DECIMAL              );
+
+            /********************* *eventDataPtr ******************/
+            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+                    "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
+
+            for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 21 bytes = 84 bytes
+            {
+                if( eventDataLen > ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX )
+                {
+                    eventDataLenTemp = ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX;
+                }
+                else
+                {
+                    eventDataLenTemp = eventDataLen;
+                }
+
+                //First in the message is the nr of iteration for save data order
+                str[0] = index + ATSSB_OFFSET_ASCCI; //lint !e9034 tested, works as expected
+                str[1] = ' ';
+                str[2] = '\0';
+
+                DBGX_logStrIntArr_INFO_SCN_SSB_CBACK_APP    (
+                        str,
+                        eventDataPtrTemp,
+                        eventDataLenTemp,
+                        DBGX_UINT8_DECIMAL                  );
+
+                eventDataPtrTemp += eventDataLenTemp;   //increase pointer by already sent
+                eventDataLen -= eventDataLenTemp;       //update length for next iteration
+
+                if( eventDataLen == 0u )
+                {
+                    break;
+                }
+            }
         }
         else
         {
@@ -146,6 +224,8 @@ uint8_t ATSSB_handleTask(void)
                                     STIM_MODE_PERIODIC,
                                     true,
                                     &ATSSB_callbackSimulationTimerCb);
+
+            DBGX_init();
 
             ATSSB_taskState = TASK_INITIALISED;
             break;
