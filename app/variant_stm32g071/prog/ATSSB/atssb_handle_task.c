@@ -45,7 +45,7 @@
  * \brief   Data which can maximal transmitted at once
  *
  */
-#define ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX     (uint8_t) 21
+#define ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX     (uint8_t) 28
 
 /**
  * \brief   Offset to match a unit8 value with a ascii character
@@ -65,7 +65,7 @@ static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
  * \brief   dummy testdata to send
  *
  */
-const uint8_t ATSSB_callbackSimulationData[] = //length 84
+const uint8_t ATSSB_callbackSimulationData[] = //length 82
 {
         0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0,
         0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1,
@@ -75,7 +75,7 @@ const uint8_t ATSSB_callbackSimulationData[] = //length 84
         0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5, 0xf5,
         0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6, 0xf6,
         0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7, 0xf7,
-        0xf8, 0xf8, 0xf8, 0xf8
+        0xf8, 0xf8
 };
 
 /**
@@ -136,7 +136,6 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
                                     const uint8_t *eventDataPtr,
                                     uint8_t eventDataLen )
 {
-    char str[3];
     uint8_t index;
     uint8_t eventDataLenTemp;
     uint8_t *eventDataPtrTemp = (uint8_t*)eventDataPtr; //lint !e926 !e954 !e9005 convert in non-const done intentionally
@@ -145,11 +144,10 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
     {
         if( (eventToken & SSB_EVT_TYPE_MASK) == SSB_EVT_LOOP_RESULTS )
         {
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-                    "*************************************************************************************");
+            DBGX_logStr_INFO_SCN_SSB_CBACK_APP("\n");
             /********************* eventToken *********************/
             DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-                    "ATSSB_doForHubCAPICallback: eventToken in hex:" );
+                    "ATSSB_doForHubCAPICallback: eventToken:" );
             DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
                     eventToken,
                     DBGX_UINT8_HEXADECIMAL      );
@@ -157,15 +155,15 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
             /********************* eventDataLen *******************/
             DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
                     "ATSSB_doForHubCAPICallback: eventDataLen:" );
-            DBGX_logInt_INFO_SCN_SSB_CBACK_APP(
+            DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
                     eventDataLen,
-                    DBGX_UINT8_DECIMAL              );
+                    DBGX_UINT8_HEXADECIMAL      );
 
             /********************* *eventDataPtr ******************/
             DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
                     "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
 
-            for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 21 bytes = 84 bytes
+            for( index = 0u; index < 3u; index++ ) //max 3 iterations to send 4x 21 bytes = 84 bytes
             {
                 if( eventDataLen > ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX )
                 {
@@ -176,16 +174,10 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
                     eventDataLenTemp = eventDataLen;
                 }
 
-                //First in the message is the nr of iteration for save data order
-                str[0] = index + ATSSB_OFFSET_ASCCI; //lint !e9034 tested, works as expected
-                str[1] = ' ';
-                str[2] = '\0';
-
-                DBGX_logStrIntArr_INFO_SCN_SSB_CBACK_APP    (
-                        str,
+                DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP   (
                         eventDataPtrTemp,
                         eventDataLenTemp,
-                        DBGX_UINT8_DECIMAL                  );
+                        DBGX_UINT8_HEXADECIMAL          );
 
                 eventDataPtrTemp += eventDataLenTemp;   //increase pointer by already sent
                 eventDataLen -= eventDataLenTemp;       //update length for next iteration
