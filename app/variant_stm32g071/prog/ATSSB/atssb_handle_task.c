@@ -136,7 +136,7 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
                                     const uint8_t *eventDataPtr,
                                     uint8_t eventDataLen )
 {
-    char str[3] = "0";
+    char str[3];
     uint8_t index;
     uint8_t eventDataLenTemp;
     uint8_t *eventDataPtrTemp = (uint8_t*)eventDataPtr; //lint !e926 !e954 !e9005 convert in non-const done intentionally
