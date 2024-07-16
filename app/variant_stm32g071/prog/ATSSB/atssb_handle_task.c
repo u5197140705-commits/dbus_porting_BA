@@ -45,7 +45,7 @@
  * \brief   Data which can maximal transmitted at once
  *
  */
-#define ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX     (uint8_t) 25
+#define ATSSB_CALLBACK_LOG_DATA_MAX             (uint8_t) 25
 /******************************************************************************/
 /* STATIC VARIABLES                                                           */
 /******************************************************************************/
@@ -159,9 +159,9 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
 
             for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
             {
-                if( eventDataLen > ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX )
+                if( eventDataLen > ATSSB_CALLBACK_LOG_DATA_MAX )
                 {
-                    eventDataLenTemp = ATSSB_CALLBACK_SIMUATION_TX_LEN_MAX;
+                    eventDataLenTemp = ATSSB_CALLBACK_LOG_DATA_MAX;
                 }
                 else
                 {
