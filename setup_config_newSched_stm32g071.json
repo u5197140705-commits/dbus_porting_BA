@@ -7,7 +7,7 @@
         "debug",
         "MCAL"
     ],
-    "compiler": "gccArm",
+    "compiler": "armclang",
     "dbus_rx": "A3",
     "dbus_tx": "A2",
     "derivat": "STM32G071CB",
