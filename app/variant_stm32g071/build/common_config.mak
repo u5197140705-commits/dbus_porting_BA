@@ -12,6 +12,8 @@
 #  Description      Common build settings for all variants
 #*******************************************************************************
 
+#SSB config, uncomment if RTOS used. Else baremetal scheduler used
+ssb_build_variant ?= rtos
 
 # build type (DEVELOP / RELEASE)
 # For more details refer to file common/build/help/make_variables.md
@@ -61,8 +63,12 @@ defines +=
 
 
 # global build settings
-
-rtos=TRUE
+ifeq ($(ssb_build_variant),rtos)
+    rtos=TRUE
+else
+    scheduler_config=auto  
+    $(info HELLO)
+endif
 
 ifeq ($(FW_update_type),FWU4)
     # start of GBL image in external flash

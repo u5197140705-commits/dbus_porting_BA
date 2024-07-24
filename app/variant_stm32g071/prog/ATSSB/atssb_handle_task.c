@@ -30,10 +30,12 @@
 #include "utility.h"
 #include "system_timer.h"
 #include "debug_extended/api_cfg.h"
-#include "rtos_ref_queue.h"
-#include "rtos_api.h"
-
-
+#ifdef ATSSB_RTOS_IS_USED
+    #include "rtos_ref_queue.h"
+    #include "rtos_api.h"
+#else
+    #include "ssbf_common_c.h"
+#endif //ATSSB_RTOS_IS_USED
 /******************************************************************************/
 /* DEFINITIONS AND DECLARATIONS                                               */
 /******************************************************************************/
@@ -119,7 +121,7 @@ extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
 RTOS_DEFINE_REF_QUEUE_AUTO( RTOS_atssbRefQueue,
                             ATSSB_CALLBACK_LOG_DATA_MSG_NR,
                             sizeof(ATSSB_REF_QUEUE_ELEMENT_t) );
-#endif
+#endif //ATSSB_RTOS_IS_USED
 /******************************************************************************/
 /* STATIC FUNCTION DECLARATIONS                                               */
 /******************************************************************************/
@@ -265,7 +267,8 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
         //Set flag to trigger ATSSB_releaseQueue()
         (void)RTD_RunEventDrivenTask( FLAG_0, ET_ID_ORYX );
 
-    #else //Send data directly with debug comp, if baremetal scheduler used
+    #else  //ATSSB_RTOS_IS_USED
+        //Send data directly with debug comp, if baremetal scheduler used
         ATSSB_setDataToDebugcomponent( eventToken, eventDataPtr, eventDataLen );
     #endif
 }
@@ -299,7 +302,7 @@ uint8_t ATSSB_releaseQueue(void)
 
     return TASK_INITIALISED;
 }
-#endif
+#endif //ATSSB_RTOS_IS_USED
 
 uint8_t ATSSB_handleTask(void)
 {

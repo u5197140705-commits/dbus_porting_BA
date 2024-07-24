@@ -31,7 +31,9 @@
 /******************************************************************************/
 #include "bsh_stdinc.h"
 #include <stdint.h>
-#include "rtos_types.h"
+#ifdef RTOS
+    #include "rtos_types.h"
+#endif
 
 
 /******************************************************************************/
@@ -51,7 +53,7 @@
  *
  */
 extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
-#endif
+#endif //ATSSB_RTOS_IS_USED
 
 /******************************************************************************/
 /* FUNCTION PROTOTYPES                                                        */
@@ -84,7 +86,7 @@ extern void ATSSB_doForHubCAPICallback(     uint16_t eventToken,
  *
  */
 extern uint8_t ATSSB_releaseQueue(void);
-#endif
+#endif //ATSSB_RTOS_IS_USED
 
 /**
  * \brief   Handletask for ATSSB

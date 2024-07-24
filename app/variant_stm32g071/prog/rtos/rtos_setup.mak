@@ -44,7 +44,7 @@ os_tx_timer_process_in_isr = FALSE
     #  this name should reflect compatibility with platform/core/compiler/build type/
     #  to prevent including incompatible library during linking
     # */
-rtos_lib_develop ?= true 
+rtos_lib_develop ?= false 
 rtos_lib_copy    ?= false
 rtos_lib_name    ?= rtos_lib$(addprefix _,$(project))
 
