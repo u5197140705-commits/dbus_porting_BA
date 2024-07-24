@@ -45,12 +45,13 @@
 /******************************************************************************/
 /* GLOBAL VARIABLES                                                           */
 /******************************************************************************/
+#ifdef ATSSB_RTOS_IS_USED
 /**
  * \brief   control blocks for RTOS reference queue
  *
  */
 extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
-
+#endif
 
 /******************************************************************************/
 /* FUNCTION PROTOTYPES                                                        */
@@ -72,6 +73,7 @@ extern void ATSSB_doForHubCAPICallback(     uint16_t eventToken,
                                             const uint8_t *eventDataPtr,
                                             uint8_t eventDataLen );
 
+#ifdef ATSSB_RTOS_IS_USED
 /**
  * \brief   Releases all messages from queue, notified by eventflag
  *
@@ -82,6 +84,7 @@ extern void ATSSB_doForHubCAPICallback(     uint16_t eventToken,
  *
  */
 extern uint8_t ATSSB_releaseQueue(void);
+#endif
 
 /**
  * \brief   Handletask for ATSSB

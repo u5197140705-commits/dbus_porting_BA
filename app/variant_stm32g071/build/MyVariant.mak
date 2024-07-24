@@ -62,3 +62,6 @@ release_note     = "Make short hint for this release"
 dyntconfig_project_template_use   ?= FALSE
 dyntconfig_project_startup_use    ?= FALSE
 
+#debug component
+dbgx_activated_filters = DBGX_FILTERS_SSB DBGX_FILTERS
+
