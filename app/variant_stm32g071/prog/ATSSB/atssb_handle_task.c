@@ -27,9 +27,11 @@
 /* INCLUDES                                                                   */
 /******************************************************************************/
 #include "atssb_handle_task.h"
-#include "ssbf_common_c.h"
+#include "utility.h"
 #include "system_timer.h"
 #include "debug_extended/api_cfg.h"
+#include "rtos_ref_queue.h"
+#include "rtos_api.h"
 
 
 /******************************************************************************/
@@ -46,6 +48,35 @@
  *
  */
 #define ATSSB_CALLBACK_LOG_DATA_MAX             (uint8_t) 25
+
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+#define ATSSB_CALLBACK_LOG_DATA_LEN             (uint8_t) 82
+
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+#define ATSSB_CALLBACK_LOG_DATA_MSG_NR          (uint8_t) 5
+
+/******************************************************************************/
+/* STATIC TYPEDEFINITIONS                                                     */
+/******************************************************************************/
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+typedef struct
+{
+    uint16_t eventToken;
+    uint8_t eventData[ATSSB_CALLBACK_LOG_DATA_LEN];
+    uint8_t eventDataLen;
+
+}ATSSB_REF_QUEUE_ELEMENT_t;
+
+
 /******************************************************************************/
 /* STATIC VARIABLES                                                           */
 /******************************************************************************/
@@ -59,7 +90,7 @@ static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
  * \brief   dummy testdata to send
  *
  */
-const uint8_t ATSSB_callbackSimulationData[] = //length 82
+const uint8_t ATSSB_callbackSimulationData[ATSSB_CALLBACK_LOG_DATA_LEN] =
 {
         0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0,
         0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1,
@@ -78,6 +109,15 @@ const uint8_t ATSSB_callbackSimulationData[] = //length 82
  */
 static struct STIM_Timer ATSSB_callbackSimulationTimer;
 static struct STDCB_Callback ATSSB_callbackSimulationTimerCb;
+
+/**
+ * \brief   control blocks for RTOS reference queue
+ *
+ */
+extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
+RTOS_DEFINE_REF_QUEUE_AUTO( RTOS_atssbRefQueue,
+                            ATSSB_CALLBACK_LOG_DATA_MSG_NR,
+                            sizeof(ATSSB_REF_QUEUE_ELEMENT_t) );
 
 /******************************************************************************/
 /* STATIC FUNCTION DECLARATIONS                                               */
@@ -109,8 +149,8 @@ static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data
     uint16_t eventToken = 0u;
     uint8_t eventDataLen;
 
-    eventToken |= SSB_EVT_CLIENT_0;
-    eventToken |= SSB_EVT_LOOP_RESULTS;
+    eventToken |= 0x0001u;
+    eventToken |= 0x8000u;
 
     eventDataLen = (uint8_t)(sizeof(ATSSB_callbackSimulationData) /
                              sizeof(ATSSB_callbackSimulationData[0]));
@@ -130,67 +170,133 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
                                     const uint8_t *eventDataPtr,
                                     uint8_t eventDataLen )
 {
-    uint8_t index;
-    uint8_t eventDataLenTemp;
-    uint8_t *eventDataPtrTemp = (uint8_t*)eventDataPtr; //lint !e926 !e954 !e9005 convert in non-const done intentionally
+    void *msgPtr_void; //gets valid adress in first fct call
+    ATSSB_REF_QUEUE_ELEMENT_t *msgPtr;
+    bool queueError = false;
 
-    if( (eventToken & SSB_EVT_CLIENT_MASK) == SSB_EVT_CLIENT_0 )
+    //allocate memory for a new queue element
+    if(RTOS_allocateMemoryForRefQueue(  &RTOS_atssbRefQueue, &msgPtr_void)
+                                            != RTOS_REF_QUEUE_OK)
     {
-        if( (eventToken & SSB_EVT_TYPE_MASK) == SSB_EVT_LOOP_RESULTS )
+        queueError = true;
+    }
+    else
+    {
+        msgPtr = (ATSSB_REF_QUEUE_ELEMENT_t*)msgPtr_void;
+
+        //Fill queue
+        msgPtr->eventToken = eventToken;
+        msgPtr->eventDataLen = eventDataLen;
+        UTI_vMemCopy( eventDataPtr,  msgPtr->eventData, eventDataLen );
+
+        //set element to end of queue
+        if( RTOS_putReferenceAtRefQueueEnd( &RTOS_atssbRefQueue, msgPtr_void,
+                                            sizeof(ATSSB_REF_QUEUE_ELEMENT_t),
+                                            RTOS_NO_WAIT )
+                                                != RTOS_REF_QUEUE_OK )
         {
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP("\n");
-            /********************* eventToken *********************/
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-                    "ATSSB_doForHubCAPICallback: eventToken:" );
-            DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
-                    eventToken,
-                    DBGX_UINT8_HEXADECIMAL      );
+            queueError = true;
+        }
+    }
 
-            /********************* eventDataLen *******************/
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-                    "ATSSB_doForHubCAPICallback: eventDataLen:" );
-            DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
-                    eventDataLen,
-                    DBGX_UINT8_HEXADECIMAL      );
+    //Set flag to trigger ATSSB_releaseQueue()
+    if( queueError == false )
+    {
+        (void)RTD_RunEventDrivenTask( FLAG_0, ET_ID_ORYX );
+    }
+}
 
-            /********************* *eventDataPtr ******************/
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-                    "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
 
-            for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
+uint8_t ATSSB_releaseQueue(void)
+{
+    void *msgPtr_void;
+    uint32_t msgLen;
+    uint8_t index;
+    RTOS_REF_QUEUE_STATUS status;
+    ATSSB_REF_QUEUE_ELEMENT_t *msgPtr;
+    uint16_t eventToken;
+    uint8_t *eventDataPtrTemp;
+    uint8_t eventDataLen;
+    uint8_t eventDataLenTemp;
+
+
+    //get reference from queue
+    status = RTOS_getReferenceFromRefQueue( &RTOS_atssbRefQueue,
+                                            &msgPtr_void,
+                                            &msgLen, RTOS_NO_WAIT );
+
+
+    if( (status != RTOS_REF_QUEUE_OK) && (status != RTOS_REF_QUEUE_EMPTY) )
+    {
+        //error or empty queue
+    }
+    else if( status == RTOS_REF_QUEUE_OK )
+    {
+        //take element out of the queue
+        msgPtr = (ATSSB_REF_QUEUE_ELEMENT_t*)msgPtr_void;
+        eventToken = msgPtr->eventToken;
+        eventDataPtrTemp = msgPtr->eventData;
+        eventDataLen = msgPtr->eventDataLen;
+
+        //Set msg to debug component
+
+        DBGX_logStr_INFO_SCN_SSB_CBACK_APP("\n");
+        /********************* eventToken *********************/
+        DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+                "ATSSB_doForHubCAPICallback: eventToken:" );
+        DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
+                eventToken,
+                DBGX_UINT8_HEXADECIMAL      );
+
+        /********************* eventDataLen *******************/
+        DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+                "ATSSB_doForHubCAPICallback: eventDataLen:" );
+        DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
+                eventDataLen,
+                DBGX_UINT8_HEXADECIMAL      );
+
+        /********************* *eventDataPtr ******************/
+        DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+                "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
+
+        for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
+        {
+            if( eventDataLen > ATSSB_CALLBACK_LOG_DATA_MAX )
             {
-                if( eventDataLen > ATSSB_CALLBACK_LOG_DATA_MAX )
-                {
-                    eventDataLenTemp = ATSSB_CALLBACK_LOG_DATA_MAX;
-                }
-                else
-                {
-                    eventDataLenTemp = eventDataLen;
-                }
+                eventDataLenTemp = ATSSB_CALLBACK_LOG_DATA_MAX;
+            }
+            else
+            {
+                eventDataLenTemp = eventDataLen;
+            }
 
-                DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP   (
-                        eventDataPtrTemp,
-                        eventDataLenTemp,
-                        DBGX_UINT8_HEXADECIMAL          );
+            DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP   (
+                    eventDataPtrTemp,
+                    eventDataLenTemp,
+                    DBGX_UINT8_HEXADECIMAL          );
 
-                eventDataPtrTemp += eventDataLenTemp;   //increase pointer by already sent
-                eventDataLen -= eventDataLenTemp;       //update length for next iteration
+            eventDataPtrTemp += eventDataLenTemp;   //increase pointer by already sent
+            eventDataLen -= eventDataLenTemp;       //update length for next iteration
 
-                if( eventDataLen == 0u )
-                {
-                    break;
-                }
+            if( eventDataLen == 0u )
+            {
+                break;
             }
         }
-        else
+
+        //free memory
+        if(RTOS_releaseMemoryForRefQueue( &RTOS_atssbRefQueue, msgPtr_void )
+                                            != RTOS_REF_QUEUE_OK)
         {
-            //nothing to do for the moment
+            //error
         }
     }
     else
     {
-        //nothing to do for the moment
+        //noting to do
     }
+
+    return TASK_INITIALISED;
 }
 
 

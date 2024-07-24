@@ -43,7 +43,11 @@ extern "C" {
 #include "mcal/mcal_includes.h"
 #include "mcal/mcal.h"
 
-
+/* Switch off:
+   Info 1756: variable 'xx' has 'static' storage duration and non-POD type 'yyy'
+   Happens when file included into a cpp-file
+ */
+/*lint -save -e1756 */
 /******************************************************************************/
 /* PUBLIC DATA DECLARATIONS FOR MDIO                                          */
 /******************************************************************************/
@@ -1363,6 +1367,7 @@ extern const struct MDAC_Channel MDAC1_OUT2_PA5;
 #endif /* MDAC_PRESENT */
 #endif /* MCAL_MDAC_INCLUDED */
 
+/*lint -restore -e1756 */
 
 #ifdef __cplusplus
 }

@@ -188,7 +188,7 @@ void HUART11_vHandleRxEvent(void)
 
 void HUART0_vPortRemap(void)
 {
-#ifdef HUART0_USED
+#if defined(HUART0_USED) && !defined(DBM_MCAL)
 #if defined(HUART0_TX_PA9)
    /* USART1_TX - option 1: PA9 */
    HDIO_vEnablePortA();
@@ -237,7 +237,7 @@ void HUART0_vPortRemap(void)
 
 void HUART1_vPortRemap(void)
 {
-#ifdef HUART1_USED
+#if defined(HUART1_USED) && !defined(DBM_MCAL)
 #if defined(HUART1_TX_PA2)
    /* USART2_TX - option 1: PA2 */
    HDIO_vEnablePortA();
@@ -280,7 +280,7 @@ void HUART1_vPortRemap(void)
 
 void HUART2_vPortRemap(void)
 {
-#ifdef HUART2_USED
+#if defined(HUART2_USED) && !defined(DBM_MCAL)
 #if defined(HUART2_TX_PA5)
    /* USART3_TX - option 1: PA5 */
    HDIO_vEnablePortA();
@@ -358,7 +358,7 @@ void HUART2_vPortRemap(void)
 
 void HUART3_vPortRemap(void)
 {
-#ifdef HUART3_USED
+#if defined(HUART3_USED) && !defined(DBM_MCAL)
 #if defined(HUART3_TX_PA0)
    /* USART4_TX - option 1: PA0 */
    HDIO_vEnablePortA();

@@ -20,4 +20,5 @@ endif
 
 code_gen_cfg += $(app_prog_path)/ATSSB/dbgx_filters.json
 dbgx_activated_filters = DBGX_FILTERS_SSB_APP
+dbgx_activated_filters = DBGX_FILTERS_SSB DBGX_FILTERS
 

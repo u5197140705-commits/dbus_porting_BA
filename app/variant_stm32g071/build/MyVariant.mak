@@ -13,15 +13,18 @@
 #*******************************************************************************
 
 # common components
-common_components = $(msp) dbus ped_fw firmware_update stack_monitor sbus_abstraction/dbus sbus_abstraction/c_constellation sbus_abstraction/constellation sbus_abstraction/register_processing sbus_framework_access mem_utility debug_extended debug MSP/mcal schedulers_bm/scheduler 
-
+common_components = $(msp) dbus ped_fw firmware_update mem_utility stack_monitor mem_utility debug_extended debug MSP/mcal 
 
 # list of included PED_FW subcomponents
 #ped_fw_subcomponent_list = basic timer schedule utility
 
+mcal_modules = $(mcal_supported_modules_$(platform))
+# If you need to reduce the size of the application, you can specify a subset of MCAL modules. Please note that some modules might not be available for your platform.
+# DBusCAN requires at least mdio mexti mspi modules
+# mcal_modules = mpcm mdio muart mexti msup mwdt mtim madc mi2c mspi mdma mdac
 
 # external components
-ext_components = 
+ext_components = rtos 
 
 
 # application specific components

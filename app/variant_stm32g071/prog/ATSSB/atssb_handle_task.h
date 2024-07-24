@@ -31,12 +31,27 @@
 /******************************************************************************/
 #include "bsh_stdinc.h"
 #include <stdint.h>
+#include "rtos_types.h"
 
 
 /******************************************************************************/
 /* C-PREPROCESSOR DEFINITIONS                                                 */
 /******************************************************************************/
-#define DEP_ATSSB MOD_SSBF,
+#define DEP_ATSSB
+
+#ifdef RTOS
+    #define ATSSB_RTOS_IS_USED
+#endif
+/******************************************************************************/
+/* GLOBAL VARIABLES                                                           */
+/******************************************************************************/
+/**
+ * \brief   control blocks for RTOS reference queue
+ *
+ */
+extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
+
+
 /******************************************************************************/
 /* FUNCTION PROTOTYPES                                                        */
 /******************************************************************************/
@@ -57,6 +72,16 @@ extern void ATSSB_doForHubCAPICallback(     uint16_t eventToken,
                                             const uint8_t *eventDataPtr,
                                             uint8_t eventDataLen );
 
+/**
+ * \brief   Releases all messages from queue, notified by eventflag
+ *
+ * \param   none
+ *
+ * \return  Taskstate
+ *          -TASK_INITIALISED     - Task initialized and in run state
+ *
+ */
+extern uint8_t ATSSB_releaseQueue(void);
 
 /**
  * \brief   Handletask for ATSSB
