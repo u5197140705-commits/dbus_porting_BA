@@ -117,7 +117,7 @@ static struct STDCB_Callback ATSSB_callbackSimulationTimerCb;
  * \brief   control blocks for RTOS reference queue
  *
  */
-extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
+RTOS_REF_QUEUE RTOS_atssbRefQueue;
 RTOS_DEFINE_REF_QUEUE_AUTO( RTOS_atssbRefQueue,
                             ATSSB_CALLBACK_LOG_DATA_MSG_NR,
                             sizeof(ATSSB_REF_QUEUE_ELEMENT_t) );
@@ -277,7 +277,6 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
 uint8_t ATSSB_releaseQueue(void)
 {
     uint32_t msgLenDummy;
-    RTOS_REF_QUEUE_STATUS status;
     ATSSB_REF_QUEUE_ELEMENT_t *msgPtr;
 
     //get all references from queue

@@ -67,7 +67,6 @@ ifeq ($(ssb_build_variant),rtos)
     rtos=TRUE
 else
     scheduler_config=auto  
-    $(info HELLO)
 endif
 
 ifeq ($(FW_update_type),FWU4)
