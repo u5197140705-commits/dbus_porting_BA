@@ -65,9 +65,9 @@ defines +=
 # global build settings
 ifeq ($(ssb_build_variant),rtos)
     rtos=TRUE
-else
-    scheduler_config=auto  
 endif
+scheduler_config=auto
+
 
 ifeq ($(FW_update_type),FWU4)
     # start of GBL image in external flash
