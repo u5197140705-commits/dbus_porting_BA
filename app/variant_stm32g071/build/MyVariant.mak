@@ -13,15 +13,26 @@
 #*******************************************************************************
 
 # common components
-common_components = $(msp) dbus ped_fw firmware_update stack_monitor sbus_abstraction/dbus sbus_abstraction/c_constellation sbus_abstraction/constellation sbus_abstraction/register_processing sbus_framework_access mem_utility debug_extended debug MSP/mcal schedulers_bm/scheduler 
-
+ifeq ($(ssb_build_variant),rtos)
+    common_components = $(msp) dbus ped_fw firmware_update mem_utility stack_monitor mem_utility debug_extended debug MSP/mcal
+else
+    common_components = $(msp) dbus ped_fw firmware_update mem_utility stack_monitor mem_utility debug_extended debug MSP/mcal schedulers_bm/scheduler 
+endif
 
 # list of included PED_FW subcomponents
 #ped_fw_subcomponent_list = basic timer schedule utility
 
+mcal_modules = $(mcal_supported_modules_$(platform))
+# If you need to reduce the size of the application, you can specify a subset of MCAL modules. Please note that some modules might not be available for your platform.
+# DBusCAN requires at least mdio mexti mspi modules
+# mcal_modules = mpcm mdio muart mexti msup mwdt mtim madc mi2c mspi mdma mdac
 
 # external components
-ext_components = 
+ifeq ($(ssb_build_variant),rtos)
+    ext_components = rtos 
+else
+    ext_components =
+endif
 
 
 # application specific components
@@ -58,4 +69,7 @@ release_note     = "Make short hint for this release"
 #Vectorcast_Related_variables
 dyntconfig_project_template_use   ?= FALSE
 dyntconfig_project_startup_use    ?= FALSE
+
+#debug component
+dbgx_activated_filters = DBGX_FILTERS_SSB DBGX_FILTERS
 

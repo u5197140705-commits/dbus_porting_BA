@@ -1,10 +1,10 @@
-# rtos_ref_project
-Repo for Developing and Testing the RTOS with Framework.
+# ssb_ref_project
+Repo for Developing and Testing the SSB with Framework and RTOS.
 
 ---
 
 ### Command to get complete project
-git clone https://github-bshg.boschdevcloud.com/RealTimeOS/rtos_ref_project.git --recurse-submodules
+git clone https://github-bshg.boschdevcloud.com/Generic/ssb_ref_project --recurse-submodules
 
 ---
 
@@ -24,13 +24,11 @@ git clone https://github-bshg.boschdevcloud.com/RealTimeOS/rtos_ref_project.git 
 ---
 
 ### To compile the project(s) in cmd
-make project=variant_stm32g071 all -j  
-make project=variant_efr32bg21 all -j  
-make project=variant_ra4m2 all -j  
-make project=variant_stm32g474 all -j  
-make project=variant_stm32l471 all -j  
-make project=variant_stm32h723 all -j  
-make project=variant_mkv56f1 all -j  
+
+stm32g071 is used at the moment for working
+
+- make [ssb_build_variant=rtos] project=variant_stm32g071 all -j  (rtos is used by default, set content in [] is optional)
+- make ssb_build_variant=bms project=variant_stm32g071 all -j  (baremetal scheduler is used)
 
 ---
 

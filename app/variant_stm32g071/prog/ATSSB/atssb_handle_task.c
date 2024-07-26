@@ -27,11 +27,14 @@
 /* INCLUDES                                                                   */
 /******************************************************************************/
 #include "atssb_handle_task.h"
-#include "ssbf_common_c.h"
+#include "utility.h"
 #include "system_timer.h"
 #include "debug_extended/api_cfg.h"
-
-
+//#include "ssbf_common_c.h" //TODO: activate as soon as SSB stack is available
+#ifdef ATSSB_RTOS_IS_USED
+    #include "rtos_ref_queue.h"
+    #include "rtos_api.h"
+#endif //ATSSB_RTOS_IS_USED
 /******************************************************************************/
 /* DEFINITIONS AND DECLARATIONS                                               */
 /******************************************************************************/
@@ -45,7 +48,36 @@
  * \brief   Data which can maximal transmitted at once
  *
  */
-#define ATSSB_CALLBACK_LOG_DATA_MAX             (uint8_t) 25
+#define ATSSB_CALLBACK_LOG_DATA_PART_LEN        (uint8_t) 25
+
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+#define ATSSB_CALLBACK_LOG_DATA_LEN             (uint8_t) 82
+
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+#define ATSSB_NUMBER_OF_CALLBACK_LOG_DATA_PARTS (uint8_t) 5
+
+/******************************************************************************/
+/* STATIC TYPEDEFINITIONS                                                     */
+/******************************************************************************/
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+typedef struct
+{
+    uint16_t eventToken;
+    uint8_t eventData[ATSSB_CALLBACK_LOG_DATA_LEN];
+    uint8_t eventDataLen;
+
+}ATSSB_REF_QUEUE_ELEMENT_t;
+
+
 /******************************************************************************/
 /* STATIC VARIABLES                                                           */
 /******************************************************************************/
@@ -59,7 +91,7 @@ static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
  * \brief   dummy testdata to send
  *
  */
-const uint8_t ATSSB_callbackSimulationData[] = //length 82
+const uint8_t ATSSB_callbackSimulationData[ATSSB_CALLBACK_LOG_DATA_LEN] =
 {
         0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0,
         0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1, 0xf1,
@@ -79,10 +111,23 @@ const uint8_t ATSSB_callbackSimulationData[] = //length 82
 static struct STIM_Timer ATSSB_callbackSimulationTimer;
 static struct STDCB_Callback ATSSB_callbackSimulationTimerCb;
 
+#ifdef ATSSB_RTOS_IS_USED
+/**
+ * \brief   control blocks for RTOS reference queue
+ *
+ */
+RTOS_REF_QUEUE RTOS_atssbRefQueue;
+RTOS_DEFINE_REF_QUEUE_AUTO( RTOS_atssbRefQueue,
+                            ATSSB_NUMBER_OF_CALLBACK_LOG_DATA_PARTS,
+                            sizeof(ATSSB_REF_QUEUE_ELEMENT_t) );
+#endif //ATSSB_RTOS_IS_USED
 /******************************************************************************/
 /* STATIC FUNCTION DECLARATIONS                                               */
 /******************************************************************************/
 static int32_t ATSSB_simulateDatastream(void *obj, uint32_t flags, int32_t data);
+static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
+                                            const uint8_t *eventDataPtr,
+                                            uint8_t eventDataLen );
 
 
 /******************************************************************************/
@@ -109,8 +154,8 @@ static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data
     uint16_t eventToken = 0u;
     uint8_t eventDataLen;
 
-    eventToken |= SSB_EVT_CLIENT_0;
-    eventToken |= SSB_EVT_LOOP_RESULTS;
+    eventToken |= 0x0001u; //TODO:Replace with SSB_EVT_CLIENT_0 as soon as SSB is available
+    eventToken |= 0x8000u; //TODO:Replace with SSB_EVT_LOOP_RESULTS as soon as SSB is available
 
     eventDataLen = (uint8_t)(sizeof(ATSSB_callbackSimulationData) /
                              sizeof(ATSSB_callbackSimulationData[0]));
@@ -123,6 +168,68 @@ static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data
 }
 
 
+/**
+ * \brief   Sends data via debug extended component
+ *
+ * \param   eventToken      Contains Hub-Index and further elements according to
+ *                          ssbf_common_c.h
+ *          eventDataPtr    Pointer to the data delivered (e.g. the loop results)
+ *          eventDataLen    Number of bytes delivered via eventDataPtr
+ *
+ * \return  none
+ */
+static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
+                                            const uint8_t *eventDataPtr,
+                                            uint8_t eventDataLen )
+{
+    uint8_t index;
+    uint8_t eventDataLenTemp;
+    uint8_t *eventDataPtrTemp = (uint8_t*)eventDataPtr; //lint !e926 !e954 !e9005 convert in non-const done intentionally
+
+    DBGX_logStr_INFO_SCN_SSB_CBACK_APP("\n");
+    /********************* eventToken *********************/
+    DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+            "ATSSB_doForHubCAPICallback: eventToken:" );
+    DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
+            eventToken,
+            DBGX_UINT8_HEXADECIMAL      );
+
+    /********************* eventDataLen *******************/
+    DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+            "ATSSB_doForHubCAPICallback: eventDataLen:" );
+    DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
+            eventDataLen,
+            DBGX_UINT8_HEXADECIMAL      );
+
+    /********************* *eventDataPtr ******************/
+    DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+            "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
+
+    for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
+    {
+        if( eventDataLen > ATSSB_CALLBACK_LOG_DATA_PART_LEN )
+        {
+            eventDataLenTemp = ATSSB_CALLBACK_LOG_DATA_PART_LEN;
+        }
+        else
+        {
+            eventDataLenTemp = eventDataLen;
+        }
+
+        DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP   (
+                eventDataPtrTemp,
+                eventDataLenTemp,
+                DBGX_UINT8_HEXADECIMAL          );
+
+        eventDataPtrTemp += eventDataLenTemp;   //increase pointer by already sent
+        eventDataLen -= eventDataLenTemp;       //update length for next iteration
+
+        if( eventDataLen == 0u )
+        {
+            break;
+        }
+    }
+}
 /******************************************************************************/
 /* FUNCTIONS                                                                  */
 /******************************************************************************/
@@ -130,69 +237,70 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
                                     const uint8_t *eventDataPtr,
                                     uint8_t eventDataLen )
 {
-    uint8_t index;
-    uint8_t eventDataLenTemp;
-    uint8_t *eventDataPtrTemp = (uint8_t*)eventDataPtr; //lint !e926 !e954 !e9005 convert in non-const done intentionally
+    #ifdef ATSSB_RTOS_IS_USED //Allocate memory and fill data in ref queue, if rtos used
 
-    if( (eventToken & SSB_EVT_CLIENT_MASK) == SSB_EVT_CLIENT_0 )
-    {
-        if( (eventToken & SSB_EVT_TYPE_MASK) == SSB_EVT_LOOP_RESULTS )
+        ATSSB_REF_QUEUE_ELEMENT_t *msgPtr;
+
+        //allocate memory for a new queue element
+        if(RTOS_allocateMemoryForRefQueue( &RTOS_atssbRefQueue, (void*)&msgPtr )
+                                    != RTOS_REF_QUEUE_OK)
         {
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP("\n");
-            /********************* eventToken *********************/
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-                    "ATSSB_doForHubCAPICallback: eventToken:" );
-            DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
-                    eventToken,
-                    DBGX_UINT8_HEXADECIMAL      );
-
-            /********************* eventDataLen *******************/
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-                    "ATSSB_doForHubCAPICallback: eventDataLen:" );
-            DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
-                    eventDataLen,
-                    DBGX_UINT8_HEXADECIMAL      );
-
-            /********************* *eventDataPtr ******************/
-            DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-                    "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
-
-            for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
-            {
-                if( eventDataLen > ATSSB_CALLBACK_LOG_DATA_MAX )
-                {
-                    eventDataLenTemp = ATSSB_CALLBACK_LOG_DATA_MAX;
-                }
-                else
-                {
-                    eventDataLenTemp = eventDataLen;
-                }
-
-                DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP   (
-                        eventDataPtrTemp,
-                        eventDataLenTemp,
-                        DBGX_UINT8_HEXADECIMAL          );
-
-                eventDataPtrTemp += eventDataLenTemp;   //increase pointer by already sent
-                eventDataLen -= eventDataLenTemp;       //update length for next iteration
-
-                if( eventDataLen == 0u )
-                {
-                    break;
-                }
-            }
+            return;
         }
         else
         {
-            //nothing to do for the moment
+            //Fill queue if there is free memory available
+            msgPtr->eventToken = eventToken;
+            msgPtr->eventDataLen = eventDataLen;
+            UTI_vMemCopy( eventDataPtr,  msgPtr->eventData, eventDataLen );
+
+            if( RTOS_putReferenceAtRefQueueEnd( &RTOS_atssbRefQueue, msgPtr,
+                                                sizeof(ATSSB_REF_QUEUE_ELEMENT_t),
+                                                RTOS_NO_WAIT )
+                                    != RTOS_REF_QUEUE_OK )
+            {
+                return;
+            }
         }
-    }
-    else
-    {
-        //nothing to do for the moment
-    }
+
+        //Set flag to trigger ATSSB_getDataFromRefQueueReleaseMem()
+        (void)RTD_RunEventDrivenTask( FLAG_0, ET_ID_ORYX );
+
+    #else  //ATSSB_RTOS_IS_USED
+        //Send data directly with debug comp, if baremetal scheduler used
+        ATSSB_setDataToDebugcomponent( eventToken, eventDataPtr, eventDataLen );
+    #endif
 }
 
+#ifdef ATSSB_RTOS_IS_USED
+uint8_t ATSSB_getDataFromRefQueueReleaseMem(void)
+{
+    uint32_t msgLenDummy;
+    ATSSB_REF_QUEUE_ELEMENT_t *msgPtr;
+
+    //get all references from queue
+    while( RTOS_getReferenceFromRefQueue(   &RTOS_atssbRefQueue,
+                                            (void*)&msgPtr,
+                                            &msgLenDummy, RTOS_NO_WAIT)
+
+                                == RTOS_REF_QUEUE_OK )
+    {
+        //take element out of the queue and set to debug comp
+        ATSSB_setDataToDebugcomponent(  msgPtr->eventToken, msgPtr->eventData,
+                                        msgPtr->eventDataLen );
+
+        //free memory
+        if(RTOS_releaseMemoryForRefQueue( &RTOS_atssbRefQueue, msgPtr )
+                                != RTOS_REF_QUEUE_OK)
+        {
+            break;
+        }
+
+    }
+
+    return TASK_INITIALISED;
+}
+#endif //ATSSB_RTOS_IS_USED
 
 uint8_t ATSSB_handleTask(void)
 {
