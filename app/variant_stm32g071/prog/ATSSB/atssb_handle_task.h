@@ -85,7 +85,7 @@ extern void ATSSB_doForHubCAPICallback(     uint16_t eventToken,
  *          -TASK_INITIALISED     - Task initialized and in run state
  *
  */
-extern uint8_t ATSSB_releaseQueue(void);
+extern uint8_t ATSSB_getDataFromRefQueueReleaseMem(void);
 #endif //ATSSB_RTOS_IS_USED
 
 /**

@@ -30,11 +30,10 @@
 #include "utility.h"
 #include "system_timer.h"
 #include "debug_extended/api_cfg.h"
+//#include "ssbf_common_c.h" //TODO: activate as soon as SSB stack is available
 #ifdef ATSSB_RTOS_IS_USED
     #include "rtos_ref_queue.h"
     #include "rtos_api.h"
-#else
-    #include "ssbf_common_c.h"
 #endif //ATSSB_RTOS_IS_USED
 /******************************************************************************/
 /* DEFINITIONS AND DECLARATIONS                                               */
@@ -49,7 +48,7 @@
  * \brief   Data which can maximal transmitted at once
  *
  */
-#define ATSSB_CALLBACK_LOG_DATA_MAX             (uint8_t) 25
+#define ATSSB_CALLBACK_LOG_DATA_PART_LEN        (uint8_t) 25
 
 /**
  * \brief   Data which can maximal transmitted at once
@@ -61,7 +60,7 @@
  * \brief   Data which can maximal transmitted at once
  *
  */
-#define ATSSB_CALLBACK_LOG_DATA_MSG_NR          (uint8_t) 5
+#define ATSSB_NUMBER_OF_CALLBACK_LOG_DATA_PARTS (uint8_t) 5
 
 /******************************************************************************/
 /* STATIC TYPEDEFINITIONS                                                     */
@@ -119,7 +118,7 @@ static struct STDCB_Callback ATSSB_callbackSimulationTimerCb;
  */
 RTOS_REF_QUEUE RTOS_atssbRefQueue;
 RTOS_DEFINE_REF_QUEUE_AUTO( RTOS_atssbRefQueue,
-                            ATSSB_CALLBACK_LOG_DATA_MSG_NR,
+                            ATSSB_NUMBER_OF_CALLBACK_LOG_DATA_PARTS,
                             sizeof(ATSSB_REF_QUEUE_ELEMENT_t) );
 #endif //ATSSB_RTOS_IS_USED
 /******************************************************************************/
@@ -155,8 +154,8 @@ static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data
     uint16_t eventToken = 0u;
     uint8_t eventDataLen;
 
-    eventToken |= 0x0001u;
-    eventToken |= 0x8000u;
+    eventToken |= 0x0001u; //TODO:Replace with SSB_EVT_CLIENT_0 as soon as SSB is available
+    eventToken |= 0x8000u; //TODO:Replace with SSB_EVT_LOOP_RESULTS as soon as SSB is available
 
     eventDataLen = (uint8_t)(sizeof(ATSSB_callbackSimulationData) /
                              sizeof(ATSSB_callbackSimulationData[0]));
@@ -208,9 +207,9 @@ static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
 
     for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
     {
-        if( eventDataLen > ATSSB_CALLBACK_LOG_DATA_MAX )
+        if( eventDataLen > ATSSB_CALLBACK_LOG_DATA_PART_LEN )
         {
-            eventDataLenTemp = ATSSB_CALLBACK_LOG_DATA_MAX;
+            eventDataLenTemp = ATSSB_CALLBACK_LOG_DATA_PART_LEN;
         }
         else
         {
@@ -238,7 +237,7 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
                                     const uint8_t *eventDataPtr,
                                     uint8_t eventDataLen )
 {
-    #ifdef ATSSB_RTOS_IS_USED //Fill data in ref queue if rtos used
+    #ifdef ATSSB_RTOS_IS_USED //Allocate memory and fill data in ref queue, if rtos used
 
         ATSSB_REF_QUEUE_ELEMENT_t *msgPtr;
 
@@ -264,7 +263,7 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
             }
         }
 
-        //Set flag to trigger ATSSB_releaseQueue()
+        //Set flag to trigger ATSSB_getDataFromRefQueueReleaseMem()
         (void)RTD_RunEventDrivenTask( FLAG_0, ET_ID_ORYX );
 
     #else  //ATSSB_RTOS_IS_USED
@@ -274,7 +273,7 @@ void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
 }
 
 #ifdef ATSSB_RTOS_IS_USED
-uint8_t ATSSB_releaseQueue(void)
+uint8_t ATSSB_getDataFromRefQueueReleaseMem(void)
 {
     uint32_t msgLenDummy;
     ATSSB_REF_QUEUE_ELEMENT_t *msgPtr;

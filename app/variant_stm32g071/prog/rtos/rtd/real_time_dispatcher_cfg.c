@@ -273,7 +273,7 @@ struct RTD_ProjectInventory RTD_DefaultProjectCatalogue =
       
         /*! place project task handlers here */
         [MOD_ATSSB]         =  ATSSB_handleTask,
-        [MOD_ATSSBQ]        =  ATSSB_releaseQueue
+        [MOD_ATSSBQ]        =  ATSSB_getDataFromRefQueueReleaseMem
 
 #ifdef BLUETOOTH_MODULE
         /*! place BTM task handlers here */
