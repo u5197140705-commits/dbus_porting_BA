@@ -4,7 +4,7 @@ Repo for Developing and Testing the SSB with Framework and RTOS.
 ---
 
 ### Command to get complete project
-git clone https://https://github-bshg.boschdevcloud.com/Generic/ssb_ref_project --recurse-submodules
+git clone https://github-bshg.boschdevcloud.com/Generic/ssb_ref_project --recurse-submodules
 
 ---
 
