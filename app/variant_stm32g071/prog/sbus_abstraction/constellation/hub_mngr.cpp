@@ -76,7 +76,6 @@ static void *SSBCO_CalleeObjPtrToHubFromTaskArray[SSBF_MNGR_NUMBER_OF_HUBS
 #else
     #error SSBF_MNGR_NUMBER_OF_HUBS has wrong value
 #endif
-
 }
 
 /******************************************************************************/
@@ -95,7 +94,7 @@ void HubMngr_c::initHubMngr(uint16_t cfgIdx, uint8_t i2cAddrOffsets,
 
     DBGX_init();
 
-    DBGX_logStr_SCN_SSB_INIT0("Initialization: initHubMngr ");
+    DBGX_logStr_SCN_SSB_INIT0("INI initHubMngr");
 
     if (HubInitialized != true)
     {
@@ -123,13 +122,16 @@ void HubMngr_c::initHubMngr(uint16_t cfgIdx, uint8_t i2cAddrOffsets,
         /* ---------------------------------------------------------- */
 
         initHubProcessing((uint8_t)SSBF_MNGR_NUMBER_OF_HUBS, cfgIdx,
-                           configurationToBeLoaded);
+                          configurationToBeLoaded);
                                          // From Hub_c::
 
         initRegistersMngr(i2cAddrOffsets);
                                          // From SSBAL::SSBR::RegistersMngr_c::
 
-        setSsbConfigurations(SsbConfigurations_c::SsbConfigurationBytes);
+        setSsbConfigurations(
+            SsbConfigurations_c::SsbExplictiteConfigurationParameters,
+            SsbConfigurations_c::SsbConfigurationBytes);
+                                         // Origin of values: ssb_config_auto.cpp
     }
 }
 

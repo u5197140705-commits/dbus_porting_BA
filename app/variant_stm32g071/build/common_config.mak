@@ -38,11 +38,11 @@ pclock ?= 64
 
 # communication configuration
 UDA                  ?= UDA-01
-dbus_uart_channel     = 1
+dbus_uart_channel     = 0
 dbus_node_address     = 1
 dbus_default_baudrate = 96
-dbus_tx_pin           = A2
-dbus_rx_pin           = A3
+dbus_tx_pin           = A9
+dbus_rx_pin           = A10
 TESTMSGSRV_SUBNODE_ADDRESS = 10
 
 
@@ -78,10 +78,4 @@ ifeq ($(FW_update_type),FWU4)
     version_major_gbl    = 1
     version_minor_gbl    = 2
     version_revision_gbl = 3
-endif
-
-# set if tooldrive information output will be suppressed (true) or not (false)
-suppress_tooldrive_info ?= false
-ifneq ($(suppress_tooldrive_info),true)
-$(info Using external tooldrive $(tooldrive))
 endif

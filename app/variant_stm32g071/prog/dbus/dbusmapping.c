@@ -90,9 +90,6 @@ __DBM_EXCLUDE_ERROR_COUNTERS
 #endif
 #include "hsup.h"
 #include "timerlib.h" //Circulating timer.
-#if defined (PLATFORM_SUPPORTS_32BIT_HWTIMER)
-#include "timerMcXs.h" //32bit HW timer
-#endif //PLATFORM_SUPPORTS_32BIT_HWTIMER
 #ifdef LSW_DBUS_MAPPING_INCLUDE_FUNCSAFE
 /* FSF_vIsrDoEntry() and FSF_vIsrDoExit() */
 #include "fSafe.h"
@@ -101,10 +98,10 @@ __DBM_EXCLUDE_ERROR_COUNTERS
 #include "dbusmapping.h"
 
 #ifdef DBM_MCAL
-    #include "mcal/mcal_includes.h"
-    #include "mcal_channels.h"
-#else
-    #include "huart.h"
+#include "mcal/mcal_includes.h"
+#include "mcal_channels.h"
+#else 
+#include "huart.h"
 #endif
 
 // switch off lint advisories for this file: #/## usage, function like macro
@@ -283,7 +280,7 @@ void DBM_UART_vInit(uint8_t ucIndex)
 {
 #ifdef DBM_MCAL
     (void)ucIndex;
-    struct MUART_Config muartCfg = MUART_CFG_8N1(DBUS_DEFAULT_BAUDRATE*100u);
+    struct MUART_Config muartCfg = MUART_CFG_8N1(DBUS_DEFAULT_BAUDRATE*100);
     (void)MUART_init(&DBM_UART_dbusHandle, DBM_UART_dbusChannel, &muartCfg);
     /* Callback initialization */
     MCAL_initCallback(&DBM_UART_handleTxRxCb, DBM_UART_handleTxRxCbFunc, &DBM_UART_dbusHandle);

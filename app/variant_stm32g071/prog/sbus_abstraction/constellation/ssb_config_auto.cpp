@@ -29,6 +29,35 @@
 
 #include "ssb_config_auto.h"
 
+/******************************************************************************/
+/* INTERNAL C-PREPROCESSOR DEFINITIONS                                        */
+/******************************************************************************/
+
+#if SSBF_MNGR_NUMBER_OF_HUBS >= 1U
+    #define SSBAL_DURATION_LOOP_PERIOD_PER_TIMER_IN_MS_HUB_0  (STIM_TIME_MS((uint32_t)1000U))
+    #define SSBF_MNGR_CLIENT_PLACEMENT_MASK_HUB_0             ((uint8_t)0x0F)
+                                      // 0x00,      0x01,     0x02, 0x04, 0x08
+                                      // No Client, Client 0, ...         Client 3
+#endif
+#if SSBF_MNGR_NUMBER_OF_HUBS >= 2U
+    #define SSBAL_DURATION_LOOP_PERIOD_PER_TIMER_IN_MS_HUB_1  (STIM_TIME_MS((uint32_t)1000U))
+    #define SSBF_MNGR_CLIENT_PLACEMENT_MASK_HUB_1             ((uint8_t)0x00)
+#endif
+#if SSBF_MNGR_NUMBER_OF_HUBS >= 3U
+    #define SSBAL_DURATION_LOOP_PERIOD_PER_TIMER_IN_MS_HUB_2  (STIM_TIME_MS((uint32_t)1000U))
+    #define SSBF_MNGR_CLIENT_PLACEMENT_MASK_HUB_2             ((uint8_t)0x00)
+#endif
+#if SSBF_MNGR_NUMBER_OF_HUBS == 4U
+    #define SSBAL_DURATION_LOOP_PERIOD_PER_TIMER_IN_MS_HUB_3  (STIM_TIME_MS((uint32_t)1000U))
+    #define SSBF_MNGR_CLIENT_PLACEMENT_MASK_HUB_3             ((uint8_t)0x00)
+#endif
+#if SSBF_MNGR_NUMBER_OF_HUBS > 4U
+    #error SSBF_MNGR_NUMBER_OF_HUBS too big
+#endif
+#ifndef SSBF_MNGR_NUMBER_OF_HUBS
+    #error SSBF_MNGR_NUMBER_OF_HUBS not defined
+#endif
+
 using namespace ::SSBAL::SSBCO;
 
 #ifdef  SSB_CFG_AS_HUB_REGS_ONLY_WITH_1_HUB_ONLY
@@ -46,6 +75,7 @@ SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
     SSBAL_CFG_END
 };
 #else
+const uint8_t
 SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
 {
     SSBAL_CFG_HUB_0,
@@ -87,6 +117,36 @@ SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
 
     SSBAL_CFG_END
 };
+#endif
+
+const struct SsbExplictiteConfigurationParameters_s
+SsbConfigurations_c::SsbExplictiteConfigurationParameters[SSB_MAX_NUMBER_OF_CLIENTS] =
+{
+#if SSBF_MNGR_NUMBER_OF_HUBS >= 1U
+    {SSBF_MNGR_CLIENT_PLACEMENT_MASK_HUB_0,
+     SSBAL_DURATION_LOOP_PERIOD_PER_TIMER_IN_MS_HUB_0}
+#endif
+#if SSBF_MNGR_NUMBER_OF_HUBS >= 2U
+    ,
+    {SSBF_MNGR_CLIENT_PLACEMENT_MASK_HUB_1,
+     SSBAL_DURATION_LOOP_PERIOD_PER_TIMER_IN_MS_HUB_1}
+#endif
+#if SSBF_MNGR_NUMBER_OF_HUBS >= 3U
+    ,
+    {SSBF_MNGR_CLIENT_PLACEMENT_MASK_HUB_2,
+     SSBAL_DURATION_LOOP_PERIOD_PER_TIMER_IN_MS_HUB_2}
+#endif
+#if SSBF_MNGR_NUMBER_OF_HUBS == 4U
+    ,
+    {SSBF_MNGR_CLIENT_PLACEMENT_MASK_HUB_3,
+     SSBAL_DURATION_LOOP_PERIOD_PER_TIMER_IN_MS_HUB_3}
+#endif
+};
+#if SSBF_MNGR_NUMBER_OF_HUBS > 4U
+    #error SSBF_MNGR_NUMBER_OF_HUBS too big
+#endif
+#ifndef SSBF_MNGR_NUMBER_OF_HUBS
+    #error SSBF_MNGR_NUMBER_OF_HUBS not defined
 #endif
 
 /*lint -e40 @@ */

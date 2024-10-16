@@ -53,10 +53,11 @@ RegisterAccessMngr_c::RegisterAccessMngr_c(void)
 void RegisterAccessMngr_c::initRegisterAccessMngr(uint8_t i2cAddrOffsets)
 {
     class SiData_c *siDataObjPtr;
+    class Timers_c *timersObjPtr;
 
     /* ---------------------------------------------------------- */
 
-    DBGX_logStr_SCN_SSB_INIT("Initialization: initRegisterAccessMngr ");
+    DBGX_logStr_SCN_SSB_INIT("INI initRegisterAccessMngr");
 
     /* ---------------------------------------------------------- */
 
@@ -65,8 +66,15 @@ void RegisterAccessMngr_c::initRegisterAccessMngr(uint8_t i2cAddrOffsets)
 
     associateSiDataObjPtr(siDataObjPtr);    // From RegisterAccess_c::
 
+    timersObjPtr = getTimersObjPtr();       // From SSBF::Timers_c::
+    SSBERR_handleErrDbgIf(timersObjPtr == nullptr, SSB_ERR_TIMERSMNGR_GET_OBJPTR);
+
+    associateTimersObjPtr(timersObjPtr);
+                                            // From RegisterAccess_c::
+
     initRegisterAccess();                   // From RegisterAccess_c::
     initSiDataMngr(i2cAddrOffsets);         // From SSBF::SiDataMngr_c::
+    initTimersMngr();                       // From SSBF::TimersMngr_c::
 }
 
 /*lint +e40 @@ */

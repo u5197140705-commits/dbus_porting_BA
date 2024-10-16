@@ -135,7 +135,7 @@ SpiDataMngr_c::SpiDataMngr_c(void)
 
 void SpiDataMngr_c::initSpiDataMngr(uint8_t instanceIdx)
 {
-    DBGX_logStr_SCN_SSB_INIT("Initialization: initSpiDataMngr ");
+    DBGX_logStr_SCN_SSB_INIT("INI initSpiDataMngr");
 
     SSBERR_handleErrDbgIf(instanceIdx >= (uint8_t)SSBF_MNGR_NUMBER_OF_HUBS,
                           SSB_ERR_SPIDATAMNGR_INSTANCE_IDX);

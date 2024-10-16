@@ -85,7 +85,7 @@ void SiDataMngr_c::initSiDataMngr(uint8_t i2cAddrOffsets)
                           SSB_ERR_SIDATAMNGR_INSTANCE_IDX);
     SiDataMngrInstanceCnt++;
 
-    DBGX_logStr_SCN_SSB_INIT("Initialization: initSiDataMngr ");
+    DBGX_logStr_SCN_SSB_INIT("INI initSiDataMngr");
 
     if (I2c_not_Spi[SiDataMngrInstanceIdx] != false)
     {

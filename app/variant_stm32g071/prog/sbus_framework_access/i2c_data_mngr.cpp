@@ -162,7 +162,7 @@ I2cDataMngr_c::I2cDataMngr_c(void)
 
 void I2cDataMngr_c::initI2cDataMngr(uint8_t instanceIdx, uint8_t i2cAddrOffsets)
 {
-    DBGX_logStr_SCN_SSB_INIT("Initialization: initI2cDataMngr ");
+    DBGX_logStr_SCN_SSB_INIT("INI initI2cDataMngr");
 
     SSBERR_handleErrDbgIf(instanceIdx >= (uint8_t)SSBF_MNGR_NUMBER_OF_HUBS,
                           SSB_ERR_I2CDATAMNGR_INSTANCE_IDX);

@@ -54,9 +54,9 @@
 /* PRIVATE TYPE DEFINITIONS                                                   */
 /******************************************************************************/
 
-#ifndef USE_32BIT_HWTIMER
-typedef uint32_t Tclock;  ///< Type for circulating timer is 32 Bit
-#endif // USE_32BIT_HWTIMER
+
+typedef ulong Tclock;  ///< Type for circulating timer is 32 Bit
+
 
 
 /******************************************************************************/
@@ -163,11 +163,9 @@ Ttimer8 TIM_uc16End;
 #endif
 SDEF_SetSegmentRW_Default() // switch back to default RW segment
 
-static uint16_t TIM_uiTimeOld = 0;///< used to calculate time difference
+static uint TIM_uiTimeOld = 0;///< used to calculate time difference
 
-#ifndef USE_32BIT_HWTIMER
 static Tclock TIM_tCircleTime = 0;
-#endif // USE_32BIT_HWTIMER
 
 /******************************************************************************/
 /* GLOBAL DATA                                                                */
@@ -224,16 +222,14 @@ const TtimerConfig TIM_ptTimer16Config[] ={
 BOOL _TIM_bIsBaseTimerDown(void)
 {
    /* Is base time down? */
-   while ( (uint16_t)( TIM_uiGetCircleMicroSeconds() - TIM_uiTimeOld ) >= BASE_TICKS_PER_US )
+   while ( (uint16)( TIM_uiGetCircleMicroSeconds() - TIM_uiTimeOld ) >= BASE_TICKS_PER_US )
    {
       /* HW-Timer elapsed */
       HSUP_vDisableInt();
       TIM_uiTimeOld  += BASE_TICKS_PER_US;
-#ifndef USE_32BIT_HWTIMER
       TIM_tCircleTime += BASE_TICKS_PER_US;
-#endif // USE_32BIT_HWTIMER
       HSUP_vEnableInt();
-      if( (uint16_t)( TIM_uiGetCircleMicroSeconds() - TIM_uiTimeOld ) < BASE_TICKS_PER_US )
+      if( (uint16)( TIM_uiGetCircleMicroSeconds() - TIM_uiTimeOld ) < BASE_TICKS_PER_US )
       {
           return TRUE;
       }
@@ -241,10 +237,9 @@ BOOL _TIM_bIsBaseTimerDown(void)
    return FALSE;
 }
 
-#ifndef USE_32BIT_HWTIMER
-uint32_t TIM_u32GetCircleMicroSeconds(void)
+
+uint32 TIM_u32GetCircleMicroSeconds(void)
 {
    uint16_t elapsedTime = (uint16_t)(TIM_uiGetCircleMicroSeconds() - TIM_uiTimeOld);
-   return TIM_tCircleTime + (uint32_t)elapsedTime;
+   return TIM_tCircleTime + (uint32)elapsedTime;
 }
-#endif // USE_32BIT_HWTIMER

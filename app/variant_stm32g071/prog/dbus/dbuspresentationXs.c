@@ -72,10 +72,6 @@ If set: Memory module 1 will be defined as a array, which can be addressed start
 #include "hsi_basic.h"
 #endif
 
-#ifdef DBAL_INCLUDED
-#include "BshDBus2AppLayer_internal.h"
-#endif
-
 /* The functions, which are prototyped here, may be defined/prototyped in an external file, which is included in this excess template */
 /*lint -esym(818,pucBuffer) parameter cannot by declared constant */
 static bool MOD_bRead(uint8_t ucMemoryModule, uint16_t uiAddress, uint8_t ucDataLen, uint8_t *pucBuffer);
@@ -309,9 +305,6 @@ void DBPL_vHSI_DataIndication(void* const data, uint32_t data_length)
 
 bool DBPL_bIsNodeToBeWokenUp(uint8_t nodeAddress)
 {
-#ifdef DBAL_INCLUDED
-    return DBAL_isNodeToBeWokenUp(nodeAddress);
-#else
     bool ret = true;
     (void)nodeAddress;
     /*
@@ -320,7 +313,6 @@ bool DBPL_bIsNodeToBeWokenUp(uint8_t nodeAddress)
     DBPL_vUnNotifyWakeupBreakSent();
     */
     return ret;
-#endif
 }
 
 void DBPL_vWakeupSentResponseReceived(uint8_t nodeAddress)

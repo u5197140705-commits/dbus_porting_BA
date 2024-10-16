@@ -49,7 +49,7 @@ TimersMngr_c::TimersMngr_c(void)
 
 void TimersMngr_c::initTimersMngr(void)
 {
-    DBGX_logStr_SCN_SSB_INIT("Initialization: initTimersMngr ");
+    DBGX_logStr_SCN_SSB_INIT("INI initTimersMngr");
 
     initTimers();
 }

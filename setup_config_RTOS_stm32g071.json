@@ -4,7 +4,8 @@
         "mem_utility",
         "debug_extended",
         "debug",
-        "MCAL"
+        "MCAL",
+        "sbus"
     ],
     "compiler": "armclang",
     "dbus_rx": "A3",

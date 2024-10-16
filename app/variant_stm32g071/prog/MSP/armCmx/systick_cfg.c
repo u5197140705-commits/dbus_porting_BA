@@ -27,16 +27,12 @@
 #include "systick.h"
 
 #ifdef RTOS
-    #include "rtos_api.h"
+    #include "os/rtos_interrupts.h"
 #endif
 
 #ifdef SYSTEM_TIMER_SYSTICK
     #include "system_timer.h"
 #endif
-#ifdef DC_COMPONENT_PRESENT
-#include "DC_api.h"
-#endif
-
 #include "IntTblArmCM.h"
 
 /* Info 765: external symbol 'SysTick_Handler' could be made static [MISRA 2012 Rule 8.7, advisory]
@@ -50,29 +46,12 @@
 void SysTick_Handler(void)
 {
 #ifdef RTOS
-
-    #ifdef RTOS_MODE_DEBUG
-        RTOS_startMeasureISRTime();
-    #endif //RTOS_MODE_DEBUG
-
     /* RTOS timer interrupt handler */
     RTOS_SysTickInterruptHandler();
-
+#endif
+    
+#ifdef SYSTEM_TIMER_SYSTICK
     /* System timer interrupt handler */
-    #ifdef SYSTEM_TIMER_SYSTICK
-        STIM_InterruptHandler(SysTick_GetPeriod());
-    #endif
-
-    #ifdef RTOS_MODE_DEBUG
-        RTOS_stopMeasureISRTime();
-    #endif //RTOS_MODE_DEBUG
-
-#elif defined(DC_COMPONENT_PRESENT)
-    DC_systickInterrupHandler();
-#else
-    #ifdef SYSTEM_TIMER_SYSTICK
-        /* System timer interrupt handler */
-        STIM_InterruptHandler(SysTick_GetPeriod());
-    #endif
-#endif //!RTOS
+    STIM_InterruptHandler(SysTick_GetPeriod());
+#endif
 }

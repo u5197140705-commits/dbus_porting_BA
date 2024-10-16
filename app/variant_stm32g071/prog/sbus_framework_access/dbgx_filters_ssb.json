@@ -11,41 +11,50 @@
             ],
             
             "level":[
-                ["ERR"             , "def"     , "on"  , "always defined for the CI-test"],
-                ["WARN"            , "def"     , "on"  , "always defined for the CI-test"],
-                ["INFO"            , "def"     , "on"  , "always defined for the CI-test"]
+                ["ERR"                 , "def"   , "on"  , "always defined for the CI-test"],
+                ["WARN"                , "def"   , "on"  , "always defined for the CI-test"],
+                ["INFO"                , "def"   , "on"  , "always defined for the CI-test"]
             ],
             
             "scenario":[
-                ["SSB_ERR"         , "undef"   , "off" , "Error processing, especially for exceptions and ..."],
+                ["SSB_ERR"             , "undef" , "off" , "Error processing, especially for exceptions and ..."],
 
-                ["SSB_CONSTR"      , "undef"   , "off" , "!!! Never activate for MCU-testing, constructor calls, can be activated for code skeleton (PC-simulation)"],
-                ["SSB_CONSTR0"     , "undef"   , "off" , "!!! Never activate for MCU-testing, constructor calls 0, can be activated for code skeleton (PC-simulation)"],
-                ["SSB_INIT"        , "def"     , "on"  , "Initializations"],
-                ["SSB_INIT0"       , "def"     , "on"  , "Initializations 0"],
-                ["SSB_ASSOC"       , "undef"   , "off" , "Associations between the classes of the generic area"],
-                ["SSB_CBACK0"      , "undef"   , "off" , "Callbacks 0 trough the layers"],
-                ["SSB_CBACK2"      , "undef"   , "off" , "Callbacks 2 trough the layers"],
-                ["SSB_STATMH"      , "undef"   , "off" , "State machine of Hub-ASIC"],
-                ["SSB_STATMR"      , "undef"   , "off" , "State machine of ASIC-register processing"],
-                ["SSB_STATMX"      , "undef"   , "off" , "State machine of access to the ASIC-registers"],
+                ["SSB_CONSTR"          , "undef" , "off" , "!!! Never activate for MCU-testing, constructor calls, can be activated for code skeleton (PC-simulation)"],
+                ["SSB_CONSTR0"         , "undef" , "off" , "!!! Never activate for MCU-testing, constructor calls 0, can be activated for code skeleton (PC-simulation)"],
+                ["SSB_INIT"            , "def"   , "on"  , "REG: Initializations"],
+                ["SSB_INIT0"           , "def"   , "on"  , "REG: Initializations 0"],
+                ["SSB_ASSOC"           , "undef" , "off" , "Associations between the classes of the generic area"],
+                ["SSB_CBACK0"          , "undef" , "off" , "Callbacks 0 trough the layers"],
+                ["SSB_CBACK2"          , "undef" , "off" , "Callbacks 2 trough the layers"],
+                ["SSB_STATMH"          , "undef" , "off" , "State machine of Hub-ASIC"],
+                ["SSB_STATMR"          , "undef" , "off" , "State machine of ASIC-register processing"],
+                ["SSB_STATMX"          , "undef" , "off" , "State machine of access to the ASIC-registers"],
 
-                ["SSB_CFGUR"       , "def"     , "on"  , "Processing of configurator output"],
-                ["SSB_STATES"      , "def"     , "on"  , "Entry and exit states of the state machines"],
-                ["SSB_EVTREQ_LOW"  , "def"     , "on"  , "Events with data trough the layers in request direction, at lower layer only, for Hub register log"],
-                ["SSB_EVTCB_LOW"   , "def"     , "on"  , "Events with data trough the layers in callback direction, at lower layer only, for Hub register log"],
+                ["SSB_CFGUR"           , "def"   , "on"  , "REG: Processing of configurator output"],
 
-                ["SSB_SIDAT"       , "undef"   , "off" , "Serial data (Host-I2C or -SPI, abstracted)"],
-                ["SSB_EVTREQ"      , "undef"   , "off" , "Events with data trough the layers in request direction, at higher layers"],
-                ["SSB_EVTCB"       , "undef"   , "off" , "Events with data trough the layers in callback direction, at higher layers"],
+                ["SSB_STATES_HUB_EN"   , "def"   , "on"  , "REG: Entry states of the Hub state machine"],
+                ["SSB_STATES_HUB_EX"   , "undef" , "off" , "Exit states of the Hub state machine"],
+                ["SSB_STATES_REGS_EN"  , "undef" , "off" , "Entry states of the Regs state machine"],
+                ["SSB_STATES_REGS_EX"  , "undef" , "off" , "Exit states of the Regs state machine"],
+                ["SSB_STATES_REGXS_EN" , "undef" , "off" , "Entry states of the RegXs state machine"],
+                ["SSB_STATES_REGXS_EX" , "undef" , "off" , "Exit states of the RegXs state machine"],
 
-                ["SSB_LOOP"        , "def"     , "on"  , "Processing of the measurement loop"],
-                ["SSB_I2CADDR"     , "undef"   , "off" , "I2C-address of the Hub"],
+                ["SSB_EVTREQ_LOW"      , "def"   , "on"  , "REG: Events with data trough the layers in request direction, at lower layer only, for Hub register log"],
+                ["SSB_EVTCB_LOW"       , "def"   , "on"  , "REG: Events with data trough the layers in callback direction, at lower layer only, for Hub register log"],
 
-                ["SSB_TEMP"        , "undef"   , "off" , "Temporary log outputs, for direct debugging"],
+                ["SSB_SIDAT"           , "undef" , "off" , "Serial data (Host-I2C or -SPI, abstracted)"],
+                ["SSB_EVTREQ"          , "undef" , "off" , "Events with data trough the layers in request direction, at higher layers"],
+                ["SSB_EVTCB"           , "undef" , "off" , "Events with data trough the layers in callback direction, at higher layers"],
 
-                ["__SSB_END__"     , "undef"   , "off" , "End marker for not forgetting ',' for further scenarios above"]
+                ["SSB_LOOP"            , "def"   , "on"  , "REG: Processing of the measurement loop"],
+                ["SSB_STARTUP"         , "def"   , "on"  , "REG: Processing of the startup of SSB-ASICs"],
+                ["SSB_I2CADDR"         , "undef" , "off" , "I2C-address of the Hub"],
+
+                ["SSB_TEMP"            , "undef" , "off" , "Temporary log outputs, for direct debugging"],
+
+                ["__SSB_END__"         , "undef" , "off" , "End marker for not forgetting ',' for further scenarios above"]
             ]
         }
     ]
 }
+

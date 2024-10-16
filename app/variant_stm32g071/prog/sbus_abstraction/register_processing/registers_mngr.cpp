@@ -54,7 +54,7 @@ void RegistersMngr_c::initRegistersMngr(uint8_t i2cAddrOffsets)
 {
     class RegisterAccess_c *registerAccessObjPtr;
 
-    DBGX_logStr_SCN_SSB_INIT("Initialization: initRegistersMngr");
+    DBGX_logStr_SCN_SSB_INIT("INI initRegistersMngr");
 
     registerAccessObjPtr = getRegisterAccessObjPtr();
                                                   // From RegisterAccess_c::

@@ -166,24 +166,14 @@
         DBGX_logStr_Gen(CallingFilter, String);
     }
 
-    void DBGX_logInt_Cfg(uint32_t CallingFilter, const uint32_t Integer, uint32_t Format)
+    void DBGX_logInt_Cfg(uint32_t CallingFilter, const void *Int, uint32_t Format)
     {
-        DBGX_logInt_Gen(CallingFilter, &Integer, Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer));
-    }
-
-    void DBGX_logInt_op_Cfg(uint32_t CallingFilter, const uint32_t Integer)
-    {
-        DBGX_logInt_Gen(CallingFilter, &Integer, DBGX_DEFAULT_FORMAT | DBGX_ADD_INT_LEN_TO_FORMAT(Integer));
+        DBGX_logInt_Gen(CallingFilter, Int, Format);
     }
 
     void DBGX_logIntArr_Cfg(uint32_t CallingFilter, const void *IntArray, uint16_t NumberOfArrayElements, uint32_t Format)
     {
         DBGX_logIntArr_Gen(CallingFilter, IntArray, NumberOfArrayElements, Format);
-    }
-
-    void DBGX_logIntArr_op_Cfg(uint32_t CallingFilter, const void *IntArray, uint16_t NumberOfArrayElements, uint8_t ArrayTypeSize)
-    {
-        DBGX_logIntArr_Gen(CallingFilter, IntArray, NumberOfArrayElements, DBGX_DEFAULT_FORMAT | DBGX_SHIFT_INT_LEN_TO_FORMAT((uint32_t)ArrayTypeSize));
     }
 
     void DBGX_logTime_Cfg(uint32_t CallingFilter)
@@ -201,24 +191,14 @@
         DBGX_logStrStr_Gen(CallingFilter, StringA, StringB);
     }
 
-    void DBGX_logStrInt_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, uint32_t Format)
+    void DBGX_logStrInt_Cfg(uint32_t CallingFilter, const char *String, const void *IntegerAddress, uint32_t Format)
     {
-        DBGX_logStrInt_Gen(CallingFilter, String, &Integer, Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer));
-    }
-
-    void DBGX_logStrInt_op_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer)
-    {
-        DBGX_logStrInt_Gen(CallingFilter, String, &Integer, DBGX_DEFAULT_FORMAT | DBGX_ADD_INT_LEN_TO_FORMAT(Integer));
+        DBGX_logStrInt_Gen(CallingFilter, String, IntegerAddress, Format);
     }
 
     void DBGX_logStrIntArr_Cfg(uint32_t CallingFilter, const char *String, const void *IntArray, uint16_t NumberOfArrayElements, uint32_t Format)
     {
         DBGX_logStrIntArr_Gen(CallingFilter, String, IntArray, NumberOfArrayElements, Format);
-    }
-
-    void DBGX_logStrIntArr_op_Cfg(uint32_t CallingFilter, const char *String, const void *IntArray, uint16_t NumberOfArrayElements, uint8_t ArrayTypeSize)
-    {
-        DBGX_logStrIntArr_Gen(CallingFilter, String, IntArray, NumberOfArrayElements, DBGX_DEFAULT_FORMAT | DBGX_SHIFT_INT_LEN_TO_FORMAT((uint32_t)ArrayTypeSize));
     }
 
     void DBGX_logStrStrLocat_Cfg(uint32_t CallingFilter, const char *StringA, const char *StringB, const char *Function)
@@ -231,123 +211,15 @@
         DBGX_logStrStrLocatFull_Gen(CallingFilter, StringA, StringB, File, Line, Function);
     }
 
-    void DBGX_logStrIntLocat_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, uint32_t Format, const char *Function)
+    void DBGX_logStrIntLocat_Cfg(uint32_t CallingFilter, const char *String, const void *IntegerAddress, uint32_t Format, const char *Function)
     {
-        DBGX_logStrIntLocat_Gen(CallingFilter, String, &Integer, Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer), Function);
+        DBGX_logStrIntLocat_Gen(CallingFilter, String, IntegerAddress, Format, Function);
     }
 
-    void DBGX_logStrIntLocat_op_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, const char *Function)
+    void DBGX_logStrIntLocatFull_Cfg(uint32_t CallingFilter, const char *String, const void *IntegerAddress, uint32_t Format, const char *File, uint32_t Line, const char *Function)
     {
-        DBGX_logStrIntLocat_Gen(CallingFilter, String, &Integer, DBGX_DEFAULT_FORMAT | DBGX_ADD_INT_LEN_TO_FORMAT(Integer), Function);
+        DBGX_logStrIntLocatFull_Gen(CallingFilter, String, IntegerAddress, Format, File, Line, Function);
     }
-
-    void DBGX_logStrIntLocatFull_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, uint32_t Format, const char *File, uint32_t Line, const char *Function)
-    {
-        DBGX_logStrIntLocatFull_Gen(CallingFilter, String, &Integer, Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer), File, Line, Function);
-    }
-
-    void DBGX_logStrIntLocatFull_op_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, const char *File, uint32_t Line, const char *Function)
-    {
-        DBGX_logStrIntLocatFull_Gen(CallingFilter, String, &Integer, DBGX_DEFAULT_FORMAT | DBGX_ADD_INT_LEN_TO_FORMAT(Integer), File, Line, Function);
-    }
-
-
-
-    void DBGX_logChar_NonFiltered_Cfg(char Char)
-    {
-        DBGX_logChar_NonFiltered_Gen(Char);
-    }
-
-    void DBGX_logStr_NonFiltered_Cfg(const char *String)
-    {
-        DBGX_logStr_NonFiltered_Gen(String);
-    }
-
-    void DBGX_logInt_NonFiltered_Cfg(const uint32_t Integer, uint32_t Format)
-    {
-        DBGX_logInt_NonFiltered_Gen(&Integer, Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer));
-    }
-
-    void DBGX_logInt_NonFiltered_op_Cfg(const uint32_t Integer)
-    {
-        DBGX_logInt_NonFiltered_Gen(&Integer, DBGX_DEFAULT_FORMAT | DBGX_ADD_INT_LEN_TO_FORMAT(Integer));
-    }
-
-    void DBGX_logIntArr_NonFiltered_Cfg(const void *IntArray, uint16_t NumberOfArrayElements, uint32_t Format)
-    {
-        DBGX_logIntArr_NonFiltered_Gen(IntArray, NumberOfArrayElements, Format);
-    }
-
-    void DBGX_logIntArr_NonFiltered_op_Cfg(const void *IntArray, uint16_t NumberOfArrayElements, uint8_t ArrayTypeSize)
-    {
-        DBGX_logIntArr_NonFiltered_Gen(IntArray, NumberOfArrayElements, DBGX_DEFAULT_FORMAT | DBGX_SHIFT_INT_LEN_TO_FORMAT((uint32_t)ArrayTypeSize));
-    }
-
-    void DBGX_logTime_NonFiltered_Cfg(void)
-    {
-        DBGX_logTime_NonFiltered_Gen();
-    }
-
-    void DBGX_logLocat_NonFiltered_Cfg(const char *File, uint32_t Line)
-    {
-        DBGX_logLocat_NonFiltered_Gen(File, Line);
-    }
-
-    void DBGX_logStrStr_NonFiltered_Cfg(const char *StringA, const char *StringB)
-    {
-        DBGX_logStrStr_NonFiltered_Gen(StringA, StringB);
-    }
-
-    void DBGX_logStrInt_NonFiltered_Cfg(const char *String, const uint32_t Integer, uint32_t Format)
-    {
-        DBGX_logStrInt_NonFiltered_Gen(String, &Integer, Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer));
-    }
-
-    void DBGX_logStrInt_NonFiltered_op_Cfg(const char *String, const uint32_t Integer)
-    {
-        DBGX_logStrInt_NonFiltered_Gen(String, &Integer, DBGX_DEFAULT_FORMAT | DBGX_ADD_INT_LEN_TO_FORMAT(Integer));
-    }
-
-    void DBGX_logStrIntArr_NonFiltered_Cfg(const char *String, const void *IntArray, uint16_t NumberOfArrayElements, uint32_t Format)
-    {
-        DBGX_logStrIntArr_NonFiltered_Gen(String, IntArray, NumberOfArrayElements, Format);
-    }
-
-    void DBGX_logStrIntArr_NonFiltered_op_Cfg(const char *String, const void *IntArray, uint16_t NumberOfArrayElements, uint8_t ArrayTypeSize)
-    {
-        DBGX_logStrIntArr_NonFiltered_Gen(String, IntArray, NumberOfArrayElements, DBGX_DEFAULT_FORMAT | DBGX_SHIFT_INT_LEN_TO_FORMAT((uint32_t)ArrayTypeSize));
-    }
-
-    void DBGX_logStrStrLocat_NonFiltered_Cfg(const char *StringA, const char *StringB, const char *Function)
-    {
-        DBGX_logStrStrLocat_NonFiltered_Gen(StringA, StringB, Function);
-    }
-
-    void DBGX_logStrStrLocatFull_NonFiltered_Cfg(const char *StringA, const char *StringB, const char *File, uint32_t Line, const char *Function)
-    {
-        DBGX_logStrStrLocatFull_NonFiltered_Gen(StringA, StringB, File, Line, Function);
-    }
-
-    void DBGX_logStrIntLocat_NonFiltered_Cfg(const char *String, const uint32_t Integer, uint32_t Format, const char *Function)
-    {
-        DBGX_logStrIntLocat_NonFiltered_Gen(String, &Integer, Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer), Function);
-    }
-
-    void DBGX_logStrIntLocat_NonFiltered_op_Cfg(const char *String, const uint32_t Integer, const char *Function)
-    {
-        DBGX_logStrIntLocat_NonFiltered_Gen(String, &Integer, DBGX_DEFAULT_FORMAT | DBGX_ADD_INT_LEN_TO_FORMAT(Integer), Function);
-    }
-
-    void DBGX_logStrIntLocatFull_NonFiltered_Cfg(const char *String, const uint32_t Integer, uint32_t Format, const char *File, uint32_t Line, const char *Function)
-    {
-        DBGX_logStrIntLocatFull_NonFiltered_Gen(String, &Integer, Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer), File, Line, Function);
-    }
-
-    void DBGX_logStrIntLocatFull_NonFiltered_op_Cfg(const char *String, const uint32_t Integer, const char *File, uint32_t Line, const char *Function)
-    {
-        DBGX_logStrIntLocatFull_NonFiltered_Gen(String, &Integer, DBGX_DEFAULT_FORMAT | DBGX_ADD_INT_LEN_TO_FORMAT(Integer), File, Line, Function);
-    }
-
 #endif /* ifdef DBGX_TEXT_DAT_FUNCTIONS_ENABLED */
 
 #ifdef DBGX_INPUT_FUNCTIONS_ENABLED

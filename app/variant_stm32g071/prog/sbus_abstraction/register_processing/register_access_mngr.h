@@ -40,6 +40,7 @@ extern "C" {
 #include "register_access.h"
 #include "ssbf_mngr_common.h"
 #include "si_data_mngr.h"
+#include "timers_mngr.h"
 #include "ssb_task.h"
 
 /******************************************************************************/
@@ -49,7 +50,7 @@ namespace SSBAL
 {
     namespace SSBR
     {
-        class RegisterAccessMngr_c : public RegisterAccess_c, public SSBF::SiDataMngr_c
+        class RegisterAccessMngr_c : public RegisterAccess_c, public SSBF::SiDataMngr_c, public SSBF::TimersMngr_c
         {
         private:
 

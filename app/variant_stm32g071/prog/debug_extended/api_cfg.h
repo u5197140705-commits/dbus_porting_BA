@@ -76,9 +76,6 @@ extern "C" {
 /* PUBLIC PREPROCESSOR DEFINITIONS - USER CONFIGURATION                       */
 /******************************************************************************/
 
-#define DBGX_DEFAULT_FORMAT        DBGX_UNSIGNED_HEXADECIMAL
-
-
 #ifdef DBGX_BIN_DAT_FUNCTIONS_ENABLED
     /******************************
     * For Tx or Rx debug_extended data, e.g. for touch: */
@@ -212,62 +209,44 @@ extern "C" {
      * Use the encapsulation function from filter_aut.h for your application, not any functions in the encapsulation.
      * A detailed parameter description can be found at the DBGX_log..._Gen declaration. */
 
-    #define DBGX_logChar_Wrapper(CallingFilter, Char) \
+    #define DBGX_logChar(CallingFilter, Char) \
         DBGX_logChar_Cfg(CallingFilter, Char)
 
-    #define DBGX_logStr_Wrapper(CallingFilter, String) \
+    #define DBGX_logStr(CallingFilter, String) \
         DBGX_logStr_Cfg(CallingFilter, String)
 
-    #define DBGX_logInt_Wrapper(CallingFilter, ...) \
-        DBGX_logInt_Cfg(CallingFilter, __VA_ARGS__)
+    #define DBGX_logInt(CallingFilter, Integer, Format) \
+        DBGX_logInt_Cfg(CallingFilter, (&Integer), (Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer)))
 
-    #define DBGX_logInt_op_Wrapper(CallingFilter, ...) \
-        DBGX_logInt_op_Cfg(CallingFilter, __VA_ARGS__)
-    
-    #define DBGX_logIntArr_Wrapper(CallingFilter, ...) \
-        DBGX_logIntArr_Cfg(CallingFilter, __VA_ARGS__)
+    #define DBGX_logIntArr(CallingFilter, IntegerArrayAddress, NumberOfArrayElements, Format) \
+        DBGX_logIntArr_Cfg(CallingFilter, IntegerArrayAddress, NumberOfArrayElements, (Format | DBGX_ADD_INT_LEN_TO_FORMAT(IntegerArrayAddress[0])))
 
-    #define DBGX_logIntArr_op_Wrapper(CallingFilter, ...) \
-        DBGX_logIntArr_op_Cfg(CallingFilter, __VA_ARGS__)
-
-    #define DBGX_logTime_Wrapper(CallingFilter) \
+    #define DBGX_logTime(CallingFilter) \
         DBGX_logTime_Cfg(CallingFilter)
 
-    #define DBGX_logLocat_Wrapper(CallingFilter) \
+    #define DBGX_logLocat(CallingFilter) \
         DBGX_logLocat_Cfg(CallingFilter, __FILE__, __LINE__)
 
-    #define DBGX_logStrStr_Wrapper(CallingFilter, StringA, StringB) \
+    #define DBGX_logStrStr(CallingFilter, StringA, StringB) \
         DBGX_logStrStr_Cfg(CallingFilter, StringA, StringB)
 
-    #define DBGX_logStrInt_Wrapper(CallingFilter, String, ...) \
-        DBGX_logStrInt_Cfg(CallingFilter, String, __VA_ARGS__)
+    #define DBGX_logStrInt(CallingFilter, String, Integer, Format) \
+        DBGX_logStrInt_Cfg(CallingFilter, String, (&Integer), (Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer)))
 
-    #define DBGX_logStrInt_op_Wrapper(CallingFilter, String, ...) \
-        DBGX_logStrInt_op_Cfg(CallingFilter, String, __VA_ARGS__)
+    #define DBGX_logStrIntArr(CallingFilter, String, IntegerArrayAddress, NumberOfArrayElements, Format) \
+        DBGX_logStrIntArr_Cfg(CallingFilter, String, IntegerArrayAddress, NumberOfArrayElements, (Format | DBGX_ADD_INT_LEN_TO_FORMAT(IntegerArrayAddress[0])))
 
-    #define DBGX_logStrIntArr_Wrapper(CallingFilter, String, ...) \
-        DBGX_logStrIntArr_Cfg(CallingFilter, String, __VA_ARGS__)
-
-    #define DBGX_logStrIntArr_op_Wrapper(CallingFilter, String, ...) \
-        DBGX_logStrIntArr_op_Cfg(CallingFilter, String, __VA_ARGS__)
-
-    #define DBGX_logStrStrLocat_Wrapper(CallingFilter, StringA, StringB) \
+    #define DBGX_logStrStrLocat(CallingFilter, StringA, StringB) \
         DBGX_logStrStrLocat_Cfg(CallingFilter, StringA, StringB, __func__)
 
-    #define DBGX_logStrStrLocatFull_Wrapper(CallingFilter, StringA, StringB) \
+    #define DBGX_logStrStrLocatFull(CallingFilter, StringA, StringB) \
         DBGX_logStrStrLocatFull_Cfg(CallingFilter, StringA, StringB, __FILE__, __LINE__, __func__)
 
-    #define DBGX_logStrIntLocat_Wrapper(CallingFilter, String, ...) \
-        DBGX_logStrIntLocat_Cfg(CallingFilter, String, __VA_ARGS__, __func__)
+    #define DBGX_logStrIntLocat(CallingFilter, String, Integer, Format) \
+        DBGX_logStrIntLocat_Cfg(CallingFilter, String, (&Integer), (Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer)), __func__)
 
-    #define DBGX_logStrIntLocat_op_Wrapper(CallingFilter, String, ...) \
-        DBGX_logStrIntLocat_op_Cfg(CallingFilter, String, __VA_ARGS__, __func__)
-
-    #define DBGX_logStrIntLocatFull_Wrapper(CallingFilter, String, ...) \
-        DBGX_logStrIntLocatFull_Cfg(CallingFilter, String, __VA_ARGS__,  __FILE__, __LINE__, __func__)
-
-    #define DBGX_logStrIntLocatFull_op_Wrapper(CallingFilter, String, ...) \
-        DBGX_logStrIntLocatFull_op_Cfg(CallingFilter, String, __VA_ARGS__,  __FILE__, __LINE__, __func__)
+    #define DBGX_logStrIntLocatFull(CallingFilter, String, Integer, Format) \
+        DBGX_logStrIntLocatFull_Cfg(CallingFilter, String, (&Integer), (Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer)),  __FILE__, __LINE__, __func__)
 
 
     /******************************
@@ -275,107 +254,77 @@ extern "C" {
      * Use this encapsulation here for your application, not any functions from the inside of the encapsulation.
      * A detailed parameter description can be found at the DBGX_log..._Gen declaration. */
 
-    #define DBGX_logChar_NonFiltered_Wrapper(Char) \
-        DBGX_logChar_NonFiltered_Cfg(Char)
+    #define DBGX_logChar_NonFiltered(Char) \
+        DBGX_logChar_NonFiltered_Gen(Char)
 
-    #define DBGX_logStr_NonFiltered_Wrapper(String) \
-        DBGX_logStr_NonFiltered_Cfg(String)
+    #define DBGX_logStr_NonFiltered(String) \
+        DBGX_logStr_NonFiltered_Gen(String)
 
-    #define DBGX_logInt_NonFiltered_Wrapper(...) \
-        DBGX_logInt_NonFiltered_Cfg(__VA_ARGS__)
+    #define DBGX_logInt_NonFiltered(Integer, Format) \
+        DBGX_logInt_NonFiltered_Gen((&Integer), (Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer)))
 
-    #define DBGX_logInt_NonFiltered_op_Wrapper(...) \
-        DBGX_logInt_NonFiltered_op_Cfg(__VA_ARGS__)
+    #define DBGX_logIntArr_NonFiltered(IntegerArrayAddress, NumberOfArrayElements, Format) \
+        DBGX_logIntArr_NonFiltered_Gen(IntegerArrayAddress, NumberOfArrayElements, (Format | DBGX_ADD_INT_LEN_TO_FORMAT(IntegerArrayAddress[0])))
 
-    #define DBGX_logIntArr_NonFiltered_Wrapper(__logIntArrVar__...) \
-        DBGX_logIntArr_NonFiltered_Cfg(__logIntArrVar__)
+    #define DBGX_logTime_NonFiltered() \
+        DBGX_logTime_NonFiltered_Gen()
 
-    #define DBGX_logIntArr_NonFiltered_op_Wrapper(...) \
-        DBGX_logIntArr_NonFiltered_op_Cfg(__VA_ARGS__)
+    #define DBGX_logLocat_NonFiltered() \
+        DBGX_logLocat_NonFiltered_Gen(__FILE__, __LINE__)
 
-    #define DBGX_logTime_NonFiltered_Wrapper() \
-        DBGX_logTime_NonFiltered_Cfg()
+    #define DBGX_logStrStr_NonFiltered(StringA, StringB) \
+        DBGX_logStrStr_NonFiltered_Gen(StringA, StringB)
 
-    #define DBGX_logLocat_NonFiltered_Wrapper() \
-        DBGX_logLocat_NonFiltered_Cfg(__FILE__, __LINE__)
+    #define DBGX_logStrInt_NonFiltered(String, Integer, Format) \
+        DBGX_logStrInt_NonFiltered_Gen(String, (&Integer), (Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer)))
 
-    #define DBGX_logStrStr_NonFiltered_Wrapper(StringA, StringB) \
-        DBGX_logStrStr_NonFiltered_Cfg(StringA, StringB)
+    #define DBGX_logStrIntArr_NonFiltered(String, IntegerArrayAddress, NumberOfArrayElements, Format) \
+        DBGX_logStrIntArr_NonFiltered_Gen(String, IntegerArrayAddress, NumberOfArrayElements, (Format | DBGX_ADD_INT_LEN_TO_FORMAT(IntegerArrayAddress[0])))
 
-    #define DBGX_logStrInt_NonFiltered_Wrapper(String, __logIntVar__...) \
-        DBGX_logStrInt_NonFiltered_Cfg(String, __logIntVar__)
+    #define DBGX_logStrStrLocat_NonFiltered(StringA, StringB) \
+        DBGX_logStrStrLocat_NonFiltered_Gen(StringA, StringB, __func__)
 
-    #define DBGX_logStrInt_NonFiltered_op_Wrapper(String, ...) \
-        DBGX_logStrInt_NonFiltered_op_Cfg(String, __VA_ARGS__)
+    #define DBGX_logStrStrLocatFull_NonFiltered(StringA, StringB) \
+        DBGX_logStrStrLocatFull_NonFiltered_Gen(StringA, StringB, __FILE__, __LINE__, __func__)
 
-    #define DBGX_logStrIntArr_NonFiltered_Wrapper(String, __logIntArrVar__...) \
-        DBGX_logStrIntArr_NonFiltered_Cfg(String, __logIntArrVar__)
+    #define DBGX_logStrIntLocat_NonFiltered(String, Integer, Format) \
+        DBGX_logStrIntLocat_NonFiltered_Gen(String, (&Integer), (Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer)), __func__)
 
-    #define DBGX_logStrIntArr_NonFiltered_op_Wrapper(String, ...) \
-        DBGX_logStrIntArr_NonFiltered_op_Cfg(String, __VA_ARGS__)
-
-    #define DBGX_logStrStrLocat_NonFiltered_Wrapper(StringA, StringB) \
-        DBGX_logStrStrLocat_NonFiltered_Cfg(StringA, StringB, __func__)
-
-    #define DBGX_logStrStrLocatFull_NonFiltered_Wrapper(StringA, StringB) \
-        DBGX_logStrStrLocatFull_NonFiltered_Cfg(StringA, StringB, __FILE__, __LINE__, __func__)
-
-    #define DBGX_logStrIntLocat_NonFiltered_Wrapper(String, __logIntVar__...) \
-        DBGX_logStrIntLocat_NonFiltered_Cfg(String, __logIntVar__, __func__)
-
-    #define DBGX_logStrIntLocat_NonFiltered_op_Wrapper(String, ...) \
-        DBGX_logStrIntLocat_NonFiltered_op_Cfg(String, __VA_ARGS__, __func__)
-
-    #define DBGX_logStrIntLocatFull_NonFiltered_Wrapper(String, __logIntVar__...) \
-        DBGX_logStrIntLocatFull_NonFiltered_Cfg(String, __logIntVar__, __FILE__, __LINE__, __func__)
-
-    #define DBGX_logStrIntLocatFull_NonFiltered_op_Wrapper(String, ...) \
-        DBGX_logStrIntLocatFull_NonFiltered_op_Cfg(String, __VA_ARGS__, __FILE__, __LINE__, __func__)
+    #define DBGX_logStrIntLocatFull_NonFiltered(String, Integer, Format) \
+        DBGX_logStrIntLocatFull_NonFiltered_Gen(String, (&Integer), (Format | DBGX_ADD_INT_LEN_TO_FORMAT(Integer)), __FILE__, __LINE__, __func__)
 
 #else /* From: ifdef DBGX_TEXT_DAT_FUNCTIONS_ENABLED */
 
     /******************************
      * End macro encapsulation in case of deactivated text protocol. */
 
-    #define DBGX_logChar_Wrapper(CallingFilter, Char)
-    #define DBGX_logStr_Wrapper(CallingFilter, String)
-    #define DBGX_logInt_Wrapper(CallingFilter, __logIntVar__...)
-    #define DBGX_logInt_op_Wrapper(CallingFilter, __logIntVar__...)
-    #define DBGX_logIntArr_Wrapper(CallingFilter, __logIntArrVar__...)
-    #define DBGX_logIntArr_op_Wrapper(CallingFilter, __logIntArrVar__...)
-    #define DBGX_logTime_Wrapper(CallingFilter)
-    #define DBGX_logLocat_Wrapper(CallingFilter)
-    #define DBGX_logStrStr_Wrapper(CallingFilter, StringA, StringB)
-    #define DBGX_logStrInt_Wrapper(CallingFilter, String, __logIntVar__...)
-    #define DBGX_logStrInt_op_Wrapper(CallingFilter, String, __logIntVar__...)
-    #define DBGX_logStrIntArr_Wrapper(CallingFilter, String, __logIntArrVar__...)
-    #define DBGX_logStrIntArr_op_Wrapper(CallingFilter, String, __logIntArrVar__...)
-    #define DBGX_logStrStrLocat_Wrapper(CallingFilter, StringA, StringB)
-    #define DBGX_logStrStrLocatFull_Wrapper(CallingFilter, StringA, StringB)
-    #define DBGX_logStrIntLocat_Wrapper(CallingFilter, String, __logIntVar__...)
-    #define DBGX_logStrIntLocat_op_Wrapper(CallingFilter, String, __logIntVar__...)
-    #define DBGX_logStrIntLocatFull_Wrapper(CallingFilter, String, __logIntVar__...)
-    #define DBGX_logStrIntLocatFull_op_Wrapper(CallingFilter, String, __logIntVar__...)
+    #define DBGX_logChar(CallingFilter, Char)
+    #define DBGX_logStr(CallingFilter, String)
+    #define DBGX_logInt(CallingFilter, Integer, Format)
+    #define DBGX_logIntArr(CallingFilter, IntegerArrayAddress, NumberOfArrayElements, Format)
+    #define DBGX_logTime(CallingFilter)
+    #define DBGX_logLocat(CallingFilter)
+    #define DBGX_logStrStr(CallingFilter, StringA, StringB)
+    #define DBGX_logStrInt(CallingFilter, String, Integer, Format)
+    #define DBGX_logStrIntArr(CallingFilter, String, IntegerArrayAddress, NumberOfArrayElements, Format)
+    #define DBGX_logStrStrLocat(CallingFilter, StringA, StringB)
+    #define DBGX_logStrStrLocatFull(CallingFilter, StringA, StringB)
+    #define DBGX_logStrIntLocat(CallingFilter, String, Integer, Format)
+    #define DBGX_logStrIntLocatFull(CallingFilter, String, Integer, Format)
 
-    #define DBGX_logChar_NonFiltered_Wrapper(Char)
-    #define DBGX_logStr_NonFiltered_Wrapper(String)
-    #define DBGX_logInt_NonFiltered_Wrapper(__logIntVar__...)
-    #define DBGX_logInt_NonFiltered_op_Wrapper(__logIntVar__...)
-    #define DBGX_logIntArr_NonFiltered_Wrapper(__logIntArrVar__...)
-    #define DBGX_logIntArr_NonFiltered_op_Wrapper(__logIntArrVar__...)
-    #define DBGX_logTime_NonFiltered_Wrapper()
-    #define DBGX_logLocat_NonFiltered_Wrapper()
-    #define DBGX_logStrStr_NonFiltered_Wrapper(StringA, StringB)
-    #define DBGX_logStrInt_NonFiltered_Wrapper(String, __logIntVar__...)
-    #define DBGX_logStrInt_NonFiltered_op_Wrapper(String, __logIntVar__...)
-    #define DBGX_logStrIntArr_NonFiltered_Wrapper(String, __logIntArrVar__...)
-    #define DBGX_logStrIntArr_NonFiltered_op_Wrapper(String, __logIntArrVar__...)
-    #define DBGX_logStrStrLocat_NonFiltered_Wrapper(StringA, StringB)
-    #define DBGX_logStrStrLocatFull_NonFiltered_Wrapper(StringA, StringB)
-    #define DBGX_logStrIntLocat_NonFiltered_Wrapper(String, __logIntVar__...)
-    #define DBGX_logStrIntLocat_NonFiltered_op_Wrapper(String, __logIntVar__...)
-    #define DBGX_logStrIntLocatFull_NonFiltered_Wrapper(String, __logIntVar__...)
-    #define DBGX_logStrIntLocatFull_NonFiltered_op_Wrapper(String, __logIntVar__...)
+    #define DBGX_logChar_NonFiltered(Char)
+    #define DBGX_logStr_NonFiltered(String)
+    #define DBGX_logInt_NonFiltered(Integer, Format)
+    #define DBGX_logIntArr_NonFiltered(IntegerArrayAddress, NumberOfArrayElements, Format)
+    #define DBGX_logTime_NonFiltered()
+    #define DBGX_logLocat_NonFiltered()
+    #define DBGX_logStrStr_NonFiltered(StringA, StringB)
+    #define DBGX_logStrInt_NonFiltered(String, Integer, Format)
+    #define DBGX_logStrIntArr_NonFiltered(String, IntegerArrayAddress, NumberOfArrayElements, Format)
+    #define DBGX_logStrStrLocat_NonFiltered(StringA, StringB)
+    #define DBGX_logStrStrLocatFull_NonFiltered(StringA, StringB)
+    #define DBGX_logStrIntLocat_NonFiltered(String, Integer, Format)
+    #define DBGX_logStrIntLocatFull_NonFiltered(String, Integer, Format)
 
 #endif /* From: ifdef DBGX_TEXT_DAT_FUNCTIONS_ENABLED */
 
@@ -445,169 +394,93 @@ extern "C" {
 #endif
 
 #ifdef DBGX_TEXT_DAT_FUNCTIONS_ENABLED
-    /** \brief   Wrapper for filtered api function - use encapsulation without the postfix _Cfg in your application.
-     *  \sa      DBGX_logChar_Gen */
+    /** \brief  Wrapper for sending a character via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logChar in your application
+     *  \sa     DBGX_logChar_Gen
+     */
     extern void DBGX_logChar_Cfg(uint32_t CallingFilter, char Char);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStr_Gen */
+    /** \brief  Wrapper for sending a string via the debug_extended interface, NULL-termination
+     *          character not included, filtered
+     *  \note   Use the encapsulating DBGX_logStr in your application
+     *  \sa     DBGX_logStr_Gen
+     */
     extern void DBGX_logStr_Cfg(uint32_t CallingFilter, const char *String);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logInt_Gen */
-    extern void DBGX_logInt_Cfg(uint32_t CallingFilter, const uint32_t Integer, uint32_t Format);
+    /** \brief  Wrapper for sending an integer value as characters via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logInt in your application
+     *  \sa     DBGX_logInt_Gen
+     */
+    extern void DBGX_logInt_Cfg(uint32_t CallingFilter, const void *Int, uint32_t Format);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logInt_Gen */
-    extern void DBGX_logInt_op_Cfg(uint32_t CallingFilter, const uint32_t Integer);
-
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logIntArr_Gen */
+    /** \brief  Wrapper for sending an array of integer values as characters via the debug_extended
+     *          interface, array elements separated by space, filtered
+     *  \note   Use the encapsulating DBGX_logIntArr in your application
+     *  \sa     DBGX_logIntArr_Gen
+     */
     extern void DBGX_logIntArr_Cfg(uint32_t CallingFilter, const void *IntArray, uint16_t NumberOfArrayElements, uint32_t Format);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logIntArr_Gen */
-    extern void DBGX_logIntArr_op_Cfg(uint32_t CallingFilter, const void *IntArray, uint16_t NumberOfArrayElements, uint8_t ArrayTypeSize);
-
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logTime_Gen */
+    /** \brief  Wrapper for sending a decimal time stamp as characters via the debug_extended
+     *          interface, in microseconds, filtered
+     *  \note   Use the encapsulating DBGX_logTime in your application
+     *  \sa     DBGX_logTime_Gen
+     */
     extern void DBGX_logTime_Cfg(uint32_t CallingFilter);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logLocat_Gen */
+    /** \brief  Wrapper for sending the source location as characters via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logLocat in your application
+     *  \sa     DBGX_logLocat_Gen
+     */
     extern void DBGX_logLocat_Cfg(uint32_t CallingFilter, const char *File, uint32_t Line);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStrStr_Gen */
+    /** \brief  Wrapper for sending a concatenation of two strings via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logStrStr in your application
+     *  \sa     DBGX_logStrStr_Gen
+     */
     extern void DBGX_logStrStr_Cfg(uint32_t CallingFilter, const char *StringA, const char *StringB);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStrInt_Gen */
-    extern void DBGX_logStrInt_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, uint32_t Format);
+    /** \brief  Wrapper for sending a concatenation of a string and an integer via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logStrInt in your application
+     *  \sa     DBGX_logStrInt_Gen
+     */
+    extern void DBGX_logStrInt_Cfg(uint32_t CallingFilter, const char *String, const void *IntegerAddress, uint32_t Format);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logStrInt_Gen */
-    extern void DBGX_logStrInt_op_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer);
-
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStrIntArr_Gen */
+    /** \brief  Wrapper for sending a concatenation of a string and an integer array via the debug_extended
+     *          interface, filtered
+     *  \note   Use the encapsulating DBGX_logStrIntArr in your application
+     *  \sa     DBGX_logStrIntArr_Gen
+     */
     extern void DBGX_logStrIntArr_Cfg(uint32_t CallingFilter, const char *String, const void *IntArray, uint16_t NumberOfArrayElements, uint32_t Format);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStrIntArr_Gen */
-    extern void DBGX_logStrIntArr_op_Cfg(uint32_t CallingFilter, const char *String, const void *IntArray, uint16_t NumberOfArrayElements, uint8_t ArrayTypeSize);
-
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStrStrLocat_Gen */
+    /** \brief  Wrapper for sending a concatenation of two strings and the source location (just function name)
+     *          as characters via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logStrStrLocat in your application
+     *  \sa     DBGX_logStrStrLocat_Gen
+     */
     extern void DBGX_logStrStrLocat_Cfg(uint32_t CallingFilter, const char *StringA, const char *StringB, const char *Function);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStrStrLocatFull_Gen */
+    /** \brief  Wrapper for sending a concatenation of two strings and the source location
+     *          (filename, line number, function name) as characters via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logStrStrLocatFull in your application
+     *  \sa     DBGX_logStrStrLocatFull_Gen
+     */
     extern void DBGX_logStrStrLocatFull_Cfg(uint32_t CallingFilter, const char *StringA, const char *StringB, const char *File, uint32_t Line, const char *Function);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStrIntLocat_Gen */
-    extern void DBGX_logStrIntLocat_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, uint32_t Format, const char *Function);
+    /** \brief  Wrapper for sending a concatenation of a string, an integer and the source location (just function name)
+     *          as characters via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logStrIntLocat in your application
+     *  \sa     DBGX_logStrIntLocat_Gen
+     */
+    extern void DBGX_logStrIntLocat_Cfg(uint32_t CallingFilter, const char *String, const void *IntegerAddress, uint32_t Format, const char *Function);
 
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logStrIntLocat_Gen */
-    extern void DBGX_logStrIntLocat_op_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, const char *Function);
-
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \sa DBGX_logStrIntLocatFull_Gen */
-    extern void DBGX_logStrIntLocatFull_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer, uint32_t Format, const char *File, uint32_t Line, const char *Function);
-
-    /** \copybrief DBGX_logChar_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logStrIntLocatFull_Gen */
-    extern void DBGX_logStrIntLocatFull_op_Cfg(uint32_t CallingFilter, const char *String, const uint32_t Integer , const char *File, uint32_t Line, const char *Function);
-
-
-    /** \brief   Wrapper for non-filtered api function - use encapsulation without the postfix _Cfg in your application.
-     *  \sa    DBGX_logChar_NonFiltered_Gen */
-    extern void DBGX_logChar_NonFiltered_Cfg(char Char);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStr_NonFiltered_Gen */
-    extern void DBGX_logStr_NonFiltered_Cfg(const char *String);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logInt_NonFiltered_Gen */
-    extern void DBGX_logInt_NonFiltered_Cfg(const uint32_t Integer, uint32_t Format);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logInt_NonFiltered_Gen */
-    extern void DBGX_logInt_NonFiltered_op_Cfg(const uint32_t Integer);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logIntArr_NonFiltered_Gen */
-    extern void DBGX_logIntArr_NonFiltered_Cfg(const void *IntArray, uint16_t NumberOfArrayElements, uint32_t Format);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logIntArr_NonFiltered_Gen */
-    extern void DBGX_logIntArr_NonFiltered_op_Cfg(const void *IntArray, uint16_t NumberOfArrayElements, uint8_t ArrayTypeSize);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logTime_NonFiltered_Gen */
-    extern void DBGX_logTime_NonFiltered_Cfg(void);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logLocat_NonFiltered_Gen */
-    extern void DBGX_logLocat_NonFiltered_Cfg(const char *File, uint32_t Line);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStrStr_NonFiltered_Gen */
-    extern void DBGX_logStrStr_NonFiltered_Cfg(const char *StringA, const char *StringB);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStrInt_NonFiltered_Gen */
-    extern void DBGX_logStrInt_NonFiltered_Cfg(const char *String, const uint32_t Integer, uint32_t Format);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStrInt_NonFiltered_Gen */
-    extern void DBGX_logStrInt_NonFiltered_op_Cfg(const char *String, const uint32_t Integer);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStrIntArr_NonFiltered_Gen */
-    extern void DBGX_logStrIntArr_NonFiltered_Cfg(const char *String, const void *IntArray, uint16_t NumberOfArrayElements, uint32_t Format);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logStrIntArr_NonFiltered_Gen */
-    extern void DBGX_logStrIntArr_NonFiltered_op_Cfg(const char *String, const void *IntArray, uint16_t NumberOfArrayElements, uint8_t ArrayTypeSize);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStrStrLocat_NonFiltered_Gen */
-    extern void DBGX_logStrStrLocat_NonFiltered_Cfg(const char *StringA, const char *StringB, const char *Function);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStrStrLocatFull_NonFiltered_Gen */
-    extern void DBGX_logStrStrLocatFull_NonFiltered_Cfg(const char *StringA, const char *StringB, const char *File, uint32_t Line, const char *Function);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStrIntLocat_NonFiltered_Gen */
-    extern void DBGX_logStrIntLocat_NonFiltered_Cfg(const char *String, const uint32_t Integer, uint32_t Format, const char *Function);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logStrIntLocat_NonFiltered_Gen */
-    extern void DBGX_logStrIntLocat_NonFiltered_op_Cfg(const char *String, const uint32_t Integer, const char *Function);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \sa DBGX_logStrIntLocatFull_NonFiltered_Gen */
-    extern void DBGX_logStrIntLocatFull_NonFiltered_Cfg(const char *String, const uint32_t Integer, uint32_t Format, const char *File, uint32_t Line, const char *Function);
-
-    /** \copybrief DBGX_logChar_NonFiltered_Cfg 
-     *  \note This function (with _op_ in its name) is for internal use only. It is optimized in usability and memory consumption, by using less arguments 
-     *  \sa DBGX_logStrIntLocatFull_NonFiltered_Gen */
-    extern void DBGX_logStrIntLocatFull_NonFiltered_op_Cfg(const char *String, const uint32_t Integer , const char *File, uint32_t Line, const char *Function);
+    /** \brief  Wrapper for sending a concatenation of a string, an integer and the source location
+     *          (filename, line number, function name) as characters via the debug_extended interface, filtered
+     *  \note   Use the encapsulating DBGX_logStrIntLocatFull in your application
+     *  \sa     DBGX_logStrIntLocatFull_Gen
+     */
+    extern void DBGX_logStrIntLocatFull_Cfg(uint32_t CallingFilter, const char *String, const void *IntegerAddress, uint32_t Format, const char *File, uint32_t Line, const char *Function);
 #endif /* From: ifdef DBGX_TEXT_DAT_FUNCTIONS_ENABLED */
+
 
 #ifdef DBGX_INPUT_FUNCTIONS_ENABLED
     /** \brief  Register your callback function to the interface input mechanism

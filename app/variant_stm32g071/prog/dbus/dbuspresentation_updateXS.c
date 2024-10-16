@@ -18,11 +18,7 @@
 #include "dbuspresentation_update.h"
 #include "dbusdll.h"
 #include "dbusmapping.h"
-#if defined(MCAL_MSUP_INCLUDED)
-#include "mcal/msup.h" //Needed for reset execution
-#else
-#include "hsup.h" //Needed for reset execution
-#endif
+#include "hsup.h"
 
 #if defined(DBUS2_UPDATE)||defined(DBUS2_UPDATE_HSI)
     #if defined(REMOTE_FIRMWARE_UPDATE)
@@ -101,11 +97,7 @@ void DBPL_vSetUpdateMode(void)
 #if defined(REMOTE_FIRMWARE_UPDATE)
     BMDAT_setBootModule(MAL_PROGRAMMER_ID);
 #ifndef VARIANT_PROGRAMMER
-    #if defined(MCAL_MSUP_INCLUDED)
-        MSUP_generateReset();
-    #else
-        HSUP_vGenerateReset();
-    #endif
+    HSUP_vGenerateReset();
 #endif
 #endif
 }
@@ -116,11 +108,7 @@ void DBPL_vLeaveUpdateMode(void)
     BMDAT_setBaudRate(0u);
     BMDAT_setBootModule(MAL_PRODUCT_APP1);
 #endif
-    #if defined(MCAL_MSUP_INCLUDED)
-        MSUP_generateReset();
-    #else
-        HSUP_vGenerateReset();
-    #endif
+    HSUP_vGenerateReset();
 }
 
 uint16_t DBPL_ulGetUpdateTransitionDelay(void)
@@ -227,13 +215,16 @@ uint16_t DBPL_uGetUsBitTimeForBaudRate(uint16_t baud)
 struct DBPL_EcuConfigReadResult DBPL_tGetEcuConfigReadResult(uint8_t objIdNumber)
 {   /* "partially initialized struct MisraC2012 9.3 required" other 2 elements initialized later */
     struct DBPL_EcuConfigReadResult obj = {.identificationObject = {{{0}}}}; /*lint !e785 , C99 initialization, all zero! */
-    const uint8_t EcuConfigCount   = ECU_ID_COUNT;
-    const uint8_t ProgrammerObjId  = PROGRAMMER_ID_NUMBER;
-    const uint8_t ApplicationObjId = APP_ID_NUMBER;
 #ifdef VARIANT_PROGRAMMER
     /* do not change settings for programmer */
+    const uint8_t EcuConfigCount   = 1u; /* Programmer NOT updatable */
+    const uint8_t ProgrammerObjId  = 1u;
+    const uint8_t ApplicationObjId = 2u;
     obj.status = DBPL_EcuStatusUpdateModeActive; /*Programmer is running.*/
 #else
+    const uint8_t EcuConfigCount   = 1u; /*Standard: Programmer NOT updatable AND one user application.*/
+    const uint8_t ProgrammerObjId  = 2u;
+    const uint8_t ApplicationObjId = 1u;
     obj.status = DBPL_EcuStatusOK; /*Expected to be ok.*/
 #endif
     const struct FWU_hw_version_s  *hw_version = NULL;
