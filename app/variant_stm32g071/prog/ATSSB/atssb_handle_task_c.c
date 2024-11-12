@@ -22,7 +22,6 @@
  *
  *  \details  
  */
-
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
@@ -44,23 +43,6 @@
  */
 #define ATSSB_CALLBACK_SIMUATION_TIME_MS        (uint8_t) 100  // 100ms
 
-/**
- * \brief   Data which can maximal transmitted at once
- *
- */
-#define ATSSB_CALLBACK_LOG_DATA_PART_LEN        (uint8_t) 25
-
-/**
- * \brief   Data which can maximal transmitted at once
- *
- */
-#define ATSSB_CALLBACK_LOG_DATA_LEN             (uint8_t) 82
-
-/**
- * \brief   Data which can maximal transmitted at once
- *
- */
-#define ATSSB_NUMBER_OF_CALLBACK_LOG_DATA_PARTS (uint8_t) 5
 
 /******************************************************************************/
 /* STATIC TYPEDEFINITIONS                                                     */
@@ -160,7 +142,7 @@ static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data
     eventDataLen = (uint8_t)(sizeof(ATSSB_callbackSimulationData) /
                              sizeof(ATSSB_callbackSimulationData[0]));
 
-    ATSSB_doForHubCAPICallback(     eventToken,
+    ATSSB_doForCallbackToApi(     eventToken,
                                     ATSSB_callbackSimulationData,
                                     eventDataLen );
 
@@ -189,21 +171,21 @@ static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
     DBGX_logStr_INFO_SCN_SSB_CBACK_APP("\n");
     /********************* eventToken *********************/
     DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-            "ATSSB_doForHubCAPICallback: eventToken:" );
+            "ATSSB_doForCallbackToApi: eventToken:" );
     DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
             eventToken,
             DBGX_UINT8_HEXADECIMAL      );
 
     /********************* eventDataLen *******************/
     DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-            "ATSSB_doForHubCAPICallback: eventDataLen:" );
+            "ATSSB_doForCallbackToApi: eventDataLen:" );
     DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
             eventDataLen,
             DBGX_UINT8_HEXADECIMAL      );
 
     /********************* *eventDataPtr ******************/
     DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
-            "ATSSB_doForHubCAPICallback: *eventDataPtr:" );
+            "ATSSB_doForCallbackToApi: *eventDataPtr:" );
 
     for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
     {
@@ -233,9 +215,9 @@ static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
 /******************************************************************************/
 /* FUNCTIONS                                                                  */
 /******************************************************************************/
-void ATSSB_doForHubCAPICallback(    uint16_t eventToken,
-                                    const uint8_t *eventDataPtr,
-                                    uint8_t eventDataLen )
+void ATSSB_doForCallbackToApi(  uint16_t eventToken,
+                                const uint8_t *eventDataPtr,
+                                uint8_t eventDataLen )
 {
     #ifdef ATSSB_RTOS_IS_USED //Allocate memory and fill data in ref queue, if rtos used
 
@@ -338,4 +320,3 @@ uint8_t ATSSB_handleTask(void)
 
     return(ATSSB_taskState);
 }
-

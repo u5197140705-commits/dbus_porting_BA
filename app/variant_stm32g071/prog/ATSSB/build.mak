@@ -12,10 +12,17 @@
 #  Description      build include for ATSSB component
 #*******************************************************************************
 
+ssb_use_c_instead_of_cpp_api = false
+
 ifeq ($(testUnit),ATSSB)
-    obj     += ATSSB/Test/ATSSB_testframe
+    #no unittest implemented
 else
-    obj     += ATSSB/atssb_handle_task
+    ifeq ($(ssb_use_c_instead_of_cpp_api),true)
+        src += ATSSB/atssb_handle_task_c.c
+        defines += SSB_USE_C_INSTEAD_OF_CPP_API
+    else
+        src += ATSSB/atssb_handle_task_cpp.cpp
+    endif
 endif
 
 code_gen_cfg += $(app_prog_path)/ATSSB/dbgx_filters.json

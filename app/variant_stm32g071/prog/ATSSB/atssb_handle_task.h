@@ -39,11 +39,37 @@
 /******************************************************************************/
 /* C-PREPROCESSOR DEFINITIONS                                                 */
 /******************************************************************************/
+/**
+ * \brief   Dependencies for scheduler
+ *
+ */
 #define DEP_ATSSB
 
+/**
+ * \brief   Auto-define ATSSB RTOS api
+ *
+ */
 #ifdef RTOS
     #define ATSSB_RTOS_IS_USED
 #endif
+
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+#define ATSSB_CALLBACK_LOG_DATA_PART_LEN        (uint8_t) 25
+
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+#define ATSSB_CALLBACK_LOG_DATA_LEN             (uint8_t) 82
+
+/**
+ * \brief   Data which can maximal transmitted at once
+ *
+ */
+#define ATSSB_NUMBER_OF_CALLBACK_LOG_DATA_PARTS (uint8_t) 5
 /******************************************************************************/
 /* GLOBAL VARIABLES                                                           */
 /******************************************************************************/
@@ -71,7 +97,7 @@ extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
  *
  * \return  none
  */
-extern void ATSSB_doForHubCAPICallback(     uint16_t eventToken,
+extern void ATSSB_doForCallbackToApi(     uint16_t eventToken,
                                             const uint8_t *eventDataPtr,
                                             uint8_t eventDataLen );
 
