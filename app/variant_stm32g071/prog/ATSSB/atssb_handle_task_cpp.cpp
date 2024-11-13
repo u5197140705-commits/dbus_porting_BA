@@ -204,7 +204,9 @@ uint8_t ATSSB_handleTask(void)
     {
         case TASK_NOT_INITIALISED:
         {
-            DBGX_init();
+            #ifdef DBGX_INCLUDED
+                DBGX_init();
+            #endif
 
             SSBAL::SSBCC::ATSSB_HubObject.initHubMngr(
                 SSB_CFG_IDX,                    // As defined in hub_mngr.h
