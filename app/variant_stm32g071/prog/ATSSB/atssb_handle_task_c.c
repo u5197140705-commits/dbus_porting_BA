@@ -28,7 +28,7 @@
 #include "atssb_handle_task.h"
 #include "utility.h"
 #include "system_timer.h"
-#include "debug_extended/api_cfg.h"
+#include "sbus_framework_access/debug_mapping.h"
 //#include "ssbf_common_c.h" //TODO: activate as soon as SSB stack is available
 #ifdef ATSSB_RTOS_IS_USED
     #include "rtos_ref_queue.h"
@@ -301,7 +301,9 @@ uint8_t ATSSB_handleTask(void)
                                     true,
                                     &ATSSB_callbackSimulationTimerCb);
 
-            DBGX_init();
+            #ifdef DBGX_INCLUDED
+                DBGX_init();
+            #endif
 
             ATSSB_taskState = TASK_INITIALISED;
             break;
