@@ -92,7 +92,9 @@ void HubMngr_c::initHubMngr(uint16_t cfgIdx, uint8_t i2cAddrOffsets,
 {
     class Registers_c *registersObjPtr;
 
-    DBGX_init();
+    #ifdef DBGX_INCLUDED
+        DBGX_init();
+    #endif
 
     DBGX_logStr_SCN_SSB_INIT0("INI initHubMngr");
 
