@@ -8,48 +8,40 @@
  *
  *******************************************************************************
  *  PROJECT          Smart Sensor Bus
- *  COMP_ABBREV      HUBC
+ *  COMP_ABBREV      TIM
  ******************************************************************************/
 
-#ifndef HUB_C_API_INTERNAL_H
-#define HUB_C_API_INTERNAL_H
+#ifndef DEBUG_MAPPING_H
+#define DEBUG_MAPPING_H
 
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
-/** \file     hub_c_api_internal.h
+/** \file     debug_mapping.h
  *
- *  \ingroup  sbus_abstraction/constellation
+ *  \ingroup  sbus_framework_access
  *
- *  \brief    Internal header of the C-API for the C++ Hub class (with the
- *            processing for the Hubs and the functionality for the
- *            Hub-connected Clients and Devices)
- *
- *  \details  
+ *  \brief    Compatibility header to debug extended component
  */
 
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
+#ifdef __cplusplus
 extern "C" {
+#endif
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include "sbus_framework_access/debug_mapping.h"
+#include "bsh_stdinc.h"
+
+#ifdef DBGX_INCLUDED
+    #include "debug_extended/api_cfg.h"
+#else
+    #include "filters_aut_dummy.h"
+#endif
+
+#ifdef __cplusplus
 }
+#endif
 
-#include "errors.h"
-#include "constellation/hub_mngr.h"
-
-/******************************************************************************/
-/* C-PREPROCESSOR DEFINITIONS                                                 */
-/******************************************************************************/
-
-/******************************************************************************/
-/* FUNCTION PROTOTYPES                                                        */
-/******************************************************************************/
-
-
-#endif // From: #ifndef HUB_C_API_INTERNAL_H
+#endif // From: #ifndef DEBUG_MAPPING_H
 
