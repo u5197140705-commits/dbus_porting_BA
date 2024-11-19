@@ -1,0 +1,24 @@
+{
+    "baud": "96",
+    "comp": [
+        "mem_utility",
+        "debug_extended",
+        "debug",
+        "MCAL"
+    ],
+    "compiler": "armclang",
+    "dbus_rx": "B7",
+    "dbus_tx": "B6",
+    "derivat": "GD32F303CBT6",
+    "ext_comp": [],
+    "fwu": "FWU1",
+    "macros": [
+        "scheduler_config=auto"
+    ],
+    "node": "1",
+    "platform": "GD32F30",
+    "project": "variant_gd32f30",
+    "scheduler": "new",
+    "uart": "0",
+    "variant": "MyVariant"
+}
