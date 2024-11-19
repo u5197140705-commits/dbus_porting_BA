@@ -227,7 +227,7 @@ uint8_t ATSSB_handleTask(void)
                                                 // of SSB
             );
 
-            SSBAL::SSBCC::ATSSB_HubObject.startLoop(1u/*SSBAL_INFINITE_LOOP*/);
+            SSBAL::SSBCC::ATSSB_HubObject.startLoop(SSB_INFINITE_LOOP);
             SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, ATSSB_doForCallbackToApi);
 
             ATSSB_taskState = TASK_INITIALISED;

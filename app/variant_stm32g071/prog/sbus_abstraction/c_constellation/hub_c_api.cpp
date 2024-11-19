@@ -48,7 +48,7 @@ using namespace ::SSBAL::SSBCO;
 /******************************************************************************/
 /* STATIC VARIABLES                                                           */
 /******************************************************************************/
-#ifdef SSB_USE_C_INSTEAD_OF_CPP_API
+#ifdef SSB_USE_CPP_INSTEAD_OF_C_API
 static SSBF_CallbackFct_t CallbackToCapiFctPtr;
 #endif
 
@@ -57,7 +57,7 @@ static SSBF_CallbackFct_t CallbackToCapiFctPtr;
 /******************************************************************************/
 extern "C" {
 
-#ifdef SSB_USE_C_INSTEAD_OF_CPP_API
+#ifdef SSB_USE_CPP_INSTEAD_OF_C_API
     static void SSB_HUBC_setupHub(uint8_t hubIdx, uint16_t cfgIdx,
                        uint8_t i2cAddrOffsets, uint8_t configurationToBeLoaded);
 
@@ -71,7 +71,7 @@ extern "C" {
 /* OBJECTS                                                                    */
 /******************************************************************************/
 
-#ifdef SSB_USE_C_INSTEAD_OF_CPP_API
+#ifdef SSB_USE_CPP_INSTEAD_OF_C_API
 namespace SSBAL
 {
     namespace SSBCC
@@ -86,7 +86,7 @@ namespace SSBAL
 /******************************************************************************/
 extern "C" {
 
-#ifdef SSB_USE_C_INSTEAD_OF_CPP_API
+#ifdef SSB_USE_CPP_INSTEAD_OF_C_API
     void SSB_HUBC_setupHubs(uint8_t i2cAddrOffsets, uint8_t configurationToBeLoaded)
                                     // Is called in the DBus 
                                     // message handler of 
@@ -257,7 +257,7 @@ extern "C" {
         SSBAL::SSBCC::HubObject[hubIdx].readDebugTest(data);
     }
     //lint +e778
-#endif // From ifdef SSB_USE_C_INSTEAD_OF_CPP_API
+#endif // From ifdef SSB_USE_CPP_INSTEAD_OF_C_API
 
 }   // From: extern "C"
 

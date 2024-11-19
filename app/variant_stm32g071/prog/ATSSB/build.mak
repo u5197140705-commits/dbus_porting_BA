@@ -12,16 +12,16 @@
 #  Description      build include for ATSSB component
 #*******************************************************************************
 
-ssb_use_c_instead_of_cpp_api = false
+ssb_use_cpp_instead_of_c_api = true
 
 ifeq ($(testUnit),ATSSB)
     #no unittest implemented
 else
-    ifeq ($(ssb_use_c_instead_of_cpp_api),true)
-        src += ATSSB/atssb_handle_task_c.c
-        defines += SSB_USE_C_INSTEAD_OF_CPP_API
-    else
+    ifeq ($(ssb_use_cpp_instead_of_c_api),true)
         src += ATSSB/atssb_handle_task_cpp.cpp
+        defines += SSB_USE_CPP_INSTEAD_OF_C_API
+    else
+        src += ATSSB/atssb_handle_task_c.c
     endif
 endif
 
