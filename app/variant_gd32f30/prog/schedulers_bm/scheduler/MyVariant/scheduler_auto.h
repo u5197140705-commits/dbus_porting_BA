@@ -37,9 +37,11 @@ typedef enum SCH_ModuleIDs
     MOD_TIM,
     MOD_WDT,
     MOD_STK,
+    MOD_SSBF,
 
     /* USER CODE BEGIN ProjectModules */
     /*! place your projects modules here */
+    MOD_ATSSB,
     /* USER CODE END ProjectModules */
 
     TOTAL_MODULES

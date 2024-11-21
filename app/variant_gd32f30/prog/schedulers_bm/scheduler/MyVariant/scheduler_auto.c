@@ -31,9 +31,11 @@
 #include "timer/timerlib.h"
 #include "watchdogtimer/watchdogtimer.h"
 #include "stack_monitor/stack_monitor.h"
+#include "sbus_framework_access/ssb_task.h"
 
 /* USER CODE BEGIN Include */
 /*! place your module includes here */
+#include "atssb_handle_task.h"
 /* USER CODE END Include */
 
 
@@ -50,9 +52,11 @@ const TaskID DLL_dep[]	= {DEPLIB_DLL	END_STAMP};
 const TaskID TIM_dep[]	= {DEP_TIM	END_STAMP};
 const TaskID WDT_dep[]	= {DEP_WDT	END_STAMP};
 const TaskID STK_dep[]	= {DEP_STK	END_STAMP};
+const TaskID SSBF_dep[]	= {DEP_SSBF	END_STAMP};
 
 /* USER CODE BEGIN Dependency */
 /*! place your module dependencies here */
+const TaskID ATSSB_dep[] = {DEP_ATSSB END_STAMP};
 /* USER CODE END Dependency */
 
 
@@ -79,9 +83,11 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
         {MOD_TIM, HIGH_PRIORITY},
         {MOD_WDT, LOW_PRIORITY},
         {MOD_STK, LOW_PRIORITY},
+        {MOD_SSBF, HIGH_PRIORITY},
 
         /* USER CODE BEGIN ModulePriority */
         /*! place your project modules and their priorities here */
+        {MOD_ATSSB, LOW_PRIORITY},
         /* USER CODE END ModulePriority */
 
         {END_STAMP, PRIO_NONE}
@@ -101,9 +107,11 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
         [MOD_TIM] = TIM_bHandleTask16,
         [MOD_WDT] = WDT_handleTask,
         [MOD_STK] = STK_HandleTask,
+        [MOD_SSBF] = SSBF_handleTask,
 
         /* USER CODE BEGIN TaskHandlers */
         /*! place your task handlers here */
+        [MOD_ATSSB] = ATSSB_handleTask
         /* USER CODE END TaskHandlers */
     },
 
@@ -123,9 +131,11 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
         [MOD_TIM] = TIM_dep,
         [MOD_WDT] = WDT_dep,
         [MOD_STK] = STK_dep,
+        [MOD_SSBF] = SSBF_dep,
 
         /* USER CODE BEGIN ModuleDependency */
         /*! place your module dependencies arrays here */
+        [MOD_ATSSB] = ATSSB_dep,
         /* USER CODE END ModuleDependency */
     },
 };
