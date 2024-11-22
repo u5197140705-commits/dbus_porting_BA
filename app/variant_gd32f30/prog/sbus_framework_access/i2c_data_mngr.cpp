@@ -49,37 +49,23 @@ const struct MDIO_Channel MDIOPB8_MI2C0_SCL_CFG =
     MDIO_PIN8,
     MDIO_SCFG(MDIO_SPEED_HIGH, MDIO_AFMODE_DEFAULT)
 };
-
-const struct MDIO_Channel MDIOPB11_MI2C1_SDA_CFG =
-{
-    &MDIOB,
-    MDIO_PIN11,
-    MDIO_SCFG(MDIO_SPEED_HIGH, MDIO_AFMODE_DEFAULT)
-};
-
-const struct MDIO_Channel MDIOPB10_MI2C1_SCL_CFG =
-{
-    &MDIOB,
-    MDIO_PIN10,
-    MDIO_SCFG(MDIO_SPEED_HIGH, MDIO_AFMODE_DEFAULT)
-};
 /* --------- End: To be defined by the user ----------- */
 
 const struct MI2C_Channel I2cDataMngr_c::I2cChannelConfigs[SSBF_MNGR_NUMBER_OF_I2C] =
         ///< MCAL-MI2C channel config. data
 {            
     {   ///< MI2C0_SDA_PB9_SCL_PB8 (this one is used):
-        &MI2C0,                         // Defined in MI2C
-        &MDIOPB9_MI2C0_SDA_CFG,         // Defined here
-        &MDIOPB8_MI2C0_SCL_CFG,         // Defined here
-        {.remapMask = GPIO_I2C0_REMAP}  // Defined in MI2C
+        &MI2C0,
+        &MDIOPB9_MI2C0_SDA_CFG,
+        &MDIOPB8_MI2C0_SCL_CFG,
+        {.remapMask = GPIO_I2C0_REMAP}
     },
-    {   ///< MI2C1_SDA_PB11_SCL_PB10 (dummy config):
-        &MI2C1,                         // Defined in MI2C
-        &MDIOPB11_MI2C1_SDA_CFG,        // Defined here
-        &MDIOPB10_MI2C1_SCL_CFG,        // Defined here
-        {.remapMask = NO_REMAP}         // Defined in MI2C
-    }
+    {   ///< MI2C0_SDA_PB9_SCL_PB8 (2nd dummy entry):
+        &MI2C0,
+        &MDIOPB9_MI2C0_SDA_CFG,
+        &MDIOPB8_MI2C0_SCL_CFG,
+        {.remapMask = GPIO_I2C0_REMAP}
+    },
 };
 
 const struct MI2C_Config I2cDataMngr_c::I2cGeneralConfigs[SSBF_MNGR_NUMBER_OF_I2C] =
@@ -187,5 +173,7 @@ void I2cDataMngr_c::initI2cDataMngr(uint8_t instanceIdx, uint8_t i2cAddrOffsets)
     initI2cData(I2cChannelConfigs, I2cGeneralConfigs,
                 I2cHubAddresses, I2cInterfaceIdxs,
                 instanceIdx);                        // From I2cData_c::
+
+    transferI2cFrame(nullptr,0,nullptr,0);
 }
 
