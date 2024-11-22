@@ -208,6 +208,8 @@ uint8_t ATSSB_handleTask(void)
                 DBGX_init();
             #endif
 
+            SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, ATSSB_doForCallbackToApi);
+
             SSBAL::SSBCC::ATSSB_HubObject.initHubMngr(
                 SSB_CFG_IDX,                    // As defined in hub_mngr.h
                                                 // Is filled in in the array of
@@ -227,7 +229,6 @@ uint8_t ATSSB_handleTask(void)
                                                 // of SSB
             );
 
-            SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, ATSSB_doForCallbackToApi);
             SSBAL::SSBCC::ATSSB_HubObject.startLoop(SSB_INFINITE_LOOP);
 
             ATSSB_taskState = TASK_INITIALISED;

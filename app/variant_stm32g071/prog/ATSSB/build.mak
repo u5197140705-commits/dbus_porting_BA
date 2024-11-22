@@ -12,7 +12,7 @@
 #  Description      build include for ATSSB component
 #*******************************************************************************
 
-ssb_use_cpp_instead_of_c_api = true
+ssb_use_cpp_instead_of_c_api = false
 
 ifeq ($(testUnit),ATSSB)
     #no unittest implemented
