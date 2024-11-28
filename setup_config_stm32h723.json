@@ -1,17 +1,24 @@
 {
     "baud": "96",
-    "comp": [],
+    "comp": [
+        "mem_utility",
+        "debug_extended",
+        "debug",
+        "MCAL"
+    ],
     "compiler": "armclang",
     "dbus_rx": "B7",
     "dbus_tx": "B6",
     "derivat": "STM32H723ZG",
     "ext_comp": [],
     "fwu": "FWU1",
-    "macros": [],
+    "macros": [
+        "scheduler_config=auto"
+    ],
     "node": "1",
     "platform": "stm32h7",
     "project": "variant_stm32h723",
-    "scheduler": "rtos",
+    "scheduler": "new",
     "uart": "0",
     "variant": "MyVariant"
 }

@@ -1,17 +1,24 @@
 {
     "baud": "96",
-    "comp": [],
+    "comp": [
+        "mem_utility",
+        "debug_extended",
+        "debug",
+        "MCAL"
+    ],
     "compiler": "armclang",
     "dbus_rx": "A15",
     "dbus_tx": "A14",
     "derivat": "MKV56F1M0VLL24",
     "ext_comp": [],
     "fwu": "FWU1",
-    "macros": [],
+    "macros": [
+        "scheduler_config=auto"
+    ],
     "node": "1",
     "platform": "mkv5x",
     "project": "variant_mkv56f1",
-    "scheduler": "rtos",
+    "scheduler": "new",
     "uart": "0",
     "variant": "MyVariant"
 }
