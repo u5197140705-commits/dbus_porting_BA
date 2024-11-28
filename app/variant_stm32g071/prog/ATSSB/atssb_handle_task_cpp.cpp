@@ -27,7 +27,7 @@
 /******************************************************************************/
 extern "C" {
 
-#include "atssb_handle_task.h"
+#include "atssb_handle_task_cpp.h"
 #include "utility.h"
 #include "sbus_framework_access/debug_mapping.h"
 #include "ssbf_common_c.h"
@@ -67,7 +67,7 @@ namespace SSBAL
  *
  */
 static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
-
+static bool    ATSSB_SsbInitIsPassed = false;
 
 /******************************************************************************/
 /* STATIC FUNCTION DECLARATIONS                                               */
@@ -100,9 +100,9 @@ static void ATSSB_doForCallbackToApi(
  *
  * \return  none
  */
-static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
-                                            const uint8_t *eventDataPtr,
-                                            uint8_t eventDataLen );
+static void ATSSB_setLoopCallbackDataToDebugcomponent(uint16_t eventToken,
+                                                      const uint8_t *eventDataPtr,
+                                                      uint8_t eventDataLen );
 
 
 /******************************************************************************/
@@ -112,31 +112,31 @@ static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
 /******************************************************************************/
 /* STATIC FUNCTION DEFINITION                                                 */
 /******************************************************************************/
-static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
-                                            const uint8_t *eventDataPtr,
-                                            uint8_t eventDataLen )
+static void ATSSB_setLoopCallbackDataToDebugcomponent(uint16_t eventToken,
+                                                      const uint8_t *eventDataPtr,
+                                                      uint8_t eventDataLen )
 {
     uint8_t index;
     uint8_t eventDataLenTemp;
     uint8_t *eventDataPtrTemp = (uint8_t*)eventDataPtr; //lint !e926 !e954 !e9005 !e1773 convert in non-const done intentionally
 
-    DBGX_logStr_INFO_SCN_SSB_CBACK_APP("\n");
+    DBGX_logStr_SCN_SSB_CBACK_APP("\n");
     /********************* eventToken *********************/
-    DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+    DBGX_logStr_SCN_SSB_CBACK_APP(
             "ATSSB_doForCallbackToApi: eventToken:" );
-    DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
+    DBGX_logInt_SCN_SSB_CBACK_APP  (
             eventToken,
             DBGX_UINT8_HEXADECIMAL      );
 
     /********************* eventDataLen *******************/
-    DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+    DBGX_logStr_SCN_SSB_CBACK_APP(
             "ATSSB_doForCallbackToApi: eventDataLen:" );
-    DBGX_logInt_INFO_SCN_SSB_CBACK_APP  (
+    DBGX_logInt_SCN_SSB_CBACK_APP  (
             eventDataLen,
             DBGX_UINT8_HEXADECIMAL      );
 
     /********************* *eventDataPtr ******************/
-    DBGX_logStr_INFO_SCN_SSB_CBACK_APP(
+    DBGX_logStr_SCN_SSB_CBACK_APP(
             "ATSSB_doForCallbackToApi: *eventDataPtr:" );
 
     for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
@@ -150,7 +150,7 @@ static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
             eventDataLenTemp = eventDataLen;
         }
 
-        DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP   (
+        DBGX_logIntArr_SCN_SSB_CBACK_APP   (
                 eventDataPtrTemp,
                 eventDataLenTemp,
                 DBGX_UINT8_HEXADECIMAL          );
@@ -191,7 +191,24 @@ static void ATSSB_doForCallbackToApi(
     //     SSB_EVT_HUB_3
 
     //Debug output
-    ATSSB_setDataToDebugcomponent( eventToken, eventDataPtr, eventDataLen );
+
+    switch (eventToken)
+    {
+        case SSB_EVT_LOAD_CFG_UP:
+            ATSSB_SsbInitIsPassed = true;
+
+            DBGX_logStr_SCN_SSB_CBACK_APP("Init callback");
+            break;
+
+        case SSB_EVT_LOOP_START_UP:
+            DBGX_logStr_SCN_SSB_CBACK_APP("Loop callback");
+            ATSSB_setLoopCallbackDataToDebugcomponent(
+                eventToken, eventDataPtr, eventDataLen);
+            break;
+
+        default:
+            break;
+    }
 }
 
 
@@ -210,6 +227,7 @@ uint8_t ATSSB_handleTask(void)
 
             SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, ATSSB_doForCallbackToApi);
 
+            DBGX_logStr_SCN_SSB_CDIRECT_APP("Init call");
             SSBAL::SSBCC::ATSSB_HubObject.initHubMngr(
                 SSB_CFG_IDX,                    // As defined in hub_mngr.h
                                                 // Is filled in in the array of
@@ -229,14 +247,32 @@ uint8_t ATSSB_handleTask(void)
                                                 // of SSB
             );
 
-            SSBAL::SSBCC::ATSSB_HubObject.startLoop(SSB_INFINITE_LOOP);
-
             ATSSB_taskState = TASK_INITIALISED;
             break;
         }
         case TASK_INITIALISED:
         {
-            //Nothing to do
+            if (ATSSB_SsbInitIsPassed != false)
+            {
+                ATSSB_SsbInitIsPassed = false;
+
+                DBGX_logStr_SCN_SSB_CDIRECT_APP("Loop start call");
+                SSBAL::SSBCC::ATSSB_HubObject.startLoop(SSB_INFINITE_LOOP);
+            }
+
+            // Recommendation for user's actions:
+            //
+            // if (ATSSB_SsbNewLoopDataAreAvailable != false)
+            // {
+            //    ATSSB_SsbNewLoopDataAreAvailable = false;
+            //
+            //    # Longer lasting actions (over 10 us) can be done here with the loop data,
+            //    # with data transferred via a pointer.
+            //
+            //    # Reason: We have the actions on the right task priority of application
+            //    # task here (callback has mostly a higher priority of SSB-provider-SW).
+            // }
+
             break;
         }
         default:
@@ -248,4 +284,6 @@ uint8_t ATSSB_handleTask(void)
 
     return(ATSSB_taskState);
 }
+
 } //extern "C"
+
