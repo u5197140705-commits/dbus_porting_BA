@@ -25,7 +25,7 @@
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
-#include "atssb_handle_task.h"
+#include "atssb_handle_task_c.h"
 #include "utility.h"
 #include "system_timer.h"
 #include "sbus_framework_access/debug_mapping.h"
@@ -41,8 +41,7 @@
  * \brief   Time in which the callback from SSB stack is simulated
  *
  */
-#define ATSSB_CALLBACK_SIMUATION_TIME_MS        (uint8_t) 100  // 100ms
-
+#define ATSSB_CALLBACK_SIMUATION_TIME_MS        0 /*100*/  // 100ms
 
 /******************************************************************************/
 /* STATIC TYPEDEFINITIONS                                                     */
@@ -90,7 +89,9 @@ const uint8_t ATSSB_callbackSimulationData[ATSSB_CALLBACK_LOG_DATA_LEN] =
  * \brief   control blocks for timer to simulate SSB callback
  *
  */
+
 static struct STIM_Timer ATSSB_callbackSimulationTimer;
+
 static struct STDCB_Callback ATSSB_callbackSimulationTimerCb;
 
 #ifdef ATSSB_RTOS_IS_USED
@@ -149,7 +150,6 @@ static int32_t ATSSB_simulateDatastream( void *obj, uint32_t flags, int32_t data
     return 0;
 }
 
-
 /**
  * \brief   Sends data via debug extended component
  *
@@ -198,10 +198,12 @@ static void ATSSB_setDataToDebugcomponent(  uint16_t eventToken,
             eventDataLenTemp = eventDataLen;
         }
 
+#if (ATSSB_CALLBACK_SIMUATION_TIME_MS != 0)
         DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP   (
                 eventDataPtrTemp,
                 eventDataLenTemp,
                 DBGX_UINT8_HEXADECIMAL          );
+#endif
 
         eventDataPtrTemp += eventDataLenTemp;   //increase pointer by already sent
         eventDataLen -= eventDataLenTemp;       //update length for next iteration
@@ -294,9 +296,10 @@ uint8_t ATSSB_handleTask(void)
             (void)STIM_InitCallback(    &ATSSB_callbackSimulationTimerCb,
                                         ATSSB_simulateDatastream,
                                         NULL, STIM_STATUS_TRIGGERED);
+
             (void)STIM_InitTimer(   &ATSSB_callbackSimulationTimer,
                                     STIM_PROCESSING_INTERRUPT,
-                                    STIM_TIME_MS(ATSSB_CALLBACK_SIMUATION_TIME_MS),
+                                    STIM_TIME_MS((uint8_t)ATSSB_CALLBACK_SIMUATION_TIME_MS),
                                     STIM_MODE_PERIODIC,
                                     true,
                                     &ATSSB_callbackSimulationTimerCb);

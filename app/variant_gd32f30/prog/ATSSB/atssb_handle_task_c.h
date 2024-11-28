@@ -84,6 +84,7 @@ extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
 /******************************************************************************/
 /* FUNCTION PROTOTYPES                                                        */
 /******************************************************************************/
+
 #ifdef ATSSB_RTOS_IS_USED
 /**
  * \brief   Releases all messages from queue, notified by eventflag
@@ -108,6 +109,13 @@ extern uint8_t ATSSB_getDataFromRefQueueReleaseMem(void);
  *
  */
 extern uint8_t ATSSB_handleTask(void);
+
+/**
+ * \brief   Callback function to the application, called by the SSB-provider-SW
+ */
+extern void ATSSB_doForCallbackToApi(uint16_t eventToken,
+                                     const uint8_t *eventDataPtr,
+                                     uint8_t eventDataLen );
 
 #endif //ATSSB_HANDLE_TASK_H
 

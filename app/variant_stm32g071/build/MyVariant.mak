@@ -67,5 +67,5 @@ dyntconfig_project_template_use   ?= FALSE
 dyntconfig_project_startup_use    ?= FALSE
 
 #debug component
-dbgx_activated_filters = DBGX_FILTERS_SSB DBGX_FILTERS
+dbgx_activated_filters += DBGX_FILTERS_SSB DBGX_FILTERS
 

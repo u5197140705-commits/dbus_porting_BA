@@ -173,7 +173,5 @@ void I2cDataMngr_c::initI2cDataMngr(uint8_t instanceIdx, uint8_t i2cAddrOffsets)
     initI2cData(I2cChannelConfigs, I2cGeneralConfigs,
                 I2cHubAddresses, I2cInterfaceIdxs,
                 instanceIdx);                        // From I2cData_c::
-
-    transferI2cFrame(nullptr,0,nullptr,0);
 }
 
