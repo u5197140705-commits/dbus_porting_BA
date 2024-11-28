@@ -84,22 +84,6 @@ extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
 /******************************************************************************/
 /* FUNCTION PROTOTYPES                                                        */
 /******************************************************************************/
-/**
- * \brief   Callback for application data
- *
- * \param   eventToken      Contains Hub-Index and further elements according to
- *                          ssbf_common_c.h, the following elements are relevant
- *                          for for the loop results:
- *                          -SSB_EVT_CLIENT_MASK
- *                          -SSB_EVT_TYPE_MASK
- *          eventDataPtr    Pointer to the data delivered (e.g. the loop results)
- *          eventDataLen    Number of bytes delivered via eventDataPtr
- *
- * \return  none
- */
-extern void ATSSB_doForCallbackToApi(     uint16_t eventToken,
-                                            const uint8_t *eventDataPtr,
-                                            uint8_t eventDataLen );
 
 #ifdef ATSSB_RTOS_IS_USED
 /**
@@ -125,6 +109,13 @@ extern uint8_t ATSSB_getDataFromRefQueueReleaseMem(void);
  *
  */
 extern uint8_t ATSSB_handleTask(void);
+
+/**
+ * \brief   Callback function to the application, called by the SSB-provider-SW
+ */
+extern void ATSSB_doForCallbackToApi(uint16_t eventToken,
+                                     const uint8_t *eventDataPtr,
+                                     uint8_t eventDataLen );
 
 #endif //ATSSB_HANDLE_TASK_H
 

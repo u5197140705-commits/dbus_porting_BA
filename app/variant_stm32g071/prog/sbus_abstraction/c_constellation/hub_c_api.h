@@ -44,7 +44,7 @@
 /* FUNCTION PROTOTYPES                                                        */
 /******************************************************************************/
 
-#ifdef SSB_USE_CPP_INSTEAD_OF_C_API
+#ifndef SSB_USE_CPP_INSTEAD_OF_C_API
 
 extern void SSB_HUBC_setupHubs(uint8_t i2cAddrOffsets,
                 uint8_t configurationToBeLoaded);
