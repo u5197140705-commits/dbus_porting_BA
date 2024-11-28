@@ -26,7 +26,7 @@ app_variants   = MyVariant
 
 
 # compiler selection
-cc_build_path ?= armclang
+cc_build_path ?= gccArm
 
 
 # microcontroller configuration

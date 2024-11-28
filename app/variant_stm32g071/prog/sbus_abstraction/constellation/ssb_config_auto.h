@@ -37,7 +37,7 @@
 extern "C" {
 
 #include "bsh_stdinc.h"
-#include "debug_extended/api_cfg.h"
+#include "sbus_framework_access/debug_mapping.h"
 }
 
 #include "constellation/hub.h"
@@ -48,13 +48,11 @@ extern "C" {
 /******************************************************************************/
 
 #define SSB_MAX_NUMBER_OF_CLIENTS             ((uint8_t)4U)
+#define SSB_NUMBER_OF_CONFIGURATION_BYTES     ((uint16_t)372U)
 
-#define SSB_CFG_AS_HUB_REGS_ONLY_WITH_1_HUB_ONLY
-#ifdef  SSB_CFG_AS_HUB_REGS_ONLY_WITH_1_HUB_ONLY
-  #define SSB_NUMBER_OF_CONFIGURATION_BYTES   13U
-#else
-  #define SSB_NUMBER_OF_CONFIGURATION_BYTES   55U
-#endif
+#define SSB_CFG_IDX                           ((uint16_t)0x3311U)
+#define SSB_I2C_ADDR_OFFSETS_DEFAULT          ((uint8_t)0xE4)
+#define SSB_CFG_TO_BE_LOADED                  ((uint8_t)0x01)
 
 /******************************************************************************/
 /* CLASS-IF DEFINITION                                                        */

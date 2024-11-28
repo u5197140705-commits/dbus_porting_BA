@@ -37,7 +37,7 @@ extern "C" {
 #include "mspi_mc.h"
 
 #include "bsh_stdinc.h"
-#include "debug_extended/api_cfg.h"
+#include "sbus_framework_access/debug_mapping.h"
 }
 
 #include "ssbf_mngr_common.h"

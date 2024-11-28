@@ -48,24 +48,30 @@ using namespace ::SSBAL::SSBCO;
 /******************************************************************************/
 /* STATIC VARIABLES                                                           */
 /******************************************************************************/
+#ifndef SSB_USE_CPP_INSTEAD_OF_C_API
 static SSBF_CallbackFct_t CallbackToCapiFctPtr;
-
+#endif
 
 /******************************************************************************/
 /* STATIC FUNCTION DECLARATIONS                                               */
 /******************************************************************************/
 extern "C" {
 
+#ifndef SSB_USE_CPP_INSTEAD_OF_C_API
     static void SSB_HUBC_setupHub(uint8_t hubIdx, uint16_t cfgIdx,
                        uint8_t i2cAddrOffsets, uint8_t configurationToBeLoaded);
+
     static void doForCallbackToApiWrap(
                        void *objPtr, uint16_t eventToken,
                        const uint8_t *eventDataPtr, uint8_t eventDataLen);
+#endif
 }
 
 /******************************************************************************/
 /* OBJECTS                                                                    */
 /******************************************************************************/
+
+#ifndef SSB_USE_CPP_INSTEAD_OF_C_API
 namespace SSBAL
 {
     namespace SSBCC
@@ -73,12 +79,14 @@ namespace SSBAL
         class HubMngr_c HubObject[SSBF_MNGR_NUMBER_OF_HUBS];
     }
 }
+#endif
 
 /******************************************************************************/
 /* FUNCTIONS                                                                  */
 /******************************************************************************/
 extern "C" {
 
+#ifndef SSB_USE_CPP_INSTEAD_OF_C_API
     void SSB_HUBC_setupHubs(uint8_t i2cAddrOffsets, uint8_t configurationToBeLoaded)
                                     // Is called in the DBus 
                                     // message handler of 
@@ -143,6 +151,7 @@ extern "C" {
     }
 
     /* ---------------------------------------------------------------------- */
+
     //lint -e778 the result '0' is OK!
     void SSB_HUBC_writeHubRamRegisters_C(
                 uint8_t hubIdx, uint8_t pageSelectOption, uint8_t registerAddr,
@@ -170,7 +179,7 @@ extern "C" {
                 numberOfReadBytes);
     }
     //lint +e778
-    
+
    //lint -e778 the result '0' is OK!
    void SSB_HUBC_writeClientRamRegisters_C(
                 uint8_t hubIdx, uint8_t clientIdx, uint8_t pageSelectOption, 
@@ -200,7 +209,7 @@ extern "C" {
                 numberOfReadBytes);
     }
     //lint +e778
-    
+ 
     //lint -e778 the result '0' is OK!
     void SSB_HUBC_transferDeviceFrame_C(
                 uint8_t hubIdx, uint8_t clientIdx, uint8_t deviceIdx, 
@@ -222,22 +231,23 @@ extern "C" {
     //lint -e715 SSBAL::SSBCC::HubObject[hubIdx].StartLoop() is not yet implemented
     //                         therefore is singleNotInfinite not used
     void SSB_HUBC_startMeasurementLoop_C(uint8_t hubIdx, uint8_t singleNotInfinite) {
-         if (hubIdx > (SSBF_MNGR_NUMBER_OF_HUBS - 1U)) {
+
+        if (hubIdx > (SSBF_MNGR_NUMBER_OF_HUBS - 1U)) {
             hubIdx = SSBF_MNGR_NUMBER_OF_HUBS - 1U;
         }
         SSBAL::SSBCC::HubObject[hubIdx].startLoop(singleNotInfinite);
-   }
-   //lint +e778 +e438 +e715
+    }
+    //lint +e778 +e438 +e715
   
-   //lint -e778 the result '0' is OK!
-   //lint -e438 SSBAL::SSBCC::HubObject[hubIdx].StopLoop()is not yet implemented
-   void SSB_HUBC_stopMeasurementLoop_C(uint8_t hubIdx) {
+    //lint -e778 the result '0' is OK!
+    //lint -e438 SSBAL::SSBCC::HubObject[hubIdx].StopLoop()is not yet implemented
+    void SSB_HUBC_stopMeasurementLoop_C(uint8_t hubIdx) {
         if (hubIdx > (SSBF_MNGR_NUMBER_OF_HUBS - 1U)) {
             hubIdx = SSBF_MNGR_NUMBER_OF_HUBS - 1U;
         }
         SSBAL::SSBCC::HubObject[hubIdx].stopLoop();
     }
-   //lint +e778 +e438 +e715
+    //lint +e778 +e438 +e715
    
     //lint -e778 the result '0' is OK!
     void SSB_HUBC_readDebugTest_C(uint8_t hubIdx, uint8_t *data) {
@@ -245,6 +255,9 @@ extern "C" {
             hubIdx = SSBF_MNGR_NUMBER_OF_HUBS - 1U;
         }
         SSBAL::SSBCC::HubObject[hubIdx].readDebugTest(data);
-   }
-   //lint +e778
-}  // From: extern "C"
+    }
+    //lint +e778
+#endif // From ifndef SSB_USE_CPP_INSTEAD_OF_C_API
+
+}   // From: extern "C"
+
