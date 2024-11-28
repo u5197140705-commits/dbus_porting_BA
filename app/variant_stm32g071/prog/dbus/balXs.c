@@ -54,10 +54,6 @@
 #include "utility.h"
 #include "dbuspresentation.h"
 
-#ifdef SSBD_INCLUDED
-#include "sbus_abstraction/dbus/msg_lists.h"
-#endif
-
 #ifdef DBGX_INCLUDED
 #include "debug_extended/dbus/dbgx_msg_lists.h"
 #endif
@@ -145,16 +141,6 @@ const TbusObjectTable BAL_tBusObject[] = {
  /* Example: {0x1, (const TbusReceiveObject *) BAL_tReceiveObject_Subsystem_A, (const TbusTransmitObject *) BAL_tTransmitObject_Subsystem_X, &BAL_ucNumberOfElementsInSubsystem_X, &BAL_ucTransmitFlagSubsystem_X} */
 #ifdef CCSS
  ,{CCCMTD_SUBSYS, (const void *)CCCMTD_RxObject, (const void *)CCCMTD_TxObject, &CCCMTD_NumberOfTxObjects, CCCMTD_TxFlags}
-#endif
-#ifdef SSBD_INCLUDED
- /* SSBD DBus message subsystem */
- ,{  
-      SSBD_SUBSYSTEM_ID,
-      SSBD_tReceiveObject,
-      SSBD_tTransmitObject,
-      &SSBD_numberOfElementsInSubsystem,
-      SSBD_transmitFlags
-  }
 #endif
 #ifdef DBGX_INCLUDED
  /* debug_extended DBus message subsystem */

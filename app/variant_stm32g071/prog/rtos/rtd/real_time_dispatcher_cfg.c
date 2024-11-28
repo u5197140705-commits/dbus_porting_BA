@@ -58,7 +58,7 @@
 
 
 #endif
-#include "atssb_handle_task.h"
+
 
 /***************************************************************************************************
  * RTD: Task List Readability
@@ -85,7 +85,7 @@
 //#define THREAD_ULTRA_FAST_1MS     PT_ID_ULTRA_FAST
 //#define THREAD_SUPER_FAST_2MS     PT_ID_SUPER_FAST
 //#define THREAD_FAST_5MS           PT_ID_FAST
-#define THREAD_MEDIUM_10MS        PT_ID_MEDIUM
+//#define THREAD_MEDIUM_10MS        PT_ID_MEDIUM
 //#define THREAD_SLOW_100MS         PT_ID_SLOW
 //#define THREAD_DCM_1MS            PT_ID_DCM
 //#define THREAD_SPIA_1MS           PT_ID_SPIA
@@ -146,7 +146,7 @@ static const TaskID FSF_dep[]      =  {DEP_FSF          END_STAMP};
 #endif
 static const TaskID SYSL_dep[]     =  {                 END_STAMP};
 /*! place your module dependencies here */
-static const TaskID ATSSB_dep[]    = {DEP_ATSSB END_STAMP};
+
 
 #ifdef BLUETOOTH_MODULE
 /*! place BTM dependencies here */
@@ -230,8 +230,7 @@ struct RTD_ProjectInventory RTD_DefaultProjectCatalogue =
     #endif
  
         /*! place project tasks and their thread IDs here */
-        [MOD_ATSSB]         = {MOD_ATSSB,         THREAD_MEDIUM_10MS, RTD_DEFAULT_INTERVAL,   RTD_INTERVAL_COUNTER_INIT},
-        [MOD_ATSSBQ]        = {MOD_ATSSBQ,        ET_ID_ORYX,         RTD_DEFAULT_INTERVAL,   RTD_INTERVAL_COUNTER_INIT},
+
 
 #ifdef BLUETOOTH_MODULE
         /*! place BTM tasks and their thread IDs here */
@@ -272,8 +271,7 @@ struct RTD_ProjectInventory RTD_DefaultProjectCatalogue =
     #endif
       
         /*! place project task handlers here */
-        [MOD_ATSSB]         =  ATSSB_handleTask,
-        [MOD_ATSSBQ]        =  ATSSB_getDataFromRefQueueReleaseMem
+
 
 #ifdef BLUETOOTH_MODULE
         /*! place BTM task handlers here */
@@ -314,8 +312,7 @@ struct RTD_ProjectInventory RTD_DefaultProjectCatalogue =
     #endif
 
         /*! Place module dependency arrays here */
-        [MOD_ATSSB]  = ATSSB_dep,
-        [MOD_ATSSBQ] = ATSSB_dep,
+
 
 #ifdef BLUETOOTH_MODULE
         /*! place BTM dependency arrays here */
@@ -351,7 +348,7 @@ struct RTD_ProjectInventory RTD_DefaultProjectCatalogue =
 const TaskID RTD_EventTasksList_ORYX[] =
 {
     /*! Place Your Task IDs Here */
-    MOD_ATSSBQ  /* FLAG_0 */   //< Smart Sensor Bus application task release queue
+    MOD_BAL  /* FLAG_0 */   //< Example! Please Replace MOD_BAL with your Event Task Module ID
 
 
     /*! DO NOT exceed 32 Tasks */
@@ -913,7 +910,6 @@ RTOS_REF_QUEUE *const RTD_RefQueueList[] =
 {
     /*! Place Your reference queues here */
     &EXA_refQueue,
-    &RTOS_atssbRefQueue
 #ifdef BLUETOOTH_MODULE
     /*! Place Bluetooth Module reference queues here */
  

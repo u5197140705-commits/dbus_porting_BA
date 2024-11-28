@@ -34,14 +34,14 @@
 extern "C" {
 
 #include "bsh_stdinc.h"
-#include "sbus_framework_access/debug_mapping.h"
+#include "debug_mapping.h"
 }
 
 #include "errors.h"
 #include "ssbf_mngr_common.h"
 #include "constellation/hub.h"
-#include "registers_mngr.h"
-#include "ssb_config_auto.h"
+#include "register_processing/registers_mngr.h"
+#include "constellation/ssb_config_auto.h"
 
 /******************************************************************************/
 /* CLASS-IF DEFINITION                                                        */

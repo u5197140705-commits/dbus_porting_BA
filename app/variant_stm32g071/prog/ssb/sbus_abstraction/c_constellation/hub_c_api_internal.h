@@ -36,7 +36,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "sbus_framework_access/debug_mapping.h"
+#include "debug_mapping.h"
 }
 
 #include "errors.h"

@@ -1,7 +1,6 @@
 {
     "baud": "96",
     "comp": [
-        "sbus",
         "mem_utility",
         "debug_extended",
         "debug",

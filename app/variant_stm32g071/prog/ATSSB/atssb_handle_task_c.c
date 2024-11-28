@@ -28,7 +28,7 @@
 #include "atssb_handle_task.h"
 #include "utility.h"
 #include "system_timer.h"
-#include "sbus_framework_access/debug_mapping.h"
+#include "debug_mapping.h"
 //#include "ssbf_common_c.h" //TODO: activate as soon as SSB stack is available
 #ifdef ATSSB_RTOS_IS_USED
     #include "rtos_ref_queue.h"

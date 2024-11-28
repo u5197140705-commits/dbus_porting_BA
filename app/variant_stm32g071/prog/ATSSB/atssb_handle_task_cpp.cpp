@@ -29,7 +29,7 @@ extern "C" {
 
 #include "atssb_handle_task.h"
 #include "utility.h"
-#include "sbus_framework_access/debug_mapping.h"
+#include "debug_mapping.h"
 #include "ssbf_common_c.h"
 }
 
