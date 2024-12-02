@@ -17,6 +17,7 @@
             ],
             
             "scenario":[
+                ["SSB_CDIRECT_APP", "def"   , "on" , "Direct calls application"],
                 ["SSB_CBACK_APP"  , "def"   , "on" , "Callbacks application"]
             ]
         }

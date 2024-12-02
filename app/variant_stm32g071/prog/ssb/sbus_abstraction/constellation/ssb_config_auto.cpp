@@ -70,6 +70,7 @@ SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
 
     //-------- Startup of Hubs and Clients: -----------------------------------------------------------
 
+    0x88U, 0x10U, // RD: [reg_int_hub           = 08] = 10 
     0x7FU, 0x00U, // WR: [reg_page_select       = 7F] = 00 Normal_Page
     0x73U, 0x01U, // WR: [reg_res_hub           = 73] = 01 
     0x88U, 0x10U, // RD: [reg_int_hub           = 08] = 10 
