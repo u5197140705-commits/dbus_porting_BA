@@ -52,7 +52,7 @@
 #define PERIODIC_THREAD_ULTRA_FAST      THREAD_DEACTIVATED
 #define PERIODIC_THREAD_SUPER_FAST      THREAD_DEACTIVATED
 #define PERIODIC_THREAD_FAST            THREAD_DEACTIVATED
-#define PERIODIC_THREAD_MEDIUM          THREAD_DEACTIVATED
+#define PERIODIC_THREAD_MEDIUM          THREAD_ACTIVATED
 #define PERIODIC_THREAD_SLOW            THREAD_DEACTIVATED
 
 /* Bluetooth Module Threads */
@@ -62,7 +62,7 @@
 #define EVENT_THREAD_BLE_LOW            THREAD_DEACTIVATED
 
 /* User Event Threads */
-#define EVENT_THREAD_ORYX               THREAD_DEACTIVATED
+#define EVENT_THREAD_ORYX               THREAD_ACTIVATED
 #define EVENT_THREAD_SPIX_MACAW         THREAD_DEACTIVATED
 #define EVENT_THREAD_VAQUITA            THREAD_DEACTIVATED
 #define EVENT_THREAD_KAKAPO             THREAD_DEACTIVATED
@@ -346,6 +346,8 @@ typedef enum RTD_ModuleIDs
 
 
 #endif
+    MOD_ATSSB,        ///< module ID for Smart Sensor Bus application task
+    MOD_ATSSBQ,       ///< module ID for Smart Sensor Bus application task release queue
 
     TOTAL_MODULES
 }TaskID;
