@@ -58,7 +58,11 @@
 
 
 #endif
-#include "atssb_handle_task.h"
+#ifndef SSB_USE_CPP_INSTEAD_OF_C_API
+    #include "atssb_handle_task_c.h"
+#else
+    #include "atssb_handle_task_cpp.h"
+#endif
 
 /***************************************************************************************************
  * RTD: Task List Readability
