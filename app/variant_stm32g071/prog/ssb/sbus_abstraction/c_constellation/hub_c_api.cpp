@@ -27,7 +27,7 @@
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
-#include "hub_c_api_internal.h"
+#include "c_constellation/hub_c_api_internal.h"
 //lint -e553 Warning 553: undefined preprocessor variable '__STDC_VERSION__',
 //                        assumed 0 [MISRA 2012 Rule 20.9, required]
 //                        The message is absolutely incomprehensible, 
@@ -36,7 +36,7 @@
 //lint +e553
 
 extern "C" {
-#include "hub_c_api.h"
+#include "c_constellation/hub_c_api.h"
 }
 
 using namespace ::SSBAL::SSBCO;

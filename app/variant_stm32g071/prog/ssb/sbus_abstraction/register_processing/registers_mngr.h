@@ -8,20 +8,20 @@
  *
  *******************************************************************************
  *  PROJECT          Smart Sensor Bus
- *  COMP_ABBREV      REGXS
+ *  COMP_ABBREV      REGS
  ******************************************************************************/
 
-#ifndef REGISTER_ACCESS_MNGR_H
-#define REGISTER_ACCESS_MNGR_H
+#ifndef REGISTERS_MNGR_H
+#define REGISTERS_MNGR_H
 
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
-/** \file     register_access_mngr.h
+/** \file     registers_mngr.h
  *
  *  \ingroup  sbus_abstraction/register_processing
  *
- *  \brief    Interfacing of the ASIC-register access manager of the
+ *  \brief    Interfacing of the ASIC-register processing manager of the
  *            SSB-abstraction layer
  *
  *  \details
@@ -33,15 +33,12 @@
 extern "C" {
 
 #include "bsh_stdinc.h"
-#include "sbus_framework_access/debug_mapping.h"
+#include "debug_mapping.h"
 }
 
 #include "errors.h"
-#include "register_access.h"
-#include "ssbf_mngr_common.h"
-#include "si_data_mngr.h"
-#include "timers_mngr.h"
-#include "ssb_task.h"
+#include "register_processing/registers.h"
+#include "register_processing/register_access_mngr.h"
 
 /******************************************************************************/
 /* CLASS-IF DEFINITION                                                        */
@@ -50,28 +47,28 @@ namespace SSBAL
 {
     namespace SSBR
     {
-        class RegisterAccessMngr_c : public RegisterAccess_c, public SSBF::SiDataMngr_c, public SSBF::TimersMngr_c
+        class RegistersMngr_c : public Registers_c, public RegisterAccessMngr_c
         {
         private:
 
         public:
             /** \brief  Creates the object of this class and of the inherited
             *           classes and initializes the generic part of the register
-            *           access
+            *           processing
             *
             *   \details
             */
-            RegisterAccessMngr_c(void);
+            RegistersMngr_c(void);
 
             /** \brief  Initializes the layer of this manager class
             *           and starts initializing the next layer below 
             *
             *   \details
             */
-            void initRegisterAccessMngr(uint8_t i2cAddrOffsets);
+            void initRegistersMngr(uint8_t i2cAddrOffsets);
         };
     }
 }
 
-#endif // From: #ifndef REGISTER_ACCESS_MNGR_H
+#endif // From: #ifndef REGISTERS_MNGR_H
 

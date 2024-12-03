@@ -33,7 +33,7 @@
 extern "C" {
 
 #include "bsh_stdinc.h"
-#include "sbus_framework_access/debug_mapping.h"
+#include "debug_mapping.h"
 }
 
 #include "ssbf_mngr_common.h"

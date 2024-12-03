@@ -1,17 +1,24 @@
 {
     "baud": "96",
-    "comp": [],
+    "comp": [
+        "mem_utility",
+        "debug_extended",
+        "debug",
+        "MCAL"
+    ],
     "compiler": "armclang",
     "dbus_rx": "A10",
     "dbus_tx": "A9",
     "derivat": "STM32L471VE",
     "ext_comp": [],
     "fwu": "FWU1",
-    "macros": [],
+    "macros": [
+        "scheduler_config=auto"
+    ],
     "node": "1",
     "platform": "STM32L4",
     "project": "variant_stm32l471",
-    "scheduler": "rtos",
+    "scheduler": "new",
     "uart": "0",
     "variant": "MyVariant"
 }
