@@ -8,21 +8,23 @@
  *
  *******************************************************************************
  *  PROJECT          Smart Sensor Bus
- *  COMP_ABBREV      TIM
+ *  COMP_ABBREV      I2C
  ******************************************************************************/
 
-#ifndef TIMERS_MNGR_H
-#define TIMERS_MNGR_H
+#ifndef I2C_DATA_MNGR_H
+#define I2C_DATA_MNGR_H
 
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
-/** \file     timers_mngr.h
+/** \file     i2c_data_mngr.h
  *
  *  \ingroup  sbus_framework_access
  *
- *  \brief    Interfacing of the timers manager processing of the SSB-framework
+ *  \brief    Interfacing of the I2C-data manager processing of the SSB-framework
  *            access layer
+ *
+ *  \details
  */
 
 /******************************************************************************/
@@ -31,32 +33,48 @@
 extern "C" {
 
 #include "bsh_stdinc.h"
-#include "sbus_framework_access/debug_mapping.h"
+#include "debug_mapping.h"
 }
 
-#include "errors.h"
-#include "timers.h"
+#include "ssbf_mngr_common.h"
+#include "i2c_data.h"
+
+
+/* --------- Begin: To be defined by the user --------- */
+extern const struct MDIO_Channel MDIOPB9_MI2C1_SDA_CFG;
+extern const struct MDIO_Channel MDIOPB8_MI2C1_SCL_CFG;
+/* --------- End: To be defined by the user ----------- */
 
 /******************************************************************************/
 /* CLASS-IF DEFINITION                                                        */
 /******************************************************************************/
 namespace SSBF
 {
-    class TimersMngr_c : public Timers_c
+    class I2cDataMngr_c : public I2cData_c
     {
     private:
+        static const struct MI2C_Channel I2cChannelConfigs[SSBF_MNGR_NUMBER_OF_I2C];
+        static const struct MI2C_Config I2cGeneralConfigs[SSBF_MNGR_NUMBER_OF_I2C];
+        static const uint8_t I2cInterfaceIdxs[SSBF_MNGR_NUMBER_OF_HUBS];
+        static uint8_t I2cHubAddresses[SSBF_MNGR_NUMBER_OF_HUBS];
+                     ///< See the explanations in i2c_data_mngr.cpp
+                     ///< (at the user-defined initializations)
 
     public:
-        /** \brief  Creates the object of this class and of the inherited classes
-        *           and initializes the generic part of the timers
+        /** \brief  Creates the object of this class
         */
-        TimersMngr_c(void);
+        I2cDataMngr_c(void);
 
         /** \brief  Initializes the layer of this manager class
+        *
+        *   \param  instanceIdx    Index of the instance of this class
+        *                          (0, ..., SSBF_MNGR_NUMBER_OF_HUBS-1)
+        *
+        *   \details
         */
-        void initTimersMngr(void);
+        void initI2cDataMngr(uint8_t instanceIdx, uint8_t i2cAddrOffsets);
     };
 }
 
-#endif // From: #ifndef TIMERS_MNGR_H
+#endif // From: #ifndef I2C_DATA_MNGR_H
 

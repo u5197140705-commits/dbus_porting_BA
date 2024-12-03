@@ -446,7 +446,11 @@ bool DBM_UART_bIsRxError(void)
 #else
    tError = (Terror)DBM_MAP_UART(DBUS_UART_CHANNEL, _ucGetRxError)();
 #endif
-
+#ifdef DBM_UART_REMOVE_OVERRUN_ERROR
+   /* This macro is only defined for Stm32F0 and Stm32F3 platforms and empty for others.
+                  In case overrun errors must explicitly be removed on other platforms, macro must be implemented accordingly */
+   DBM_UART_vRemoveOverrunError();
+#endif
 #ifdef __DBM_DBUS_MAPPING_LOCK_RX_DISABLE
    if (DBM_UART_ucRxDisabled == DBM_UART_RX_EVENT_DURING_LOCK_STATE)
    {
@@ -585,15 +589,14 @@ bool DBM_UART_bIsRxOnGoing(void)
 /************************************************************************/
 void DBM_UART_vHandleRxEvent(void)
 {
+#ifdef DBM_UART_REMOVE_OVERRUN_ERROR
+   uint8_t ucError;
+#endif
     /* enable higher priority interrupts */
    DBM_UART_ENABLE_OTHER_INTERRUPTS();
 #ifdef LSW_DBUS_MAPPING_INCLUDE_FUNCSAFE
    /* Start time measurement */
    FSF_vIsrDoEntry(FS_ISR_DBUS2_RX);
-   if (DLL_isSilentMode() == true)
-   {
-      FSF_stopIsrCheck(FS_ISR_DBUS2_RX);
-   }
 #endif
 #ifdef __DBM_USE_IRQ_FOR_IDLE_DETECTION
    /* Clear pending interrupt. */
@@ -617,7 +620,11 @@ void DBM_UART_vHandleRxEvent(void)
    /* Stop time measurement */
    FSF_vIsrDoExit(FS_ISR_DBUS2_RX);
 #endif
-
+#ifdef DBM_UART_REMOVE_OVERRUN_ERROR
+   //Work-around for Renesas platform in the case a higher priority interrupt interrupts the receive event between reading of DBM_UART_bIsRxError() and DBM_UART_ucGetRxData(). If this interruption lasts long enough to provoke a UART_Overrun error no further receive interrupts would be activated unless this error condition is removed. Unconditional reading of error flags at this point should not have any side effect (i.e. during normal operation the error flags can never be set at this point).
+   ucError = (uint8_t)DBM_MAP_UART(DBUS_UART_CHANNEL, _ucGetRxError)(); // dummy read to make sure Rx Interrupts will be generated even if an overrun error occured between reading of U0RBH and U0RBL (which would cause DBus to stop receiving any data otherwise because of missing Rx interrupts)
+   (void)ucError;
+#endif
 }
 /************************************************************************/
 /* void HUART0_vHandleTxEvent(void) when DBUS_UART_CHANNEL is 0 */
@@ -628,10 +635,6 @@ void DBM_UART_vHandleTxEvent(void)
    #ifdef LSW_DBUS_MAPPING_INCLUDE_FUNCSAFE
    /* Start time measurement */
    FSF_vIsrDoEntry(FS_ISR_DBUS2_TX);
-   if (DLL_isSilentMode() == true)
-   {
-      FSF_stopIsrCheck(FS_ISR_DBUS2_TX);
-   }    
 #endif
    #ifdef __DBM_DBUS_MAPPING_LOCK_TX_DISABLE
    if (!DBM_UART_ucTxDisabled)

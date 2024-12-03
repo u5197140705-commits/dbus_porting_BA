@@ -308,7 +308,7 @@ struct DBPL_SwSubmoduleReadResult DBPL_tGetSwSubmoduleReadResult(const uint8_t *
         .identificationObject =
         {
          .sw_version =
-            {
+            { /** \todo please specify id-string for your flex partition */
                 .ID       = {0,1,2,3,4,5,6,7},
                 .major    = {0x12, 0x34},
                 .minor    = {0x98, 0x76},
@@ -316,7 +316,7 @@ struct DBPL_SwSubmoduleReadResult DBPL_tGetSwSubmoduleReadResult(const uint8_t *
                 .build    = {0xab, 0xcd, 0xef, 0x01}
             },
          .sw_submodule_version = 
-            {
+            { /** \todo please specify id-string for your flex partition */
                 .ID       = {0,1,2,3,4,5,6,7},
                 .major    = {0x12, 0x34},
                 .minor    = {0x98, 0x76},

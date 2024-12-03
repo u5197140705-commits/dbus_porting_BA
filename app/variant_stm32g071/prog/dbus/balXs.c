@@ -82,7 +82,11 @@
 #endif
 
 
+/******************************************************************************/
+/* PRIVATE DEFINITIONS                                                        */
+/******************************************************************************/
 
+#if !defined(DBM_DBUSCAN)
 /**
  BAL_MAX_TRANSMISSION_RETRIES_AFTER_COLLISION: A message, which is aborted, due to a collision,
  must be repeated in order for any recipient to be able to receive the message correctly.
@@ -104,6 +108,7 @@
  by the receiving node, will be retried this many times, before the corresponding transmit flag is reset.
 */
 #define BAL_MAX_TRANSMISSION_RETRIES_AFTER_NEGATIVE_ACKNOWLEDGE    2
+#endif //!DBM_DBUSCAN
 
 #define NO_TX_TABLE  ((const TbusTransmitObject *)(NULL))            //!<zero pointer with type TbusTransmitObject*
 #ifdef GSW_INCLUDE_ONLY_MANDATORY_MESSAGES
@@ -121,6 +126,11 @@
         #endif
      #endif
 #endif
+
+
+/******************************************************************************/
+/* DATA DEFINITIONS                                                           */
+/******************************************************************************/
 
 #ifdef RTOS
     static char BAL_cMutexName[4] = "BAL";
@@ -164,9 +174,15 @@ const TbusObjectTable BAL_tBusObject[] = {
 /*lint -restore -e929 */
 
 const uint8_t BAL_ucNumberOfSubsystems = (uint8_t)UTI_NELEMENTS(BAL_tBusObject); //!< A constant telling how many subsystems are available in the system (needed e.g. for transmission of messages).
-const uint8_t BAL_ucMaxCollisionRetries = BAL_MAX_TRANSMISSION_RETRIES_AFTER_COLLISION; //!<A constant telling how many transmission attempts (retries) are made before giving up transmission of a message.
+#if !defined(DBM_DBUSCAN)
+const uint8_t BAL_ucMaxCollisionRetries  = BAL_MAX_TRANSMISSION_RETRIES_AFTER_COLLISION; //!<A constant telling how many transmission attempts (retries) are made before giving up transmission of a message.
 const uint8_t BAL_ucMaxMissingAckRetries = BAL_MAX_TRANSMISSION_RETRIES_AFTER_MISSING_ACKNOWLEDGE; //!< A constant telling how many transmission attempts (retries) are made before giving up transmission of a message.
-const uint8_t BAL_ucMaxNackRetries = BAL_MAX_TRANSMISSION_RETRIES_AFTER_NEGATIVE_ACKNOWLEDGE; //!<A constant telling how many transmission attempts (retries) are made before giving up transmission of a message.
+const uint8_t BAL_ucMaxNackRetries       = BAL_MAX_TRANSMISSION_RETRIES_AFTER_NEGATIVE_ACKNOWLEDGE; //!<A constant telling how many transmission attempts (retries) are made before giving up transmission of a message.
+#else // DBM_DBUSCAN
+/* With DBusCAN chip it is not possible to differentiate number of transmission retries based on (type of/ not) received ACK, therefore maximum number of retries is set as default */
+const uint8_t BAL_ucMaxTxRetries         = 16u; //!<A constant telling how many transmission attempts are made before giving up transmission of a message.
+#endif
+
 /**************************************************************************************************/
 /* GLOBAL FUNCTION DEFINITIONS                                                                    */
 /**************************************************************************************************/

@@ -8,17 +8,17 @@
  *
  *******************************************************************************
  *  PROJECT          Smart Sensor Bus
- *  COMP_ABBREV      REGS
+ *  COMP_ABBREV      REGXS
  ******************************************************************************/
 
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
-/** \file     registers_mngr.cpp
+/** \file     register_access_mngr.cpp
  *
  *  \ingroup  sbus_abstraction/register_processing
  *
- *  \brief    Register processing manager of the SSB-abstraction layer
+ *  \brief    Register access manager of the SSB-abstraction layer
  *
  *  \details
  */
@@ -26,7 +26,7 @@
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
-#include "registers_mngr.h"
+#include "register_processing/register_access_mngr.h"
 
 using namespace ::SSBAL::SSBR;
 using namespace ::SSBF;
@@ -44,29 +44,38 @@ using namespace ::SSBF;
 /******************************************************************************/
 /* METHODS                                                                    */
 /******************************************************************************/
-RegistersMngr_c::RegistersMngr_c(void)
+RegisterAccessMngr_c::RegisterAccessMngr_c(void)
 {
-    DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: RegistersMngr_c: ",(uint32_t)this,
-                                  DBGX_UNSIGNED_HEXADECIMAL);
+    DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: RegisterAccessMngr_c: ",
+                                  (uint32_t)this, DBGX_UNSIGNED_HEXADECIMAL);
 }
 
-void RegistersMngr_c::initRegistersMngr(uint8_t i2cAddrOffsets)
+void RegisterAccessMngr_c::initRegisterAccessMngr(uint8_t i2cAddrOffsets)
 {
-    class RegisterAccess_c *registerAccessObjPtr;
+    class SiData_c *siDataObjPtr;
+    class Timers_c *timersObjPtr;
 
-    DBGX_logStr_SCN_SSB_INIT("INI initRegistersMngr");
+    /* ---------------------------------------------------------- */
 
-    registerAccessObjPtr = getRegisterAccessObjPtr();
-                                                  // From RegisterAccess_c::
-                                           
-    SSBERR_handleErrDbgIf(registerAccessObjPtr == nullptr, 
-                          SSB_ERR_REGISTERSMNGR_GET_OBJPTR);
+    DBGX_logStr_SCN_SSB_INIT("INI initRegisterAccessMngr");
 
-    associateRegisterAccessObjPtr(registerAccessObjPtr);
-                                                  // From Registers_c::
+    /* ---------------------------------------------------------- */
 
-    initRegistersProcessing();                    // From Registers_c::
-    initRegisterAccessMngr(i2cAddrOffsets);       // From RegisterAccessMngr_c::
+    siDataObjPtr = getSiDataObjPtr();       // From SSBF::SiData_c::
+    SSBERR_handleErrDbgIf(siDataObjPtr == nullptr, SSB_ERR_REGXSMNGR_GET_OBJPTR);
+
+    associateSiDataObjPtr(siDataObjPtr);    // From RegisterAccess_c::
+
+    timersObjPtr = getTimersObjPtr();       // From SSBF::Timers_c::
+    SSBERR_handleErrDbgIf(timersObjPtr == nullptr, SSB_ERR_TIMERSMNGR_GET_OBJPTR);
+
+    associateTimersObjPtr(timersObjPtr);
+                                            // From RegisterAccess_c::
+
+    initRegisterAccess();                   // From RegisterAccess_c::
+    initSiDataMngr(i2cAddrOffsets);         // From SSBF::SiDataMngr_c::
+    initTimersMngr();                       // From SSBF::TimersMngr_c::
 }
 
 /*lint +e40 @@ */
+

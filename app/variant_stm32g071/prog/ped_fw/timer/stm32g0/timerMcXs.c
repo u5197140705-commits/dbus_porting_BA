@@ -30,6 +30,9 @@
 #ifdef MCAL_MPCM_INCLUDED
 #include "mcal/mpcm.h"
 #endif
+#if defined (PLATFORM_SUPPORTS_32BIT_HWTIMER)
+#include "timerMcXs.h" //32bit HW timer
+#endif //PLATFORM_SUPPORTS_32BIT_HWTIMER
 /*
     These macros ensure compatibility between Stm32G071xx and Stm32G081xx platforms.
 */
@@ -37,7 +40,7 @@
 #define RCC_APBENR1_LPTIM1EN     RCC_APB1ENR_LPTIM1EN
 #endif
 
-#if defined(MTIMLP1_PRESENT)
+#if defined(MTIMLP1_PRESENT) && !defined(USE_32BIT_HWTIMER)
 /******************************************************************************/
 /* CODE FOR DERIVATIVES WITH LOW POWER TIMERS                                 */
 /******************************************************************************/
@@ -65,7 +68,7 @@ BOOL _TIM_bGetInitConfig(void)
     return TRUE;
 }
 
-uint16 TIM_uiGetCircleMicroSeconds(void)
+uint16_t TIM_uiGetCircleMicroSeconds(void)
 {
 /*
 *   Following implementation is a workaround to solve the problem documented in STM32G0 errata.
@@ -75,12 +78,12 @@ uint16 TIM_uiGetCircleMicroSeconds(void)
     uint16_t syncTimer;
     do
     {
-        syncTimer = (uint16)LPTIM1_CNT_CNT;         // The LPTIM timer works with asynchronous clock.
-    } while((uint16)LPTIM1_CNT_CNT != syncTimer);   // This check is necessary to correctly result from timer.
+        syncTimer = (uint16_t)LPTIM1_CNT_CNT;         // The LPTIM timer works with asynchronous clock.
+    } while((uint16_t)LPTIM1_CNT_CNT != syncTimer);   // This check is necessary to correctly result from timer.
     return syncTimer;
 }
 
-#elif defined(MTIM14_PRESENT)
+#elif defined(MTIM14_PRESENT) && !defined(USE_32BIT_HWTIMER)
 /******************************************************************************/
 /* CODE FOR DERIVATIVES WITHOUT LOW POWER TIMERS - TIM14 IS USED              */
 /******************************************************************************/
@@ -113,9 +116,47 @@ BOOL _TIM_bGetInitConfig(void)
     return TRUE;
 }
 
-uint16 TIM_uiGetCircleMicroSeconds(void)
+uint16_t TIM_uiGetCircleMicroSeconds(void)
 {
-    return (uint16) (TIM14_CNT_CNT);
+    return (uint16_t) (TIM14_CNT_CNT);
+}
+
+#elif defined(MTIM2_PRESENT) && defined(USE_32BIT_HWTIMER)
+    #if (CORE_CLOCK <= 170U) && ((CORE_CLOCK % PCLOCK) == 0U)
+        #if ((CORE_CLOCK/PCLOCK) == 1U)
+            #define TIMER_PRESCALER             (PCLOCK - 1U)
+        #else
+            #define TIMER_PRESCALER             ((PCLOCK * 2U) - 1U)
+        #endif
+    #else
+        #error "No valid peripheral clock defined. PCLOCK must be correctly defined"
+    #endif //(CORE_CLOCK <= 170U) && ((CORE_CLOCK % PCLOCK) == 0U)
+
+BOOL _TIM_bGetInitConfig(void)
+{
+    /* Enable clock for timer unit. */
+    RCC_APBENR1_TIM2EN = 1;
+    /* Set the prescaler for microsecond base. */
+    TIM2_PSC = TIMER_PRESCALER;
+    TIM2_ARR = 0xFFFFFFFFuL;
+    /* generate update event (UEV) to immediately set new prescaler */
+    TIM2_EGR_UG = 1;
+    /* clear timer update event flag <- maybe not needed in timerMcXs.c, as no interrupts are used there */
+    TIM2_SR_UIF = 0;
+    /* Enable the timer. */
+    TIM2_CR1 = 1;
+
+    return TRUE;
+}
+
+uint16_t TIM_uiGetCircleMicroSeconds(void)
+{
+    return (uint16) (TIM2_CNT);
+}
+
+uint32_t TIM_u32GetCircleMicroSeconds(void)
+{
+   return (TIM2_CNT);
 }
 
 #else

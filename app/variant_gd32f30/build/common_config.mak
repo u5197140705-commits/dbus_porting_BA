@@ -51,6 +51,9 @@ TESTMSGSRV_SUBNODE_ADDRESS = 10
 # firmware update type (FWU1 / FWU3)
 FW_update_type = FWU1
 
+# flex partition table settings (ENABLED / DISABLED)
+fwu_flex_partition_used = DISABLED
+
 # functional safety settings (ENABLED / DISABLED)
 feature_functional_safety ?= DISABLED
 

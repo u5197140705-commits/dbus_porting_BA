@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2022 BSH Hausgeraete GmbH,
+ *  Copyright (c) 2024 BSH Hausgeraete GmbH,
  *  Carl-Wery-Str. 34, 81739 Munich, Germany, www.bsh-group.de
  *
  *  All rights reserved. This program and the accompanying materials
@@ -7,49 +7,66 @@
  *  Please contact copyright holder for licensing information.
  *
  *******************************************************************************
- *  PROJECT          Smart Sensor Bus
- *  COMP_ABBREV      HUBC
+ *  PROJECT         Generic SW
+ *  COMP_ABBREV     TIM
  ******************************************************************************/
 
-#ifndef HUB_C_API_INTERNAL_H
-#define HUB_C_API_INTERNAL_H
+
+#ifndef TIMER_MC_XS_H
+#define TIMER_MC_XS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
-/** \file     hub_c_api_internal.h
+/** \file     timerMcXs.h
  *
- *  \ingroup  sbus_abstraction/constellation
+ *  \ingroup  PED-FW
  *
- *  \brief    Internal header of the C-API for the C++ Hub class (with the
- *            processing for the Hubs and the functionality for the
- *            Hub-connected Clients and Devices)
- *
- *  \details  
+ *  \brief    Public inline functions and macro definitions specific for
+ *            STM32G0 TIMER.
  */
+
+
 
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
-extern "C" {
+#include "BSH_stdinc.h"
+#include "processor.h"
+#include "timerlib.h"
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include "sbus_framework_access/debug_mapping.h"
+
+/******************************************************************************/
+/* PUBLIC DEFINITIONS                                                         */
+/******************************************************************************/
+/** \brief    The macro function returns the current 32 bit timer
+ *            value in microseconds.
+ *
+ *  \details  The macro could be used to get direct value of the 32 bit timer
+ *            in cases when using standard function TIM_u32GetCircleMicroSeconds
+ *            is not suitable.
+ */
+#ifdef USE_32BIT_HWTIMER
+    #if defined(TIM2_CR1)
+        #define TIM_getDirectTimer32BitMicroseconds()    (uint32_t)(TIM2_CNT)
+    #else
+        #error "No 32bit HW timer source for this derivative!"
+    #endif // TIM2_CR1
+#endif // USE_32BIT_HWTIMER
+
+/******************************************************************************/
+/* PUBLIC TYPE DEFINITIONS                                                    */
+/******************************************************************************/
+
+
+
+#ifdef __cplusplus
 }
+#endif
 
-#include "errors.h"
-#include "constellation/hub_mngr.h"
-
-/******************************************************************************/
-/* C-PREPROCESSOR DEFINITIONS                                                 */
-/******************************************************************************/
-
-/******************************************************************************/
-/* FUNCTION PROTOTYPES                                                        */
-/******************************************************************************/
-
-
-#endif // From: #ifndef HUB_C_API_INTERNAL_H
-
+#endif // TIMER_MC_XS_H

@@ -39,12 +39,15 @@ extern "C" {
 #include <stdint.h>
 
 
-#if !defined(FWU_APP1_START_ADDRESS2)
+#if !defined(FWU_APP1_START_ADDRESS2) && !defined(FWU_FLEX_PARTITION_USED)
     #define MAL_FIX_PARTITION_ENTRIES   3u ///< number of entries in fix partition table
+#elif defined(FWU_APP1_START_ADDRESS2) && defined(FWU_FLEX_PARTITION_USED)
+    #define MAL_FIX_PARTITION_ENTRIES   5u ///< number of entries in fix partition table
 #else
     #define MAL_FIX_PARTITION_ENTRIES   4u ///< number of entries in fix partition table
 #endif
 
+#define MAL_FLEX_PARTITION_ENTRIES      4u ///< number of entries in flex partition table
 #define MAL_HW_VERSION_ENTRIES          1u ///< number of entries in HW version table
 
 
@@ -66,7 +69,8 @@ enum MAL_ModuleEnum
     
    ,MAL_PRODUCT_APP1    = 0x2200u ///< Module id of product application1
    ,MAL_PRODUCT_APP2    = 0x2210u ///< Module id of product application2
-   ,MAL_NO_MODULE       = 0xFFFFu ///< Fixed: no valid module
+   ,MAL_FLEX_PARTITION  = 0x22F0u ///< Module id of flex partition table
+   ,MAL_NO_MODULE       = 0xFFFFu ///< Fixed: no valid module, used as last entry in flex table
 };
 
 

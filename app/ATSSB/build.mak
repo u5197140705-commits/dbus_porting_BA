@@ -19,12 +19,12 @@ ifeq ($(testUnit),ATSSB)
     #no unittest implemented
 else
     ifeq ($(ssb_use_cpp_instead_of_c_api),true)
-        src += ATSSB/atssb_handle_task_cpp.cpp
+        src += $(app_path)/../ATSSB/atssb_handle_task_cpp.cpp
         defines += SSB_USE_CPP_INSTEAD_OF_C_API
     else
-        src += ATSSB/atssb_handle_task_c.c
+        src += $(app_path)/../ATSSB/atssb_handle_task_c.c
     endif
 endif
 
-code_gen_cfg += $(app_prog_path)/ATSSB/dbgx_filters.json
+code_gen_cfg += $(app_path)/../ATSSB/dbgx_filters.json
 dbgx_activated_filters += DBGX_FILTERS_SSB_APP

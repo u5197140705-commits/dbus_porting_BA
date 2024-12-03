@@ -22,6 +22,10 @@ endif
 # list of included PED_FW subcomponents
 #ped_fw_subcomponent_list = basic timer schedule utility
 
+mcal_modules = $(mcal_supported_modules_$(platform))
+# If you need to reduce the size of the application, you can specify a subset of MCAL modules. Please note that some modules might not be available for your platform.
+# DBusCAN requires at least mdio mexti mspi modules
+# mcal_modules = mpcm mdio muart mexti msup mwdt mtim madc mi2c mspi mdma mdac
 
 # external components
 ifeq ($(ssb_build_variant),rtos)
@@ -32,7 +36,7 @@ endif
 
 
 # application specific components
-app_components = ATSSB
+app_components = /../../ATSSB
 
 
 # translation units not related to a component
@@ -48,7 +52,7 @@ defines +=
 
 
 # additional search paths
-search_path += $(app_path)/prog/ATSSB
+search_path += $(app_path)/../ATSSB
 
 
 # Version settings (needed for ModuleHeader)

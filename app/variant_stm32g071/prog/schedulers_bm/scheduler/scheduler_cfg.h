@@ -60,6 +60,7 @@ typedef enum SCH_ModuleIDs
 
         /*! place your project modules here */
         MOD_ATSSB,          ///< module ID of Smart Sensor Bus application task
+        /* USER CODE END Include */
 
     #ifdef CCSS_DOM_REF
         MOD_CCDOM,          ///< module ID of SystemStates Domain Reference implementation. to be replaced with an application specific implementation.

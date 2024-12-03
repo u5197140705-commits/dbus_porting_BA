@@ -62,7 +62,7 @@
 *-----------------------------------------------------------------------------
 *        Flash Latency(WS)                      | auto
 *-----------------------------------------------------------------------------
-*        Prefetch Buffer                        | ON
+*        Prefetch Buffer                        | ON (OFF for dual bank MCU)
 *-----------------------------------------------------------------------------
 *****************************************************************************/
 /* Switch off: info 845: the right operand to << always evaluates to 0 */
@@ -333,15 +333,22 @@ void BASIC_vConfigPlatform (void)
 #if !defined(MCAL_MPCM_INCLUDED)
 static void BASIC_vInitClock(void)
 {
+#if defined(SECOND_FLASH_CTRL)
+    uint32_t prefetchSetting = 0u; // disable prefetch buffer for dual bank MCU - suggestion from errata
+#else
+    uint32_t prefetchSetting = 1u; // prefetch buffer is enabled
+#endif /* defined(SECOND_FLASH_CTRL) */
     FLASH_ACR_LATENCY = 2u; // set max wait states for safety
     RCC_CR = RCC_CR_HSION_MASK; // enable HSI16, divider and external clock off
+
+
 #if defined(STM32G030) || defined(STM32G050) || defined(STM32G070) || defined(STM32G0B0)
     /* enable prefetch buffer instruction cache */
-    FLASH_ACR |= FLASH_ACR_PRFTEN_MASK | FLASH_ACR_ICEN_MASK;
+    FLASH_ACR |= (prefetchSetting << FLASH_ACR_PRFTEN_POS) | FLASH_ACR_ICEN_MASK;
 #else
     /* for STM32G0X1 */
     /* enable prefetch buffer instruction cache and debugger */
-    FLASH_ACR |= FLASH_ACR_PRFTEN_MASK | FLASH_ACR_ICEN_MASK | FLASH_ACR_DBG_SWEN_MASK;
+    FLASH_ACR |= (prefetchSetting << FLASH_ACR_PRFTEN_POS) | FLASH_ACR_ICEN_MASK | FLASH_ACR_DBG_SWEN_MASK;
 #endif
 
 #ifdef EXT_CRYSTAL_OSC

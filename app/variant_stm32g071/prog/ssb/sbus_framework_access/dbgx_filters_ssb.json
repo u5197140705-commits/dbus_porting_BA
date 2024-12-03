@@ -42,13 +42,9 @@
                 ["SSB_EVTREQ_LOW"      , "def"   , "on"  , "REG: Events with data trough the layers in request direction, at lower layer only, for Hub register log"],
                 ["SSB_EVTCB_LOW"       , "def"   , "on"  , "REG: Events with data trough the layers in callback direction, at lower layer only, for Hub register log"],
 
+                ["SSB_SIDAT"           , "undef" , "off" , "Serial data (Host-I2C or -SPI, abstracted)"],
                 ["SSB_EVTREQ"          , "undef" , "off" , "Events with data trough the layers in request direction, at higher layers"],
                 ["SSB_EVTCB"           , "undef" , "off" , "Events with data trough the layers in callback direction, at higher layers"],
-
-                ["SSB_EVTSEND_HUB"     , "undef" , "off" , "Events sent to the Hub state machine"],
-                ["SSB_EVTRECV_HUB"     , "def"   , "on"  , "Events received from the Hub state machine"],
-
-                ["SSB_SIDAT"           , "undef" , "off" , "Serial data (Host-I2C or -SPI, abstracted)"],
 
                 ["SSB_LOOP"            , "def"   , "on"  , "REG: Processing of the measurement loop"],
                 ["SSB_STARTUP"         , "def"   , "on"  , "REG: Processing of the startup of SSB-ASICs"],

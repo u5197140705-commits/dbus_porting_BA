@@ -79,3 +79,9 @@ ifeq ($(FW_update_type),FWU4)
     version_minor_gbl    = 2
     version_revision_gbl = 3
 endif
+
+# set if tooldrive information output will be suppressed (true) or not (false)
+suppress_tooldrive_info ?= false
+ifneq ($(suppress_tooldrive_info),true)
+$(info Using external tooldrive $(tooldrive))
+endif

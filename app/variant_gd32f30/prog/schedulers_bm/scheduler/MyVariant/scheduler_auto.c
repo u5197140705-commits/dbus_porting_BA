@@ -25,13 +25,13 @@
 #include "scheduler_auto.h"
 #include "scheduler_types.h"
 
+#include "ssb_task.h"
 #include "dbus/bal.h"
 #include "dbus/dbuspresentation.h"
 #include "dbusdll.h"
 #include "timer/timerlib.h"
 #include "watchdogtimer/watchdogtimer.h"
 #include "stack_monitor/stack_monitor.h"
-#include "sbus_framework_access/ssb_task.h"
 
 /* USER CODE BEGIN Include */
 /*! place your module includes here */
@@ -50,13 +50,13 @@
  * *************************************************************************************************
  * \note: No Circular Dependencies allowed
  ***************************************************************************************************/
+const TaskID SSBF_dep[]	= {DEP_SSBF	END_STAMP};
 const TaskID BAL_dep[]	= {DEPLIB_BAL	END_STAMP};
 const TaskID DBPL_dep[]	= {DEPLIB_DBPL	END_STAMP};
 const TaskID DLL_dep[]	= {DEPLIB_DLL	END_STAMP};
 const TaskID TIM_dep[]	= {DEP_TIM	END_STAMP};
 const TaskID WDT_dep[]	= {DEP_WDT	END_STAMP};
 const TaskID STK_dep[]	= {DEP_STK	END_STAMP};
-const TaskID SSBF_dep[]	= {DEP_SSBF	END_STAMP};
 
 /* USER CODE BEGIN Dependency */
 /*! place your module dependencies here */
@@ -81,13 +81,13 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
      ***************************************************************************************************/
     .TasksList =
     {
+        {MOD_SSBF, HIGH_PRIORITY},
         {MOD_BAL, HIGH_PRIORITY},
         {MOD_DBPL, HIGH_PRIORITY},
         {MOD_DLL, LOW_PRIORITY},
         {MOD_TIM, HIGH_PRIORITY},
         {MOD_WDT, LOW_PRIORITY},
         {MOD_STK, LOW_PRIORITY},
-        {MOD_SSBF, HIGH_PRIORITY},
 
         /* USER CODE BEGIN ModulePriority */
         /*! place your project modules and their priorities here */
@@ -105,13 +105,13 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
      ***************************************************************************************************/
     .TaskHandlersList =
     {
+        [MOD_SSBF] = SSBF_handleTask,
         [MOD_BAL] = BAL_HandleTask,
         [MOD_DBPL] = DBPL_HandleTask,
         [MOD_DLL] = DLL_HandleTask,
         [MOD_TIM] = TIM_bHandleTask16,
         [MOD_WDT] = WDT_handleTask,
         [MOD_STK] = STK_HandleTask,
-        [MOD_SSBF] = SSBF_handleTask,
 
         /* USER CODE BEGIN TaskHandlers */
         /*! place your task handlers here */
@@ -129,13 +129,13 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
      ***************************************************************************************************/
     .DependenciesList =
     {
+        [MOD_SSBF] = SSBF_dep,
         [MOD_BAL] = BAL_dep,
         [MOD_DBPL] = DBPL_dep,
         [MOD_DLL] = DLL_dep,
         [MOD_TIM] = TIM_dep,
         [MOD_WDT] = WDT_dep,
         [MOD_STK] = STK_dep,
-        [MOD_SSBF] = SSBF_dep,
 
         /* USER CODE BEGIN ModuleDependency */
         /*! place your module dependencies arrays here */
