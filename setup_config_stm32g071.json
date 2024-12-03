@@ -4,8 +4,7 @@
         "mem_utility",
         "debug_extended",
         "debug",
-        "MCAL",
-        "sbus"
+        "MCAL"
     ],
     "compiler": "armclang",
     "dbus_rx": "A3",
@@ -13,11 +12,13 @@
     "derivat": "STM32G071CB",
     "ext_comp": [],
     "fwu": "FWU1",
-    "macros": [],
+    "macros": [
+        "scheduler_config=auto"
+    ],
     "node": "1",
     "platform": "STM32G0",
     "project": "variant_stm32g071",
-    "scheduler": "rtos",
+    "scheduler": "new",
     "uart": "1",
     "variant": "MyVariant"
 }

@@ -5,3 +5,6 @@
 [submodule "ext/rtos"]
 	path = ext/rtos
 	url = ../../RealTimeOS/rtos.git
+[submodule "ext/ssb"]
+	path = ext/ssb
+	url = ../../Generic/ssb

@@ -28,7 +28,7 @@
 /* INCLUDES                                                                   */
 /******************************************************************************/
 
-#include "hub_mngr.h"
+#include "constellation/hub_mngr.h"
 
 using namespace ::SSBAL::SSBCO;
 using namespace ::SSBF;

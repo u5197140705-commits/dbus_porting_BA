@@ -27,7 +27,7 @@
 /* INCLUDES                                                                   */
 /******************************************************************************/
 
-#include "ssb_config_auto.h"
+#include "constellation/ssb_config_auto.h"
 
 /******************************************************************************/
 /* INTERNAL C-PREPROCESSOR DEFINITIONS                                        */
