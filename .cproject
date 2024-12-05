@@ -51,7 +51,6 @@
 		<buildTargets>
 			<target name="all -j" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>all -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -59,7 +58,6 @@
 			</target>
 			<target name="axstyle -j6" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -67,7 +65,6 @@
 			</target>
 			<target name="axstyle -j6 -B" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6 -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -75,7 +72,6 @@
 			</target>
 			<target name="clean" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>clean</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -83,7 +79,6 @@
 			</target>
 			<target name="init" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>init</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -91,7 +86,6 @@
 			</target>
 			<target name="-j" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -99,7 +93,6 @@
 			</target>
 			<target name="-j -B" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -107,7 +100,6 @@
 			</target>
 			<target name="JLink_only" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>JLink_only</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -115,7 +107,6 @@
 			</target>
 			<target name="link -j" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -123,7 +114,6 @@
 			</target>
 			<target name="link -j -B" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -131,7 +121,6 @@
 			</target>
 			<target name="lint -j" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -139,7 +128,6 @@
 			</target>
 			<target name="lint -j -B" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -147,7 +135,6 @@
 			</target>
 			<target name="uvision_gen_ini" path="app/variant_stm32g474" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>uvision_gen_ini</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -155,7 +142,6 @@
 			</target>
 			<target name="all -j" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>all -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -163,7 +149,6 @@
 			</target>
 			<target name="axstyle -j6" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -171,7 +156,6 @@
 			</target>
 			<target name="axstyle -j6 -B" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6 -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -179,7 +163,6 @@
 			</target>
 			<target name="clean" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>clean</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -187,7 +170,6 @@
 			</target>
 			<target name="init" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>init</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -195,7 +177,6 @@
 			</target>
 			<target name="-j" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -203,7 +184,6 @@
 			</target>
 			<target name="-j -B" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -211,7 +191,6 @@
 			</target>
 			<target name="JLink_only" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>JLink_only</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -219,7 +198,6 @@
 			</target>
 			<target name="link -j" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -227,7 +205,6 @@
 			</target>
 			<target name="link -j -B" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -235,7 +212,6 @@
 			</target>
 			<target name="lint -j" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -243,7 +219,6 @@
 			</target>
 			<target name="lint -j -B" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -251,7 +226,6 @@
 			</target>
 			<target name="uvision_gen_ini" path="app/variant_ra4m2" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>uvision_gen_ini</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -259,7 +233,6 @@
 			</target>
 			<target name="ssb_build_variant=bms all -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>ssb_build_variant=bms all -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -267,7 +240,6 @@
 			</target>
 			<target name="axstyle -j6" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -275,283 +247,12 @@
 			</target>
 			<target name="axstyle -j6 -B" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6 -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>false</runAllBuilders>
 			</target>
-			<target name="clean" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>clean</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="init" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>init</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="JLink_only" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>JLink_only</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=bms lint -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>ssb_build_variant=bms lint -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="lint -j -B" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>lint -j -B</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="uvision_gen_ini" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>uvision_gen_ini</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=rtos link -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>ssb_build_variant=rtos link -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=bms link -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>ssb_build_variant=bms link -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=rtos all -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>ssb_build_variant=rtos all -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=bms init" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>ssb_build_variant=bms init</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="all -j" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>all -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="axstyle -j6 -B" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>axstyle -j6 -B</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="clean" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>clean</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="-j -B" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>-j -B</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="link -j -B" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>link -j -B</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="lint -j -B" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>lint -j -B</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="axstyle -j6" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>axstyle -j6</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="-j" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>-j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="init" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>init</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="JLink_only" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>JLink_only</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="lint -j" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>lint -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="link -j" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>link -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="uvision_gen_ini" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>uvision_gen_ini</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=bms all -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>ssb_build_variant=bms all -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="axstyle -j6" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>axstyle -j6</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="axstyle -j6 -B" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>axstyle -j6 -B</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="clean" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>clean</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=bms init" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>ssb_build_variant=bms init</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="JLink_only" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>JLink_only</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=bms lint -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>ssb_build_variant=bms lint -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="lint -j -B" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>lint -j -B</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="uvision_gen_ini" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>uvision_gen_ini</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=rtos link -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>ssb_build_variant=rtos link -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=bms link -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildTarget>ssb_build_variant=bms link -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=rtos all -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
-				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
-				<buildTarget>ssb_build_variant=rtos all -j</buildTarget>
-				<stopOnError>true</stopOnError>
-				<useDefaultCommand>false</useDefaultCommand>
-				<runAllBuilders>false</runAllBuilders>
-			</target>
-			<target name="ssb_build_variant=bms clean" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="ssb_build_variant=bms clean" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
 				<buildArguments/>
 				<buildTarget>ssb_build_variant=bms clean</buildTarget>
@@ -559,9 +260,263 @@
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>false</runAllBuilders>
 			</target>
-			<target name="all -j" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+			<target name="init" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>init</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="JLink_only" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>JLink_only</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=bms lint -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>ssb_build_variant=bms lint -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="lint -j -B" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>lint -j -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="uvision_gen_ini" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
 				<buildArguments/>
+				<buildTarget>uvision_gen_ini</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=rtos link -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>ssb_build_variant=rtos link -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=bms link -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>ssb_build_variant=bms link -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=rtos all -j" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>ssb_build_variant=rtos all -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=bms init" path="app/variant_stm32g071" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>ssb_build_variant=bms init</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="all -j" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>all -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="axstyle -j6 -B" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>axstyle -j6 -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="clean" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>clean</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="-j -B" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>-j -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="link -j -B" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>link -j -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="lint -j -B" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>lint -j -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="axstyle -j6" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>axstyle -j6</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="-j" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>-j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="init" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>init</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="JLink_only" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>JLink_only</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="lint -j" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>lint -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="link -j" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>link -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="uvision_gen_ini" path="app/variant_efr32bg21" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>uvision_gen_ini</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=bms all -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>ssb_build_variant=bms all -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="axstyle -j6" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>axstyle -j6</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="axstyle -j6 -B" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>axstyle -j6 -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="clean" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>clean</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=bms init" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>ssb_build_variant=bms init</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="JLink_only" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>JLink_only</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=bms lint -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>ssb_build_variant=bms lint -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="lint -j -B" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>lint -j -B</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="uvision_gen_ini" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>uvision_gen_ini</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=rtos link -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>ssb_build_variant=rtos link -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=bms link -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildArguments/>
+				<buildTarget>ssb_build_variant=bms link -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=rtos all -j" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>ssb_build_variant=rtos all -j</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="ssb_build_variant=bms clean" path="app/variant_gd32f30" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
+				<buildTarget>ssb_build_variant=bms clean</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>false</runAllBuilders>
+			</target>
+			<target name="all -j" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make.bat</buildCommand>
 				<buildTarget>all -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -569,7 +524,6 @@
 			</target>
 			<target name="axstyle -j6" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -577,7 +531,6 @@
 			</target>
 			<target name="axstyle -j6 -B" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6 -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -585,7 +538,6 @@
 			</target>
 			<target name="clean" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>clean</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -593,7 +545,6 @@
 			</target>
 			<target name="init" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>init</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -601,7 +552,6 @@
 			</target>
 			<target name="-j" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -609,7 +559,6 @@
 			</target>
 			<target name="-j -B" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -617,7 +566,6 @@
 			</target>
 			<target name="JLink_only" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>JLink_only</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -625,7 +573,6 @@
 			</target>
 			<target name="link -j" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -633,7 +580,6 @@
 			</target>
 			<target name="link -j -B" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -641,7 +587,6 @@
 			</target>
 			<target name="lint -j" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -649,7 +594,6 @@
 			</target>
 			<target name="lint -j -B" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -657,7 +601,6 @@
 			</target>
 			<target name="uvision_gen_ini" path="app/variant_stm32l471" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>uvision_gen_ini</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -665,7 +608,6 @@
 			</target>
 			<target name="all -j" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>all -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -673,7 +615,6 @@
 			</target>
 			<target name="axstyle -j6" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -681,7 +622,6 @@
 			</target>
 			<target name="axstyle -j6 -B" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6 -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -689,7 +629,6 @@
 			</target>
 			<target name="clean" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>clean</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -697,7 +636,6 @@
 			</target>
 			<target name="init" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>init</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -705,7 +643,6 @@
 			</target>
 			<target name="-j" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -713,7 +650,6 @@
 			</target>
 			<target name="-j -B" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -721,7 +657,6 @@
 			</target>
 			<target name="JLink_only" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>JLink_only</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -729,7 +664,6 @@
 			</target>
 			<target name="link -j" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -737,7 +671,6 @@
 			</target>
 			<target name="link -j -B" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -745,7 +678,6 @@
 			</target>
 			<target name="lint -j" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -753,7 +685,6 @@
 			</target>
 			<target name="lint -j -B" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -761,7 +692,6 @@
 			</target>
 			<target name="uvision_gen_ini" path="app/variant_mkv56f1" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>uvision_gen_ini</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -769,7 +699,6 @@
 			</target>
 			<target name="all -j" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>all -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -777,7 +706,6 @@
 			</target>
 			<target name="axstyle -j6" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -785,7 +713,6 @@
 			</target>
 			<target name="axstyle -j6 -B" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>axstyle -j6 -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -793,7 +720,6 @@
 			</target>
 			<target name="clean" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>clean</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -801,7 +727,6 @@
 			</target>
 			<target name="init" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>init</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -809,7 +734,6 @@
 			</target>
 			<target name="-j" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -817,7 +741,6 @@
 			</target>
 			<target name="-j -B" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>-j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -825,7 +748,6 @@
 			</target>
 			<target name="JLink_only" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>JLink_only</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -833,7 +755,6 @@
 			</target>
 			<target name="link -j" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -841,7 +762,6 @@
 			</target>
 			<target name="link -j -B" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>link -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -849,7 +769,6 @@
 			</target>
 			<target name="lint -j" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -857,7 +776,6 @@
 			</target>
 			<target name="lint -j -B" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>lint -j -B</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
@@ -865,7 +783,6 @@
 			</target>
 			<target name="uvision_gen_ini" path="app/variant_stm32h723" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>make.bat</buildCommand>
-				<buildArguments/>
 				<buildTarget>uvision_gen_ini</buildTarget>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
