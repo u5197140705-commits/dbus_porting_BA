@@ -34,6 +34,7 @@ else
     ext_components = ssb
 endif
 
+dbus_mapping = mcal
 
 # application specific components
 app_components = /../../ATSSB
