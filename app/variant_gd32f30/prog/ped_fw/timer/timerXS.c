@@ -32,6 +32,9 @@
 #include "hsup.h"
 #include "SegmentDef.h"
 #include "timerlib.h"
+#ifdef USE_32BIT_HWTIMER
+   #include "timerMcXS.h"
+#endif // USE_32BIT_HWTIMER
 
 /******************************************************************************/
 /* PRIVATE DEFINITIONS                                                        */
@@ -241,10 +244,12 @@ BOOL _TIM_bIsBaseTimerDown(void)
    return FALSE;
 }
 
-#ifndef USE_32BIT_HWTIMER
 uint32_t TIM_u32GetCircleMicroSeconds(void)
 {
+#ifdef USE_32BIT_HWTIMER
+   return TIM_getDirectTimer32BitMicroseconds();
+#else
    uint16_t elapsedTime = (uint16_t)(TIM_uiGetCircleMicroSeconds() - TIM_uiTimeOld);
    return TIM_tCircleTime + (uint32_t)elapsedTime;
-}
 #endif // USE_32BIT_HWTIMER
+}

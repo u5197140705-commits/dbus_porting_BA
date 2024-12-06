@@ -43,8 +43,11 @@ SYMBOL_IRQ void USART1_IRQHandler(void)
 {
   #ifdef MCAL_MUART_INCLUDED
     MUART_IRQ_Handler(MUART1_IRQ_INDEX);
-  #endif
+  #else
+    #if defined(DBM_HAL) || defined(APP_VARIANT)
     HUART0_ISR_HandleEvent();
+    #endif
+  #endif
 }
 
 #if defined(STM32G0B1) || defined(STM32G0C1)
@@ -55,8 +58,11 @@ SYMBOL_IRQ void USART1_IRQHandler(void)
 {
   #ifdef MCAL_MUART_INCLUDED
     MUART_IRQ_Handler(MUART2_LP2_IRQ_INDEX);
-  #endif
+  #else
+    #if defined(DBM_HAL) || defined(APP_VARIANT)
     HUART1_11_ISR_HandleEvent();
+    #endif
+  #endif
 }
 
 #if defined(STM32G0B1) || defined(STM32G0C1)
@@ -71,11 +77,14 @@ SYMBOL_IRQ void USART1_IRQHandler(void)
 {
   #ifdef MCAL_MUART_INCLUDED
     MUART_IRQ_Handler(MUART3_4_5_6_LP1_IRQ_INDEX);
-  #endif
-  #if defined(STM32G0B0)
-    HUART2_3_4_5_ISR_HandleEvent();
   #else
-    HUART2_3_10_ISR_HandleEvent();
+    #if defined(DBM_HAL) || defined(APP_VARIANT)
+      #if defined(STM32G0B0)
+      HUART2_3_4_5_ISR_HandleEvent();
+      #else
+      HUART2_3_10_ISR_HandleEvent();
+      #endif
+    #endif //DBM_HAL||APP_VARIANT
   #endif
 }
 
@@ -83,24 +92,27 @@ SYMBOL_IRQ void EXTI0_1_IRQHandler(void)
 {
   #ifdef MCAL_MEXTI_INCLUDED
     MEXTI_IRQ_Handler(MEXTI0_1_IRQ_INDEX);
-  #endif
+  #else
     HINT01_ISR_HandleEvent();
+  #endif
 }
 
 SYMBOL_IRQ void EXTI2_3_IRQHandler(void)
 {
   #ifdef MCAL_MEXTI_INCLUDED
     MEXTI_IRQ_Handler(MEXTI2_3_IRQ_INDEX);
-  #endif
+  #else
     HINT23_ISR_HandleEvent();
+  #endif
 }
 
 SYMBOL_IRQ void EXTI4_15_IRQHandler(void)
 {
   #ifdef MCAL_MEXTI_INCLUDED
     MEXTI_IRQ_Handler(MEXTI4_15_IRQ_INDEX);
-  #endif
+  #else
     HINT415_ISR_HandleEvent();
+  #endif
 }
 
 SYMBOL_IRQ void ADC_COMP_IRQHandler(void)
@@ -114,24 +126,27 @@ SYMBOL_IRQ void TIM1_BRK_UP_TRG_COMP_IRQHandler(void)
 {
   #ifdef MCAL_MTIM_INCLUDED
     MTIM_IRQ_Handler(MTIM1_IRQ_INDEX);
-  #endif
+  #else
     HTIM1_TimerEvent_ISR_HandleEvent();
+  #endif
 }
 
 SYMBOL_IRQ void TIM1_CC_IRQHandler(void)
 {
   #ifdef MCAL_MTIM_INCLUDED
     MTIM_IRQ_Handler(MTIM1_IRQ_INDEX);
-  #endif
+  #else
     HTIM1_ISR_HandleEvent();
+  #endif
 }
 
 SYMBOL_IRQ void TIM2_IRQHandler(void)
 {
   #ifdef MCAL_MTIM_INCLUDED
     MTIM_IRQ_Handler(MTIM2_IRQ_INDEX);
-  #endif
+  #else
     HTIM2_ISR_HandleEvent();
+  #endif
 }
 
 
@@ -143,8 +158,9 @@ SYMBOL_IRQ void TIM2_IRQHandler(void)
 {
   #ifdef MCAL_MTIM_INCLUDED
     MTIM_IRQ_Handler(MTIM3_4_IRQ_INDEX);
-  #endif
+  #else
     HTIM3_ISR_HandleEvent();
+  #endif
 }
 
 #if defined(MTIM6_PRESENT) && defined(MTIMLP1_PRESENT)
@@ -169,8 +185,9 @@ SYMBOL_IRQ void TIM14_IRQHandler(void)
 {
   #ifdef MCAL_MTIM_INCLUDED
     MTIM_IRQ_Handler(MTIM14_IRQ_INDEX);
-  #endif
+  #else
     HTIM14_ISR_HandleEvent();
+  #endif
 }
 
 #ifdef MTIM15_PRESENT
@@ -178,8 +195,9 @@ SYMBOL_IRQ void TIM15_IRQHandler(void)
 {
   #ifdef MCAL_MTIM_INCLUDED
     MTIM_IRQ_Handler(MTIM15_IRQ_INDEX);
-  #endif
+  #else
     HTIM15_ISR_HandleEvent();
+  #endif
 }
 #endif
 
@@ -191,8 +209,9 @@ SYMBOL_IRQ void TIM15_IRQHandler(void)
 {
   #ifdef MCAL_MTIM_INCLUDED
     MTIM_IRQ_Handler(MTIM16_IRQ_INDEX);
-  #endif
+  #else
     HTIM16_ISR_HandleEvent();
+  #endif
 }
 
 #if defined(STM32G0B1) || defined(STM32G0C1)
@@ -203,8 +222,9 @@ SYMBOL_IRQ void TIM15_IRQHandler(void)
 {
   #ifdef MCAL_MTIM_INCLUDED
     MTIM_IRQ_Handler(MTIM17_IRQ_INDEX);
-  #endif
+  #else
     HTIM17_ISR_HandleEvent();
+  #endif
 }
 
 SYMBOL_IRQ void I2C1_IRQHandler(void)
@@ -229,8 +249,9 @@ SYMBOL_IRQ void SPI1_IRQHandler(void)
 {
   #ifdef MCAL_MSPI_INCLUDED
     MSPI_IRQ_Handler(MSPI1_IRQ_INDEX);
-  #endif
+  #else
     HSPI0_vIsrHandleTxRxEvent();
+  #endif
 }
 
 #if defined(STM32G0B1) || defined(STM32G0C1)
@@ -241,8 +262,9 @@ SYMBOL_IRQ void SPI1_IRQHandler(void)
 {
   #ifdef MCAL_MSPI_INCLUDED
     MSPI_IRQ_Handler(MSPI2_3_IRQ_INDEX);
-  #endif
+  #else
     HSPI1_2_vIsrHandleTxRxEvent();
+  #endif
 }
 
 SYMBOL_IRQ void DMA_Channel1_IRQHandler(void)

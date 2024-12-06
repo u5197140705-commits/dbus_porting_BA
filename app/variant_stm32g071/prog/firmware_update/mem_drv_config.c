@@ -63,8 +63,6 @@ const struct MEMDRV_driver_entry_s MEMDRV_driverTable[] =
 #endif
 /* +++++++++ Add your external memory driver here +++++++++ */
  /* {DRVXX_driver, MAL_myExternalMemDriver, MAL_NO_BP2_OFFSET},  */
-
-#ifndef VARIANT_BOOTMANAGER
 /* --------------Internal memory drivers------------------- *
  * For internal memory boot manager does not need a driver, *
  * as just read-only access is needed                       *
@@ -78,6 +76,5 @@ const struct MEMDRV_driver_entry_s MEMDRV_driverTable[] =
     #if defined(MAL_ENABLE_DATA_FLASH_DRIVER)
         {&DRVDF_driver, MAL_DataFlashDriver, MAL_NO_BP2_OFFSET},
     #endif
-#endif
     {NULL, MAL_NoDriver, MAL_NO_BP2_OFFSET} // do not remove end mark !!
 };

@@ -25,6 +25,7 @@
 #include "scheduler_auto.h"
 #include "scheduler_types.h"
 
+#include "ssb_task.h"
 #include "dbus/bal.h"
 #include "dbus/dbuspresentation.h"
 #include "dbusdll.h"
@@ -34,6 +35,11 @@
 
 /* USER CODE BEGIN Include */
 /*! place your module includes here */
+#ifndef SSB_USE_CPP_INSTEAD_OF_C_API
+    #include "atssb_handle_task_c.h"
+#else
+    #include "atssb_handle_task_cpp.h"
+#endif
 /* USER CODE END Include */
 
 
@@ -44,6 +50,7 @@
  * *************************************************************************************************
  * \note: No Circular Dependencies allowed
  ***************************************************************************************************/
+const TaskID SSBF_dep[]	= {DEP_SSBF	END_STAMP};
 const TaskID BAL_dep[]	= {DEPLIB_BAL	END_STAMP};
 const TaskID DBPL_dep[]	= {DEPLIB_DBPL	END_STAMP};
 const TaskID DLL_dep[]	= {DEPLIB_DLL	END_STAMP};
@@ -53,6 +60,7 @@ const TaskID STK_dep[]	= {DEP_STK	END_STAMP};
 
 /* USER CODE BEGIN Dependency */
 /*! place your module dependencies here */
+const TaskID ATSSB_dep[] = {DEP_ATSSB END_STAMP};
 /* USER CODE END Dependency */
 
 
@@ -73,6 +81,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
      ***************************************************************************************************/
     .TasksList =
     {
+        {MOD_SSBF, HIGH_PRIORITY},
         {MOD_BAL, HIGH_PRIORITY},
         {MOD_DBPL, HIGH_PRIORITY},
         {MOD_DLL, LOW_PRIORITY},
@@ -82,6 +91,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
 
         /* USER CODE BEGIN ModulePriority */
         /*! place your project modules and their priorities here */
+        {MOD_ATSSB, LOW_PRIORITY},
         /* USER CODE END ModulePriority */
 
         {END_STAMP, PRIO_NONE}
@@ -95,6 +105,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
      ***************************************************************************************************/
     .TaskHandlersList =
     {
+        [MOD_SSBF] = SSBF_handleTask,
         [MOD_BAL] = BAL_HandleTask,
         [MOD_DBPL] = DBPL_HandleTask,
         [MOD_DLL] = DLL_HandleTask,
@@ -104,6 +115,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
 
         /* USER CODE BEGIN TaskHandlers */
         /*! place your task handlers here */
+        [MOD_ATSSB] = ATSSB_handleTask
         /* USER CODE END TaskHandlers */
     },
 
@@ -117,6 +129,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
      ***************************************************************************************************/
     .DependenciesList =
     {
+        [MOD_SSBF] = SSBF_dep,
         [MOD_BAL] = BAL_dep,
         [MOD_DBPL] = DBPL_dep,
         [MOD_DLL] = DLL_dep,
@@ -126,6 +139,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
 
         /* USER CODE BEGIN ModuleDependency */
         /*! place your module dependencies arrays here */
+        [MOD_ATSSB] = ATSSB_dep,
         /* USER CODE END ModuleDependency */
     },
 };

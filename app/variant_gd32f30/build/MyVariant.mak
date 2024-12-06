@@ -14,9 +14,9 @@
 
 # common components
 ifeq ($(ssb_build_variant),rtos)
-    common_components = $(msp) dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug MSP/mcal
+    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug
 else
-    common_components = $(msp) dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug MSP/mcal schedulers_bm/scheduler
+    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug schedulers_bm/scheduler
 endif
 
 # list of included PED_FW subcomponents
@@ -29,14 +29,15 @@ mcal_modules = $(mcal_supported_modules_$(platform))
 
 # external components
 ifeq ($(ssb_build_variant),rtos)
-    ext_components = rtos 
+    ext_components = rtos ssb
 else
-    ext_components =
+    ext_components = ssb
 endif
 
+dbus_mapping = mcal
 
 # application specific components
-app_components = 
+app_components = /../../ATSSB
 
 
 # translation units not related to a component
@@ -52,7 +53,7 @@ defines +=
 
 
 # additional search paths
-search_path += 
+search_path += $(app_path)/../ATSSB
 
 
 # Version settings (needed for ModuleHeader)
@@ -69,4 +70,7 @@ release_note     = "Make short hint for this release"
 #Vectorcast_Related_variables
 dyntconfig_project_template_use   ?= FALSE
 dyntconfig_project_startup_use    ?= FALSE
+
+#debug component
+dbgx_activated_filters += DBGX_FILTERS_SSB DBGX_FILTERS
 

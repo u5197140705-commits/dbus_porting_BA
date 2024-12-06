@@ -31,6 +31,7 @@
  ***************************************************************************************************/
 typedef enum SCH_ModuleIDs
 {
+    MOD_SSBF,
     MOD_BAL,
     MOD_DBPL,
     MOD_DLL,
@@ -40,6 +41,7 @@ typedef enum SCH_ModuleIDs
 
     /* USER CODE BEGIN ProjectModules */
     /*! place your projects modules here */
+    MOD_ATSSB,
     /* USER CODE END ProjectModules */
 
     TOTAL_MODULES

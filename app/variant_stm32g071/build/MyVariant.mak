@@ -14,14 +14,18 @@
 
 # common components
 ifeq ($(ssb_build_variant),rtos)
-    common_components = $(msp) dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug MSP/mcal
+    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug
 else
-    common_components = $(msp) dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug MSP/mcal schedulers_bm/scheduler
+    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug schedulers_bm/scheduler
 endif
 
 # list of included PED_FW subcomponents
 #ped_fw_subcomponent_list = basic timer schedule utility
 
+mcal_modules = $(mcal_supported_modules_$(platform))
+# If you need to reduce the size of the application, you can specify a subset of MCAL modules. Please note that some modules might not be available for your platform.
+# DBusCAN requires at least mdio mexti mspi modules
+# mcal_modules = mpcm mdio muart mexti msup mwdt mtim madc mi2c mspi mdma mdac
 
 # external components
 ifeq ($(ssb_build_variant),rtos)
@@ -30,9 +34,10 @@ else
     ext_components = ssb
 endif
 
+dbus_mapping = mcal
 
 # application specific components
-app_components = ATSSB
+app_components = /../../ATSSB
 
 
 # translation units not related to a component
@@ -48,7 +53,7 @@ defines +=
 
 
 # additional search paths
-search_path += $(app_path)/prog/ATSSB
+search_path += $(app_path)/../ATSSB
 
 
 # Version settings (needed for ModuleHeader)
@@ -67,5 +72,5 @@ dyntconfig_project_template_use   ?= FALSE
 dyntconfig_project_startup_use    ?= FALSE
 
 #debug component
-dbgx_activated_filters = DBGX_FILTERS_SSB DBGX_FILTERS
+dbgx_activated_filters += DBGX_FILTERS_SSB DBGX_FILTERS
 

@@ -38,21 +38,12 @@
 #endif
 #ifdef MAL_ENABLE_DATA_FLASH_DRIVER
     #include "firmware_update/mem_drv/dataflash_drv.h"
-    #ifndef MAL_DATA_FLASH_OFFSET
-        #define MAL_DATA_FLASH_OFFSET 0u
-    #endif
 #endif
 #ifdef MAL_ENABLE_EEPROM_DRIVER
     #include "firmware_update/mem_drv/inteeprom_drv.h"
-    #ifndef MAL_EEPROM_OFFSET
-        #define MAL_EEPROM_OFFSET 0u
-    #endif
 #endif
 #ifdef MAL_ENABLE_SPI_FLASH_DRIVER
     #include "firmware_update/mem_drv/extflash_drv.h"
-    #ifndef MAL_SPI_FLASH_OFFSET
-        #define MAL_SPI_FLASH_OFFSET 0u
-    #endif
 #endif
 
 #define MAL_NO_BP2_OFFSET 0u
@@ -65,10 +56,10 @@ const struct MEMDRV_driver_entry_s MEMDRV_driverTable[] =
 {
 /* --------------External memory drivers------------------- */
 #if defined(MAL_ENABLE_SPI_FLASH_DRIVER)
-    {&DRVSF_driver, MAL_SpiFlashDriver, MAL_SPI_FLASH_OFFSET},
+    {&DRVSF_driver, MAL_SpiFlashDriver, MAL_NO_BP2_OFFSET},
 #endif
 #if defined(MAL_ENABLE_EEPROM_DRIVER)
-    {&DRVEE_driver, MAL_EepromDriver, MAL_EEPROM_OFFSET},
+    {&DRVEE_driver, MAL_EepromDriver, MAL_NO_BP2_OFFSET},
 #endif
 /* +++++++++ Add your external memory driver here +++++++++ */
  /* {DRVXX_driver, MAL_myExternalMemDriver, MAL_NO_BP2_OFFSET},  */
@@ -83,7 +74,7 @@ const struct MEMDRV_driver_entry_s MEMDRV_driverTable[] =
         {&DRVOF_driver, MAL_OptFlashDriver, MAL_NO_BP2_OFFSET},
     #endif
     #if defined(MAL_ENABLE_DATA_FLASH_DRIVER)
-        {&DRVDF_driver, MAL_DataFlashDriver, MAL_DATA_FLASH_OFFSET},
+        {&DRVDF_driver, MAL_DataFlashDriver, MAL_NO_BP2_OFFSET},
     #endif
     {NULL, MAL_NoDriver, MAL_NO_BP2_OFFSET} // do not remove end mark !!
 };

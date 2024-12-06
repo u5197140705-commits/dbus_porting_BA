@@ -21,7 +21,7 @@
 
 #if defined(GCCARM) || defined(GCCINTEL)
     #define LINKER_SEGMENT(segment)     *(.segment)
-#elif defined(ARMCLANG)
+#elif defined(KEILARM) || defined(ARMCLANG)
     #define LINKER_SEGMENT(segment)     ER_##segment +0 {*(segment)}
 #else
     #error unsupported compiler
