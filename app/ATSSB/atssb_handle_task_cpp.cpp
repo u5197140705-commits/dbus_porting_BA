@@ -41,6 +41,10 @@ using namespace ::SSBAL::SSBCO;
 /* DEFINITIONS AND DECLARATIONS                                               */
 /******************************************************************************/
 
+#define ATSSB_TASK_RUN_COUNTER_VAL_FOR_SSB_INIT ((uint8_t)2U)
+                     // Could be avoided with connected elements in case of having
+                     // a solution using the dependencies of initialization of
+                     // tasks
 
 /******************************************************************************/
 /* STATIC TYPEDEFINITIONS                                                     */
@@ -130,14 +134,14 @@ static void ATSSB_setLoopCallbackDataToDebugcomponent(uint16_t eventToken,
 
     /********************* eventDataLen *******************/
     DBGX_logStr_SCN_SSB_CBACK_APP(
-            "ATSSB_doForCallbackToApi: eventDataLen:" );
+            "App eventDataLen:" );
     DBGX_logInt_SCN_SSB_CBACK_APP  (
             eventDataLen,
             DBGX_UINT8_HEXADECIMAL      );
 
     /********************* *eventDataPtr ******************/
     DBGX_logStr_SCN_SSB_CBACK_APP(
-            "ATSSB_doForCallbackToApi: *eventDataPtr:" );
+            "App *eventDataPtr:" );
 
     for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
     {
@@ -197,11 +201,11 @@ static void ATSSB_doForCallbackToApi(
         case SSB_EVT_LOAD_CFG_UP:
             ATSSB_SsbInitIsPassed = true;
 
-            DBGX_logStr_SCN_SSB_CBACK_APP("Init callback");
+            DBGX_logStr_SCN_SSB_CBACK_APP("App ini cback");
             break;
 
         case SSB_EVT_LOOP_START_UP:
-            DBGX_logStr_SCN_SSB_CBACK_APP("Loop callback");
+            DBGX_logStr_SCN_SSB_CBACK_APP("Loop cback");
             ATSSB_setLoopCallbackDataToDebugcomponent(
                 eventToken, eventDataPtr, eventDataLen);
             break;
@@ -217,6 +221,8 @@ static void ATSSB_doForCallbackToApi(
 /******************************************************************************/
 uint8_t ATSSB_handleTask(void)
 {
+    static uint8_t TaskRunCounterForSsbInit = (uint8_t)0U;
+
     switch (ATSSB_taskState)
     {
         case TASK_NOT_INITIALISED:
@@ -225,29 +231,37 @@ uint8_t ATSSB_handleTask(void)
                 DBGX_init();
             #endif
 
-            SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, ATSSB_doForCallbackToApi);
+            if (TaskRunCounterForSsbInit == ATSSB_TASK_RUN_COUNTER_VAL_FOR_SSB_INIT)
+            {
+                TaskRunCounterForSsbInit = (uint8_t)0U;
 
-            DBGX_logStr_SCN_SSB_CDIRECT_APP("Init call");
-            SSBAL::SSBCC::ATSSB_HubObject.initHubMngr(
-                SSB_CFG_IDX,                    // As defined in hub_mngr.h
-                                                // Is filled in in the array of
-                                                // configurations in ssb_config_auto.cpp
+                SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, ATSSB_doForCallbackToApi);
 
-                SSB_I2C_ADDR_OFFSETS_DEFAULT,   //SSBAL_I2C_ADDR_OFFSETS_DEFAULT, // Correspondents to the following
-                                                // EEPROM-configurations of the Hubs,
-                                                // burned by the configuration tool:
-                                                // Offset 0 for Hub 0
-                                                // Offset 1 for Hub 1
-                                                // Offset 2 for Hub 2
-                                                // Offset 3 for Hub 3
-                                                // Normally to be used for SW-applications
-                                                // of SSB
+                DBGX_logStr_SCN_SSB_CDIRECT_APP("App ini call");
+                SSBAL::SSBCC::ATSSB_HubObject.initHubMngr(
+                    SSB_CFG_IDX,                    // As defined in hub_mngr.h
+                                                    // Is filled in in the array of
+                                                    // configurations in ssb_config_auto.cpp
 
-                SSB_CFG_TO_BE_LOADED            // Normally to be used for SW-applications
-                                                // of SSB
-            );
+                    SSB_I2C_ADDR_OFFSETS_DEFAULT,   //SSBAL_I2C_ADDR_OFFSETS_DEFAULT, // Correspondents to the following
+                                                    // EEPROM-configurations of the Hubs,
+                                                    // burned by the configuration tool:
+                                                    // Offset 0 for Hub 0
+                                                    // Offset 1 for Hub 1
+                                                    // Offset 2 for Hub 2
+                                                    // Offset 3 for Hub 3
+                                                    // Normally to be used for SW-applications
+                                                    // of SSB
 
-            ATSSB_taskState = TASK_INITIALISED;
+                    SSB_CFG_TO_BE_LOADED            // Normally to be used for SW-applications
+                                                    // of SSB
+                );
+
+                ATSSB_taskState = TASK_INITIALISED;
+            }
+
+            TaskRunCounterForSsbInit++;
+
             break;
         }
         case TASK_INITIALISED:
@@ -256,7 +270,7 @@ uint8_t ATSSB_handleTask(void)
             {
                 ATSSB_SsbInitIsPassed = false;
 
-                DBGX_logStr_SCN_SSB_CDIRECT_APP("Loop start call");
+                DBGX_logStr_SCN_SSB_CDIRECT_APP("App loop start call");
                 SSBAL::SSBCC::ATSSB_HubObject.startLoop(SSB_INFINITE_LOOP);
             }
 
