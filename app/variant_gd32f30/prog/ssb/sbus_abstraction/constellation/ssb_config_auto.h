@@ -48,7 +48,7 @@ extern "C" {
 /******************************************************************************/
 
 #define SSB_MAX_NUMBER_OF_CLIENTS             ((uint8_t)4U)
-#define SSB_NUMBER_OF_CONFIGURATION_BYTES     ((uint16_t)370U)
+#define SSB_NUMBER_OF_CONFIGURATION_BYTES     ((uint16_t)380U)
 
 #define SSB_CFG_IDX                           ((uint16_t)0x3311U)
 #define SSB_I2C_ADDR_OFFSETS_DEFAULT          ((uint8_t)0xE4)

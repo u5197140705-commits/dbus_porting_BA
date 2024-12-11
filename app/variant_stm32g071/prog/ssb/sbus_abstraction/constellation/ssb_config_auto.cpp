@@ -65,14 +65,24 @@ SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
 {
     // ================================================================
     SSBAL_CFG_DAT_ITEM_BEGIN,
-    0x33U, 0x11U, // <cfg_idx_high>U, <cfg_idx_low>,
+    0x33U, 0x11U, // <cfg_idx_high>, <cfg_idx_low>,
     // ----------------------------------------------------------------
 
     //-------- Startup of Hubs and Clients: -----------------------------------------------------------
 
     0x7FU, 0x00U, // WR: [reg_page_select       = 7F] = 00 Normal_Page
-    0x73U, 0x01U, // WR: [reg_res_hub           = 73] = 01 
+    0x6EU, 0x00U, // WR: [reg_loop              = 6E] = 00 Stopping the loop
+    // ----------------------------------------------------------------
     0x88U, 0x10U, // RD: [reg_int_hub           = 08] = 10 
+    0x73U, 0x01U, // WR: [reg_res_hub           = 73] = 01 
+    0x88U, 0x10U, // RD: [reg_int_hub           = 08] = 10 Reset Hub
+
+    0x73U, 0x02U, // WR: [reg_res_hub           = 73] = 02 Power for all Clients off (sleep-bit)
+    0x88U, 0x10U, // RD: [reg_int_hub           = 08] = 10 
+
+    0x73U, 0x01U, // WR: [reg_res_hub           = 73] = 01 Power for all Clients on and reset Hub
+    0x88U, 0x10U, // RD: [reg_int_hub           = 08] = 10 
+
     0x7EU, 0x4BU, // WR: [reg_key               = 7E] = 4B 
     // ----------------------------------------------------------------
     0x6DU, 0x01U, // WR: [reg_pwr_res           = 6D] = 01 

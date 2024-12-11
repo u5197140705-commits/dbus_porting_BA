@@ -11,17 +11,17 @@
  *  COMP_ABBREV      SSB_HUBC
  ******************************************************************************/
 
-#ifndef ATSSB_HANDLE_TASK_H
-#define ATSSB_HANDLE_TASK_H
+#ifndef ATSSB_HANDLE_TASK_C_H
+#define ATSSB_HANDLE_TASK_C_H
 
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
-/** \file     atssb_handle_task.h
+/** \file     atssb_handle_task_c.h
  *
  *  \ingroup  app/ATSSB
  *
- *  \brief    Interface of Application Task for Smart Sensor Bus
+ *  \brief    Interface of Application Task for Smart Sensor Bus, C-variant
  *
  *  \details  
  */
@@ -117,5 +117,5 @@ extern void ATSSB_doForCallbackToApi(uint16_t eventToken,
                                      const uint8_t *eventDataPtr,
                                      uint8_t eventDataLen );
 
-#endif //ATSSB_HANDLE_TASK_H
+#endif //ATSSB_HANDLE_TASK_C_H
 

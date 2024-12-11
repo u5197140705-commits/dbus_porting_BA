@@ -11,17 +11,17 @@
  *  COMP_ABBREV      SSB_HUBC
  ******************************************************************************/
 
-#ifndef ATSSB_HANDLE_TASK_H
-#define ATSSB_HANDLE_TASK_H
+#ifndef ATSSB_HANDLE_TASK_CPP_H
+#define ATSSB_HANDLE_TASK_CPP_H
 
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
-/** \file     atssb_handle_task.h
+/** \file     atssb_handle_task_cpp.h
  *
  *  \ingroup  app/ATSSB
  *
- *  \brief    Interface of Application Task for Smart Sensor Bus
+ *  \brief    Interface of Application Task for Smart Sensor Bus, CPP-variant
  *
  *  \details  
  */
@@ -110,5 +110,5 @@ extern uint8_t ATSSB_getDataFromRefQueueReleaseMem(void);
  */
 extern uint8_t ATSSB_handleTask(void);
 
-#endif //ATSSB_HANDLE_TASK_H
+#endif //ATSSB_HANDLE_TASK_CPP_H
 
