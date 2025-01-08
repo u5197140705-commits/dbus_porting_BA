@@ -38,7 +38,7 @@ pclock ?= 64
 
 # communication configuration
 UDA                  ?= UDA-01
-dbus_uart_channel     = 0
+dbus_uart_channel    ?= 0
 dbus_node_address     = 1
 dbus_default_baudrate = 96
 dbus_tx_pin           = A9
