@@ -38,6 +38,7 @@ typedef enum SCH_ModuleIDs
     MOD_TIM,
     MOD_WDT,
     MOD_STK,
+    MOD_DBC,
 
     /* USER CODE BEGIN ProjectModules */
     /*! place your projects modules here */

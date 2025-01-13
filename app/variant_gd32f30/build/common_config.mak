@@ -40,11 +40,11 @@ ext_osc ?= 8
 
 # communication configuration
 UDA                  ?= UDA-01
-dbus_uart_channel     = 0
+dbus_uart_channel     = #DBusCAN chip is used instead, configure its communication channel settings in app/<project>/prog/devices/dbuscan/<platform>/dbuscan_drv_cfg.c
 dbus_node_address     = 1
 dbus_default_baudrate = 96
-dbus_tx_pin           = B6
-dbus_rx_pin           = B7
+dbus_tx_pin           = #DBUS pin of DBusCAN chip is used instead
+dbus_rx_pin           = #DBUS pin of DBusCAN chip is used instead
 TESTMSGSRV_SUBNODE_ADDRESS = 10
 
 
@@ -70,6 +70,7 @@ ifeq ($(ssb_build_variant),rtos)
 endif
 scheduler_config=auto
 
+dbus_mapping = dbuscan
 
 ifeq ($(FW_update_type),FWU4)
     # start of GBL image in external flash
