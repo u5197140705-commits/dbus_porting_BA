@@ -35,6 +35,7 @@ else
 endif
 
 dbus_mapping = mcal
+dbus_uart_channel = 1
 
 # application specific components
 app_components = /../../ATSSB
