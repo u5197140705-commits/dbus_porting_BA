@@ -64,7 +64,7 @@ const uint8_t
 SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
 {
     // ================================================================
-    SSBAL_CFG_DAT_ITEM_BEGIN,
+    SSBAL_CFG_DAT_ITEM_BEGIN,   // 4 Sensor modules with IMU+T sensor from ST (for PUMU)
     0x33U, 0x11U, // <cfg_idx_high>, <cfg_idx_low>,
     // ----------------------------------------------------------------
 
@@ -351,6 +351,17 @@ SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
     0x7EU, 0x4BU, // WR: [reg_key               = 7E] = 4B 
     0x7FU, 0x00U, // WR: [reg_page_select       = 7F] = 00 Normal_Page
     // ================================================================
+
+    SSBAL_CFG_DAT_ITEM_BEGIN,  // Power down of sensor modules (only dummy data preliminarily here)
+    0x33U, 0x10U, // <cfg_idx_high>, <cfg_idx_low>,
+    // ----------------------------------------------------------------
+
+    //-------- Startup of Hubs and Clients: -----------------------------------------------------------
+
+    0x7FU, 0x00U, // WR: [reg_page_select       = 7F] = 00 Normal_Page
+    0x6EU, 0x00U, // WR: [reg_loop              = 6E] = 00 Stopping the loop
+    // ================================================================
+
     SSBAL_CFG_DAT_END  // Only once after the configs of all cfg_idx
     // ----------------------------------------------------------------
 };
