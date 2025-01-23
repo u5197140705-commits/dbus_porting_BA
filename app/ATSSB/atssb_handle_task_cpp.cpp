@@ -239,7 +239,7 @@ uint8_t ATSSB_handleTask(void)
 
                 DBGX_logStr_SCN_SSB_CDIRECT_APP("App ini call");
                 SSBAL::SSBCC::ATSSB_HubObject.initHubMngr(
-                    SSB_CFG_IDX,                    // As defined in hub_mngr.h
+                    SSB_CFG_IDX_MEASUREMENT,        // As defined in hub_mngr.h
                                                     // Is filled in in the array of
                                                     // configurations in ssb_config_auto.cpp
 
