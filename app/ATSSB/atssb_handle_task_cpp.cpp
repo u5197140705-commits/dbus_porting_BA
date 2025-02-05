@@ -27,16 +27,17 @@
 /******************************************************************************/
 extern "C" {
 
-#include "atssb_handle_task_cpp.h"
 #include "utility.h"
 #include "debug_mapping.h"
 #include "ssbf_common_c.h"
 }
 
+#include "atssb_handle_task_cpp.h"
 #include "../sbus_abstraction/constellation/hub_mngr.h"
 
 
 using namespace ::SSBAL::SSBCO;
+using namespace ::ATSSB;
 /******************************************************************************/
 /* DEFINITIONS AND DECLARATIONS                                               */
 /******************************************************************************/
@@ -62,63 +63,54 @@ namespace SSBAL
     }
 }
 
-
+extern "C" {
 /******************************************************************************/
-/* STATIC VARIABLES                                                           */
+/* STATIC C VARIABLES                                                           */
 /******************************************************************************/
 /**
  * \brief   state of handle task of this module
  *
  */
 static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
-static bool    ATSSB_SsbInitIsPassed = false;
-
-/******************************************************************************/
-/* STATIC FUNCTION DECLARATIONS                                               */
-/******************************************************************************/
-extern "C" {
 
 /**
- * \brief   Callback function of SSB
+ * \brief   state of initilization of underlaying SSB
  *
- * \param   calleeObjPtrToHere  Object pointer
- *          eventToken          Contains Hub-Index and further elements according to
- *                              ssbf_common_c.h
- *          eventDataPtr        Pointer to the data delivered (e.g. the loop results)
- *          eventDataLen        Number of bytes delivered via eventDataPtr
- *
- * \return  none
  */
-static void ATSSB_doForCallbackToApi(
-                   void *calleeObjPtrToHere, uint16_t eventToken,
-                   const uint8_t *eventDataPtr, uint8_t eventDataLen);
-
-
-/**
- * \brief   Sends data via debug extended component
- *
- * \param   eventToken      Contains Hub-Index and further elements according to
- *                          ssbf_common_c.h
- *          eventDataPtr    Pointer to the data delivered (e.g. the loop results)
- *          eventDataLen    Number of bytes delivered via eventDataPtr
- *
- * \return  none
- */
-static void ATSSB_setLoopCallbackDataToDebugcomponent(uint16_t eventToken,
-                                                      const uint8_t *eventDataPtr,
-                                                      uint8_t eventDataLen );
+static bool ATSSB_SsbInitIsPassed = false;
 
 
 /******************************************************************************/
-/* OBJECTS                                                                    */
+/* C WRAPPER                                                                  */
 /******************************************************************************/
+static void doForCallbackToApiWrap(
+                     void *calleeObjPtrToHere,
+                     uint16_t eventToken,
+                     const uint8_t *eventDataPtr,
+                     uint8_t eventDataLen);
+
+
+static void doForCallbackToApiWrap(
+                     void *calleeObjPtrToHere,
+                     uint16_t eventToken,
+                     const uint8_t *eventDataPtr,
+                     uint8_t eventDataLen)
+{
+    class Atssb_c *calleeObjPtrCasted
+                        = static_cast<Atssb_c*>(calleeObjPtrToHere);
+
+    calleeObjPtrCasted->doForCallbackToApi( eventToken, eventDataPtr,
+                                            eventDataLen);
+}
+
+} // extern "C"
 
 /******************************************************************************/
-/* STATIC FUNCTION DEFINITION                                                 */
+/* CLASS METHODS                                                              */
 /******************************************************************************/
-static void ATSSB_setLoopCallbackDataToDebugcomponent(uint16_t eventToken,
-                                                      const uint8_t *eventDataPtr,
-                                                      uint8_t eventDataLen )
+void Atssb_c::setLoopCallbackDataToDebugcomponent(  uint16_t eventToken, //lint !e715 eventToken only printed for debug purpose
+                                                    const uint8_t *eventDataPtr,
+                                                    uint8_t eventDataLen )
 {
     uint8_t index;
     uint8_t eventDataLenTemp;
@@ -170,12 +162,12 @@ static void ATSSB_setLoopCallbackDataToDebugcomponent(uint16_t eventToken,
 }
 
 
-static void ATSSB_doForCallbackToApi(
-                   void *calleeObjPtrToHere, uint16_t eventToken,
+Atssb_c::Atssb_c(void){};
+
+void Atssb_c::doForCallbackToApi(
+                   uint16_t eventToken,
                    const uint8_t *eventDataPtr, uint8_t eventDataLen)
 {
-    (void)calleeObjPtrToHere;
-
     // Especially the measurement data are available in the data under
     // eventDataPtr for the callback of ATSSB_HubObject.startLoop.
 
@@ -206,8 +198,8 @@ static void ATSSB_doForCallbackToApi(
 
         case SSB_EVT_LOOP_START_UP:
             DBGX_logStr_SCN_SSB_CBACK_APP("Loop cback");
-            ATSSB_setLoopCallbackDataToDebugcomponent(
-                eventToken, eventDataPtr, eventDataLen);
+            setLoopCallbackDataToDebugcomponent(    eventToken,
+                                                    eventDataPtr, eventDataLen);
             break;
 
         default:
@@ -216,8 +208,9 @@ static void ATSSB_doForCallbackToApi(
 }
 
 
+extern "C" {
 /******************************************************************************/
-/* FUNCTIONS                                                                  */
+/* C FUNCTIONS                                                                */
 /******************************************************************************/
 uint8_t ATSSB_handleTask(void)
 {
@@ -235,7 +228,7 @@ uint8_t ATSSB_handleTask(void)
             {
                 TaskRunCounterForSsbInit = (uint8_t)0U;
 
-                SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, ATSSB_doForCallbackToApi);
+                SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, doForCallbackToApiWrap);
 
                 DBGX_logStr_SCN_SSB_CDIRECT_APP("App ini call");
                 SSBAL::SSBCC::ATSSB_HubObject.initHubMngr(
