@@ -63,6 +63,12 @@ namespace SSBAL
     }
 }
 
+namespace ATSSB
+{
+    class Atssb_c ATSSB_obj;
+}
+
+
 extern "C" {
 /******************************************************************************/
 /* STATIC C VARIABLES                                                           */
@@ -72,12 +78,6 @@ extern "C" {
  *
  */
 static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
-
-/**
- * \brief   state of initilization of underlaying SSB
- *
- */
-static bool ATSSB_SsbInitIsPassed = false;
 
 
 /******************************************************************************/
@@ -191,7 +191,7 @@ void Atssb_c::doForCallbackToApi(
     switch (eventToken)
     {
         case SSB_EVT_LOAD_CFG_UP:
-            ATSSB_SsbInitIsPassed = true;
+            ssbInitIsPassed = true;
 
             DBGX_logStr_SCN_SSB_CBACK_APP("App ini cback");
             break;
@@ -259,9 +259,9 @@ uint8_t ATSSB_handleTask(void)
         }
         case TASK_INITIALISED:
         {
-            if (ATSSB_SsbInitIsPassed != false)
+            if (ATSSB::ATSSB_obj.ssbInitIsPassed != false)
             {
-                ATSSB_SsbInitIsPassed = false;
+                ATSSB::ATSSB_obj.ssbInitIsPassed = false;
 
                 DBGX_logStr_SCN_SSB_CDIRECT_APP("App loop start call");
                 SSBAL::SSBCC::ATSSB_HubObject.startLoop(SSB_INFINITE_LOOP);

@@ -142,25 +142,32 @@ namespace ATSSB
                                                     uint8_t eventDataLen );
 
     public:
-            /** \brief  Creates the object of this class and of the inherited
-            *           classes
-            */
-            Atssb_c(void);
+        /**
+         * \brief   state of initilization of underlaying SSB
+         *
+         */
+        bool ssbInitIsPassed = false;
 
-            /**
-             * \brief   Callback function of SSB
-             *
-             * \param   calleeObjPtrToHere  Object pointer
-             *          eventToken          Contains Hub-Index and further elements according to
-             *                              ssbf_common_c.h
-             *          eventDataPtr        Pointer to the data delivered (e.g. the loop results)
-             *          eventDataLen        Number of bytes delivered via eventDataPtr
-             *
-             * \return  none
-             */
-            void doForCallbackToApi(    uint16_t eventToken,
-                                        const uint8_t *eventDataPtr,
-                                        uint8_t eventDataLen);
+
+        /** \brief  Creates the object of this class and of the inherited
+        *           classes
+        */
+        Atssb_c(void);
+
+        /**
+         * \brief   Callback function of SSB
+         *
+         * \param   calleeObjPtrToHere  Object pointer
+         *          eventToken          Contains Hub-Index and further elements according to
+         *                              ssbf_common_c.h
+         *          eventDataPtr        Pointer to the data delivered (e.g. the loop results)
+         *          eventDataLen        Number of bytes delivered via eventDataPtr
+         *
+         * \return  none
+         */
+        void doForCallbackToApi(    uint16_t eventToken,
+                                    const uint8_t *eventDataPtr,
+                                    uint8_t eventDataLen);
     };
 }
 #endif
