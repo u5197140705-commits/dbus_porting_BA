@@ -29,6 +29,10 @@
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "bsh_stdinc.h"
 #include <stdint.h>
 #ifdef RTOS
@@ -82,7 +86,7 @@ extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
 #endif //ATSSB_RTOS_IS_USED
 
 /******************************************************************************/
-/* FUNCTION PROTOTYPES                                                        */
+/* C FUNCTION PROTOTYPES                                                      */
 /******************************************************************************/
 
 #ifdef ATSSB_RTOS_IS_USED
@@ -98,6 +102,7 @@ extern RTOS_REF_QUEUE RTOS_atssbRefQueue;
 extern uint8_t ATSSB_getDataFromRefQueueReleaseMem(void);
 #endif //ATSSB_RTOS_IS_USED
 
+
 /**
  * \brief   Handletask for ATSSB
  *
@@ -109,6 +114,63 @@ extern uint8_t ATSSB_getDataFromRefQueueReleaseMem(void);
  *
  */
 extern uint8_t ATSSB_handleTask(void);
+
+#ifdef __cplusplus
+} // extern "C"
+
+
+/******************************************************************************/
+/* CLASS DEFINITION                                                           */
+/******************************************************************************/
+namespace ATSSB
+{
+    class Atssb_c
+    {
+    private:
+        /**
+         * \brief   Sends data via debug extended component
+         *
+         * \param   eventToken      Contains Hub-Index and further elements according to
+         *                          ssbf_common_c.h
+         *          eventDataPtr    Pointer to the data delivered (e.g. the loop results)
+         *          eventDataLen    Number of bytes delivered via eventDataPtr
+         *
+         * \return  none
+         */
+        void setLoopCallbackDataToDebugcomponent(   uint16_t eventToken,
+                                                    const uint8_t *eventDataPtr,
+                                                    uint8_t eventDataLen );
+
+    public:
+        /**
+         * \brief   state of initilization of underlaying SSB
+         *
+         */
+        bool ssbInitIsPassed = false;
+
+
+        /** \brief  Creates the object of this class and of the inherited
+        *           classes
+        */
+        Atssb_c(void);
+
+        /**
+         * \brief   Callback function of SSB
+         *
+         * \param   calleeObjPtrToHere  Object pointer
+         *          eventToken          Contains Hub-Index and further elements according to
+         *                              ssbf_common_c.h
+         *          eventDataPtr        Pointer to the data delivered (e.g. the loop results)
+         *          eventDataLen        Number of bytes delivered via eventDataPtr
+         *
+         * \return  none
+         */
+        void doForCallbackToApi(    uint16_t eventToken,
+                                    const uint8_t *eventDataPtr,
+                                    uint8_t eventDataLen);
+    };
+}
+#endif
 
 #endif //ATSSB_HANDLE_TASK_CPP_H
 
