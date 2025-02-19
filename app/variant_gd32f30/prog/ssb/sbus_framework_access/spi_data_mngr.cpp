@@ -130,14 +130,14 @@ const uint8_t SpiDataMngr_c::SpiInterfaceIdxs[SSBF_MNGR_NUMBER_OF_HUBS] =
 SpiDataMngr_c::SpiDataMngr_c(void)
 {
     DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: SpiDataMngr_c: ",
-                                  (uint32_t)this, DBGX_UNSIGNED_HEXADECIMAL);
+                                  static_cast<uint32_t>(this), DBGX_UNSIGNED_HEXADECIMAL);
 }
 
 void SpiDataMngr_c::initSpiDataMngr(uint8_t instanceIdx)
 {
     DBGX_logStr_SCN_SSB_INIT("INI initSpiDataMngr");
 
-    SSBERR_handleErrDbgIf(instanceIdx >= (uint8_t)SSBF_MNGR_NUMBER_OF_HUBS,
+    SSBERR_handleErrDbgIf(instanceIdx >= static_cast<uint8_t>(SSBF_MNGR_NUMBER_OF_HUBS),
                           SSB_ERR_SPIDATAMNGR_INSTANCE_IDX);
 
     //setSpiIndexes(SpiInterfaceIdxs[instanceIdx], instanceIdx);

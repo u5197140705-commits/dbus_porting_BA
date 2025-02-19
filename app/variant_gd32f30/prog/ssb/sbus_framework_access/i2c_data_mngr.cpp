@@ -155,19 +155,19 @@ void I2cDataMngr_c::initI2cDataMngr(uint8_t instanceIdx, uint8_t i2cAddrOffsets)
 
 #if SSBF_MNGR_NUMBER_OF_HUBS >= 1U
     I2cDataMngr_c::I2cHubAddresses[0] =
-        SSBF_I2C_ADDR_BASE + (i2cAddrOffsets & (uint8_t)0x03U);
+        SSBF_I2C_ADDR_BASE + (i2cAddrOffsets & static_cast<uint8_t>(0x03U));
 #endif
 #if SSBF_MNGR_NUMBER_OF_HUBS >= 2U
     I2cDataMngr_c::I2cHubAddresses[1] =
-        SSBF_I2C_ADDR_BASE + ((i2cAddrOffsets & (uint8_t)0x0CU) >> 2);
+        SSBF_I2C_ADDR_BASE + ((i2cAddrOffsets & static_cast<uint8_t>(0x0CU)) >> 2);
 #endif
 #if SSBF_MNGR_NUMBER_OF_HUBS >= 3U
     I2cDataMngr_c::I2cHubAddresses[2] =
-        SSBF_I2C_ADDR_BASE + ((i2cAddrOffsets & (uint8_t)0x30U) >> 4);
+        SSBF_I2C_ADDR_BASE + ((i2cAddrOffsets & static_cast<uint8_t>(0x30U)) >> 4);
 #endif
 #if SSBF_MNGR_NUMBER_OF_HUBS == 4U
     I2cDataMngr_c::I2cHubAddresses[3] =
-        SSBF_I2C_ADDR_BASE + ((i2cAddrOffsets & (uint8_t)0xC0U) >> 6);
+        SSBF_I2C_ADDR_BASE + ((i2cAddrOffsets & static_cast<uint8_t>(0xC0U)) >> 6);
 #endif
 
     initI2cData(I2cChannelConfigs, I2cGeneralConfigs,

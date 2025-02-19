@@ -47,21 +47,21 @@ extern "C" {
 /* PREPROCESSOR DEFINITIONS                                                   */
 /******************************************************************************/
 
-#define SSB_MAX_NUMBER_OF_CLIENTS             ((uint8_t)4U)
-#define SSB_NUMBER_OF_CONFIGURATION_BYTES     ((uint16_t)387U)
+#define SSB_MAX_NUMBER_OF_CLIENTS             (static_cast<uint8_t>(4U))
+#define SSB_NUMBER_OF_CONFIGURATION_BYTES     (static_cast<uint16_t>(387U))
 
 // ----------------------------------------------------------------------------
 // The following indexes must be filled in as a marker in SsbConfigurationBytes
 // behind one of the markers SSBAL_CFG_DAT_ITEM_BEGIN
 
-#define SSB_CFG_IDX                           ((uint16_t)0x3311U)
-#define SSB_CFG_IDX_PWR_DOWN                  ((uint16_t)0x3310U)
-#define SSB_CFG_IDX_MEASUREMENT               ((uint16_t)0x3311U)
+#define SSB_CFG_IDX                           (static_cast<uint16_t>(0x3311U))
+#define SSB_CFG_IDX_PWR_DOWN                  (static_cast<uint16_t>(0x3310U))
+#define SSB_CFG_IDX_MEASUREMENT               (static_cast<uint16_t>(0x3311U))
 
 // ----------------------------------------------------------------------------
 
-#define SSB_I2C_ADDR_OFFSETS_DEFAULT          ((uint8_t)0xE4)
-#define SSB_CFG_TO_BE_LOADED                  ((uint8_t)0x01)
+#define SSB_I2C_ADDR_OFFSETS_DEFAULT          (static_cast<uint8_t>(0xE4))
+#define SSB_CFG_TO_BE_LOADED                  (static_cast<uint8_t>(0x01))
 
 /******************************************************************************/
 /* CLASS-IF DEFINITION                                                        */

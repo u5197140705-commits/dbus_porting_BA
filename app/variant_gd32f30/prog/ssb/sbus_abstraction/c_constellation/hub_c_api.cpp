@@ -93,16 +93,16 @@ extern "C" {
                                     // MsgSsbTestModeStartRequest
     {
 #if   SSBF_MNGR_NUMBER_OF_HUBS == 1U
-       SSB_HUBC_setupHub((uint8_t)0x00U, (uint16_t)0x3311U, i2cAddrOffsets,
+       SSB_HUBC_setupHub(static_cast<uint8_t>(0x00U), static_cast<uint16_t>(0x3311U), i2cAddrOffsets,
                           configurationToBeLoaded);
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 2U
-       SSB_HUBC_setupHub((uint8_t)0x01U, (uint16_t)0x3312U, i2cAddrOffsets,
+       SSB_HUBC_setupHub(static_cast<uint8_t>(0x01U), static_cast<uint16_t>(0x3312U), i2cAddrOffsets,
                           configurationToBeLoaded);
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 3U
-       SSB_HUBC_setupHub((uint8_t)0x02U, (uint16_t)0x3313U, i2cAddrOffsets,
+       SSB_HUBC_setupHub(static_cast<uint8_t>(0x02U), static_cast<uint16_t>(0x3313U), i2cAddrOffsets,
                           configurationToBeLoaded);
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 4U
-       SSB_HUBC_setupHub((uint8_t)0x03U, (uint16_t)0x3314U, i2cAddrOffsets,
+       SSB_HUBC_setupHub(static_cast<uint8_t>(0x03U), static_cast<uint16_t>(0x3314U), i2cAddrOffsets,
                           configurationToBeLoaded);
 #else
     #error SSBF_MNGR_NUMBER_OF_HUBS has wrong value

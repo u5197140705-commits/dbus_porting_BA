@@ -46,7 +46,7 @@ using namespace ::SSBF;
 /******************************************************************************/
 RegistersMngr_c::RegistersMngr_c(void)
 {
-    DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: RegistersMngr_c: ",(uint32_t)this,
+    DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: RegistersMngr_c: ", static_cast<uint32_t>(this),
                                   DBGX_UNSIGNED_HEXADECIMAL);
 }
 

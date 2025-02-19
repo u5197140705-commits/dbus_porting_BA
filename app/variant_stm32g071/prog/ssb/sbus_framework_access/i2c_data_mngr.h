@@ -70,6 +70,9 @@ namespace SSBF
         *   \param  instanceIdx    Index of the instance of this class
         *                          (0, ..., SSBF_MNGR_NUMBER_OF_HUBS-1)
         *
+        *   \param  i2cAddrOffsets Offsets of the I2C-addresses of the 4 Hubs
+        *                          (Hub 0 has the two lowest order bits and so on)
+        *
         *   \details
         */
         void initI2cDataMngr(uint8_t instanceIdx, uint8_t i2cAddrOffsets);
@@ -77,4 +80,3 @@ namespace SSBF
 }
 
 #endif // From: #ifndef I2C_DATA_MNGR_H
-

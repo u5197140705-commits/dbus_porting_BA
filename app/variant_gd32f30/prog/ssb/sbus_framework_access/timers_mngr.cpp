@@ -43,7 +43,7 @@ using namespace ::SSBF;
 /******************************************************************************/
 TimersMngr_c::TimersMngr_c(void)
 {
-    DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: TimersMngr_c: ",(uint32_t)this,
+    DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: TimersMngr_c: ", static_cast<uint32_t>(this),
                                   DBGX_UNSIGNED_HEXADECIMAL);
 }
 

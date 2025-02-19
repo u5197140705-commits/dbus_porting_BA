@@ -83,7 +83,7 @@ static void *SSBCO_CalleeObjPtrToHubFromTaskArray[SSBF_MNGR_NUMBER_OF_HUBS
 /******************************************************************************/
 HubMngr_c::HubMngr_c(void)
 {
-    DBGX_logStrInt_SCN_SSB_CONSTR0("Constructor: HubMngr_c: ", (uint32_t)this,
+    DBGX_logStrInt_SCN_SSB_CONSTR0("Constructor: HubMngr_c: ", static_cast<uint32_t>(this),
                                    DBGX_UNSIGNED_HEXADECIMAL);
 }
 
@@ -107,7 +107,7 @@ void HubMngr_c::initHubMngr(uint16_t cfgIdx, uint8_t i2cAddrOffsets,
         SSBF_locateCallbacksFromTask(
                 SSBCO_CallbackToHubFromTaskFctPtrArray,
                 SSBCO_CalleeObjPtrToHubFromTaskArray,
-                (uint8_t)SSBF_MNGR_NUMBER_OF_HUBS,
+                static_cast<uint8_t>(SSBF_MNGR_NUMBER_OF_HUBS),
                 SSBF_MNGR_NUMBER_OF_LAYERS_NOTIFIED);
 
         /* ---------------------------------------------------------- */
@@ -123,7 +123,7 @@ void HubMngr_c::initHubMngr(uint16_t cfgIdx, uint8_t i2cAddrOffsets,
 
         /* ---------------------------------------------------------- */
 
-        initHubProcessing((uint8_t)SSBF_MNGR_NUMBER_OF_HUBS, cfgIdx,
+        initHubProcessing(static_cast<uint8_t>(SSBF_MNGR_NUMBER_OF_HUBS), cfgIdx,
                           configurationToBeLoaded);
                                          // From Hub_c::
 

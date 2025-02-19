@@ -57,7 +57,7 @@ namespace SSBF
                      ///< Counts the instances of this class for setting
                      ///< SiDataMngrInstanceIdx
 
-        uint8_t SiDataMngrInstanceIdx = (uint8_t)0U;
+        uint8_t SiDataMngrInstanceIdx = static_cast<uint8_t>(0U);
                      ///< Instance index of this class
 
     public:

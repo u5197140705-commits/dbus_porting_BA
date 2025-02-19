@@ -45,7 +45,8 @@
                                       // because of preprocessor comparison
                                       // with no cast allowed
 
-#define SSBF_MNGR_NUMBER_OF_I2C               ((uint8_t)2U)
-#define SSBF_MNGR_NUMBER_OF_LAYERS_NOTIFIED   ((uint8_t)3U)
+#define SSBF_MNGR_NUMBER_OF_I2C               (static_cast<uint8_t>(2U))
+#define SSBF_MNGR_NUMBER_OF_LAYERS_NOTIFIED   (static_cast<uint8_t>(3U))
 
 #endif // From: #ifndef SSBF_MNGR_COMMON_H
+
