@@ -68,10 +68,10 @@ uint8_t SiDataMngr_c::SiDataMngrInstanceCnt = (uint8_t)0U;
 /******************************************************************************/
 SiDataMngr_c::SiDataMngr_c(void)
 {
-    DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: SiDataMngr_c: ",(uint32_t)this,
+    DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: SiDataMngr_c: ", static_cast<uint32_t>(this),
                                   DBGX_UNSIGNED_HEXADECIMAL);
 
-    SiDataMngrInstanceIdx = (uint8_t)0U;
+    SiDataMngrInstanceIdx = static_cast<uint8_t>(0U);
 }
 
 void SiDataMngr_c::initSiDataMngr(uint8_t i2cAddrOffsets)
@@ -81,7 +81,7 @@ void SiDataMngr_c::initSiDataMngr(uint8_t i2cAddrOffsets)
 
     SiDataMngrInstanceIdx = SiDataMngrInstanceCnt;
     SSBERR_handleErrDbgIf(SiDataMngrInstanceIdx 
-                              >= (uint8_t)SSBF_MNGR_NUMBER_OF_HUBS,
+                              >= static_cast<uint8_t>(SSBF_MNGR_NUMBER_OF_HUBS),
                           SSB_ERR_SIDATAMNGR_INSTANCE_IDX);
     SiDataMngrInstanceCnt++;
 
@@ -114,3 +114,4 @@ void SiDataMngr_c::initSiDataMngr(uint8_t i2cAddrOffsets)
 }
 
 /*lint +e40 */
+

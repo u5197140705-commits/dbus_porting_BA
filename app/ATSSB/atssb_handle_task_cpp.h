@@ -148,7 +148,6 @@ namespace ATSSB
          */
         bool ssbInitIsPassed = false;
 
-
         /** \brief  Creates the object of this class and of the inherited
         *           classes
         */

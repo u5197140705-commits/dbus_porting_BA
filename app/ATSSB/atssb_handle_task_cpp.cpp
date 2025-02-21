@@ -35,9 +35,8 @@ extern "C" {
 #include "atssb_handle_task_cpp.h"
 #include "../sbus_abstraction/constellation/hub_mngr.h"
 
-
 using namespace ::SSBAL::SSBCO;
-using namespace ::ATSSB;
+
 /******************************************************************************/
 /* DEFINITIONS AND DECLARATIONS                                               */
 /******************************************************************************/
@@ -55,19 +54,12 @@ using namespace ::ATSSB;
 /******************************************************************************/
 /* OBJECTS                                                                    */
 /******************************************************************************/
-namespace SSBAL
-{
-    namespace SSBCC
-    {
-        class HubMngr_c ATSSB_HubObject;
-    }
-}
 
 namespace ATSSB
 {
-    class Atssb_c ATSSB_obj;
+    class Atssb_c   HubApplicationObject;
+    class HubMngr_c HubProviderObject;
 }
-
 
 extern "C" {
 /******************************************************************************/
@@ -83,21 +75,20 @@ static uint8_t ATSSB_taskState = TASK_NOT_INITIALISED;
 /******************************************************************************/
 /* C WRAPPER                                                                  */
 /******************************************************************************/
-static void doForCallbackToApiWrap(
+static void ATSSB_doForCallbackToApiWrap(
                      void *calleeObjPtrToHere,
                      uint16_t eventToken,
                      const uint8_t *eventDataPtr,
                      uint8_t eventDataLen);
 
-
-static void doForCallbackToApiWrap(
+static void ATSSB_doForCallbackToApiWrap(
                      void *calleeObjPtrToHere,
                      uint16_t eventToken,
                      const uint8_t *eventDataPtr,
                      uint8_t eventDataLen)
 {
-    class Atssb_c *calleeObjPtrCasted
-                        = static_cast<Atssb_c*>(calleeObjPtrToHere);
+    class ATSSB::Atssb_c *calleeObjPtrCasted
+                        = static_cast<ATSSB::Atssb_c*>(calleeObjPtrToHere);
 
     calleeObjPtrCasted->doForCallbackToApi( eventToken, eventDataPtr,
                                             eventDataLen);
@@ -105,6 +96,8 @@ static void doForCallbackToApiWrap(
 
 } // extern "C"
 
+namespace ATSSB
+{
 /******************************************************************************/
 /* CLASS METHODS                                                              */
 /******************************************************************************/
@@ -161,15 +154,16 @@ void Atssb_c::setLoopCallbackDataToDebugcomponent(  uint16_t eventToken, //lint 
     }
 }
 
-
-Atssb_c::Atssb_c(void){};
+Atssb_c::Atssb_c(void)
+{
+}
 
 void Atssb_c::doForCallbackToApi(
                    uint16_t eventToken,
                    const uint8_t *eventDataPtr, uint8_t eventDataLen)
 {
     // Especially the measurement data are available in the data under
-    // eventDataPtr for the callback of ATSSB_HubObject.startLoop.
+    // eventDataPtr for the callback of HubProviderObject.startLoop.
 
     // Call a member function of your application object here.
 
@@ -206,7 +200,7 @@ void Atssb_c::doForCallbackToApi(
             break;
     }
 }
-
+} // namespace ATSSB
 
 extern "C" {
 /******************************************************************************/
@@ -228,10 +222,10 @@ uint8_t ATSSB_handleTask(void)
             {
                 TaskRunCounterForSsbInit = (uint8_t)0U;
 
-                SSBAL::SSBCC::ATSSB_HubObject.notifyCallbackToApi(nullptr, doForCallbackToApiWrap);
+                ATSSB::HubProviderObject.notifyCallbackToApi(&ATSSB::HubApplicationObject, ATSSB_doForCallbackToApiWrap);
 
                 DBGX_logStr_SCN_SSB_CDIRECT_APP("App ini call");
-                SSBAL::SSBCC::ATSSB_HubObject.initHubMngr(
+                ATSSB::HubProviderObject.initHubMngr(
                     SSB_CFG_IDX_MEASUREMENT,        // As defined in hub_mngr.h
                                                     // Is filled in in the array of
                                                     // configurations in ssb_config_auto.cpp
@@ -259,12 +253,12 @@ uint8_t ATSSB_handleTask(void)
         }
         case TASK_INITIALISED:
         {
-            if (ATSSB::ATSSB_obj.ssbInitIsPassed != false)
+            if (ATSSB::HubApplicationObject.ssbInitIsPassed != false)
             {
-                ATSSB::ATSSB_obj.ssbInitIsPassed = false;
+                ATSSB::HubApplicationObject.ssbInitIsPassed = false;
 
                 DBGX_logStr_SCN_SSB_CDIRECT_APP("App loop start call");
-                SSBAL::SSBCC::ATSSB_HubObject.startLoop(SSB_INFINITE_LOOP);
+                ATSSB::HubProviderObject.startLoop(SSB_INFINITE_LOOP);
             }
 
             // Recommendation for user's actions:
@@ -291,6 +285,5 @@ uint8_t ATSSB_handleTask(void)
 
     return(ATSSB_taskState);
 }
-
 } //extern "C"
 

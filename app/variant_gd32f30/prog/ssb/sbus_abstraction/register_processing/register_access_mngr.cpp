@@ -47,7 +47,7 @@ using namespace ::SSBF;
 RegisterAccessMngr_c::RegisterAccessMngr_c(void)
 {
     DBGX_logStrInt_SCN_SSB_CONSTR("Constructor: RegisterAccessMngr_c: ",
-                                  (uint32_t)this, DBGX_UNSIGNED_HEXADECIMAL);
+                                  static_cast<uint32_t>(this), DBGX_UNSIGNED_HEXADECIMAL);
 }
 
 void RegisterAccessMngr_c::initRegisterAccessMngr(uint8_t i2cAddrOffsets)
