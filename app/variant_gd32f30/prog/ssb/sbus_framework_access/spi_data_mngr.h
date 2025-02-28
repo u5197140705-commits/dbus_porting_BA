@@ -40,13 +40,22 @@ extern "C" {
 #include "debug_mapping.h"
 }
 
+#include "ssb_project_cfg.h"
 #include "ssbf_mngr_common.h"
 #include "spi_data.h"
 
+#ifdef SSBCFG_SPI_USED
 
 /* --------- Begin: To be defined by the user --------- */
+#ifdef SSBCFG_STM32G071_SPI_HW0
 /// extern const struct MDIO_Channel MDIOB9_MI2C1_SDA_CFG;
 /// extern const struct MDIO_Channel MDIOA9_MI2C1_SCL_CFG;
+#endif
+
+#ifdef SSBCFG_GD32F303_SPI_HW0
+/// extern const struct MDIO_Channel MDIOB9_MI2C1_SDA_CFG;
+/// extern const struct MDIO_Channel MDIOA9_MI2C1_SCL_CFG;
+#endif
 /* --------- End: To be defined by the user ----------- */
 
 /******************************************************************************/
@@ -85,5 +94,6 @@ namespace SSBF
     //lint +e1790
 }
 
+#endif // From: #ifdef SSBCFG_SPI_USED
 #endif // From: #ifndef SPI_DATA_MNGR_H
 
