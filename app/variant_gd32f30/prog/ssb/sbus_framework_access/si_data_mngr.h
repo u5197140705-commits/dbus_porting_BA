@@ -36,6 +36,7 @@ extern "C" {
 #include "debug_mapping.h"
 }
 
+#include "ssb_project_cfg.h"
 #include "errors.h"
 #include "si_data.h"
 #include "i2c_data_mngr.h"
@@ -46,7 +47,13 @@ extern "C" {
 /******************************************************************************/
 namespace SSBF
 {
-    class SiDataMngr_c : public SiData_c, public I2cDataMngr_c, public SpiDataMngr_c
+#if defined SSBCFG_I2C_USED
+    class SiDataMngr_c : public SiData_c, public I2cDataMngr_c
+#elif defined SSBCFG_SPI_USED
+    class SiDataMngr_c : public SiData_c, public SpiDataMngr_c
+#else
+    #error "SSB-Error 2: Neither I2C nor SPI configured in ssb_project_cfg.h"
+#endif
     {
     private:
         static const bool I2c_not_Spi[SSBF_MNGR_NUMBER_OF_HUBS];

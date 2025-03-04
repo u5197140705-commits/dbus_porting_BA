@@ -76,8 +76,12 @@ SiDataMngr_c::SiDataMngr_c(void)
 
 void SiDataMngr_c::initSiDataMngr(uint8_t i2cAddrOffsets)
 {
+#ifdef SSBCFG_I2C_USED
     class I2cData_c *i2cDataObjPtr;
+#endif
+#ifdef SSBCFG_SPI_USED
     class SpiData_c *spiDataObjPtr;
+#endif
 
     SiDataMngrInstanceIdx = SiDataMngrInstanceCnt;
     SSBERR_handleErrDbgIf(SiDataMngrInstanceIdx 
@@ -89,6 +93,7 @@ void SiDataMngr_c::initSiDataMngr(uint8_t i2cAddrOffsets)
 
     if (I2c_not_Spi[SiDataMngrInstanceIdx] != false)
     {
+#ifdef SSBCFG_I2C_USED
         i2cDataObjPtr = getI2cDataObjPtr();             // From I2cData_c::
 
         SSBERR_handleErrDbgIf(i2cDataObjPtr == nullptr,
@@ -99,9 +104,11 @@ void SiDataMngr_c::initSiDataMngr(uint8_t i2cAddrOffsets)
 
         initI2cDataMngr(SiDataMngrInstanceIdx, i2cAddrOffsets);
                                                         // From I2cDataMngr_c::
+#endif
     }
     else
     {
+#ifdef SSBCFG_SPI_USED
         spiDataObjPtr = getSpiDataObjPtr();             // From SpiData_c::
         SSBERR_handleErrDbgIf(spiDataObjPtr == nullptr,
                               SSB_ERR_SIDATAMNGR_GET_SPIOBJPTR);
@@ -110,6 +117,7 @@ void SiDataMngr_c::initSiDataMngr(uint8_t i2cAddrOffsets)
         initSiData(I2c_not_Spi[SiDataMngrInstanceIdx]); // From SiData_c::
 
         initSpiDataMngr(SiDataMngrInstanceIdx);         // From SpiDataMngr_c:
+#endif
     }
 }
 

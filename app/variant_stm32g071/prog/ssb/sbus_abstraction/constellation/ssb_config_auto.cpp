@@ -60,6 +60,8 @@
 
 using namespace ::SSBAL::SSBCO;
 
+#if defined SSBCFG_IMUT_ST_ST_ST_ST_PUMU0
+
 const uint8_t
 SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
 {
@@ -365,6 +367,120 @@ SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
     SSBAL_CFG_DAT_END  // Only once after the configs of all cfg_idx
     // ----------------------------------------------------------------
 };
+
+#elif defined SSBCFG_IMUT_ST_n_n_n_PUMU0
+const uint8_t
+SsbConfigurations_c::SsbConfigurationBytes[SSB_NUMBER_OF_CONFIGURATION_BYTES] =
+{
+    // ================================================================
+    SSBAL_CFG_DAT_ITEM_BEGIN,
+    static_cast<uint8_t>(0x33U), static_cast<uint8_t>(0x11U), // <cfg_idx_high>, <cfg_idx_low>,
+    // ----------------------------------------------------------------
+
+    //-------- Startup of Hubs and Clients: -----------------------------------------------------------
+
+    static_cast<uint8_t>(0x7FU), static_cast<uint8_t>(0x00U), // WR: [reg_page_select       = 7F] = 00 Normal_Page
+    static_cast<uint8_t>(0x6EU), static_cast<uint8_t>(0x00U), // WR: [reg_loop              = 6E] = 00 Stopping the loop
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x88U), static_cast<uint8_t>(0x10U), // RD: [reg_int_hub           = 08] = 10 
+    static_cast<uint8_t>(0x73U), static_cast<uint8_t>(0x01U), // WR: [reg_res_hub           = 73] = 01 
+    static_cast<uint8_t>(0x88U), static_cast<uint8_t>(0x10U), // RD: [reg_int_hub           = 08] = 10 Reset Hub
+
+    static_cast<uint8_t>(0x73U), static_cast<uint8_t>(0x02U), // WR: [reg_res_hub           = 73] = 02 Power for all Clients off (sleep-bit)
+    static_cast<uint8_t>(0x88U), static_cast<uint8_t>(0x10U), // RD: [reg_int_hub           = 08] = 10 
+
+    static_cast<uint8_t>(0x73U), static_cast<uint8_t>(0x01U), // WR: [reg_res_hub           = 73] = 01 Power for all Clients on and reset Hub
+    static_cast<uint8_t>(0x88U), static_cast<uint8_t>(0x10U), // RD: [reg_int_hub           = 08] = 10 
+
+    static_cast<uint8_t>(0x7EU), static_cast<uint8_t>(0x4BU), // WR: [reg_key               = 7E] = 4B 
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x6DU), static_cast<uint8_t>(0x01U), // WR: [reg_pwr_res           = 6D] = 01 
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x6FU), static_cast<uint8_t>(0x70U), // WR: [reg_addr              = 6F] = 70 ; RD_CLT_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x98U), // WR: [reg_access            = 71] = 98 ; RD_CLT_0
+    static_cast<uint8_t>(0xF2U), static_cast<uint8_t>(0x01U), // RD: [reg_rx_data           = 72] = 01 ; RD_CLT_0: [reg_clt_status        = 70] = 01 
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x6FU), static_cast<uint8_t>(0x7EU), // WR: [reg_addr              = 6F] = 7E ; WR_CLT_0
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x4BU), // WR: [reg_tx_data           = 70] = 4B ; WR_CLT_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x88U), // WR: [reg_access            = 71] = 88 ; WR_CLT_0: [reg_key               = 7E] = 4B 
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x6FU), static_cast<uint8_t>(0x7FU), // WR: [reg_addr              = 6F] = 7F ; WR_CLT_0
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x00U), // WR: [reg_tx_data           = 70] = 00 ; WR_CLT_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x88U), // WR: [reg_access            = 71] = 88 ; WR_CLT_0: [reg_page_select       = 7F] = 00 Normal_Page_Clt
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x88U), static_cast<uint8_t>(0x0FU), // RD: [reg_int_hub           = 08] = 0F 
+    static_cast<uint8_t>(0x89U), static_cast<uint8_t>(0x20U), // RD: [reg_int_clt0          = 09] = 20 
+    // ----------------------------------------------------------------
+
+    //-------- Configuration of Clients and Devices: --------------------------------------------------
+
+    static_cast<uint8_t>(0x6FU), static_cast<uint8_t>(0x7EU), // WR: [reg_addr              = 6F] = 7E ; WR_CLT_0
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x4BU), // WR: [reg_tx_data           = 70] = 4B ; WR_CLT_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x88U), // WR: [reg_access            = 71] = 88 ; WR_CLT_0: [reg_key               = 7E] = 4B 
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x6FU), static_cast<uint8_t>(0x75U), // WR: [reg_addr              = 6F] = 75 ; WR_CLT_0
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x07U), // WR: [reg_tx_data           = 70] = 07 ; WR_CLT_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x88U), // WR: [reg_access            = 71] = 88 ; WR_CLT_0: [reg_temp_cfg          = 75] = 07 
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x6FU), static_cast<uint8_t>(0x71U), // WR: [reg_addr              = 6F] = 71 ; WR_CLT_0
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x01U), // WR: [reg_tx_data           = 70] = 01 ; WR_CLT_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x88U), // WR: [reg_access            = 71] = 88 ; WR_CLT_0: [reg_pwr_sensor        = 71] = 01 
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x6FU), static_cast<uint8_t>(0x71U), // WR: [reg_addr              = 6F] = 71 ; RD_CLT_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x98U), // WR: [reg_access            = 71] = 98 ; RD_CLT_0
+    static_cast<uint8_t>(0xF2U), static_cast<uint8_t>(0x01U), // RD: [reg_rx_data           = 72] = 01 ; RD_CLT_0: [reg_pwr_sensor        = 71] = 01 
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x11U), // WR: [reg_tx_data           = 70] = 11 ; WR_CLT_0_SENS_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x80U), // WR: [reg_access            = 71] = 80 ; WR_CLT_0_SENS_0: 11
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x4CU), // WR: [reg_tx_data           = 70] = 4C ; WR_CLT_0_SENS_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x80U), // WR: [reg_access            = 71] = 80 ; WR_CLT_0_SENS_0: 4C
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0xC0U), // WR: [reg_access            = 71] = C0 ; WR_CLT_0_SENS_0: EoT
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x91U), // WR: [reg_tx_data           = 70] = 91 ; WR_CLT_0_SENS_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x80U), // WR: [reg_access            = 71] = 80 ; WR_CLT_0_SENS_0: 91
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0xB0U), // WR: [reg_access            = 71] = B0 ; RD_CLT_0_SENS_0
+    static_cast<uint8_t>(0xF2U), static_cast<uint8_t>(0x4CU), // RD: [reg_rx_data           = 72] = 4C ; RD_CLT_0_SENS_0: 4C
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0xD0U), // WR: [reg_access            = 71] = D0 ; RD_CLT_0_SENS_0: EoT
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x10U), // WR: [reg_tx_data           = 70] = 10 ; WR_CLT_0_SENS_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x80U), // WR: [reg_access            = 71] = 80 ; WR_CLT_0_SENS_0: 10
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x48U), // WR: [reg_tx_data           = 70] = 48 ; WR_CLT_0_SENS_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x80U), // WR: [reg_access            = 71] = 80 ; WR_CLT_0_SENS_0: 48
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0xC0U), // WR: [reg_access            = 71] = C0 ; WR_CLT_0_SENS_0: EoT
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x70U), static_cast<uint8_t>(0x90U), // WR: [reg_tx_data           = 70] = 90 ; WR_CLT_0_SENS_0
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0x80U), // WR: [reg_access            = 71] = 80 ; WR_CLT_0_SENS_0: 90
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0xB0U), // WR: [reg_access            = 71] = B0 ; RD_CLT_0_SENS_0
+    static_cast<uint8_t>(0xF2U), static_cast<uint8_t>(0x48U), // RD: [reg_rx_data           = 72] = 48 ; RD_CLT_0_SENS_0: 48
+    // ----------------------------------------------------------------
+    static_cast<uint8_t>(0x71U), static_cast<uint8_t>(0xD0U), // WR: [reg_access            = 71] = D0 ; RD_CLT_0_SENS_0: EoT
+    // ----------------------------------------------------------------
+
+    // -------- Preparation of measurement loop: ------------------------------------------------------
+
+    static_cast<uint8_t>(0x03U), static_cast<uint8_t>(0x16U), // WR: [reg_tread_sensor      = 03] = 16 
+    static_cast<uint8_t>(0x01U), static_cast<uint8_t>(0x25U), // WR: [reg_tloop_period      = 01] = 25 
+    static_cast<uint8_t>(0x02U), static_cast<uint8_t>(0x01U), // WR: [reg_en_client         = 02] = 01 
+    static_cast<uint8_t>(0x7EU), static_cast<uint8_t>(0x4BU), // WR: [reg_key               = 7E] = 4B 
+    static_cast<uint8_t>(0x7FU), static_cast<uint8_t>(0x00U), // WR: [reg_page_select       = 7F] = 00 Normal_Page
+    // ================================================================
+    SSBAL_CFG_DAT_END  // Only once after the configs of all cfg_idx
+    // ----------------------------------------------------------------
+};
+
+#elif defined SSBCFG_HUMID_BEA0
+    #error "SSB-Error 3a: Humidity sensor not yet supported in ssb_config_auto.cpp"
+
+#else
+    #error "SSB-Error 3: Switch SSBCFG_MAIN__... or SSBCFG_... missed in ssb_project_cfg.h"
+#endif
 
 const struct SsbExplictiteConfigurationParameters_s
 SsbConfigurations_c::SsbExplictiteConfigurationParameters[SSB_MAX_NUMBER_OF_CLIENTS] =

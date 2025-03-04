@@ -36,13 +36,24 @@ extern "C" {
 #include "debug_mapping.h"
 }
 
+#include "ssb_project_cfg.h"
 #include "ssbf_mngr_common.h"
 #include "i2c_data.h"
 
+#ifdef SSBCFG_I2C_USED
 
 /* --------- Begin: To be defined by the user --------- */
+
+#ifdef SSBCFG_STM32G071_I2C_HW0
 extern const struct MDIO_Channel MDIOB9_MI2C1_SDA_CFG;
 extern const struct MDIO_Channel MDIOA9_MI2C1_SCL_CFG;
+#endif
+
+#ifdef SSBCFG_GD32F303_I2C_HW0
+extern const struct MDIO_Channel MDIOPB9_MI2C1_SDA_CFG;
+extern const struct MDIO_Channel MDIOPB8_MI2C1_SCL_CFG;
+#endif
+
 /* --------- End: To be defined by the user ----------- */
 
 /******************************************************************************/
@@ -79,4 +90,5 @@ namespace SSBF
     };
 }
 
+#endif   // From: #ifdef SSBCFG_I2C_USED
 #endif // From: #ifndef I2C_DATA_MNGR_H

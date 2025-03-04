@@ -41,6 +41,7 @@ extern "C" {
 }
 
 #include "constellation/hub.h"
+#include "ssb_project_cfg.h"
 #include "ssbf_mngr_common.h"
 
 /******************************************************************************/
@@ -48,7 +49,19 @@ extern "C" {
 /******************************************************************************/
 
 #define SSB_MAX_NUMBER_OF_CLIENTS             (static_cast<uint8_t>(4U))
-#define SSB_NUMBER_OF_CONFIGURATION_BYTES     (static_cast<uint16_t>(387U))
+
+#if   defined SSBCFG_IMUT_ST_ST_ST_ST_PUMU0
+    #define SSB_NUMBER_OF_CONFIGURATION_BYTES     (static_cast<uint16_t>(387U))
+
+#elif defined SSBCFG_IMUT_ST_n_n_n_PUMU0
+    #define SSB_NUMBER_OF_CONFIGURATION_BYTES     (static_cast<uint16_t>(122U))
+
+#elif defined SSBCFG_HUMID_BEA0
+    #error "SSB-Error 4a: Humidity sensor not yet supported in ssb_config_auto.h"
+
+#else
+    #error "SSB-Error 4: Switch SSBCFG_MAIN__... or SSBCFG_... missed in ssb_project_cfg.h"
+#endif
 
 // ----------------------------------------------------------------------------
 // The following indexes must be filled in as a marker in SsbConfigurationBytes

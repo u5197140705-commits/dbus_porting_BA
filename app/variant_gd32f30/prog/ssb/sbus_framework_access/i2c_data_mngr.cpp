@@ -26,7 +26,10 @@
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
+
 #include "i2c_data_mngr.h"
+
+#ifdef SSBCFG_I2C_USED
 
 using namespace ::SSBF;
 
@@ -34,8 +37,41 @@ using namespace ::SSBF;
 /* STATIC ATTRIBUTE DECLARATIONS                                              */
 /******************************************************************************/
 
-/* --------- Begin: To be defined by the user --------- */
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+/* --------- Begin: To be defined by the user ----------- */
+
+#ifdef SSBCFG_STM32G071_I2C_HW0
+const struct MDIO_Channel MDIOB7_MI2C1_SDA_CFG =
+{
+    &MDIOB,
+    MDIO_PIN7,
+    MDIO_SCFG(MDIO_AF6, MDIO_SPEED_DEFAULT)
+};
+
+const struct MDIO_Channel MDIOB8_MI2C1_SCL_CFG =
+{
+    &MDIOB,
+    MDIO_PIN8,
+    MDIO_SCFG(MDIO_AF6, MDIO_SPEED_DEFAULT)
+};
+
+const struct MDIO_Channel MDIOB9_MI2C1_SDA_CFG =
+{
+    &MDIOB,
+    MDIO_PIN9,
+    MDIO_SCFG(MDIO_AF6, MDIO_SPEED_DEFAULT)
+};
+
+const struct MDIO_Channel MDIOA9_MI2C1_SCL_CFG =
+{
+    &MDIOA,
+    MDIO_PIN9,
+    MDIO_SCFG(MDIO_AF6, MDIO_SPEED_DEFAULT)
+};
+
+/* ... and up to 4 structures, for interface index = 0, ..., 3 */
+#endif
+
+#ifdef SSBCFG_GD32F303_I2C_HW0
 const struct MDIO_Channel MDIOPB9_MI2C0_SDA_CFG =
 {
     &MDIOB,
@@ -49,8 +85,32 @@ const struct MDIO_Channel MDIOPB8_MI2C0_SCL_CFG =
     MDIO_PIN8,
     MDIO_SCFG(MDIO_SPEED_HIGH, MDIO_AFMODE_DEFAULT)
 };
-/* --------- End: To be defined by the user ----------- */
 
+/* ... and up to 4 structures, for interface index = 0, ..., 3 */
+#endif
+
+#ifdef SSBCFG_STM32G071_I2C_HW0
+const struct MI2C_Channel I2cDataMngr_c::I2cChannelConfigs[SSBF_MNGR_NUMBER_OF_I2C] =
+        ///< MCAL-MI2C channel config. data
+{            
+    {   ///< MI2C1_SDA_PB7_SCL_PB8:
+        &MI2C1,                // Defined in MI2C
+        &MDIOB7_MI2C1_SDA_CFG, // Defined here
+        &MDIOB8_MI2C1_SCL_CFG, // Defined here
+        MI2C_SCFG_DEFAULT      // Defined in MI2C
+    },
+    {   ///< MI2C1_SDA_PB9_SCL_PA9:
+        &MI2C1,                // Defined in MI2C
+        &MDIOB9_MI2C1_SDA_CFG, // Defined here
+        &MDIOA9_MI2C1_SCL_CFG, // Defined here
+        MI2C_SCFG_DEFAULT      // Defined in MI2C
+    }
+
+    /* ... and up to 4 elements of array, for interface index = 0, ..., 3 */
+};
+#endif
+
+#ifdef SSBCFG_GD32F303_I2C_HW0
 const struct MI2C_Channel I2cDataMngr_c::I2cChannelConfigs[SSBF_MNGR_NUMBER_OF_I2C] =
         ///< MCAL-MI2C channel config. data
 {            
@@ -66,7 +126,10 @@ const struct MI2C_Channel I2cDataMngr_c::I2cChannelConfigs[SSBF_MNGR_NUMBER_OF_I
         &MDIOPB8_MI2C0_SCL_CFG,
         {.remapMask = GPIO_I2C0_REMAP}
     },
+
+    /* ... and up to 4 elements of array, for interface index = 0, ..., 3 */
 };
+#endif
 
 const struct MI2C_Config I2cDataMngr_c::I2cGeneralConfigs[SSBF_MNGR_NUMBER_OF_I2C] =
         ///< MCAL-MI2C general config. data:
@@ -99,7 +162,11 @@ const struct MI2C_Config I2cDataMngr_c::I2cGeneralConfigs[SSBF_MNGR_NUMBER_OF_I2
 #endif
         .intPullUps = true                    // Pull-up resistors used
     }
+
+    /* ... and up to 4 elements of array, for interface index = 0, ..., 3 */
 };
+
+/* --------- End: To be defined by the user ----------- */
 
 uint8_t I2cDataMngr_c::I2cHubAddresses[SSBF_MNGR_NUMBER_OF_HUBS] =
 {
@@ -135,6 +202,9 @@ const uint8_t I2cDataMngr_c::I2cInterfaceIdxs[SSBF_MNGR_NUMBER_OF_HUBS] =
              ///< manager instance index (is equal to the Hub instance
              ///< index)
              ///< @@ Still to be implemented on for more than one instance
+             ///< Take care, that the contents does not overlap with the
+             ///< one of SpiInterfaceIdxs[] !
+
 /* --------- End: To be defined by the user ----------- */
 
 /******************************************************************************/
@@ -174,4 +244,6 @@ void I2cDataMngr_c::initI2cDataMngr(uint8_t instanceIdx, uint8_t i2cAddrOffsets)
                 I2cHubAddresses, I2cInterfaceIdxs,
                 instanceIdx);                        // From I2cData_c::
 }
+
+#endif   // From: #ifdef SSBCFG_I2C_USED
 
