@@ -46,7 +46,8 @@ using namespace ::SSBF;
 /* --------- Begin: To be defined by the user --------- */
 
 #ifdef SSBCFG_STM32G071_SPI_HW0
-#if 0
+#if 0    // Code below is only a demo, how the SPI can be configured here
+         // (nested comments not allowed for LintPlus)
 const struct MDIO_Channel MDIOB3_MSPI1_SCLK_CFG =   // MDIOB3_MSPI1_SCK
 {
     &MDIOB,
@@ -77,7 +78,7 @@ const struct MDIO_Channel MDIOB3_MSPI1_CS_CFG =     // MDIOA4_MSPI1_NSS
 #endif
 
 #ifdef SSBCFG_GD32F303_SPI_HW0
-#if 0
+#if 0    // Code below is only a demo, how the SPI can be configured here
 const struct MDIO_Channel MDIOB3_MSPI1_SCLK_CFG =   // MDIOB3_MSPI1_SCK
 {
     &MDIOB,
@@ -123,7 +124,7 @@ const struct MSPI_Channel SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
 #endif
 
 #ifdef SSBCFG_GD32F303_SPI_HW0
-#if 0
+#if 0    // Code below is only a demo, how the SPI can be configured here
 const struct MSPI_Channel SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
 {
     {
@@ -202,7 +203,7 @@ void SpiDataMngr_c::initSpiDataMngr(uint8_t instanceIdx)
 #endif
 
 #ifdef SSBCFG_GD32F303_I2C_HW0
-#if 0
+#if 0    // Code below is only a demo, how the SPI can be configured here
     setSpiIndexes(SpiInterfaceIdxs[instanceIdx], instanceIdx);
                                                        // From SpiData_c::
 
