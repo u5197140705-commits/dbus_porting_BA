@@ -143,10 +143,14 @@ namespace ATSSB
 
     public:
         /**
-         * \brief   state of initilization of underlaying SSB
-         *
+         * \brief   State of initilization of underlaying SSB
          */
-        bool ssbInitIsPassed = false;
+        bool SsbInitIsPassed = false;
+
+        /**
+         * \brief   Counter of calls of callback function
+         */
+        uint8_t CounterOfCallBackCalls = static_cast<uint8_t>(0U);
 
         /** \brief  Creates the object of this class and of the inherited
         *           classes

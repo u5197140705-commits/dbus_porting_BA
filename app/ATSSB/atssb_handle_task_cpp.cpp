@@ -41,10 +41,17 @@ using namespace ::SSBAL::SSBCO;
 /* DEFINITIONS AND DECLARATIONS                                               */
 /******************************************************************************/
 
-#define ATSSB_TASK_RUN_COUNTER_VAL_FOR_SSB_INIT ((uint8_t)2U)
-                     // Could be avoided with connected elements in case of having
-                     // a solution using the dependencies of initialization of
-                     // tasks
+#define ATSSB_TASK_RUN_COUNTER_VAL_FOR_SSB_INIT (static_cast<uint8_t>(2U))
+                     // Calling  SSB-init-API-function after this number of
+                     // runs of application task
+                     // Could be avoided in case of having a solution using the
+                     // dependencies of initialization of tasks
+
+#define ATSSB_CALLBACK_CALL_COUNTER_UNTIL_STOP  (static_cast<uint8_t>(9U))
+                     // Calling SSB-loop-stop-API-function after this number of
+                     // calls of application callback
+
+#define ATSSB_CALLBACK_CALL_COUNTER_VALUE_MAX  (static_cast<uint8_t>(0xFFU))
 
 /******************************************************************************/
 /* STATIC TYPEDEFINITIONS                                                     */
@@ -112,21 +119,21 @@ void Atssb_c::setLoopCallbackDataToDebugcomponent(  uint16_t eventToken, //lint 
     DBGX_logStr_SCN_SSB_CBACK_APP("\n");
     /********************* eventToken *********************/
     DBGX_logStr_SCN_SSB_CBACK_APP(
-            "ATSSB_doForCallbackToApi: eventToken:" );
+            "cback eventToken:" );
     DBGX_logInt_SCN_SSB_CBACK_APP  (
             eventToken,
             DBGX_UINT8_HEXADECIMAL      );
 
     /********************* eventDataLen *******************/
     DBGX_logStr_SCN_SSB_CBACK_APP(
-            "App eventDataLen:" );
+            "cback eventDataLen:" );
     DBGX_logInt_SCN_SSB_CBACK_APP  (
             eventDataLen,
             DBGX_UINT8_HEXADECIMAL      );
 
     /********************* *eventDataPtr ******************/
     DBGX_logStr_SCN_SSB_CBACK_APP(
-            "App *eventDataPtr:" );
+            "cback *eventDataPtr:" );
 
     for( index = 0u; index < 4u; index++ ) //max 4 iterations to send 4x 25 bytes = 100 bytes
     {
@@ -182,18 +189,27 @@ void Atssb_c::doForCallbackToApi(
 
     //Debug output
 
+    if (CounterOfCallBackCalls < ATSSB_CALLBACK_CALL_COUNTER_VALUE_MAX)
+    {
+        CounterOfCallBackCalls++;
+    }
+
     switch (eventToken)
     {
         case SSB_EVT_LOAD_CFG_UP:
-            ssbInitIsPassed = true;
+            SsbInitIsPassed = true;
 
             DBGX_logStr_SCN_SSB_CBACK_APP("App ini cback");
             break;
 
         case SSB_EVT_LOOP_START_UP:
-            DBGX_logStr_SCN_SSB_CBACK_APP("Loop cback");
+            DBGX_logStr_SCN_SSB_CBACK_APP("App loop cback");
             setLoopCallbackDataToDebugcomponent(    eventToken,
                                                     eventDataPtr, eventDataLen);
+            break;
+
+        case SSB_EVT_LOOP_STOP_UP:
+            DBGX_logStr_SCN_SSB_CBACK_APP("App loop stop cback");
             break;
 
         default:
@@ -253,12 +269,19 @@ uint8_t ATSSB_handleTask(void)
         }
         case TASK_INITIALISED:
         {
-            if (ATSSB::HubApplicationObject.ssbInitIsPassed != false)
+            if (ATSSB::HubApplicationObject.SsbInitIsPassed != false)
             {
-                ATSSB::HubApplicationObject.ssbInitIsPassed = false;
+                ATSSB::HubApplicationObject.SsbInitIsPassed = false;
 
                 DBGX_logStr_SCN_SSB_CDIRECT_APP("App loop start call");
                 ATSSB::HubProviderObject.startLoop(SSB_INFINITE_LOOP);
+            }
+
+            if (ATSSB::HubApplicationObject.CounterOfCallBackCalls
+                                      == ATSSB_CALLBACK_CALL_COUNTER_UNTIL_STOP)
+            {
+                DBGX_logStr_SCN_SSB_CDIRECT_APP("App loop stop call");
+                ATSSB::HubProviderObject.stopLoop();
             }
 
             // Recommendation for user's actions:
