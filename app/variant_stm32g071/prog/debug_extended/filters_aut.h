@@ -135,7 +135,7 @@ extern "C" {
 #define DBGX_INFO                        (((uint32_t)3 << DBGX_LEV_BIT_IDX_SHIFT)    | (uint32_t)0 )           /* I */       
 
 #define DBGX_SCN_SSB_CDIRECT_APP         (((uint32_t)1 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0101 */  
-#define DBGX_SCN_SSB_CBACK_APP          
+#define DBGX_SCN_SSB_CBACK_APP           (((uint32_t)2 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0102 */  
 #define DBGX_SCN_SSB_ERR                
 #define DBGX_SCN_SSB_CONSTR             
 #define DBGX_SCN_SSB_CONSTR0            
@@ -148,14 +148,14 @@ extern "C" {
 #define DBGX_SCN_SSB_STATMR             
 #define DBGX_SCN_SSB_STATMX             
 #define DBGX_SCN_SSB_CFGUR              
-#define DBGX_SCN_SSB_STATES_HUB_EN       (((uint32_t)2 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0102 */  
+#define DBGX_SCN_SSB_STATES_HUB_EN       (((uint32_t)3 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0103 */  
 #define DBGX_SCN_SSB_STATES_HUB_EX      
 #define DBGX_SCN_SSB_STATES_REGS_EN     
 #define DBGX_SCN_SSB_STATES_REGS_EX     
 #define DBGX_SCN_SSB_STATES_REGXS_EN    
 #define DBGX_SCN_SSB_STATES_REGXS_EX    
-#define DBGX_SCN_SSB_EVTREQ_LOW          (((uint32_t)3 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0103 */  
-#define DBGX_SCN_SSB_EVTCB_LOW           (((uint32_t)4 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0104 */  
+#define DBGX_SCN_SSB_EVTREQ_LOW          (((uint32_t)4 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0104 */  
+#define DBGX_SCN_SSB_EVTCB_LOW           (((uint32_t)5 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0105 */  
 #define DBGX_SCN_SSB_EVTREQ             
 #define DBGX_SCN_SSB_EVTCB              
 #define DBGX_SCN_SSB_EVTSEND_HUB        
@@ -166,7 +166,7 @@ extern "C" {
 #define DBGX_SCN_SSB_I2CADDR            
 #define DBGX_SCN_SSB_TEMP               
 #define DBGX_SCN___SSB_END__            
-#define DBGX_SCN_DBGX_TOUCH              (((uint32_t)5 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0105 */  
+#define DBGX_SCN_DBGX_TOUCH              (((uint32_t)6 << DBGX_SCN_BIT_IDX_SHIFT)    | (uint32_t)1 )           /* 0x0106 */  
 #define DBGX_SCN_DBGX_POWER             
 
 
@@ -189,10 +189,11 @@ extern "C" {
     ),                                                                                                                    \
     (                                                                                                                     \
           ((uint32_t)1 <<      (1-1))     /* 1    0x0101           SSB_CDIRECT_APP               1          0X00000001 */ \
-        | ((uint32_t)1 <<      (2-1))     /* 1    0x0102           SSB_STATES_HUB_EN             2          0X00000002 */ \
-        | ((uint32_t)1 <<      (3-1))     /* 1    0x0103           SSB_EVTREQ_LOW                4          0X00000004 */ \
-        | ((uint32_t)1 <<      (4-1))     /* 1    0x0104           SSB_EVTCB_LOW                 8          0X00000008 */ \
-        | ((uint32_t)1 <<      (5-1))     /* 1    0x0105           DBGX_TOUCH                    16         0X00000010 */ \
+        | ((uint32_t)1 <<      (2-1))     /* 1    0x0102           SSB_CBACK_APP                 2          0X00000002 */ \
+        | ((uint32_t)1 <<      (3-1))     /* 1    0x0103           SSB_STATES_HUB_EN             4          0X00000004 */ \
+        | ((uint32_t)1 <<      (4-1))     /* 1    0x0104           SSB_EVTREQ_LOW                8          0X00000008 */ \
+        | ((uint32_t)1 <<      (5-1))     /* 1    0x0105           SSB_EVTCB_LOW                 16         0X00000010 */ \
+        | ((uint32_t)1 <<      (6-1))     /* 1    0x0106           DBGX_TOUCH                    32         0X00000020 */ \
     )                                                                                                                     \
 }
 
@@ -301,58 +302,58 @@ extern "C" {
 #define DBGX_logStrIntLocatFull_WARN_SCN_SSB_CDIRECT_APP(string, __logStrIntLocatFullVar__...)                DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_WARN | DBGX_SCN_SSB_CDIRECT_APP, string, __logStrIntLocatFullVar__)
 #define DBGX_logStrIntLocatFull_INFO_SCN_SSB_CDIRECT_APP(string, __logStrIntLocatFullVar__...)                DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_INFO | DBGX_SCN_SSB_CDIRECT_APP, string, __logStrIntLocatFullVar__)
 
-#define DBGX_logChar_SCN_SSB_CBACK_APP(char)                                                                  
-#define DBGX_logChar_ERR_SCN_SSB_CBACK_APP(char)                                                              DBGX_logChar_Wrapper(DBGX_ERR, char)
-#define DBGX_logChar_WARN_SCN_SSB_CBACK_APP(char)                                                             DBGX_logChar_Wrapper(DBGX_WARN, char)
-#define DBGX_logChar_INFO_SCN_SSB_CBACK_APP(char)                                                             DBGX_logChar_Wrapper(DBGX_INFO, char)
-#define DBGX_logStr_SCN_SSB_CBACK_APP(string)                                                                 
-#define DBGX_logStr_ERR_SCN_SSB_CBACK_APP(string)                                                             DBGX_logStr_Wrapper(DBGX_ERR, string)
-#define DBGX_logStr_WARN_SCN_SSB_CBACK_APP(string)                                                            DBGX_logStr_Wrapper(DBGX_WARN, string)
-#define DBGX_logStr_INFO_SCN_SSB_CBACK_APP(string)                                                            DBGX_logStr_Wrapper(DBGX_INFO, string)
-#define DBGX_logInt_SCN_SSB_CBACK_APP(__logIntVar__...)                                                       
-#define DBGX_logInt_ERR_SCN_SSB_CBACK_APP(__logIntVar__...)                                                   DBGX_LOG_INT_VARIABLES(DBGX_logInt, DBGX_ERR, __logIntVar__)
-#define DBGX_logInt_WARN_SCN_SSB_CBACK_APP(__logIntVar__...)                                                  DBGX_LOG_INT_VARIABLES(DBGX_logInt, DBGX_WARN, __logIntVar__)
-#define DBGX_logInt_INFO_SCN_SSB_CBACK_APP(__logIntVar__...)                                                  DBGX_LOG_INT_VARIABLES(DBGX_logInt, DBGX_INFO, __logIntVar__)
-#define DBGX_logIntArr_SCN_SSB_CBACK_APP(__logIntArrVar__...)                                                 
-#define DBGX_logIntArr_ERR_SCN_SSB_CBACK_APP(__logIntArrVar__...)                                             DBGX_LOG_INT_ARR_VARIABLES(DBGX_logIntArr, DBGX_ERR, __logIntArrVar__)
-#define DBGX_logIntArr_WARN_SCN_SSB_CBACK_APP(__logIntArrVar__...)                                            DBGX_LOG_INT_ARR_VARIABLES(DBGX_logIntArr, DBGX_WARN, __logIntArrVar__)
-#define DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP(__logIntArrVar__...)                                            DBGX_LOG_INT_ARR_VARIABLES(DBGX_logIntArr, DBGX_INFO, __logIntArrVar__)
-#define DBGX_logTime_SCN_SSB_CBACK_APP()                                                                      
-#define DBGX_logTime_ERR_SCN_SSB_CBACK_APP()                                                                  DBGX_logTime_Wrapper(DBGX_ERR)
-#define DBGX_logTime_WARN_SCN_SSB_CBACK_APP()                                                                 DBGX_logTime_Wrapper(DBGX_WARN)
-#define DBGX_logTime_INFO_SCN_SSB_CBACK_APP()                                                                 DBGX_logTime_Wrapper(DBGX_INFO)
-#define DBGX_logLocat_SCN_SSB_CBACK_APP()                                                                     
-#define DBGX_logLocat_ERR_SCN_SSB_CBACK_APP()                                                                 DBGX_logLocat_Wrapper(DBGX_ERR)
-#define DBGX_logLocat_WARN_SCN_SSB_CBACK_APP()                                                                DBGX_logLocat_Wrapper(DBGX_WARN)
-#define DBGX_logLocat_INFO_SCN_SSB_CBACK_APP()                                                                DBGX_logLocat_Wrapper(DBGX_INFO)
-#define DBGX_logStrStr_SCN_SSB_CBACK_APP(string_a, string_b)                                                  
-#define DBGX_logStrStr_ERR_SCN_SSB_CBACK_APP(string_a, string_b)                                              DBGX_logStrStr_Wrapper(DBGX_ERR, string_a, string_b)
-#define DBGX_logStrStr_WARN_SCN_SSB_CBACK_APP(string_a, string_b)                                             DBGX_logStrStr_Wrapper(DBGX_WARN, string_a, string_b)
-#define DBGX_logStrStr_INFO_SCN_SSB_CBACK_APP(string_a, string_b)                                             DBGX_logStrStr_Wrapper(DBGX_INFO, string_a, string_b)
-#define DBGX_logStrInt_SCN_SSB_CBACK_APP(string, __logStrIntVar__...)                                         
-#define DBGX_logStrInt_ERR_SCN_SSB_CBACK_APP(string, __logStrIntVar__...)                                     DBGX_LOG_STR_INT_VARIABLES(DBGX_logStrInt, DBGX_ERR, string, __logStrIntVar__)
-#define DBGX_logStrInt_WARN_SCN_SSB_CBACK_APP(string, __logStrIntVar__...)                                    DBGX_LOG_STR_INT_VARIABLES(DBGX_logStrInt, DBGX_WARN, string, __logStrIntVar__)
-#define DBGX_logStrInt_INFO_SCN_SSB_CBACK_APP(string, __logStrIntVar__...)                                    DBGX_LOG_STR_INT_VARIABLES(DBGX_logStrInt, DBGX_INFO, string, __logStrIntVar__)
-#define DBGX_logStrIntArr_SCN_SSB_CBACK_APP(string, __logStrIntArrVar__...)                                   
-#define DBGX_logStrIntArr_ERR_SCN_SSB_CBACK_APP(string, __logStrIntArrVar__...)                               DBGX_LOG_STR_INT_ARR_VARIABLES(DBGX_logStrIntArr, DBGX_ERR, string, __logStrIntArrVar__)
-#define DBGX_logStrIntArr_WARN_SCN_SSB_CBACK_APP(string, __logStrIntArrVar__...)                              DBGX_LOG_STR_INT_ARR_VARIABLES(DBGX_logStrIntArr, DBGX_WARN, string, __logStrIntArrVar__)
-#define DBGX_logStrIntArr_INFO_SCN_SSB_CBACK_APP(string, __logStrIntArrVar__...)                              DBGX_LOG_STR_INT_ARR_VARIABLES(DBGX_logStrIntArr, DBGX_INFO, string, __logStrIntArrVar__)
-#define DBGX_logStrStrLocat_SCN_SSB_CBACK_APP(string_a, string_b)                                             
-#define DBGX_logStrStrLocat_ERR_SCN_SSB_CBACK_APP(string_a, string_b)                                         DBGX_logStrStrLocat_Wrapper(DBGX_ERR, string_a, string_b)
-#define DBGX_logStrStrLocat_WARN_SCN_SSB_CBACK_APP(string_a, string_b)                                        DBGX_logStrStrLocat_Wrapper(DBGX_WARN, string_a, string_b)
-#define DBGX_logStrStrLocat_INFO_SCN_SSB_CBACK_APP(string_a, string_b)                                        DBGX_logStrStrLocat_Wrapper(DBGX_INFO, string_a, string_b)
-#define DBGX_logStrStrLocatFull_SCN_SSB_CBACK_APP(string_a, string_b)                                         
-#define DBGX_logStrStrLocatFull_ERR_SCN_SSB_CBACK_APP(string_a, string_b)                                     DBGX_logStrStrLocatFull_Wrapper(DBGX_ERR, string_a, string_b)
-#define DBGX_logStrStrLocatFull_WARN_SCN_SSB_CBACK_APP(string_a, string_b)                                    DBGX_logStrStrLocatFull_Wrapper(DBGX_WARN, string_a, string_b)
-#define DBGX_logStrStrLocatFull_INFO_SCN_SSB_CBACK_APP(string_a, string_b)                                    DBGX_logStrStrLocatFull_Wrapper(DBGX_INFO, string_a, string_b)
-#define DBGX_logStrIntLocat_SCN_SSB_CBACK_APP(string, __logStrIntLocatVar__...)                               
-#define DBGX_logStrIntLocat_ERR_SCN_SSB_CBACK_APP(string, __logStrIntLocatVar__...)                           DBGX_LOG_STR_INT_LOCAT_VARIABLES(DBGX_logStrIntLocat, DBGX_ERR, string, __logStrIntLocatVar__)
-#define DBGX_logStrIntLocat_WARN_SCN_SSB_CBACK_APP(string, __logStrIntLocatVar__...)                          DBGX_LOG_STR_INT_LOCAT_VARIABLES(DBGX_logStrIntLocat, DBGX_WARN, string, __logStrIntLocatVar__)
-#define DBGX_logStrIntLocat_INFO_SCN_SSB_CBACK_APP(string, __logStrIntLocatVar__...)                          DBGX_LOG_STR_INT_LOCAT_VARIABLES(DBGX_logStrIntLocat, DBGX_INFO, string, __logStrIntLocatVar__)
-#define DBGX_logStrIntLocatFull_SCN_SSB_CBACK_APP(string, __logStrIntLocatFullVar__...)                       
-#define DBGX_logStrIntLocatFull_ERR_SCN_SSB_CBACK_APP(string, __logStrIntLocatFullVar__...)                   DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_ERR, string, __logStrIntLocatFullVar__)
-#define DBGX_logStrIntLocatFull_WARN_SCN_SSB_CBACK_APP(string, __logStrIntLocatFullVar__...)                  DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_WARN, string, __logStrIntLocatFullVar__)
-#define DBGX_logStrIntLocatFull_INFO_SCN_SSB_CBACK_APP(string, __logStrIntLocatFullVar__...)                  DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_INFO, string, __logStrIntLocatFullVar__)
+#define DBGX_logChar_SCN_SSB_CBACK_APP(char)                                                                  DBGX_logChar_Wrapper(DBGX_SCN_SSB_CBACK_APP, char)
+#define DBGX_logChar_ERR_SCN_SSB_CBACK_APP(char)                                                              DBGX_logChar_Wrapper(DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, char)
+#define DBGX_logChar_WARN_SCN_SSB_CBACK_APP(char)                                                             DBGX_logChar_Wrapper(DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, char)
+#define DBGX_logChar_INFO_SCN_SSB_CBACK_APP(char)                                                             DBGX_logChar_Wrapper(DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, char)
+#define DBGX_logStr_SCN_SSB_CBACK_APP(string)                                                                 DBGX_logStr_Wrapper(DBGX_SCN_SSB_CBACK_APP, string)
+#define DBGX_logStr_ERR_SCN_SSB_CBACK_APP(string)                                                             DBGX_logStr_Wrapper(DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, string)
+#define DBGX_logStr_WARN_SCN_SSB_CBACK_APP(string)                                                            DBGX_logStr_Wrapper(DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, string)
+#define DBGX_logStr_INFO_SCN_SSB_CBACK_APP(string)                                                            DBGX_logStr_Wrapper(DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, string)
+#define DBGX_logInt_SCN_SSB_CBACK_APP(__logIntVar__...)                                                       DBGX_LOG_INT_VARIABLES(DBGX_logInt, DBGX_SCN_SSB_CBACK_APP, __logIntVar__)
+#define DBGX_logInt_ERR_SCN_SSB_CBACK_APP(__logIntVar__...)                                                   DBGX_LOG_INT_VARIABLES(DBGX_logInt, DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, __logIntVar__)
+#define DBGX_logInt_WARN_SCN_SSB_CBACK_APP(__logIntVar__...)                                                  DBGX_LOG_INT_VARIABLES(DBGX_logInt, DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, __logIntVar__)
+#define DBGX_logInt_INFO_SCN_SSB_CBACK_APP(__logIntVar__...)                                                  DBGX_LOG_INT_VARIABLES(DBGX_logInt, DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, __logIntVar__)
+#define DBGX_logIntArr_SCN_SSB_CBACK_APP(__logIntArrVar__...)                                                 DBGX_LOG_INT_ARR_VARIABLES(DBGX_logIntArr, DBGX_SCN_SSB_CBACK_APP, __logIntArrVar__)
+#define DBGX_logIntArr_ERR_SCN_SSB_CBACK_APP(__logIntArrVar__...)                                             DBGX_LOG_INT_ARR_VARIABLES(DBGX_logIntArr, DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, __logIntArrVar__)
+#define DBGX_logIntArr_WARN_SCN_SSB_CBACK_APP(__logIntArrVar__...)                                            DBGX_LOG_INT_ARR_VARIABLES(DBGX_logIntArr, DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, __logIntArrVar__)
+#define DBGX_logIntArr_INFO_SCN_SSB_CBACK_APP(__logIntArrVar__...)                                            DBGX_LOG_INT_ARR_VARIABLES(DBGX_logIntArr, DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, __logIntArrVar__)
+#define DBGX_logTime_SCN_SSB_CBACK_APP()                                                                      DBGX_logTime_Wrapper(DBGX_SCN_SSB_CBACK_APP)
+#define DBGX_logTime_ERR_SCN_SSB_CBACK_APP()                                                                  DBGX_logTime_Wrapper(DBGX_ERR | DBGX_SCN_SSB_CBACK_APP)
+#define DBGX_logTime_WARN_SCN_SSB_CBACK_APP()                                                                 DBGX_logTime_Wrapper(DBGX_WARN | DBGX_SCN_SSB_CBACK_APP)
+#define DBGX_logTime_INFO_SCN_SSB_CBACK_APP()                                                                 DBGX_logTime_Wrapper(DBGX_INFO | DBGX_SCN_SSB_CBACK_APP)
+#define DBGX_logLocat_SCN_SSB_CBACK_APP()                                                                     DBGX_logLocat_Wrapper(DBGX_SCN_SSB_CBACK_APP)
+#define DBGX_logLocat_ERR_SCN_SSB_CBACK_APP()                                                                 DBGX_logLocat_Wrapper(DBGX_ERR | DBGX_SCN_SSB_CBACK_APP)
+#define DBGX_logLocat_WARN_SCN_SSB_CBACK_APP()                                                                DBGX_logLocat_Wrapper(DBGX_WARN | DBGX_SCN_SSB_CBACK_APP)
+#define DBGX_logLocat_INFO_SCN_SSB_CBACK_APP()                                                                DBGX_logLocat_Wrapper(DBGX_INFO | DBGX_SCN_SSB_CBACK_APP)
+#define DBGX_logStrStr_SCN_SSB_CBACK_APP(string_a, string_b)                                                  DBGX_logStrStr_Wrapper(DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStr_ERR_SCN_SSB_CBACK_APP(string_a, string_b)                                              DBGX_logStrStr_Wrapper(DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStr_WARN_SCN_SSB_CBACK_APP(string_a, string_b)                                             DBGX_logStrStr_Wrapper(DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStr_INFO_SCN_SSB_CBACK_APP(string_a, string_b)                                             DBGX_logStrStr_Wrapper(DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrInt_SCN_SSB_CBACK_APP(string, __logStrIntVar__...)                                         DBGX_LOG_STR_INT_VARIABLES(DBGX_logStrInt, DBGX_SCN_SSB_CBACK_APP, string, __logStrIntVar__)
+#define DBGX_logStrInt_ERR_SCN_SSB_CBACK_APP(string, __logStrIntVar__...)                                     DBGX_LOG_STR_INT_VARIABLES(DBGX_logStrInt, DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntVar__)
+#define DBGX_logStrInt_WARN_SCN_SSB_CBACK_APP(string, __logStrIntVar__...)                                    DBGX_LOG_STR_INT_VARIABLES(DBGX_logStrInt, DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntVar__)
+#define DBGX_logStrInt_INFO_SCN_SSB_CBACK_APP(string, __logStrIntVar__...)                                    DBGX_LOG_STR_INT_VARIABLES(DBGX_logStrInt, DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntVar__)
+#define DBGX_logStrIntArr_SCN_SSB_CBACK_APP(string, __logStrIntArrVar__...)                                   DBGX_LOG_STR_INT_ARR_VARIABLES(DBGX_logStrIntArr, DBGX_SCN_SSB_CBACK_APP, string, __logStrIntArrVar__)
+#define DBGX_logStrIntArr_ERR_SCN_SSB_CBACK_APP(string, __logStrIntArrVar__...)                               DBGX_LOG_STR_INT_ARR_VARIABLES(DBGX_logStrIntArr, DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntArrVar__)
+#define DBGX_logStrIntArr_WARN_SCN_SSB_CBACK_APP(string, __logStrIntArrVar__...)                              DBGX_LOG_STR_INT_ARR_VARIABLES(DBGX_logStrIntArr, DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntArrVar__)
+#define DBGX_logStrIntArr_INFO_SCN_SSB_CBACK_APP(string, __logStrIntArrVar__...)                              DBGX_LOG_STR_INT_ARR_VARIABLES(DBGX_logStrIntArr, DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntArrVar__)
+#define DBGX_logStrStrLocat_SCN_SSB_CBACK_APP(string_a, string_b)                                             DBGX_logStrStrLocat_Wrapper(DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStrLocat_ERR_SCN_SSB_CBACK_APP(string_a, string_b)                                         DBGX_logStrStrLocat_Wrapper(DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStrLocat_WARN_SCN_SSB_CBACK_APP(string_a, string_b)                                        DBGX_logStrStrLocat_Wrapper(DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStrLocat_INFO_SCN_SSB_CBACK_APP(string_a, string_b)                                        DBGX_logStrStrLocat_Wrapper(DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStrLocatFull_SCN_SSB_CBACK_APP(string_a, string_b)                                         DBGX_logStrStrLocatFull_Wrapper(DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStrLocatFull_ERR_SCN_SSB_CBACK_APP(string_a, string_b)                                     DBGX_logStrStrLocatFull_Wrapper(DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStrLocatFull_WARN_SCN_SSB_CBACK_APP(string_a, string_b)                                    DBGX_logStrStrLocatFull_Wrapper(DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrStrLocatFull_INFO_SCN_SSB_CBACK_APP(string_a, string_b)                                    DBGX_logStrStrLocatFull_Wrapper(DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, string_a, string_b)
+#define DBGX_logStrIntLocat_SCN_SSB_CBACK_APP(string, __logStrIntLocatVar__...)                               DBGX_LOG_STR_INT_LOCAT_VARIABLES(DBGX_logStrIntLocat, DBGX_SCN_SSB_CBACK_APP, string, __logStrIntLocatVar__)
+#define DBGX_logStrIntLocat_ERR_SCN_SSB_CBACK_APP(string, __logStrIntLocatVar__...)                           DBGX_LOG_STR_INT_LOCAT_VARIABLES(DBGX_logStrIntLocat, DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntLocatVar__)
+#define DBGX_logStrIntLocat_WARN_SCN_SSB_CBACK_APP(string, __logStrIntLocatVar__...)                          DBGX_LOG_STR_INT_LOCAT_VARIABLES(DBGX_logStrIntLocat, DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntLocatVar__)
+#define DBGX_logStrIntLocat_INFO_SCN_SSB_CBACK_APP(string, __logStrIntLocatVar__...)                          DBGX_LOG_STR_INT_LOCAT_VARIABLES(DBGX_logStrIntLocat, DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntLocatVar__)
+#define DBGX_logStrIntLocatFull_SCN_SSB_CBACK_APP(string, __logStrIntLocatFullVar__...)                       DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_SCN_SSB_CBACK_APP, string, __logStrIntLocatFullVar__)
+#define DBGX_logStrIntLocatFull_ERR_SCN_SSB_CBACK_APP(string, __logStrIntLocatFullVar__...)                   DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_ERR | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntLocatFullVar__)
+#define DBGX_logStrIntLocatFull_WARN_SCN_SSB_CBACK_APP(string, __logStrIntLocatFullVar__...)                  DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_WARN | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntLocatFullVar__)
+#define DBGX_logStrIntLocatFull_INFO_SCN_SSB_CBACK_APP(string, __logStrIntLocatFullVar__...)                  DBGX_LOG_STR_INT_LOCAT_FULL_VARIABLES(DBGX_logStrIntLocatFull, DBGX_INFO | DBGX_SCN_SSB_CBACK_APP, string, __logStrIntLocatFullVar__)
 
 #define DBGX_logChar_SCN_SSB_ERR(char)                                                                        
 #define DBGX_logChar_ERR_SCN_SSB_ERR(char)                                                                    DBGX_logChar_Wrapper(DBGX_ERR, char)
