@@ -663,16 +663,17 @@ extern const struct MUART_Channel MUARTLP2_RX_PF3_TX_PF2;
 /******************************************************************************/
 
 #ifdef MCAL_MADC_INCLUDED
-/* MADC peripheral without pin */
+/* MADC peripherals with SW trigger */
 extern const struct MADC_Periph MADC1;
 
-/* MADC peripheral with HW trigger */
-extern const struct MADC_Periph MADC1_TRIG_TIM1_TRGO;
+/* MADC peripherals with HW trigger */
+extern const struct MADC_Periph MADC1_TRIG_TIM1_TRGO2;
 extern const struct MADC_Periph MADC1_TRIG_TIM1_CC4;
 extern const struct MADC_Periph MADC1_TRIG_TIM2_TRGO;
 extern const struct MADC_Periph MADC1_TRIG_TIM3_TRGO;
 extern const struct MADC_Periph MADC1_TRIG_TIM15_TRGO;
 extern const struct MADC_Periph MADC1_TRIG_TIM6_TRGO;
+extern const struct MADC_Periph MADC1_TRIG_TIM4_TRGO;
 extern const struct MADC_Periph MADC1_TRIG_EXTI11;
 
 /* MADC channels */

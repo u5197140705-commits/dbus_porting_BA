@@ -32,7 +32,7 @@
 //        ====== containing used MCU-type, serial pins (I2C / SPI)  =============
 //        ====== and sensor configuration                           =============
 
-#define SSBCFG_MAIN__STM32G071_I2C_HW0__IMUT_ST_ST_ST_ST_PUMU0
+// #define SSBCFG_MAIN__STM32G071_I2C_HW0__IMUT_ST_ST_ST_ST_PUMU0
         ///< - Old DBus reference board with I2C connected and
         ///<   4 IMU+T-sensors
         ///< - MCU-HW for tests, with I2C, sensor config. of 1st sensor is used in PUMU0,
@@ -45,7 +45,7 @@
         ///< - MCU-HW for tests, with I2C, sensor config. is used in PUMU0)
         ///< - Has been placed into operation
 
-// #define SSBCFG_MAIN__STM32G071_SPI_HW0__IMUT_ST_n_n_n_PUMU0
+#define SSBCFG_MAIN__STM32G071_SPI_HW0__IMUT_ST_n_n_n_PUMU0
         ///< - Old DBus reference board with SPI connected and
         ///<   1 IMU+T-sensor
         ///< - MCU-HW for tests, with SPI, sensor config. is used in PUMU0)

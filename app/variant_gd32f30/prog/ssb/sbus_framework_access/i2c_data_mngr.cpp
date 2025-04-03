@@ -192,15 +192,17 @@ const uint8_t I2cDataMngr_c::I2cInterfaceIdxs[SSBF_MNGR_NUMBER_OF_HUBS] =
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 2U
     0U, 0U
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 3U
-    SSBF_NO_INTERFACE_IDX, SSBF_NO_INTERFACE_IDX, 0U
+    0U, 0U, 0U
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 4U
-    SSBF_NO_INTERFACE_IDX, SSBF_NO_INTERFACE_IDX, 0U, 0U
+    0U, 0U, 0U, 0U
 #else
     #error SSBF_MNGR_NUMBER_OF_HUBS has wrong value
 #endif
 };           ///< The I2C-interface indexes depending on the data
              ///< manager instance index (is equal to the Hub instance
              ///< index)
+             ///< SiDataMngr_c::I2c_not_Spi tells for the Hub instance, whether
+             ///< I2C or SPI is used
              ///< @@ Still to be implemented on for more than one instance
              ///< Take care, that the contents does not overlap with the
              ///< one of SpiInterfaceIdxs[] !
