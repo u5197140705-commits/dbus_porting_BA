@@ -149,29 +149,62 @@ const struct MSPI_Config SpiGeneralConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
         .dataInvert         = MSPI_DATA_INVERT_DISABLED,    ///< Enable/Disable data inversion
         .frameFormat        = MSPI_FRAME_FORMAT_MSB_FIRST,  ///< Format for transmit and receive with MSB or LSB first (Most/Least Significant Bit)
         .chipSelMode        = MSPI_CHIP_SELECT_AUTO_LOW,    ///< Setting for chip select
-        .clockFreq          = 100000U,                      ///< Generated frequency on SCLK pin
+        .clockFreq          = MSPI_FREQUENCY_100K,          ///< Generated frequency on SCLK pin, MSPI_FREQUENCY_1M also useable
         .misoPullResistor   = MDIO_PULL_UP                  ///< Enable/Disable internal pull up/down resistor on MISO pin
     }
 
     /* ... and up to 4 elements of array, for interface index = 0, ..., 3 */
 };
 
+#ifdef SSB_DMA_USED_FOR_SPI
+struct MDMA_Periph DmaPeriphConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
+{
+    {&MDMA1_Descriptor}
+};
+
+struct MDMA_Channel DmaTxChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
+{
+    {
+        .desc = &MDMA1_CH1_Descriptor,
+        .scfg =
+        {
+            .priority    = MDMA_PRIORITY_LOW,
+            .eventSource = MDMA_EVENT_SOURCE_SPI2_TX
+        }
+    }
+};
+
+struct MDMA_Channel DmaRxChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
+{
+    {
+        .desc = &MDMA1_CH2_Descriptor,
+        .scfg =
+        {
+            .priority    = MDMA_PRIORITY_LOW,
+            .eventSource = MDMA_EVENT_SOURCE_SPI2_RX
+        }
+    }
+};
+#endif
+
 const uint8_t SpiDataMngr_c::SpiInterfaceIdxs[SSBF_MNGR_NUMBER_OF_HUBS] =
 {
 #if   SSBF_MNGR_NUMBER_OF_HUBS == 1U
-    SSBF_NO_INTERFACE_IDX
+    0U
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 2U
-    SSBF_NO_INTERFACE_IDX, SSBF_NO_INTERFACE_IDX
+    0U, 0U
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 3U
-    0U, 0U, SSBF_NO_INTERFACE_IDX
+    0U, 0U, 0U
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 4U
-    0U, 0U, SSBF_NO_INTERFACE_IDX, SSBF_NO_INTERFACE_IDX
+    0U, 0U, 0U, 0U
 #else
     #error SSBF_MNGR_NUMBER_OF_HUBS has wrong value
 #endif
 };           ///< The SPI-interface indexes depending on the data
              ///< manager instance index (is equal to the Hub instance
              ///< index)
+             ///< SiDataMngr_c::I2c_not_Spi tells for the Hub instance, whether
+             ///< I2C or SPI is used
              ///< @@ Still to be implemented on for more than one instance
              ///< Take care, that the contents does not overlap with the
              ///< one of SpiInterfaceIdxs[] !
@@ -195,11 +228,18 @@ void SpiDataMngr_c::initSpiDataMngr(uint8_t instanceIdx)
                           SSB_ERR_SPIDATAMNGR_INSTANCE_IDX);
 
 #ifdef SSBCFG_STM32G071_SPI_HW0
+
     setSpiIndexes(SpiInterfaceIdxs[instanceIdx], instanceIdx);
                                                        // From SpiData_c::
 
+  #ifdef SSB_DMA_USED_FOR_SPI
+    initSpiData(SpiChannelConfigs, SpiGeneralConfigs,
+                DmaPeriphConfigs, DmaTxChannelConfigs, DmaRxChannelConfigs);
+                                                       // From SpiData_c::
+  #else
     initSpiData(SpiChannelConfigs, SpiGeneralConfigs);
                                                        // From SpiData_c::
+  #endif
 #endif
 
 #ifdef SSBCFG_GD32F303_I2C_HW0

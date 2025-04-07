@@ -647,17 +647,18 @@ const struct MUART_Channel MUARTLP2_RX_PF3_TX_PF2 = {&MUARTLP2, &MDIOF3_MUARTLP2
 /******************************************************************************/
 
 #ifdef MCAL_MADC_INCLUDED
-/* MADC peripheral without pin */
+/* MADC peripherals with SW trigger */
 const struct MADC_Periph MADC1 = {&MADC1_Descriptor, MADC_SCFG_DEFAULT};
 
-/* MADC peripheral with HW trigger */
-const struct MADC_Periph MADC1_TRIG_TIM1_TRGO = {&MADC1_Descriptor, MADC_SCFG_DEFAULT};
-const struct MADC_Periph MADC1_TRIG_TIM1_CC4 = {&MADC1_Descriptor, MADC_SCFG_DEFAULT};
-const struct MADC_Periph MADC1_TRIG_TIM2_TRGO = {&MADC1_Descriptor, MADC_SCFG_DEFAULT};
-const struct MADC_Periph MADC1_TRIG_TIM3_TRGO = {&MADC1_Descriptor, MADC_SCFG_DEFAULT};
-const struct MADC_Periph MADC1_TRIG_TIM15_TRGO = {&MADC1_Descriptor, MADC_SCFG_DEFAULT};
-const struct MADC_Periph MADC1_TRIG_TIM6_TRGO = {&MADC1_Descriptor, MADC_SCFG_DEFAULT};
-const struct MADC_Periph MADC1_TRIG_EXTI11 = {&MADC1_Descriptor, MADC_SCFG_DEFAULT};
+/* MADC peripherals with HW trigger */
+const struct MADC_Periph MADC1_TRIG_TIM1_TRGO2 = {&MADC1_Descriptor, MADC_SCFG_HW_TRIG(TIM1_TRGO2)};
+const struct MADC_Periph MADC1_TRIG_TIM1_CC4 = {&MADC1_Descriptor, MADC_SCFG_HW_TRIG(TIM1_CC4)};
+const struct MADC_Periph MADC1_TRIG_TIM2_TRGO = {&MADC1_Descriptor, MADC_SCFG_HW_TRIG(TIM2_TRGO)};
+const struct MADC_Periph MADC1_TRIG_TIM3_TRGO = {&MADC1_Descriptor, MADC_SCFG_HW_TRIG(TIM3_TRGO)};
+const struct MADC_Periph MADC1_TRIG_TIM15_TRGO = {&MADC1_Descriptor, MADC_SCFG_HW_TRIG(TIM15_TRGO)};
+const struct MADC_Periph MADC1_TRIG_TIM6_TRGO = {&MADC1_Descriptor, MADC_SCFG_HW_TRIG(TIM6_TRGO)};
+const struct MADC_Periph MADC1_TRIG_TIM4_TRGO = {&MADC1_Descriptor, MADC_SCFG_HW_TRIG(TIM4_TRGO)};
+const struct MADC_Periph MADC1_TRIG_EXTI11 = {&MADC1_Descriptor, MADC_SCFG_HW_TRIG(EXTI11)};
 
 /* MADC channels */
 const struct MADC_Channel MADC1_IN0_PA0 = {&MADC1_IN0_PA0_Descriptor, MADC_CHANNEL_SCFG_DEFAULT};

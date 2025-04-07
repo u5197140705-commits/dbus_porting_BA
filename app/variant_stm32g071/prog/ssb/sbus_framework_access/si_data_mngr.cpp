@@ -48,7 +48,11 @@ const bool SiDataMngr_c::I2c_not_Spi[SSBF_MNGR_NUMBER_OF_HUBS] =
              ///< @@ Still to be implemented on for more than one instance
 
 #if   SSBF_MNGR_NUMBER_OF_HUBS == 1U
+    #if defined SSBCFG_STM32G071_SPI_HW0
+          {false};
+    #else
           {true};
+    #endif
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 2U
           {true, true};
 #elif SSBF_MNGR_NUMBER_OF_HUBS == 3U
