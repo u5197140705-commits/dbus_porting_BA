@@ -29,9 +29,9 @@ mcal_modules = $(mcal_supported_modules_$(platform))
 
 # external components
 ifeq ($(ssb_build_variant),rtos)
-    ext_components = rtos ssb services bsp
+    ext_components = rtos ssb
 else
-    ext_components = ssb services bsp
+    ext_components = ssb
 endif
 
 dbus_mapping = mcal
