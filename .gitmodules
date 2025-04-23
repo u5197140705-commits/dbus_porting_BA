@@ -8,3 +8,9 @@
 [submodule "ext/ssb"]
 	path = ext/ssb
 	url = ../../Generic/ssb
+[submodule "ext/bsp"]
+	path = ext/bsp
+	url = ../../ECU-BuildingBlocks/bsp
+[submodule "ext/services"]
+	path = ext/services
+	url = ../../ECU-BuildingBlocks/services
