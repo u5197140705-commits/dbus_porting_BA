@@ -14,9 +14,9 @@
 
 # common components
 ifeq ($(ssb_build_variant),rtos)
-    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug devices/dbuscan
+    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug devices/dbuscan dbus/DBal
 else
-    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug schedulers_bm/scheduler devices/dbuscan
+    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug schedulers_bm/scheduler devices/dbuscan dbus/DBal
 endif
 
 # list of included PED_FW subcomponents
@@ -29,11 +29,12 @@ mcal_modules = $(mcal_supported_modules_$(platform))
 
 # external components
 ifeq ($(ssb_build_variant),rtos)
-    ext_components = rtos ssb
+    ext_components = rtos ssb services bsp
 else
-    ext_components = ssb
+    ext_components = ssb services bsp
 endif
 
+search_path += ext
 
 # application specific components
 app_components = /../../ATSSB
