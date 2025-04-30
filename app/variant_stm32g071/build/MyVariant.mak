@@ -36,6 +36,7 @@ endif
 
 dbus_mapping = mcal
 dbus_uart_channel = 1
+HEAPSIZE ?= 10
 search_path += ext
 
 # application specific components

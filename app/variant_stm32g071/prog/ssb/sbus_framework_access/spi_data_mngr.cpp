@@ -109,7 +109,7 @@ const struct MDIO_Channel MDIOB3_MSPI1_CS_CFG =     // MDIOA4_MSPI1_NSS
 #endif
 
 #ifdef SSBCFG_STM32G071_SPI_HW0
-const struct MSPI_Channel SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
+const struct MSPI_Channel SSBF::SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
 {
     {
         .mspi = &MSPI2,                     // mspi_mc.c
@@ -125,7 +125,7 @@ const struct MSPI_Channel SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
 
 #ifdef SSBCFG_GD32F303_SPI_HW0
 #if 0    // Code below is only a demo, how the SPI can be configured here
-const struct MSPI_Channel SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
+const struct MSPI_Channel SSBF::SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
 {
     {
         .mspi = &MSPI2,                     // mspi_mc.c
@@ -140,7 +140,7 @@ const struct MSPI_Channel SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
 #endif
 #endif
 
-const struct MSPI_Config SpiGeneralConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
+const struct MSPI_Config SSBF::SpiGeneralConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
 {
     {
         .dataBits           = MSPI_DATA_BITS_8,             ///< Number of data bits
@@ -231,8 +231,10 @@ void SpiDataMngr_c::initSpiDataMngr(uint8_t instanceIdx)
 
     setSpiIndexes(SpiInterfaceIdxs[instanceIdx], instanceIdx);
                                                        // From SpiData_c::
-
-  #ifdef SSB_DMA_USED_FOR_SPI
+  #if defined(SSB_SHARED_SPI_USED)
+    initSpiData();
+                                                       // From SpiData_c::
+  #elif defined(SSB_DMA_USED_FOR_SPI)
     initSpiData(SpiChannelConfigs, SpiGeneralConfigs,
                 DmaPeriphConfigs, DmaTxChannelConfigs, DmaRxChannelConfigs);
                                                        // From SpiData_c::

@@ -14,6 +14,7 @@
 
 # ssb_use_cpp_instead_of_c_api = false
 ssb_use_cpp_instead_of_c_api = true
+defines += SSB_SHARED_SPI_USED
 
 ifeq ($(testUnit),ATSSB)
     #no unittest implemented
