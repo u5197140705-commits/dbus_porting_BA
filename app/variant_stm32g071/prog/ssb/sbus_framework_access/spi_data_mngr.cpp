@@ -28,6 +28,11 @@
 /******************************************************************************/
 #include "spi_data_mngr.h"
 
+#ifdef SSB_SHARED_SPI_USED
+    #include "drv/digital/digital_mcal.hpp"
+    #include "drv/spi/spi_bus_mcal.hpp"
+#endif
+
 #ifdef SSBCFG_SPI_USED
 
 using namespace ::SSBF;
@@ -109,7 +114,7 @@ const struct MDIO_Channel MDIOB3_MSPI1_CS_CFG =     // MDIOA4_MSPI1_NSS
 #endif
 
 #ifdef SSBCFG_STM32G071_SPI_HW0
-const struct MSPI_Channel SSBF::SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
+const struct MSPI_Channel SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
 {
     {
         .mspi = &MSPI2,                     // mspi_mc.c
@@ -125,7 +130,7 @@ const struct MSPI_Channel SSBF::SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
 
 #ifdef SSBCFG_GD32F303_SPI_HW0
 #if 0    // Code below is only a demo, how the SPI can be configured here
-const struct MSPI_Channel SSBF::SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
+const struct MSPI_Channel SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] = 
 {
     {
         .mspi = &MSPI2,                     // mspi_mc.c
@@ -140,7 +145,7 @@ const struct MSPI_Channel SSBF::SpiChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
 #endif
 #endif
 
-const struct MSPI_Config SSBF::SpiGeneralConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
+const struct MSPI_Config SpiGeneralConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
 {
     {
         .dataBits           = MSPI_DATA_BITS_8,             ///< Number of data bits
@@ -185,6 +190,13 @@ struct MDMA_Channel DmaRxChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
         }
     }
 };
+#endif
+
+#ifdef SSB_SHARED_SPI_USED
+    drv::DigitalMCAL SSBF::csPinMcal(*SpiChannelConfigs[0].cs);
+    drv::IDigital& SSBF::csPin(csPinMcal);
+    drv::spi::BusMcal SSBF::spiBusMcal(&SpiChannelConfigs[0], SpiGeneralConfigs[0]);
+    drv::spi::BusBase& SSBF::spiBus(spiBusMcal);
 #endif
 
 const uint8_t SpiDataMngr_c::SpiInterfaceIdxs[SSBF_MNGR_NUMBER_OF_HUBS] =
