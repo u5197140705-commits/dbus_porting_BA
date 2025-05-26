@@ -28,6 +28,11 @@
 /******************************************************************************/
 #include "spi_data_mngr.h"
 
+#ifdef SSB_SHARED_SPI_USED
+    #include "drv/digital/digital_mcal.hpp"
+    #include "drv/spi/spi_bus_mcal.hpp"
+#endif
+
 #ifdef SSBCFG_SPI_USED
 
 using namespace ::SSBF;
@@ -195,6 +200,13 @@ struct MDMA_Channel DmaRxChannelConfigs[SSBF_MNGR_NUMBER_OF_SPI] =
 };
 #endif
 
+#ifdef SSB_SHARED_SPI_USED
+    drv::DigitalMCAL SSBF::csPinMcal(MDIOB9);
+    drv::IDigital& SSBF::csPin(csPinMcal);
+    drv::spi::BusMcal SSBF::spiBusMcal(&SpiChannelConfigs[0], SpiGeneralConfigs[0]);
+    drv::spi::BusBase& SSBF::spiBus(spiBusMcal);
+#endif
+
 const uint8_t SpiDataMngr_c::SpiInterfaceIdxs[SSBF_MNGR_NUMBER_OF_HUBS] =
 {
 #if   SSBF_MNGR_NUMBER_OF_HUBS == 1U
@@ -239,8 +251,10 @@ void SpiDataMngr_c::initSpiDataMngr(uint8_t instanceIdx)
 
     setSpiIndexes(SpiInterfaceIdxs[instanceIdx], instanceIdx);
                                                        // From SpiData_c::
-
-  #ifdef SSB_DMA_USED_FOR_SPI
+  #if defined(SSB_SHARED_SPI_USED)
+    initSpiData();
+                                                       // From SpiData_c::
+  #elif defined(SSB_DMA_USED_FOR_SPI)
     initSpiData(SpiChannelConfigs, SpiGeneralConfigs,
                 DmaPeriphConfigs, DmaTxChannelConfigs, DmaRxChannelConfigs);
                                                        // From SpiData_c::
