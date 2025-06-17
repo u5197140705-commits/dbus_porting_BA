@@ -287,11 +287,18 @@ extern const struct MUART_Channel MUART4_RX_PD2_TX_PC12;
 
 #ifdef MCAL_MADC_INCLUDED
 /* MADC peripheral without pin */
+/* SW trigger for regular channel */
 extern const struct MADC_Periph MADC0;
 extern const struct MADC_Periph MADC1;
 extern const struct MADC_Periph MADC2;
 
-/* MADC peripheral with HW trigger */
+/* SW trigger for inserted channel */
+extern const struct MADC_Periph MADC0_INSERTED;
+extern const struct MADC_Periph MADC1_INSERTED;
+extern const struct MADC_Periph MADC2_INSERTED;
+
+
+/* MADC peripheral with HW trigger for regular channel */
 extern const struct MADC_Periph MADC0_TRIG_TIM0_CH0;
 extern const struct MADC_Periph MADC0_TRIG_TIM0_CH1;
 extern const struct MADC_Periph MADC0_TRIG_TIM0_CH2;
@@ -300,16 +307,6 @@ extern const struct MADC_Periph MADC0_TRIG_TIM2_TRGO;
 extern const struct MADC_Periph MADC0_TRIG_TIM3_CH3;
 extern const struct MADC_Periph MADC0_TRIG_EXTI11;
 extern const struct MADC_Periph MADC0_TRIG_TIM7_TRGO;
-extern const struct MADC_Periph MADC0_TRIG_SWRCST;
-extern const struct MADC_Periph MADC0_TRIG_TIM0_TRGO;
-extern const struct MADC_Periph MADC0_TRIG_TIM0_CH3;
-extern const struct MADC_Periph MADC0_TRIG_TIM1_TRGO;
-extern const struct MADC_Periph MADC0_TRIG_TIM1_CH0;
-extern const struct MADC_Periph MADC0_TRIG_TIM2_CH3;
-extern const struct MADC_Periph MADC0_TRIG_TIM3_TRGO;
-extern const struct MADC_Periph MADC0_TRIG_EXTI15;
-extern const struct MADC_Periph MADC0_TRIG_TIM7_CH3;
-extern const struct MADC_Periph MADC0_TRIG_SWICST;
 extern const struct MADC_Periph MADC1_TRIG_TIM0_CH0;
 extern const struct MADC_Periph MADC1_TRIG_TIM0_CH1;
 extern const struct MADC_Periph MADC1_TRIG_TIM0_CH2;
@@ -318,16 +315,6 @@ extern const struct MADC_Periph MADC1_TRIG_TIM2_TRGO;
 extern const struct MADC_Periph MADC1_TRIG_TIM3_CH3;
 extern const struct MADC_Periph MADC1_TRIG_EXTI11;
 extern const struct MADC_Periph MADC1_TRIG_TIM7_TRGO;
-extern const struct MADC_Periph MADC1_TRIG_SWRCST;
-extern const struct MADC_Periph MADC1_TRIG_TIM0_TRGO;
-extern const struct MADC_Periph MADC1_TRIG_TIM0_CH3;
-extern const struct MADC_Periph MADC1_TRIG_TIM1_TRGO;
-extern const struct MADC_Periph MADC1_TRIG_TIM1_CH0;
-extern const struct MADC_Periph MADC1_TRIG_TIM2_CH3;
-extern const struct MADC_Periph MADC1_TRIG_TIM3_TRGO;
-extern const struct MADC_Periph MADC1_TRIG_EXTI15;
-extern const struct MADC_Periph MADC1_TRIG_TIM7_CH3;
-extern const struct MADC_Periph MADC1_TRIG_SWICST;
 extern const struct MADC_Periph MADC2_TRIG_TIM2_CH0;
 extern const struct MADC_Periph MADC2_TRIG_TIM1_CH2;
 extern const struct MADC_Periph MADC2_TRIG_TIM0_CH2;
@@ -335,15 +322,32 @@ extern const struct MADC_Periph MADC2_TRIG_TIM7_CH0;
 extern const struct MADC_Periph MADC2_TRIG_TIM7_TRGO;
 extern const struct MADC_Periph MADC2_TRIG_TIM4_CH0;
 extern const struct MADC_Periph MADC2_TRIG_TIM4_CH2;
-extern const struct MADC_Periph MADC2_TRIG_SWRCST;
-extern const struct MADC_Periph MADC2_TRIG_TIM0_TRGO;
-extern const struct MADC_Periph MADC2_TRIG_TIM0_CH3;
-extern const struct MADC_Periph MADC2_TRIG_TIM3_CH2;
-extern const struct MADC_Periph MADC2_TRIG_TIM7_CH1;
-extern const struct MADC_Periph MADC2_TRIG_TIM7_CH3;
-extern const struct MADC_Periph MADC2_TRIG_TIM4_TRGO;
-extern const struct MADC_Periph MADC2_TRIG_TIM4_CH3;
-extern const struct MADC_Periph MADC2_TRIG_SWICST;
+
+/* MADC peripheral with HW trigger for inserted channel */
+extern const struct MADC_Periph MADC0_INSETED_TRIG_TIM0_TRGO;
+extern const struct MADC_Periph MADC0_INSETED_TRIG_TIM0_CH3;
+extern const struct MADC_Periph MADC0_INSETED_TRIG_TIM1_TRGO;
+extern const struct MADC_Periph MADC0_INSETED_TRIG_TIM1_CH0;
+extern const struct MADC_Periph MADC0_INSETED_TRIG_TIM2_CH3;
+extern const struct MADC_Periph MADC0_INSETED_TRIG_TIM3_TRGO;
+extern const struct MADC_Periph MADC0_INSETED_TRIG_EXTI15;
+extern const struct MADC_Periph MADC0_INSETED_TRIG_TIM7_CH3;
+extern const struct MADC_Periph MADC1_INSETED_TRIG_TIM0_TRGO;
+extern const struct MADC_Periph MADC1_INSETED_TRIG_TIM0_CH3;
+extern const struct MADC_Periph MADC1_INSETED_TRIG_TIM1_TRGO;
+extern const struct MADC_Periph MADC1_INSETED_TRIG_TIM1_CH0;
+extern const struct MADC_Periph MADC1_INSETED_TRIG_TIM2_CH3;
+extern const struct MADC_Periph MADC1_INSETED_TRIG_TIM3_TRGO;
+extern const struct MADC_Periph MADC1_INSETED_TRIG_EXTI15;
+extern const struct MADC_Periph MADC1_INSETED_TRIG_TIM7_CH3;
+extern const struct MADC_Periph MADC2_INSETED_TRIG_TIM0_TRGO;
+extern const struct MADC_Periph MADC2_INSETED_TRIG_TIM0_CH3;
+extern const struct MADC_Periph MADC2_INSETED_TRIG_TIM3_CH2;
+extern const struct MADC_Periph MADC2_INSETED_TRIG_TIM7_CH1;
+extern const struct MADC_Periph MADC2_INSETED_TRIG_TIM7_CH3;
+extern const struct MADC_Periph MADC2_INSETED_TRIG_TIM4_TRGO;
+extern const struct MADC_Periph MADC2_INSETED_TRIG_TIM4_CH3;
+
 
 /* MADC channels */
 extern const struct MADC_Channel MADC0_IN0_PA0;

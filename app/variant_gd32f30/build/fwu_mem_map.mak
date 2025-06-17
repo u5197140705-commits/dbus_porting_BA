@@ -1,5 +1,5 @@
 #*******************************************************************************
-#  Copyright (c) 2017 BSH Hausgeraete GmbH,
+#  Copyright (c) 2024 BSH Hausgeraete GmbH,
 #  Carl-Wery-Str. 34, 81739 Munich, Germany, www.bsh-group.de
 #
 #  All rights reserved. This program and the accompanying materials
@@ -15,23 +15,27 @@
 #*******************************************************************************
 
 # Module: FWU_ROMLOADER
+
 # Make variables
 FWU_ROMLOADER_START_ADDRESS ?= 8000000
-FWU_ROMLOADER_END_ADDRESS ?= 8001fff
-FWU_ROMLOADER_SIZE ?= 2000
+FWU_ROMLOADER_END_ADDRESS ?= 8000fff
+FWU_ROMLOADER_SIZE ?= 1000
 # Definitions
 defines += FWU_ROMLOADER_START_ADDRESS=UINT32_C(0x8000000)
-defines += FWU_ROMLOADER_END_ADDRESS=UINT32_C(0x8001fff)
-defines += FWU_ROMLOADER_SIZE=UINT32_C(0x2000)
+defines += FWU_ROMLOADER_END_ADDRESS=UINT32_C(0x8000fff)
+defines += FWU_ROMLOADER_SIZE=UINT32_C(0x1000)
 
 # Module: FWU_APPLICATION
+
 # Make variables
-FWU_APPLICATION_START_ADDRESS ?= 8002000
+FWU_APPLICATION_START_ADDRESS ?= 8001000
 FWU_APPLICATION_END_ADDRESS ?= 801ffff
-FWU_APPLICATION_SIZE ?= 1e000
+FWU_APPLICATION_SIZE ?= 1f000
 # Definitions
-defines += FWU_APPLICATION_START_ADDRESS=UINT32_C(0x8002000)
+defines += FWU_APPLICATION_START_ADDRESS=UINT32_C(0x8001000)
 defines += FWU_APPLICATION_END_ADDRESS=UINT32_C(0x801ffff)
-defines += FWU_APPLICATION_SIZE=UINT32_C(0x1e000)
+defines += FWU_APPLICATION_SIZE=UINT32_C(0x1f000)
+
+
 
 
