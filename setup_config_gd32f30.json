@@ -2,6 +2,7 @@
     "baud": "96",
     "comp": [
         "mem_utility",
+        "debug_extended",
         "debug",
         "MCAL",
         "dbuscan"
