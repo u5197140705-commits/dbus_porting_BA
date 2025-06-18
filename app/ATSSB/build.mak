@@ -11,11 +11,6 @@
 #*******************************************************************************
 #  Description      build include for ATSSB component
 #*******************************************************************************
-
-# ssb_use_cpp_instead_of_c_api = false
-ssb_use_cpp_instead_of_c_api = true
-defines += SSB_SHARED_SPI_USED
-
 ifeq ($(testUnit),ATSSB)
     #no unittest implemented
 else
@@ -25,6 +20,10 @@ else
     else
         src += $(app_path)/../ATSSB/atssb_handle_task_c.c
     endif
+endif
+
+ifeq ($(ssb_shared_spi_used),true)
+    defines += SSB_SHARED_SPI_USED
 endif
 
 code_gen_cfg += $(app_path)/../ATSSB/dbgx_filters.json

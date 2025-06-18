@@ -99,7 +99,7 @@ static struct INT_StackFrame_s* INT_getStackFrame(void)
 SYMBOL_IRQ SYMBOL_NO_RETURN void SpuriousIsr_Handler(uint32_t SpuriousInt)
 {
    /* in bits [9..0] of the SpuriousInt is spurious interrupt number
-    * e.g. 0x13 is for Stm32f10XXX vector table RTC_IRQHandler() 
+    * e.g. 0x13 corresponds to an interrupt handler in the vector table
     * i.e. IRQ3 (0x13 - 0x10 = 0x03)
     * where 0x10 in subtraction represents IRQs offset
     */
@@ -122,6 +122,7 @@ SYMBOL_IRQ SYMBOL_NO_RETURN void HardFault_Handler(void)
     for(;;) {}
 }
 
+#if !defined(NO_ISR_SUPPORT) || defined(need_ModuleHeader)
 SYMBOL_IRQ SYMBOL_NO_RETURN void NMI_Handler(void)
 {
     /* Read stack frame */
@@ -132,6 +133,7 @@ SYMBOL_IRQ SYMBOL_NO_RETURN void NMI_Handler(void)
     /* Endless loop - no return from fault */
     for(;;) {}
 }
+#endif /* #if !defined(NO_ISR_SUPPORT) || defined(need_ModuleHeader) */
 
 #if !defined(NO_ISR_SUPPORT)
 #if !defined(CORTEX_M0) && !defined(CORTEX_M0_PLUS) && !defined(CORTEX_M23)

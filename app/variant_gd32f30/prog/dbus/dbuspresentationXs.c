@@ -290,7 +290,7 @@ void DBPL_vEnterBootloaderMode(void)
 {
 #if defined (WIRED_FIRMWARE_UPDATE)
     BMDAT_setMagicPattern(BMDAT_startBlAfterReset);
-#elif defined (REMOTE_FIRMWARE_UPDATE)
+#elif defined (REMOTE_FIRMWARE_UPDATE) && !defined (FWU3_LITE)
     BMDAT_setBootModule(MAL_BP2_LOADER_ID);
 #elif defined (BTM_FIRMWARE_UPDATE)
     GBTL_bootGromLoaderAfterReset();

@@ -24,7 +24,7 @@
 /******************************************************************************/
 #include "bsh_stdinc.h"
 #include "basic.h"
-#include "hwdt.h"
+#include "watchdogtimer/watchdogtimer.h"
 
 #if defined(RTOS)
     #include "os/rtos_kernel_enter.h"
@@ -103,5 +103,5 @@ void BASIC_vUsrSchedTasks (void)
 #else
     SCH_scheduler_entry();
 #endif
-    HWDT_vTrigger();
+    WDT_trigger();
 }

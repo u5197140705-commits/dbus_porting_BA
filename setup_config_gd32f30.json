@@ -2,13 +2,13 @@
     "baud": "96",
     "comp": [
         "mem_utility",
-        "debug_extended",
         "debug",
-        "MCAL"
+        "MCAL",
+        "dbuscan"
     ],
     "compiler": "armclang",
-    "dbus_rx": "B7",
-    "dbus_tx": "B6",
+    "dbus_rx": "#DBUS pin of DBusCAN chip is used instead",
+    "dbus_tx": "#DBUS pin of DBusCAN chip is used instead",
     "derivat": "GD32F303CBT6",
     "ext_comp": [],
     "fwu": "FWU1",
@@ -19,6 +19,6 @@
     "platform": "GD32F30",
     "project": "variant_gd32f30",
     "scheduler": "new",
-    "uart": "0",
+    "uart": "#DBusCAN chip is used instead, configure its communication channel settings in app/<project>/prog/devices/dbuscan/<platform>/dbuscan_drv_cfg.c",
     "variant": "MyVariant"
 }
