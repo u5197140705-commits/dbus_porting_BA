@@ -61,12 +61,12 @@ const struct MSPI_Channel DBCDRV_mspiChannel =
     {
         .remapMask = NO_REMAP
     },
-    .mspi = &MSPI0,
-    .sclk = &MDIOA5_MSPI0_SCK,
-    .miso = &MDIOA6_MSPI0_MISO,
-    .mosi = &MDIOA7_MSPI0_MOSI,
+    .mspi = &MSPI1,
+    .sclk = &MDIOB13_MSPI1_SCK,
+    .miso = &MDIOB14_MSPI1_MISO,
+    .mosi = &MDIOB15_MSPI1_MOSI,
 #ifndef DBUSCAN_WITH_BBL_SPI
-    .cs   = &MDIOA4
+    .cs   = &MDIOB7
 #else
     .cs   = NULL // must be NULL here- separate channel @DBCDRV_csPin is used with BBL for the chip select pin
 #endif
