@@ -14,7 +14,7 @@
 
 # SSB specific config
 ssb_use_cpp_instead_of_c_api = true
-ssb_shared_spi_used = true
+ssb_shared_spi_used = false
 
 # common components
 ifeq ($(ssb_build_variant),rtos)
@@ -46,7 +46,7 @@ else
     endif
 endif
 
-dbus_mapping = mcal
+#dbus_mapping = mcal
 dbus_uart_channel = 1
 HEAPSIZE ?= 10
 search_path += ext
