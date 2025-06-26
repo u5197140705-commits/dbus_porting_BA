@@ -12,15 +12,19 @@
 #  Description      Application variant build file
 #*******************************************************************************
 
+# SSB specific config
+ssb_use_cpp_instead_of_c_api = true
+ssb_shared_spi_used = false
+
 # common components
 ifeq ($(ssb_build_variant),rtos)
-    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug devices/dbuscan
+    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug devices/dbuscan dbus/DBal
 else
-    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug schedulers_bm/scheduler devices/dbuscan
+    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug schedulers_bm/scheduler devices/dbuscan dbus/DBal
 endif
 
 # list of included PED_FW subcomponents
-#ped_fw_subcomponent_list = basic timer schedule utility
+#ped_fw_subcomponent_list = basic stdcrc timer schedule utility watchdogtimer
 
 mcal_modules = $(mcal_supported_modules_$(platform))
 # If you need to reduce the size of the application, you can specify a subset of MCAL modules. Please note that some modules might not be available for your platform.
@@ -29,11 +33,23 @@ mcal_modules = $(mcal_supported_modules_$(platform))
 
 # external components
 ifeq ($(ssb_build_variant),rtos)
-    ext_components = rtos ssb
+    ifeq ($(ssb_shared_spi_used),true)
+        ext_components = rtos ssb services bsp
+    else
+        ext_components = rtos ssb
+    endif
 else
-    ext_components = ssb
+    ifeq ($(ssb_shared_spi_used),true)
+        ext_components = ssb services bsp
+    else
+        ext_components = ssb
+    endif
 endif
 
+#dbus_mapping = mcal
+dbus_uart_channel = 1
+HEAPSIZE ?= 10
+search_path += ext
 
 # application specific components
 app_components = /../../ATSSB

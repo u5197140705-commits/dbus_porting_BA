@@ -230,7 +230,7 @@ static void BASIC_vInitClock(void);
 
 #if defined(MCAL_MPCM_INCLUDED)
 // Axivion Next Line MisraC2012-8.9: Global variable can be declared inside function.
-static const struct MPCM_PowerModesConfig customPowerModes =
+static const struct MPCM_PowerModesConfig BASIC_CustomPowerModes =
 {
     /* Check available configurations for your platform in mcpm_mc.h */
     &MPCM_CFG_DEFAULT,              // Take configuration from make process
@@ -240,21 +240,182 @@ static const struct MPCM_PowerModesConfig customPowerModes =
 };
 #endif
 
+#if defined(APP_VARIANT)
+
+/** \brief Sets pin or port to analog input mode */
+static void BASIC_vSetAnalogInput(uint32_t port, uint32_t pin);
+/** \brief Sets all invisible pins to analog input mode */
+static void BASIC_vInitInvisiblePins(void);
+
+#endif /* defined(APP_VARIANT) */
+
 /******************************************************************************/
 /* PRIVATE FUNCTION DEFINITIONS AND PRIVATE MACRO FUNCTION DEFINITIONS   v    */
 /******************************************************************************/
 // Axivion Next Line MisraC2012-8.7: Routine can be declared static in primary file
+
+#if defined(APP_VARIANT)
+#define GPIO_CTLx_PIN2PIN_WIDTH  4U
+
+/** Function for setting pin to analog input mode: CTLx[1:0]=0b00,MDx[1:0]=0b00.
+ *  \param port: pointer to GPIO address
+ *               GPIOx(x = A,B,C,D,E,F,G)
+ *  \param pin:  GPIO pin defined in vendor's file
+ *               GPIO_PIN_x(x=0,1,2,...,15,ALL) equal (BIT0,BIT1,BIT2,...,BIT15,BITS(0,15))
+ */
+static void BASIC_vSetAnalogInput(uint32_t port, uint32_t pin)
+{
+    volatile uint32_t * gpio_ctl_ptr;
+    uint16_t pinPos = 0u;
+
+
+    if(GPIO_PIN_ALL == pin)         //configure completed port to analog input mode
+    {
+        gpio_ctl_ptr = &GPIO_CTL0(port);
+        *gpio_ctl_ptr = 0u;
+        gpio_ctl_ptr = &GPIO_CTL1(port);
+        *gpio_ctl_ptr = 0u;
+    }
+    else                           //configure one pin to analog input mode
+    {
+        if(pin >= GPIO_PIN_8)
+        {
+            gpio_ctl_ptr = &GPIO_CTL1(port);
+            pin >>= 8u;
+        }
+        else
+        {
+            gpio_ctl_ptr = &GPIO_CTL0(port);
+        }
+
+        while(pin > 1u)
+        {
+            pinPos++;
+            pin >>= 1u;
+        }
+
+        //configure analog input
+        *gpio_ctl_ptr &= ~(GPIO_CTL0_MD0  << (pinPos*GPIO_CTLx_PIN2PIN_WIDTH));
+        *gpio_ctl_ptr &= ~(GPIO_CTL0_CTL0 << (pinPos*GPIO_CTLx_PIN2PIN_WIDTH));
+    }
+}
+
+static void BASIC_vInitInvisiblePins(void)
+{
+    #if defined(GD32F303CBT6)
+    //invisible pins for GD32F303CBT6
+    //GPIOC: PIN0,PIN1,PIN2,PIN3,PIN4,PIN5,PIN6,PIN7,PIN8,PIN9,PIN10,PIN11,PIN12
+    //GPIOD: PIN2,PIN3,PIN4,PIN5,PIN6,PIN7,PIN8,PIN9,PIN10,PIN11,PIN12,PIN13,PIN14,PIN15
+    //GPIOE: all pins
+    //GPIOF: all pins
+    //GPIOG: all pins
+
+    //GPIOC
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PCEN;
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_0);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_1);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_2);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_3);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_4);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_5);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_6);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_7);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_8);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_9);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_10);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_11);
+    BASIC_vSetAnalogInput(GPIOC, GPIO_PIN_12);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PCEN;
+
+    //GPIOD
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PDEN;
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_2);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_3);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_4);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_5);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_6);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_7);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_8);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_9);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_10);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_11);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_12);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_13);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_14);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_15);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PDEN;
+
+    //GPIOE
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PEEN;
+    BASIC_vSetAnalogInput(GPIOE, GPIO_PIN_ALL);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PEEN;
+
+    //GPIOF
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PFEN;
+    BASIC_vSetAnalogInput(GPIOF, GPIO_PIN_ALL);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PFEN;
+
+    //GPIOG
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PGEN;
+    BASIC_vSetAnalogInput(GPIOG, GPIO_PIN_ALL);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PGEN;
+    #elif defined(GD32F303RCT6)
+    //invisible pins for GD32F303RCT6
+    //GPIOD: PIN3,PIN4,PIN5,PIN6,PIN7,PIN8,PIN9,PIN10,PIN11,PIN12,PIN13,PIN14,PIN15
+    //GPIOE: all pins
+    //GPIOF: all pins
+    //GPIOG: all pins
+
+    //GPIOD
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PDEN;
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_3);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_4);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_5);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_6);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_7);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_8);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_9);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_10);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_11);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_12);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_13);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_14);
+    BASIC_vSetAnalogInput(GPIOD, GPIO_PIN_15);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PDEN;
+
+    //GPIOE
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PEEN;
+    BASIC_vSetAnalogInput(GPIOE, GPIO_PIN_ALL);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PEEN;
+
+    //GPIOF
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PFEN;
+    BASIC_vSetAnalogInput(GPIOF, GPIO_PIN_ALL);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PFEN;
+
+    //GPIOG
+    RCU_APB2EN |= (uint32_t)RCU_APB2EN_PGEN;
+    BASIC_vSetAnalogInput(GPIOG, GPIO_PIN_ALL);
+    RCU_APB2EN &= ~(uint32_t)RCU_APB2EN_PGEN;
+    #endif
+}
+#endif /* defined(APP_VARIANT) */
+
 void BASIC_vInitPlatform(void)
 {
     /* Set the clocks to default state as like after the hardware reset */
 
   #if defined(MCAL_MPCM_INCLUDED)
-    if(MPCM_init(&customPowerModes) != MCAL_OK)
+    if(MPCM_init(&BASIC_CustomPowerModes) != MCAL_OK)
     {
         MCAL_error("Invalid MPCM configuration");
     }
   #else
     BASIC_vInitClock();
+  #endif
+
+  #if defined(APP_VARIANT)
+    BASIC_vInitInvisiblePins();
   #endif
     
     /* Enable clock of GPIO AF */

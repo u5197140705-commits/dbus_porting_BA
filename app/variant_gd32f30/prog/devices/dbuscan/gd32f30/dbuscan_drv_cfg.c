@@ -33,7 +33,6 @@
 #include <stdint.h>
 #include "dbuscan_drv.h"
 #include "dbuscan_types.h"
-#include "mcal/mcal_includes.h"
 #include "mcal_channels.h"
 
 
@@ -41,20 +40,42 @@
 /* PUBLIC DATA AND FUNCTION DEFINITIONS                                       */
 /******************************************************************************/
 
+// Configuration of SPI communication with the DBusCAN chip
+const struct MSPI_Config DBCDRV_mspiCfg =
+{
+    .dataBits         = MSPI_DATA_BITS_8,            //do not modify
+    .clockPolarity    = MSPI_CLOCK_POLARITY_0,       //do not modify
+    .clockPhase       = MSPI_CLOCK_PHASE_0,          //do not modify
+    .dataInvert       = MSPI_DATA_INVERT_DISABLED,   //do not modify
+    .frameFormat      = MSPI_FRAME_FORMAT_MSB_FIRST, //do not modify
+    .chipSelMode      = MSPI_CHIP_SELECT_AUTO_LOW,   //do not modify
+    .clockFreq        = MSPI_FREQUENCY_1M,
+    .misoPullResistor = MDIO_PULL_UP                 //do not modify
+};
+
+
 // SPI peripheral unit and pins used for communication with the DBusCAN chip
 const struct MSPI_Channel DBCDRV_mspiChannel =
 {
     .scfg =
     {
-        .clkSrc    = MSPI_DEFAULT_CLOCK_SOURCE,
         .remapMask = NO_REMAP
     },
     .mspi = &MSPI1,
     .sclk = &MDIOB13_MSPI1_SCK,
     .miso = &MDIOB14_MSPI1_MISO,
     .mosi = &MDIOB15_MSPI1_MOSI,
+#ifndef DBUSCAN_WITH_BBL_SPI
     .cs   = &MDIOB7
+#else
+    .cs   = NULL // must be NULL here- separate channel @DBCDRV_csPin is used with BBL for the chip select pin
+#endif
 };
+
+#ifdef DBUSCAN_WITH_BBL_SPI
+// GPIO pin used as chip select for the DBusCAN chip
+const struct MDIO_Channel* DBCDRV_csPin = &MDIOA4;
+#endif
 
 // GPIO pin used for the external interrupt from interrupt pin (nINT) of the DBusCAN chip
 const struct MEXTI_Channel* DBCDRV_getMextiChannel(void)
@@ -62,11 +83,8 @@ const struct MEXTI_Channel* DBCDRV_getMextiChannel(void)
     return &MEXTIA3;
 }
 
-// Clock frequency used for SPI communication with the DBusCAN chip
-uint32_t DBCDRV_getMspiFrequency(void)
-{
-    return MSPI_FREQUENCY_1M;
-}
+// Enable for programming chip EEPROM via DBCDRV_HandleTask()
+bool DBCDRV_eepromWriteEnable = true;
 
 // Values used for DBusCAN chip configuration and stored in its EEPROM
 DBC_Cfg_t DBCDRV_getConfig(void)
@@ -90,8 +108,6 @@ DBC_Cfg_t DBCDRV_getConfig(void)
     cfg.CAN_BIAS     = 0u;
     cfg.FD_DR        = 0u;
     cfg.CAN_DR       = 0u;
-
-    DBCDRV_eepromWriteEnable = true; // Enable write to the chip EEPROM via DBCDRV_HandleTask()
 
     return cfg;
 }

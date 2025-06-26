@@ -54,7 +54,7 @@
 #include "utility.h"
 #include "dbuspresentation.h"
 
-#if defined(SSBD_INCLUDED) && !defined(SSB_USE_CPP_INSTEAD_OF_C_API)
+#if defined(SSBD_INCLUDED) && !defined (SSB_USE_CPP_INSTEAD_OF_C_API)
 #include "dbus/msg_lists.h"
 #endif
 
@@ -156,7 +156,7 @@ const TbusObjectTable BAL_tBusObject[] = {
 #ifdef CCSS
  ,{CCCMTD_SUBSYS, (const void *)CCCMTD_RxObject, (const void *)CCCMTD_TxObject, &CCCMTD_NumberOfTxObjects, CCCMTD_TxFlags}
 #endif
-#if defined(SSBD_INCLUDED) && !defined(SSB_USE_CPP_INSTEAD_OF_C_API)
+#if defined(SSBD_INCLUDED) && !defined (SSB_USE_CPP_INSTEAD_OF_C_API)
  /* SSBD DBus message subsystem */
  ,{SSBD_SUBSYSTEM_ID, (const void *)SSBD_tReceiveObject, (const void *)SSBD_tTransmitObject, &SSBD_numberOfElementsInSubsystem, SSBD_transmitFlags}
 #endif
