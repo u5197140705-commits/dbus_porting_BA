@@ -28,9 +28,11 @@
 
 #ifdef RTOS
     #include "rtos_api.h"
+#elif defined (ZRTOS)
+    #include "os_port/osp_fwToOs.h"
 #endif
 
-#ifdef SYSTEM_TIMER_SYSTICK
+#ifdef SYSTEM_TIMER_ENABLED
     #include "system_timer.h"
 #endif
 #ifdef DC_COMPONENT_PRESENT
@@ -38,6 +40,20 @@
 #endif
 
 #include "IntTblArmCM.h"
+
+#if defined (RTOS)
+    #if defined (RTOS_MODE_DEBUG)
+        #define OS_MODE_DEBUG
+        #define OS_startMeasureISRTime    RTOS_startMeasureISRTime
+        #define OS_stopMeasureISRTime     RTOS_stopMeasureISRTime
+    #endif
+    #define OS_sysTickHandler         RTOS_SysTickInterruptHandler
+#elif defined (ZRTOS)
+    #define OS_MODE_DEBUG
+    #define OS_startMeasureISRTime    OSP_startMeasuerISRTime
+    #define OS_stopMeasureISRTime     OSP_stopMeasuerISRTime
+    #define OS_sysTickHandler         OSP_sysTickHandler
+#endif
 
 /* Info 765: external symbol 'SysTick_Handler' could be made static [MISRA 2012 Rule 8.7, advisory]
  * it needs to be external! */
@@ -49,30 +65,25 @@
 
 void SysTick_Handler(void)
 {
-#ifdef RTOS
+#ifdef OS_MODE_DEBUG
+    OS_startMeasureISRTime();
+#endif // OS_MODE_DEBUG
 
-    #ifdef RTOS_MODE_DEBUG
-        RTOS_startMeasureISRTime();
-    #endif //RTOS_MODE_DEBUG
-
-    /* RTOS timer interrupt handler */
-    RTOS_SysTickInterruptHandler();
+#if defined (RTOS) || defined (ZRTOS)
+    /* OS timer interrupt handler */
+    OS_sysTickHandler();
+#endif // RTOS || ZRTOS
 
     /* System timer interrupt handler */
-    #ifdef SYSTEM_TIMER_SYSTICK
-        STIM_InterruptHandler(SysTick_GetPeriod());
-    #endif
+#ifdef SYSTEM_TIMER_ENABLED
+    STIM_InterruptHandler();
+#endif
 
-    #ifdef RTOS_MODE_DEBUG
-        RTOS_stopMeasureISRTime();
-    #endif //RTOS_MODE_DEBUG
-
-#elif defined(DC_COMPONENT_PRESENT)
+#if defined(DC_COMPONENT_PRESENT)
     DC_systickInterrupHandler();
-#else
-    #ifdef SYSTEM_TIMER_SYSTICK
-        /* System timer interrupt handler */
-        STIM_InterruptHandler(SysTick_GetPeriod());
-    #endif
-#endif //!RTOS
+#endif // DC_COMPONENT_PRESENT
+
+#ifdef OS_MODE_DEBUG
+    OS_stopMeasureISRTime();
+#endif // OS_MODE_DEBUG
 }

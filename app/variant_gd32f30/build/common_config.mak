@@ -13,7 +13,8 @@
 #*******************************************************************************
 
 #SSB config, uncomment if RTOS used. Else baremetal scheduler used
-ssb_build_variant ?= rtos
+ssb_build_variant ?= bms
+ssb_dbus_variant ?= mcal
 
 # build type (DEVELOP / RELEASE)
 # For more details refer to file common/build/help/make_variables.md
@@ -39,13 +40,24 @@ ext_osc ?= 8
 
 
 # communication configuration
+dbus_mapping ?= mcal
+ifeq ($(ssb_dbus_variant),dbuscan)
+    dbus_mapping = dbuscan
+endif    
 UDA                  ?= UDA-01
-dbus_uart_channel     = #DBusCAN chip is used instead, configure its communication channel settings in app/<project>/prog/devices/dbuscan/<platform>/dbuscan_drv_cfg.c
 dbus_node_address     = 1
 dbus_default_baudrate = 96
-dbus_tx_pin           = #DBUS pin of DBusCAN chip is used instead
-dbus_rx_pin           = #DBUS pin of DBusCAN chip is used instead
 TESTMSGSRV_SUBNODE_ADDRESS = 10
+
+ifeq ($(dbus_mapping), ssb_dbus_variant) 
+    dbus_uart_channel     = #DBusCAN chip is used instead, configure its communication channel settings in app/<project>/prog/devices/dbuscan/<platform>/dbuscan_drv_cfg.c
+    dbus_tx_pin           = #DBUS pin of DBusCAN chip is used instead
+    dbus_rx_pin           = #DBUS pin of DBusCAN chip is used instead
+else
+    dbus_uart_channel    ?= 0
+    dbus_tx_pin           = A9
+    dbus_rx_pin           = A10
+endif
 
 
 # firmware update type (FWU1 / FWU3)
@@ -67,7 +79,6 @@ ifeq ($(ssb_build_variant),rtos)
 endif
 scheduler_config=auto
 
-dbus_mapping = dbuscan
 
 ifeq ($(FW_update_type),FWU4)
     # start of GBL image in external flash

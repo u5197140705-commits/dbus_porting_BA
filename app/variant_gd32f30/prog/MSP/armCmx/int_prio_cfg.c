@@ -26,9 +26,13 @@
 #include "int_prio.h"
 #include <stdint.h>
 #include "processor.h" // find out cortex core
-#include "IntTbl.h"
-#if defined(RTOS)
-    #include "os/rtos_initialize_low_level.h"
+
+#ifdef INTP_CONFIG_SUPPORTED
+#include "IntPrioTbl_auto.h"
+#endif
+
+#ifdef INTP_CONFIG_ENABLED
+static void INTP_setCustomInterruptPriority(void);
 #endif
 
 //lint -e765 external symbol 'INTP_setApplicationPriority' could be made static [MISRA 2012 Rule 8.7, advisory]
@@ -41,10 +45,17 @@ void INTP_setApplicationPriority(void)
     /* Allowed values CM3, CM4, CM4F: INT_PRIO_0 ... INT_PRIO_15  */
 
     INTP_setDefaultInterruptPriority();
-#if !defined(PSOC4)
-    ITBL_setCustomInterruptPriority();
-#endif
-#if defined(RTOS)
-    RTOS_setRtosInterruptPriority();
+#ifdef INTP_CONFIG_ENABLED
+    INTP_setCustomInterruptPriority();
 #endif
 }
+
+#ifdef INTP_CONFIG_ENABLED
+static void INTP_setCustomInterruptPriority(void)
+{
+    for(uint32_t i = 0; i < INTP_PrioTblSize; i++)
+    {
+        NVIC_SetPriority(INTP_PrioTbl[i].vectorNumber, INTP_PrioTbl[i].priority);
+    }
+}
+#endif // defined(INTP_CONFIG_ENABLED)

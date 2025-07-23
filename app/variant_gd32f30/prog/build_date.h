@@ -11,6 +11,6 @@
 #ifndef BUILD_DATE_H
 #define BUILD_DATE_H
 
-#define DBUS2_NODE_DATE	date:20250618
+#define DBUS2_NODE_DATE	date:20250723
 
 #endif /* BUILD_DATE_H */

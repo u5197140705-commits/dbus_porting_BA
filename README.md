@@ -27,8 +27,8 @@ git clone https://github-bshg.boschdevcloud.com/Generic/ssb_ref_project --recurs
 
 stm32g071 is used at the moment for working
 
-- make [ssb_build_variant=rtos] project=variant_stm32g071 all -j  (rtos is used by default, set content in [] is optional)
-- make ssb_build_variant=bms project=variant_stm32g071 all -j  (baremetal scheduler is used)
+- make [ssb_build_variant=bms] [ssb_dbus_variant=mcal] project=variant_stm32g071 all -j  (baremetal and no dbusCAN chip is used by default, set content in [] is optional)
+- make ssb_build_variant=rtos ssb_dbus_variant=dbuscan project=variant_stm32g071 all -j  (rtos scheduler is used, dbusCAN chip is used)
 
 ---
 
