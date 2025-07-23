@@ -43,6 +43,7 @@ typedef enum SCH_ModuleIDs
 
     /* USER CODE BEGIN ProjectModules */
     /*! place your projects modules here */
+    MOD_ATSSB,
     /* USER CODE END ProjectModules */
 
     TOTAL_MODULES

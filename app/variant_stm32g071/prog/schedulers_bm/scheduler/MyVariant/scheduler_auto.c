@@ -37,6 +37,11 @@
 
 /* USER CODE BEGIN Include */
 /*! place your module includes here */
+#ifndef SSB_USE_CPP_INSTEAD_OF_C_API
+    #include "atssb_handle_task_c.h"
+#else
+    #include "atssb_handle_task_cpp.h"
+#endif
 /* USER CODE END Include */
 
 
@@ -59,6 +64,7 @@ const TaskID DBC_dep[]	= {DEP_DBC	END_STAMP};
 
 /* USER CODE BEGIN Dependency */
 /*! place your module dependencies here */
+const TaskID ATSSB_dep[] = {DEP_ATSSB END_STAMP};
 /* USER CODE END Dependency */
 
 
@@ -91,6 +97,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
 
         /* USER CODE BEGIN ModulePriority */
         /*! place your project modules and their priorities here */
+        {MOD_ATSSB, LOW_PRIORITY},
         /* USER CODE END ModulePriority */
 
         {END_STAMP, PRIO_NONE}
@@ -116,6 +123,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
 
         /* USER CODE BEGIN TaskHandlers */
         /*! place your task handlers here */
+        [MOD_ATSSB] = ATSSB_handleTask
         /* USER CODE END TaskHandlers */
     },
 
@@ -141,6 +149,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
 
         /* USER CODE BEGIN ModuleDependency */
         /*! place your module dependencies arrays here */
+        [MOD_ATSSB] = ATSSB_dep,
         /* USER CODE END ModuleDependency */
     },
 };
