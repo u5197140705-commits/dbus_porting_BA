@@ -41,12 +41,10 @@
 
 SYMBOL_IRQ void USART1_IRQHandler(void)
 {
-  #ifdef MCAL_MUART_INCLUDED
-    MUART_IRQ_Handler(MUART1_IRQ_INDEX);
-  #else
-    #if defined(DBM_HAL) || defined(APP_VARIANT)
+  #if defined(HUART0_USED)
     HUART0_ISR_HandleEvent();
-    #endif
+  #elif defined(MCAL_MUART_INCLUDED)
+    MUART_IRQ_Handler(MUART1_IRQ_INDEX);
   #endif
 }
 
@@ -56,12 +54,10 @@ SYMBOL_IRQ void USART1_IRQHandler(void)
     SYMBOL_IRQ void USART2_IRQHandler(void)
 #endif
 {
-  #ifdef MCAL_MUART_INCLUDED
-    MUART_IRQ_Handler(MUART2_LP2_IRQ_INDEX);
-  #else
-    #if defined(DBM_HAL) || defined(APP_VARIANT)
+  #if defined(HUART1_USED) || defined(HUART11_USED)
     HUART1_11_ISR_HandleEvent();
-    #endif
+  #elif defined(MCAL_MUART_INCLUDED)
+    MUART_IRQ_Handler(MUART2_LP2_IRQ_INDEX);
   #endif
 }
 
@@ -75,16 +71,14 @@ SYMBOL_IRQ void USART1_IRQHandler(void)
     SYMBOL_IRQ void USART3_USART4_LPUART1_IRQHandler(void)
 #endif
 {
-  #ifdef MCAL_MUART_INCLUDED
-    MUART_IRQ_Handler(MUART3_4_5_6_LP1_IRQ_INDEX);
-  #else
-    #if defined(DBM_HAL) || defined(APP_VARIANT)
-      #if defined(STM32G0B0)
+  #if defined(HUART2_USED) || defined(HUART3_USED) || defined(HUART4_USED) || defined(HUART5_USED) || defined(HUART10_USED)
+    #if defined(STM32G0B0)
       HUART2_3_4_5_ISR_HandleEvent();
-      #else
+    #else
       HUART2_3_10_ISR_HandleEvent();
-      #endif
-    #endif //DBM_HAL||APP_VARIANT
+    #endif
+  #elif defined(MCAL_MUART_INCLUDED)
+    MUART_IRQ_Handler(MUART3_4_5_6_LP1_IRQ_INDEX);
   #endif
 }
 

@@ -12,8 +12,8 @@
 *   PROCESSOR         stm32g0
 *******************************************************************************/
 
-#ifndef STM32G0_EXT_H
-#define STM32G0_EXT_H
+#ifndef STM32G0_EXT_CFG_H
+#define STM32G0_EXT_CFG_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,5 +53,5 @@ extern "C" {
 }
 #endif
 
-#endif // STM32G0_EXT_H
+#endif // STM32G0_EXT_CFG_H
 

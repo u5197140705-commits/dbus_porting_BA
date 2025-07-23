@@ -8,7 +8,7 @@
  *
  *******************************************************************************
  *  PROJECT          Generic SW
- *  COMP_ABBREV      MPX
+ *  COMP_ABBREV      BASIC
  ******************************************************************************/
 
 /******************************************************************************/
@@ -234,6 +234,17 @@ static void BASIC_vSetPLL(uint32_t divFactorPLLM, uint32_t mulFactorPLLN, uint32
 /** \brief Initializes clock based on make configuration */
 static void BASIC_vInitClock(void);
 
+#else
+
+static const struct MPCM_PowerModesConfig BASIC_CustomPowerModes =
+{
+    /* Check available configurations for your platform in mcpm_mc.h */
+    &MPCM_CFG_DEFAULT,              // Take configuration from make process
+    &MPCM_CFG_CORE_8_PCLK_8,        // Lowered clock speeds for low-power run
+    NULL,                           // No special configuration for sleep mode
+    NULL                            // No special configuration for stop mode
+};
+
 #endif /* !defined(MCAL_MPCM_INCLUDED) */
 
 /*
@@ -250,16 +261,7 @@ void BASIC_vInitPlatform(void)
   #endif
 
   #if defined(MCAL_MPCM_INCLUDED)
-    const struct MPCM_PowerModesConfig customPowerModes =
-    {
-        /* Check available configurations for your platform in mcpm_mc.h */
-        &MPCM_CFG_DEFAULT,              // Take configuration from make process
-        &MPCM_CFG_CORE_8_PCLK_8,        // Lowered clock speeds for low-power run
-        NULL,                           // No special configuration for sleep mode
-        NULL                            // No special configuration for stop mode
-    };
-    
-    if(MPCM_init(&customPowerModes) != MCAL_OK)
+    if(MPCM_init(&BASIC_CustomPowerModes) != MCAL_OK)
     {
         MCAL_error("Invalid MPCM configuration");
     }

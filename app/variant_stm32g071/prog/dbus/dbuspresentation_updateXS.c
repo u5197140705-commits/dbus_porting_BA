@@ -294,12 +294,7 @@ struct DBPL_EcuConfigReadResult DBPL_tGetEcuConfigReadResult(uint8_t objIdNumber
 }
 
 struct DBPL_SwSubmoduleReadResult DBPL_tGetSwSubmoduleReadResult(const uint8_t * const pucSwID, uint8_t objIdNumber)
-{   
-    // adapt parameters below according your requiremets
-    
-    /*lint -e818 Pointer parameter ... could be declared: pucSwID was not used */
-    (void)*pucSwID; 
-    
+{
     struct DBPL_SwSubmoduleReadResult obj = 
     {
         .status = DBPL_EcuStatusOK,
@@ -308,7 +303,7 @@ struct DBPL_SwSubmoduleReadResult DBPL_tGetSwSubmoduleReadResult(const uint8_t *
         .identificationObject =
         {
          .sw_version =
-            { /** \todo please specify id-string for your flex partition */
+            {
                 .ID       = {0,1,2,3,4,5,6,7},
                 .major    = {0x12, 0x34},
                 .minor    = {0x98, 0x76},
@@ -316,7 +311,7 @@ struct DBPL_SwSubmoduleReadResult DBPL_tGetSwSubmoduleReadResult(const uint8_t *
                 .build    = {0xab, 0xcd, 0xef, 0x01}
             },
          .sw_submodule_version = 
-            { /** \todo please specify id-string for your flex partition */
+            {
                 .ID       = {0,1,2,3,4,5,6,7},
                 .major    = {0x12, 0x34},
                 .minor    = {0x98, 0x76},
@@ -327,12 +322,67 @@ struct DBPL_SwSubmoduleReadResult DBPL_tGetSwSubmoduleReadResult(const uint8_t *
     };
     
 #ifdef VARIANT_PROGRAMMER
+    if (NULL == pucSwID) {}
+    (void)objIdNumber;
     obj.status = DBPL_EcuStatusUpdateModeActive; /*Programmer is running.*/
+    return obj;   //return dummy data
 #else
-    obj.status = DBPL_EcuStatusOK; /*Expected to be ok.*/
-#endif
+    const struct STDV_version bmVersion =
+    {
+        .ID = {0},
+        .major = {0},
+        .minor = {0},
+        .revision = {0},
+        .build = {0}
+    };
+    
+    uint8_t SwSubmoduleCount = 0;
+    enum MAL_ModuleEnum moduleID = MAL_NO_MODULE;
+    const struct STDV_version *swVersion = NULL;
+    const struct FWU_sw_version_s *subModuleVersion = NULL;
+    const struct MAL_ModuleHeader_s *appModuleHeader = BMMOD_GetMemModuleHeader(MAL_PRODUCT_APP1);
+    
+    //check module variant(BootManager, programmer, application)
+    /*lint -e{927,826}  cast from 'const uint8_t *const' (aka 'const unsigned char *const') to 'const struct STDV_idArray *' */
+    if(STDV_isIdEqual(&bmVersion, (const struct STDV_idArray *)pucSwID) == true)  //is BootManager
+    {
+        moduleID = MAL_PARTITION_TABLE;
+        
+        swVersion = &bmVersion;
+    }
+    else if(STDV_isIdEqual(&appModuleHeader->sw_version.version, (const struct STDV_idArray *)pucSwID) == true) // is application
+    {
+        moduleID = MAL_PRODUCT_APP1;
 
-    return obj;    
+        swVersion = &appModuleHeader->sw_version.version;
+    }
+    else
+    {
+
+    }
+
+    // fetch submodule version
+    if(moduleID != MAL_NO_MODULE)
+    {
+        SwSubmoduleCount = FWU_getSwSubmodCount(moduleID);
+        subModuleVersion = FWU_getSwSubmodVersion(moduleID, objIdNumber);
+    }
+
+    // copy version data
+    if(subModuleVersion != NULL)
+    {
+        obj.identificationObject.sw_submodule_version = subModuleVersion->version;
+
+        obj.identificationObject.sw_version = *swVersion;
+
+        obj.objCount = SwSubmoduleCount;
+    }
+    else
+    {
+        obj.status = DBPL_EcuStatusError;
+    }
+    return obj;
+#endif
 }
 
 #elif defined (DBUS2_PROD_MSG_IN_APP)
@@ -370,21 +420,69 @@ struct DBPL_EcuConfigReadResult DBPL_tGetEcuConfigReadResult(uint8_t objIdNumber
 /* typical FWU1 application with fwu production messages */
 struct DBPL_SwSubmoduleReadResult DBPL_tGetSwSubmoduleReadResult(const uint8_t * const pucSwID, uint8_t objIdNumber)
 {   
-    // adapt parameters below according your requirements
-    
-    /*lint -e818 Pointer parameter ... could be declared: pucSwID was not used */
-    (void)*pucSwID; 
-    
-    struct DBPL_SwSubmoduleReadResult dummy = 
+    struct DBPL_SwSubmoduleReadResult obj = 
     {
         .status = DBPL_EcuStatusOK,
         .objIdNumber   = objIdNumber,
-        .objCount      = 0x00u,
-        /* Axivion Next Line MisraC2012-9.3: "Provide explicit initializer for each part of initialized entity" */        
-        .identificationObject = {{{0}}}
+        .objCount      = 0x00u,        
+        .identificationObject =
+        {
+         .sw_version =
+            {
+                .ID       = {0,1,2,3,4,5,6,7},
+                .major    = {0x12, 0x34},
+                .minor    = {0x98, 0x76},
+                .revision = {0xfe, 0xdc},
+                .build    = {0xab, 0xcd, 0xef, 0x01}
+            },
+         .sw_submodule_version = 
+            {
+                .ID       = {0,1,2,3,4,5,6,7},
+                .major    = {0x12, 0x34},
+                .minor    = {0x98, 0x76},
+                .revision = {0xfe, 0xdc},
+                .build    = {0xab, 0xcd, 0xef, 0x01}
+            }
+        }
     };
+    
+    uint8_t SwSubmoduleCount = 0;
+    enum MAL_ModuleEnum moduleID = MAL_NO_MODULE;
+    const struct STDV_version *swVersion = NULL;
+    const struct FWU_sw_version_s *subModuleVersion = NULL;
+    const struct FWU_sw_version_s  *app_sw_version = FWU_getSoftwareVersion();;
+    
+    /*lint -e{927,826}  cast from 'const uint8_t *const' (aka 'const unsigned char *const') to 'const struct STDV_idArray *' */
+    if(app_sw_version != NULL)
+    {
+        if(STDV_isIdEqual(&app_sw_version->version, (const struct STDV_idArray *)pucSwID) == true)
+        {
+            moduleID = MAL_PRODUCT_APP1;
+            swVersion = &app_sw_version->version;
+        }
+    }
 
-    return dummy;    
+    // fetch submodule version
+    if(moduleID != MAL_NO_MODULE)
+    {
+        SwSubmoduleCount = FWU_getSwSubmodCount(moduleID);
+        subModuleVersion = FWU_getSwSubmodVersion(moduleID, objIdNumber);
+    }
+
+    // copy version data
+    if(subModuleVersion != NULL)
+    {
+        obj.identificationObject.sw_submodule_version = subModuleVersion->version;
+
+        obj.identificationObject.sw_version = *swVersion;
+
+        obj.objCount = SwSubmoduleCount;
+    }
+    else
+    {
+        obj.status = DBPL_EcuStatusError;
+    }
+    return obj;
 }
 
 #else

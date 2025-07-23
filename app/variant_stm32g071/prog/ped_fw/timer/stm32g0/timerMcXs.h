@@ -38,7 +38,7 @@ extern "C" {
 /******************************************************************************/
 #include "BSH_stdinc.h"
 #include "processor.h"
-#include "timerlib.h"
+
 
 
 /******************************************************************************/
@@ -53,7 +53,7 @@ extern "C" {
  */
 #ifdef USE_32BIT_HWTIMER
     #if defined(TIM2_CR1)
-        #define TIM_getDirectTimer32BitMicroseconds()    (uint32_t)(TIM2_CNT)
+        #define TIM_getDirectTimer32BitMicroseconds()   (uint32_t)(TIM2_CNT)
     #else
         #error "No 32bit HW timer source for this derivative!"
     #endif // TIM2_CR1
