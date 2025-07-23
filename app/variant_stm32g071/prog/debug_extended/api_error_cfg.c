@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2020 BSH Hausgeraete GmbH,
+ *  Copyright (c) 2017 BSH Hausgeraete GmbH,
  *  Carl-Wery-Str. 34, 81739 Munich, Germany, www.bsh-group.de
  *
  *  All rights reserved. This program and the accompanying materials
@@ -8,59 +8,61 @@
  *
  *******************************************************************************
  *  PROJECT          Generic SW
+ *  COMP_ABBREV      DBGX
  ******************************************************************************/
-
 
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
 /** \file
  *
- *  \ingroup  firmware_update
+ *  \ingroup   debug_extended
  *
- *  \brief    configuration file for user-defined handle function inside Programmer
+ *  \brief     Definitions and declarations of configuration part of the
+ *             debug_extended component: Exceptional error handling
  *
- *  \details  section shall be filled by developers
+ *  \details   See also FNG_DebugExtendedDataUsersManual.md
  */
-
 
 /******************************************************************************/
 /* INCLUDES                                                                   */
 /******************************************************************************/
+
 #include "bsh_stdinc.h"
-#include "firmware_update/Programmer/prog_user_task.h"
-//#include "watchdogtimer/watchdogtimer.h"
+#include "api_error_cfg.h"
+
+#ifdef DBGE_EXCEPTIONAL_ERROR_FUNCTIONS_ENABLED
 
 /******************************************************************************/
-/* PUBLIC DATA DEFINITIONS                                                   */
+/* PUBLIC DATA DEFINITIONS                                                    */
 /******************************************************************************/
 
+static DBGE_ErrorSolvingFunction_t DBGE_ErrorSolvingFunctions_Cfg[DBGE_LIMIT_OF_ERROR_SOLVING_FUNCTIONS];
+static uint8_t DBGE_NumberOfErrorSolvingFunctions = 0;
 
 /******************************************************************************/
 /* PUBLIC FUNCTION DEFINITIONS                                                */
 /******************************************************************************/
-bool PRG_bUserHandleTask(void)
-{
-    /*
-    BE CAREFUL!
-    - SIZE OF FUNCTION
-       User-specific code will inflate Programmer's size which may 
-       result in overlapping with other memory sections. In such cases 
-       enlargement of Programmer's reserved space might be needed.
-    - DURATION TIME OF FUNCTION
-       Be aware of keeping optimized code in user specific function. Not well
-       optimized user specific function can affect a runtime of Programmer.
-    - STATES OF FUNCTION
-       Be aware of fact that return values of user specific function are ignored.
-       The user specific function call is performed in simple endless loop unlike
-       a call in the scheduler.
-    */
-    
-    /*
-    Add user specific code there.
-    */
-    
-    //WDT_trigger();
 
-    return true; // return value is ignored in the Programmer's scheduler
+bool DBGX_registerErrorSolvingFunction(DBGE_ErrorSolvingFunction_t ErrorSolvingFunction)
+{
+    if(DBGE_NumberOfErrorSolvingFunctions < DBGE_LIMIT_OF_ERROR_SOLVING_FUNCTIONS)
+    {
+        DBGE_ErrorSolvingFunctions_Cfg[DBGE_NumberOfErrorSolvingFunctions] = ErrorSolvingFunction;
+        DBGE_NumberOfErrorSolvingFunctions ++;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
+
+
+void DBGE_init(void)
+{
+    DBGX_setErrorSolvingFunctions(DBGE_ErrorSolvingFunctions_Cfg, &DBGE_NumberOfErrorSolvingFunctions, DBGE_LIMIT_OF_ERROR_SOLVING_FUNCTIONS);
+}
+
+
+#endif // From: #ifdef DBGE_EXCEPTIONAL_ERROR_FUNCTIONS_ENABLED

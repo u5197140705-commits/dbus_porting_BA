@@ -17,8 +17,8 @@
 /**************************************************************************************************/
 /// \file Public User application specific definitions and declarations for scheduler
 
-#ifndef SCHEDULER_CFG_H
-#define SCHEDULER_CFG_H
+#ifndef SCHEDULER_CFG_H_
+#define SCHEDULER_CFG_H_
 
 
 /**************************************************************************************************/
@@ -59,6 +59,8 @@ typedef enum SCH_ModuleIDs
     #endif
 
         /*! place your project modules here */
+        MOD_ATSSB,          ///< module ID of Smart Sensor Bus application task
+        /* USER CODE END Include */
 
     #ifdef CCSS_DOM_REF
         MOD_CCDOM,          ///< module ID of SystemStates Domain Reference implementation. to be replaced with an application specific implementation.
@@ -93,16 +95,8 @@ typedef enum SCH_ModuleIDs
 /**************************************************************************************************/
 /* PUBLIC DEFINITIONS                                                                             */
 /**************************************************************************************************/
-#ifndef NDEBUG
-    // time monitoring active
-    #define SCH_ACTIVATE_DEBUG_MODE
-#endif
+#define SCH_ACTIVATE_DEBUG_MODE
 
-/** Definition activates the measurement of a task period and a jitter
- *  \note It takes an additional 20 bytes for each task, consider using DEBUG_SINGLE_MODULE
- */
-
-#define SCH_ACTIVATE_DEBUG_PERIOD
 
 /***************************************************************************************************
  * SELECT DEBUG MODE
@@ -112,15 +106,26 @@ typedef enum SCH_ModuleIDs
  * *************************************************************************************************
  * \note: Please select the desired Debug Mode below, 'DEBUG_SINGLE_MODULE' or 'DEBUG_ALL_MODULES'
  ***************************************************************************************************/
-#define DEBUG_MODE  DEBUG_SINGLE_MODULE       //< Select Debug Mode
+#define DEBUG_MODE  DEBUG_ALL_MODULES       //< Select Debug Mode
+
+
+/***************************************************************************************************
+ * SELECT MODULE ID for DEBUG_SINGLE_MODULE MODE
+ * *************************************************************************************************
+ * \brief: If DEBUG_SINGLE_MODULE mode is selected, the Module ID which needs to be debugged,
+ *         must be selected below
+ ***************************************************************************************************/
+#if(DEBUG_MODE == DEBUG_SINGLE_MODULE)
+#define DEBUG_MOD_ID                        //< Select Module ID, example MOD_TIM
+#endif
 
 
 /***************************************************************************************************
  * SELECT NUMBER OF TIMING SAMPLES
  * *************************************************************************************************
- * \brief: Number of timing samples for each module for mean calculation
-  ***************************************************************************************************/
-#define NUMBER_OF_SAMPLES   16U              //< Select number of samples
+ * \brief: Number of Timing Samples for each module to be saved, by default 3 samples!
+ ***************************************************************************************************/
+#define NUMBER_OF_SAMPLES   2U              //< Select number of samples
 
 
 /***************************************************************************************************

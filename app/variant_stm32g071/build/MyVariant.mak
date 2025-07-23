@@ -12,11 +12,24 @@
 #  Description      Application variant build file
 #*******************************************************************************
 
+# SSB specific config
+ssb_use_cpp_instead_of_c_api = true
+ssb_shared_spi_used = true
+
+
 # common components
-common_components = $(msp) dbus ped_fw firmware_update mem_utility stack_monitor dbus/DBal schedulers_bm/scheduler 
+common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug dbus/DBal
+
+ifeq ($(ssb_build_variant),bms)
+    common_components += schedulers_bm/scheduler 
+endif
+
+ifeq ($(ssb_dbus_variant),dbuscan)
+    common_components += devices/dbuscan
+endif
 
 # list of included PED_FW subcomponents
-#ped_fw_subcomponent_list = basic stdcrc timer schedule utility watchdogtimer
+#ped_fw_subcomponent_list = basic timer schedule utility
 
 mcal_modules = $(mcal_supported_modules_$(platform))
 # If you need to reduce the size of the application, you can specify a subset of MCAL modules. Please note that some modules might not be available for your platform.
@@ -24,11 +37,25 @@ mcal_modules = $(mcal_supported_modules_$(platform))
 # mcal_modules = mpcm mdio muart mexti msup mwdt mtim madc mi2c mspi mdma mdac
 
 # external components
-ext_components = 
+ext_components = ssb
 
+ifeq ($(ssb_build_variant),rtos)
+    ext_components += rtos
+endif
+
+ifeq ($(ssb_shared_spi_used),true)
+    ext_components += services bsp
+    ext_components += bsp
+
+    dbuscan_with_bbl_spi = true
+endif
+
+dbus_uart_channel = 1
+HEAPSIZE ?= 10
+search_path += ext
 
 # application specific components
-app_components = 
+app_components = /../../ATSSB
 
 
 # translation units not related to a component
@@ -44,7 +71,7 @@ defines +=
 
 
 # additional search paths
-search_path += 
+search_path += $(app_path)/../ATSSB
 
 
 # Version settings (needed for ModuleHeader)
@@ -61,4 +88,7 @@ release_note     = "Make short hint for this release"
 #Vectorcast_Related_variables
 dyntconfig_project_template_use   ?= FALSE
 dyntconfig_project_startup_use    ?= FALSE
+
+#debug component
+dbgx_activated_filters += DBGX_FILTERS_SSB DBGX_FILTERS
 

@@ -1,0 +1,25 @@
+{
+    "dbgx_filters":[
+        {
+            "domain": "DBGX_FILTERS",
+            
+            "__comments__":[
+                "This file is the central place to configure all static and dynamic filters of the debug_extended component.   ",
+                "There are two filter types ",
+                "  - static filter:  def / undef",
+                "  - dynamic filter: on  / off"
+            ],
+            
+            "level":[
+                ["ERR"  , "undef" , "off", "This field is optional for comments"],
+                ["WARN" , "undef" , "off", "This field is optional for comments"],
+                ["INFO" , "undef" , "off", "This field is optional for comments"]
+            ],
+            
+            "scenario":[
+                ["DBGX_TOUCH" , "def"   , "on" , "This field is optional for comments"],
+                ["DBGX_POWER" , "undef" , "off", "This field is optional for comments"]
+            ]
+        }
+    ]
+}

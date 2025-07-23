@@ -19,6 +19,7 @@ Ozone Version : V3.26h
 **********************************************************************
 */
 void OnProjectLoad (void) {
+  Edit.SysVar (VAR_HSS_SPEED, 1000000);
   //
   // Dialog-generated settings
   //
@@ -28,7 +29,7 @@ void OnProjectLoad (void) {
   Project.SetTIFSpeed ("5 MHz");
   Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M0.svd");
   Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/ARMv6M.svd");
-  // 
+  //
   // User settings
   //
   Project.AddSvdFile ("$(ProjectDir)/svd/STM32G071.svd");
@@ -36,7 +37,7 @@ void OnProjectLoad (void) {
   //File.Open ("$(ProjectDir)/../../out/variant_stm32g071/romLoader/bin/romLoader.elf");
   File.Open ("$(ProjectDir)/../../out/variant_stm32g071/MyVariant/bin/MyVariant.elf");
 
-  Window.Add ("Watched Data 1", "RTD_TimeMonitor"); 
+  Window.Add ("Watched Data 1", "RTD_TimeMonitor");
   Window.Add ("Watched Data 1", "RTD_RuntimeCatalogue");
 }
 
