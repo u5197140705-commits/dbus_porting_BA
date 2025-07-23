@@ -18,10 +18,14 @@ ssb_shared_spi_used = true
 
 
 # common components
-ifeq ($(ssb_build_variant),rtos)
-    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug dbus/DBal
-else
-    common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug schedulers_bm/scheduler dbus/DBal
+common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug dbus/DBal
+
+ifeq ($(ssb_build_variant),bms)
+    common_components += schedulers_bm/scheduler 
+endif
+
+ifeq ($(ssb_dbus_variant),dbuscan)
+    common_components += devices/dbuscan
 endif
 
 # list of included PED_FW subcomponents
@@ -33,21 +37,19 @@ mcal_modules = $(mcal_supported_modules_$(platform))
 # mcal_modules = mpcm mdio muart mexti msup mwdt mtim madc mi2c mspi mdma mdac
 
 # external components
+ext_components = ssb
+
 ifeq ($(ssb_build_variant),rtos)
-    ifeq ($(ssb_shared_spi_used),true)
-        ext_components = rtos ssb services bsp
-    else
-        ext_components = rtos ssb
-    endif
-else
-    ifeq ($(ssb_shared_spi_used),true)
-        ext_components = ssb services bsp
-    else
-        ext_components = ssb
-    endif
+    ext_components += rtos
 endif
 
-dbus_mapping = mcal
+ifeq ($(ssb_shared_spi_used),true)
+    ext_components += services bsp
+    ext_components += bsp
+
+    dbuscan_with_bbl_spi = true
+endif
+
 dbus_uart_channel = 1
 HEAPSIZE ?= 10
 search_path += ext
