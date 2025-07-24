@@ -37,16 +37,18 @@ core_clock ?= 64
 pclock ?= 64
 
 # communication configuration
-dbus_mapping ?= mcal
 ifeq ($(ssb_dbus_variant),dbuscan)
     dbus_mapping = dbuscan
-endif    
+else
+    dbus_mapping = mcal
+endif
+
 UDA                  ?= UDA-01
 dbus_node_address     = 1
 dbus_default_baudrate = 96
 TESTMSGSRV_SUBNODE_ADDRESS = 10
 
-ifeq ($(dbus_mapping), ssb_dbus_variant) 
+ifeq ($(ssb_dbus_variant), dbuscan) 
     dbus_uart_channel     = #DBusCAN chip is used instead, configure its communication channel settings in app/<project>/prog/devices/dbuscan/<platform>/dbuscan_drv_cfg.c
     dbus_tx_pin           = #DBUS pin of DBusCAN chip is used instead
     dbus_rx_pin           = #DBUS pin of DBusCAN chip is used instead
@@ -59,9 +61,6 @@ endif
 
 # firmware update type (FWU1 / FWU3)
 FW_update_type = FWU1
-
-# flex partition table settings (ENABLED / DISABLED)
-fwu_flex_partition_used = DISABLED
 
 # functional safety settings (ENABLED / DISABLED)
 feature_functional_safety ?= DISABLED

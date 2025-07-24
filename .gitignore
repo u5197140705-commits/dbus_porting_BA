@@ -96,3 +96,6 @@ ozone/*
 !ozone/variant_stm32h723/variant_stm32h723.jdebug
 !ozone/variant_stm32l471/svd/STM32L4x1.svd
 !ozone/variant_stm32l471/variant_stm32l471.jdebug
+
+# ignore vscode
+.vscode/**/*

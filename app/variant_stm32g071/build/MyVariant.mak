@@ -50,6 +50,7 @@ ifeq ($(ssb_shared_spi_used),true)
     dbuscan_with_bbl_spi = true
 endif
 
+
 dbus_uart_channel = 1
 HEAPSIZE ?= 10
 search_path += ext

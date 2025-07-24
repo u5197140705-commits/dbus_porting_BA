@@ -40,16 +40,18 @@ ext_osc ?= 8
 
 
 # communication configuration
-dbus_mapping ?= mcal
-ifeq ($(ssb_dbus_variant),dbuscan)
-    dbus_mapping = dbuscan
-endif    
+ifeq ($(ssb_dbus_variant), dbuscan) 
+    dbus_mapping = dbuscan   
+else
+    dbus_mapping = mcal
+endif
+
 UDA                  ?= UDA-01
 dbus_node_address     = 1
 dbus_default_baudrate = 96
 TESTMSGSRV_SUBNODE_ADDRESS = 10
 
-ifeq ($(dbus_mapping), ssb_dbus_variant) 
+ifeq ($(ssb_dbus_variant), dbuscan) 
     dbus_uart_channel     = #DBusCAN chip is used instead, configure its communication channel settings in app/<project>/prog/devices/dbuscan/<platform>/dbuscan_drv_cfg.c
     dbus_tx_pin           = #DBUS pin of DBusCAN chip is used instead
     dbus_rx_pin           = #DBUS pin of DBusCAN chip is used instead
