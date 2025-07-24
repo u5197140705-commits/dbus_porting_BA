@@ -12,7 +12,7 @@
 #  Description      Common build settings for all variants
 #*******************************************************************************
 
-#SSB config, uncomment if RTOS used. Else baremetal scheduler used
+#SSB config
 ssb_build_variant ?= bms
 ssb_dbus_variant ?= mcal
 
@@ -39,8 +39,6 @@ pclock ?= 64
 # communication configuration
 ifeq ($(ssb_dbus_variant),dbuscan)
     dbus_mapping = dbuscan
-else
-    dbus_mapping = mcal
 endif
 
 UDA                  ?= UDA-01

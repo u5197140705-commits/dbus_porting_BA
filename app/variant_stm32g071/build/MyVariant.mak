@@ -17,7 +17,7 @@ ssb_use_cpp_instead_of_c_api = true
 ssb_shared_spi_used = true
 
 # common components
-common_components = $(msp) MSP/mcal dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug dbus/DBal
+common_components = $(msp) dbus ped_fw firmware_update stack_monitor mem_utility debug_extended debug MSP/mcal dbus/DBal
 
 ifeq ($(ssb_build_variant),bms)
     common_components += schedulers_bm/scheduler 
@@ -28,7 +28,7 @@ ifeq ($(ssb_dbus_variant),dbuscan)
 endif
 
 # list of included PED_FW subcomponents
-#ped_fw_subcomponent_list = basic timer schedule utility
+#ped_fw_subcomponent_list = basic stdcrc timer schedule utility watchdogtimer
 
 mcal_modules = $(mcal_supported_modules_$(platform))
 # If you need to reduce the size of the application, you can specify a subset of MCAL modules. Please note that some modules might not be available for your platform.
@@ -36,25 +36,21 @@ mcal_modules = $(mcal_supported_modules_$(platform))
 # mcal_modules = mpcm mdio muart mexti msup mwdt mtim madc mi2c mspi mdma mdac
 
 # external components
-ext_components = ssb
+ext_components = ssb services bsp
+
+search_path += ext
+HEAPSIZE ?= 10
 
 ifeq ($(ssb_build_variant),rtos)
     ext_components += rtos
 endif
 
-ifeq ($(ssb_shared_spi_used),true)
-    ext_components += services bsp
-    ext_components += bsp
-
-    ifeq ($(ssb_dbus_variant),dbuscan)
-        dbuscan_with_bbl_spi = true
-        dbus_uart_channel = 1
-        HEAPSIZE ?= 10
-        search_path += ext
-    endif
+ifeq ($(ssb_dbus_variant),dbuscan)
+    dbuscan_with_bbl_spi = true
 endif
 
-ifeq ($(ssb_dbus_variant),mcal)   
+ifeq ($(ssb_dbus_variant),mcal)
+    ssb_shared_spi_used = false
     dbus_mapping = mcal
     dbus_uart_channel = 1
 endif
