@@ -14,7 +14,7 @@
 
 #SSB config, uncomment if RTOS used. Else baremetal scheduler used
 ssb_build_variant ?= bms
-ssb_dbus_variant ?= mcal
+ssb_dbus_variant ?= dbuscan
 
 # build type (DEVELOP / RELEASE)
 # For more details refer to file common/build/help/make_variables.md
