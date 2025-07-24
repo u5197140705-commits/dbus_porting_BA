@@ -46,12 +46,20 @@ ifeq ($(ssb_shared_spi_used),true)
     ext_components += services bsp
     ext_components += bsp
 
-    dbuscan_with_bbl_spi = true
+    ifeq ($(ssb_dbus_variant),dbuscan)
+        dbuscan_with_bbl_spi = true
+        dbus_uart_channel = 1
+        HEAPSIZE ?= 10
+        search_path += ext
+    endif
 endif
 
-dbus_uart_channel = 1
-HEAPSIZE ?= 10
-search_path += ext
+ifeq ($(ssb_dbus_variant),mcal)   
+    dbus_mapping = mcal
+    dbus_uart_channel = 1
+endif
+
+
 
 # application specific components
 app_components = /../../ATSSB
