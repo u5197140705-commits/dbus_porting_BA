@@ -74,7 +74,7 @@ const struct MSPI_Channel DBCDRV_mspiChannel =
 
 #ifdef DBUSCAN_WITH_BBL_SPI
 // GPIO pin used as chip select for the DBusCAN chip
-const struct MDIO_Channel* DBCDRV_csPin = &MDIOA4;
+const struct MDIO_Channel* DBCDRV_csPin = &MDIOB7;
 #endif
 
 // GPIO pin used for the external interrupt from interrupt pin (nINT) of the DBusCAN chip
