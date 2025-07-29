@@ -54,7 +54,7 @@ union DBCDBUS_AddressList DBCDBUS_getAddressList(void)
         .addr0 = {cfg.NODE_ID, defaultSubsystMask}, // default DBus address
         /* In order to use also another DBus address than default one,
         e.g. to use address 0x21 replace following line like this: {2u, DBC_DBUS_NF_SUBSYS1_MASK},*/
-        .addr1  = {0, 0},
+        .addr1  = {1u, DBC_DBUS_NF_SUBSYS1_MASK},
         .addr2  = {0, 0},
         .addr3  = {0, 0},
         .addr4  = {0, 0},
