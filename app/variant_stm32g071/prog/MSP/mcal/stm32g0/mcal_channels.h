@@ -52,6 +52,7 @@ extern "C" {
 /* PUBLIC DATA DECLARATIONS FOR MDIO                                          */
 /******************************************************************************/
 
+#ifdef MCAL_MDIO_INCLUDED
 /* MDIO channels without alternate function */
 extern const struct MDIO_Channel MDIOA0;
 extern const struct MDIO_Channel MDIOA1;
@@ -384,7 +385,7 @@ extern const struct MDIO_Channel MDIOF10_MUART6_RX;
 extern const struct MDIO_Channel MDIOF12_MTIM15_CH1;
 extern const struct MDIO_Channel MDIOF13_MTIM15_CH2;
 
-
+#endif /* MCAL_MDIO_INCLUDED */
 
 /******************************************************************************/
 /* PUBLIC DATA DECLARATIONS FOR MEXTI                                         */

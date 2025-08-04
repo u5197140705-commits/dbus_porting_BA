@@ -37,6 +37,7 @@
 /* PUBLIC DATA DEFINITIONS FOR MDIO                                           */
 /******************************************************************************/
 
+#ifdef MCAL_MDIO_INCLUDED
 /* MDIO channels without alternate function */
 const struct MDIO_Channel MDIOA0 = {&MDIOA, MDIO_PIN0, MDIO_SCFG_DEFAULT};
 const struct MDIO_Channel MDIOA1 = {&MDIOA, MDIO_PIN1, MDIO_SCFG_DEFAULT};
@@ -369,6 +370,7 @@ const struct MDIO_Channel MDIOF10_MUART6_RX = {&MDIOF, MDIO_PIN10, MDIO_SCFG(MDI
 const struct MDIO_Channel MDIOF12_MTIM15_CH1 = {&MDIOF, MDIO_PIN12, MDIO_SCFG(MDIO_AF1, MDIO_SPEED_DEFAULT)};
 const struct MDIO_Channel MDIOF13_MTIM15_CH2 = {&MDIOF, MDIO_PIN13, MDIO_SCFG(MDIO_AF1, MDIO_SPEED_DEFAULT)};
 
+#endif /* MCAL_MDIO_INCLUDED */
 
 /******************************************************************************/
 /* PUBLIC DATA DEFINITIONS FOR MEXTI                                          */

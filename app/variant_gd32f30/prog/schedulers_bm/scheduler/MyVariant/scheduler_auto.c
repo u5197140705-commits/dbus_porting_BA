@@ -26,6 +26,7 @@
 #include "scheduler_types.h"
 
 #include "ssb_task.h"
+#include "cml/cml.h"
 #include "dbus/bal.h"
 #include "dbus/dbuspresentation.h"
 #include "dbusdll.h"
@@ -52,6 +53,7 @@
  * \note: No Circular Dependencies allowed
  ***************************************************************************************************/
 const TaskID SSBF_dep[]	= {DEP_SSBF	END_STAMP};
+const TaskID CML_dep[]	= {DEP_CML	END_STAMP};
 const TaskID BAL_dep[]	= {DEPLIB_BAL	END_STAMP};
 const TaskID DBPL_dep[]	= {DEPLIB_DBPL	END_STAMP};
 const TaskID DLL_dep[]	= {DEPLIB_DLL	END_STAMP};
@@ -84,6 +86,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
     .TasksList =
     {
         {MOD_SSBF, HIGH_PRIORITY},
+        {MOD_CML, LOW_PRIORITY},
         {MOD_BAL, HIGH_PRIORITY},
         {MOD_DBPL, HIGH_PRIORITY},
         {MOD_DLL, LOW_PRIORITY},
@@ -109,6 +112,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
     .TaskHandlersList =
     {
         [MOD_SSBF] = SSBF_handleTask,
+        [MOD_CML] = CML_HandleTask,
         [MOD_BAL] = BAL_HandleTask,
         [MOD_DBPL] = DBPL_HandleTask,
         [MOD_DLL] = DLL_HandleTask,
@@ -134,6 +138,7 @@ struct SCH_ProjectInventory SCH_DefaultProjectCatalogue =
     .DependenciesList =
     {
         [MOD_SSBF] = SSBF_dep,
+        [MOD_CML] = CML_dep,
         [MOD_BAL] = BAL_dep,
         [MOD_DBPL] = DBPL_dep,
         [MOD_DLL] = DLL_dep,

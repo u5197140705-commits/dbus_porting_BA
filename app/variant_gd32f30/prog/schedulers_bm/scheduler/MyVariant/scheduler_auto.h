@@ -32,6 +32,7 @@
 typedef enum SCH_ModuleIDs
 {
     MOD_SSBF,
+    MOD_CML,
     MOD_BAL,
     MOD_DBPL,
     MOD_DLL,

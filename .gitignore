@@ -80,19 +80,30 @@ uv/*
 !uv/Templates/uvision_template.ini
 
 # ignore dynamically generated Ozone (Segger ozone debugger) files
-ozone/*
-# except the following files
+ozone/variant_efr32bg21/*
 !ozone/variant_efr32bg21/svd/EFR32BG21A010F1024IM32.svd
 !ozone/variant_efr32bg21/variant_efr32bg21.jdebug
+ozone/variant_gd32f30/*
+!ozone/variant_gd32f30/
+!ozone/variant_gd32f30/variant_gd32f30.jdebug
+ozone/variant_mkv56f1/*
 !ozone/variant_mkv56f1/svd/MKV56F24.xml
 !ozone/variant_mkv56f1/variant_mkv56f1.jdebug
+ozone/variant_ra4m2/*
 !ozone/variant_ra4m2/svd/R7FA4M2AD.svd
 !ozone/variant_ra4m2/variant_ra4m2.jdebug
+ozone/variant_stm32g071/*
 !ozone/variant_stm32g071/svd/STM32G071.svd
 !ozone/variant_stm32g071/variant_stm32g071.jdebug
+ozone/variant_stm32g474/*
 !ozone/variant_stm32g474/svd/STM32G474xx.svd
 !ozone/variant_stm32g474/variant_stm32g474.jdebug
+ozone/variant_stm32h723/*
 !ozone/variant_stm32h723/svd/STM32H723.svd
 !ozone/variant_stm32h723/variant_stm32h723.jdebug
+ozone/variant_stm32l471/*
 !ozone/variant_stm32l471/svd/STM32L4x1.svd
 !ozone/variant_stm32l471/variant_stm32l471.jdebug
+
+# ignore vscode
+.vscode/*

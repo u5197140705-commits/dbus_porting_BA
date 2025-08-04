@@ -36,19 +36,8 @@ extern "C" {
 /******************************************************************************/
 #include "bsh_stdinc.h"
 #include "IntTblArmCM.h"
-#include "int_prio.h"
 
 /*lint -esym(526,*IRQHandler,*ISR_HandleEvent,*vIsrHandle*) Warning 526: symbol 'xx' is not defined */
-
-/* uncomment if necessary */
-//#define PRIORITY_HIGH    INT_PRIO_0
-//#define PRIORITY_MEDIUM  INT_PRIO_1
-//#define PRIORITY_LOW     INT_PRIO_2
-#if defined(RTOS)
-#define PRIORITY_RTOS_SERVICES_LOW       INT_PRIO_2
-#define PRIORITY_RTOS_SERVICES_LOWEST    INT_PRIO_3    /* Reserved for RTOS */
-#define RTOS_SVCALL_IRQN_NAME            SVC_IRQn
-#endif
 
 /* Platfom specific IRQs - Stm32G030xx */
 #if defined (STM32G030)
@@ -303,9 +292,6 @@ extern void HTIM17_ISR_HandleEvent            (void);
 /* Function defined in the HSPI module - hspi01.lib (hspi01i.obj) */
 extern void HSPI0_vIsrHandleTxRxEvent         (void);
 extern void HSPI1_2_vIsrHandleTxRxEvent       (void);
-
-
-extern void ITBL_setCustomInterruptPriority   (void);
 
 #ifdef __cplusplus
 }

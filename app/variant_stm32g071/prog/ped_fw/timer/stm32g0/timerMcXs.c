@@ -30,9 +30,6 @@
 #ifdef MCAL_MPCM_INCLUDED
 #include "mcal/mpcm.h"
 #endif
-#if defined (PLATFORM_SUPPORTS_32BIT_HWTIMER)
-#include "timerMcXs.h" //32bit HW timer
-#endif //PLATFORM_SUPPORTS_32BIT_HWTIMER
 /*
     These macros ensure compatibility between Stm32G071xx and Stm32G081xx platforms.
 */
@@ -152,11 +149,6 @@ BOOL _TIM_bGetInitConfig(void)
 uint16_t TIM_uiGetCircleMicroSeconds(void)
 {
     return (uint16) (TIM2_CNT);
-}
-
-uint32_t TIM_u32GetCircleMicroSeconds(void)
-{
-   return (TIM2_CNT);
 }
 
 #else

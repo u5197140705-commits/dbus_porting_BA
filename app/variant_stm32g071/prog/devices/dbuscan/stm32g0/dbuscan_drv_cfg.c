@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2023 BSH Hausgeraete GmbH,
+ *  Copyright (c) 2022 BSH Hausgeraete GmbH,
  *  Carl-Wery-Str. 34, 81739 Munich, Germany, www.bsh-group.de
  *
  *  All rights reserved. This program and the accompanying materials
@@ -15,7 +15,7 @@
 /******************************************************************************/
 /* DOCUMENTATION                                                              */
 /******************************************************************************/
-/** \file     dbuscan_drv_cfg.c
+/** \file
  *
  *  \ingroup  dbuscan
  *
@@ -53,20 +53,15 @@ const struct MSPI_Config DBCDRV_mspiCfg =
     .misoPullResistor = MDIO_PULL_UP                 //do not modify
 };
 
-
 // SPI peripheral unit and pins used for communication with the DBusCAN chip
 const struct MSPI_Channel DBCDRV_mspiChannel =
 {
-    .scfg =
-    {
-        .remapMask = NO_REMAP
-    },
-    .mspi = &MSPI1,
-    .sclk = &MDIOB13_MSPI1_SCK,
-    .miso = &MDIOB14_MSPI1_MISO,
-    .mosi = &MDIOB15_MSPI1_MOSI,
+    .mspi = &MSPI2,
+    .sclk = &MDIOB8_MSPI2_SCK,
+    .miso = &MDIOB6_MSPI2_MISO,
+    .mosi = &MDIOB7_MSPI2_MOSI,
 #ifndef DBUSCAN_WITH_BBL_SPI
-    .cs   = &MDIOB7
+    .cs   = &MDIOB12
 #else
     .cs   = NULL // must be NULL here- separate channel @DBCDRV_csPin is used with BBL for the chip select pin
 #endif
@@ -74,13 +69,37 @@ const struct MSPI_Channel DBCDRV_mspiChannel =
 
 #ifdef DBUSCAN_WITH_BBL_SPI
 // GPIO pin used as chip select for the DBusCAN chip
-const struct MDIO_Channel* DBCDRV_csPin = &MDIOB7;
+const struct MDIO_Channel* DBCDRV_csPin = &MDIOB12;
 #endif
+
+#ifdef DBUSCAN_DMA_USED
+const struct MDMA_Periph DBCDRV_dmaPeriph = {&MDMA1_Descriptor};
+
+struct MDMA_Channel DBCDRV_dmaTxChannel =
+{
+    .desc = &MDMA1_CH1_Descriptor,
+    .scfg =
+    {
+        .priority    = MDMA_PRIORITY_LOW,
+        .eventSource = MDMA_EVENT_SOURCE_SPI2_TX
+    }
+};
+
+struct MDMA_Channel DBCDRV_dmaRxChannel =
+{
+    .desc = &MDMA1_CH2_Descriptor,
+    .scfg =
+    {
+        .priority    = MDMA_PRIORITY_LOW,
+        .eventSource = MDMA_EVENT_SOURCE_SPI2_RX
+    }
+};
+#endif // DBUSCAN_DMA_USED
 
 // GPIO pin used for the external interrupt from interrupt pin (nINT) of the DBusCAN chip
 const struct MEXTI_Channel* DBCDRV_getMextiChannel(void)
 {
-    return &MEXTIA3;
+    return &MEXTID3;
 }
 
 // Enable for programming chip EEPROM via DBCDRV_HandleTask()

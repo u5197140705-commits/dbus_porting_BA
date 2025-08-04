@@ -54,7 +54,7 @@
 #include "utility.h"
 #include "dbuspresentation.h"
 
-#if defined(SSBD_INCLUDED) && !defined(SSB_USE_CPP_INSTEAD_OF_C_API)
+#if defined(SSBD_INCLUDED) && !defined (SSB_USE_CPP_INSTEAD_OF_C_API)
 #include "dbus/msg_lists.h"
 #endif
 
@@ -71,8 +71,10 @@
 #ifdef CCSS/*SystemStates service.*/
 #include "CCCM_Dbus2PedFwMapping.h"
 #endif
-#ifdef RTOS
+#if defined (RTOS)
 #include "rtos_api.h"
+#elif defined (ZRTOS)
+#include "critical_section/zrtos_critical_section_api.h"
 #endif
 
 #ifdef DBAL_INCLUDED
@@ -134,6 +136,7 @@
 
 #ifdef RTOS
     static char BAL_cMutexName[4] = "BAL";
+/* Axivion Next Line MisraC2012-8.4: declaration for object definition [mutex_BAL] is in .c file */
     RTOS_MUTEX mutex_BAL =
     {
         .mutex_name = BAL_cMutexName,
@@ -156,7 +159,7 @@ const TbusObjectTable BAL_tBusObject[] = {
 #ifdef CCSS
  ,{CCCMTD_SUBSYS, (const void *)CCCMTD_RxObject, (const void *)CCCMTD_TxObject, &CCCMTD_NumberOfTxObjects, CCCMTD_TxFlags}
 #endif
-#if defined(SSBD_INCLUDED) && !defined(SSB_USE_CPP_INSTEAD_OF_C_API)
+#if defined(SSBD_INCLUDED) && !defined (SSB_USE_CPP_INSTEAD_OF_C_API)
  /* SSBD DBus message subsystem */
  ,{SSBD_SUBSYSTEM_ID, (const void *)SSBD_tReceiveObject, (const void *)SSBD_tTransmitObject, &SSBD_numberOfElementsInSubsystem, SSBD_transmitFlags}
 #endif
@@ -180,7 +183,7 @@ const uint8_t BAL_ucMaxMissingAckRetries = BAL_MAX_TRANSMISSION_RETRIES_AFTER_MI
 const uint8_t BAL_ucMaxNackRetries       = BAL_MAX_TRANSMISSION_RETRIES_AFTER_NEGATIVE_ACKNOWLEDGE; //!<A constant telling how many transmission attempts (retries) are made before giving up transmission of a message.
 #else // DBM_DBUSCAN
 /* With DBusCAN chip it is not possible to differentiate number of transmission retries based on (type of/ not) received ACK, therefore maximum number of retries is set as default */
-const uint8_t BAL_ucMaxTxRetries         = 16u; //!<A constant telling how many transmission attempts are made before giving up transmission of a message.
+const uint8_t BAL_ucMaxTxAttempts        = 16u; //!<A constant telling how many transmission attempts are made before giving up transmission of a message.
 #endif
 
 /**************************************************************************************************/
@@ -266,15 +269,19 @@ bool BAL_bIsIdentifierInRangeOfReceiveTable(TbusMessageIdentifier tMessageIdenti
 
 void BAL_vEnterCriticalSectionForSending(void)
 {
-#ifdef RTOS
+#if defined (RTOS)
     (void)RTOS_enterCriticalSection(&mutex_BAL);
+#elif defined (ZRTOS)
+    (void)ZRTOS_enterCriticalSection_dbusBalSend();
 #endif
 }
 
 
 void BAL_vExitCriticalSectionforSending(void)
 {
-#ifdef RTOS
+#if defined (RTOS)
     (void)RTOS_exitCriticalSection(&mutex_BAL);
+#elif defined (ZRTOS)
+    (void)ZRTOS_exitCriticalSection_dbusBalSend();
 #endif
 }

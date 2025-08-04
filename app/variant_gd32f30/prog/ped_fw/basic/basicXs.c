@@ -26,18 +26,24 @@
 #include "basic.h"
 #include "watchdogtimer/watchdogtimer.h"
 
+#if defined (SYSTICK_TIMER_INCLUDED)
+    #include "systick.h"
+#endif
+
 #if defined(RTOS)
     #include "os/rtos_kernel_enter.h"
     #if defined(RTOS_MODE_DEBUG)
         #include "timerlib.h"
     #endif
+#elif defined (ZRTOS)
+    #include "os_port/osp_fwToOs.h"
 #elif defined(SCHEDULER_OLD)
     #include "schedule/schedDef.h"
 #elif defined(SCHEDULER)
     #include "scheduler/scheduler.h"  // New Scheduler
 #else
     #error "No Scheduler defined"
-#endif
+#endif // defined(RTOS)
 
 #ifdef REMOTE_FIRMWARE_UPDATE
     #include "firmware_update/mal/moduleAdministration.h"
@@ -60,12 +66,20 @@
 void BASIC_vUsrInitAppl (void)
 {
     /* Do any pre initialization here: ...*/
+#if defined(SYSTICK_TIMER_INCLUDED)
+    (void)SysTick_Init();
+#endif
 #if defined(REMOTE_FIRMWARE_UPDATE)
     (void)MAL_writeFirmwareIDs();
 #endif
 
+    // Calls TIM_bHandleTask16 early to avoid HardFaults if circular timer is used before scheduler.
+    TIM_initializeModule();
+
 #if defined(RTOS)
     /* RTOS Initializations */
+#elif defined (ZRTOS)
+    /* ZRTOS Initializations */
 #elif defined(SCHEDULER_OLD)
     SCH_vSetMainStateTable(MainTaskTbl); // register tasks with allotted priorities
 #elif defined(SCHEDULER)
@@ -94,10 +108,9 @@ void BASIC_vUsrInitAppl (void)
 void BASIC_vUsrSchedTasks (void)
 {
 #if defined(RTOS)
-    #if defined(RTOS_MODE_DEBUG)
-        (void)TIM_handleTask16(); /* Early initialization of timerlib required for tx_execution_profile. */
-    #endif
     RTOS_kernel_entry();
+#elif defined (ZRTOS)
+    OSP_startOS();
 #elif defined SCHEDULER_OLD
     (void)SCH_bHandleTask(); // handle project tasks
 #else

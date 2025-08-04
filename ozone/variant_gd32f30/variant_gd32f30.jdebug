@@ -4,12 +4,12 @@
 *                         www.segger.com                             *
 **********************************************************************
 
-File          : ./rtos_ref_project/ozone/variant_stm32g071/variant_stm32g071.jdebug
-Created       : 5 Jun 2023 08:00
-Ozone Version : V3.26h
+File          : ./ssb_ref_project/ozone/variant_gd32f30/variant_gd32f30.jdebug
+Created       : 29 Jul 2025 09:23
+Ozone Version : V3.38
 */
 
-/*********************************************************************
+/**********************************************************************
 *
 *       OnProjectLoad
 *
@@ -19,26 +19,21 @@ Ozone Version : V3.26h
 **********************************************************************
 */
 void OnProjectLoad (void) {
-  Edit.SysVar (VAR_HSS_SPEED, 1000000);
   //
   // Dialog-generated settings
   //
-  Project.SetDevice ("STM32G071CB");
+  Project.AddPathSubstitute ("C:/projects/ssb_ref_project/ozone/variant_gd32f30", "$(ProjectDir)");
+  Project.AddPathSubstitute ("c:/projects/ssb_ref_project/ozone/variant_gd32f30", "$(ProjectDir)");
+  Project.SetDevice ("GD32F303CB");
   Project.SetHostIF ("USB", "");
   Project.SetTargetIF ("SWD");
-  Project.SetTIFSpeed ("5 MHz");
-  Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M0.svd");
-  Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/ARMv6M.svd");
+  Project.SetTIFSpeed ("50 MHz");
+  Project.AddSvdFile ("$(InstallDir)/Config/CPU/Cortex-M4F.svd");
+  Project.AddSvdFile ("$(InstallDir)/Config/Peripherals/ARMv6M.svd"); 
   //
   // User settings
   //
-  Project.AddSvdFile ("$(ProjectDir)/svd/STM32G071.svd");
-
-  //File.Open ("$(ProjectDir)/../../out/variant_stm32g071/romLoader/bin/romLoader.elf");
-  File.Open ("$(ProjectDir)/../../out/variant_stm32g071/MyVariant/bin/MyVariant.elf");
-
-  Window.Add ("Watched Data 1", "RTD_TimeMonitor");
-  Window.Add ("Watched Data 1", "RTD_RuntimeCatalogue");
+  File.Open ("$(ProjectDir)/../../out/variant_gd32f30/MyVariant/bin/MyVariant.elf");
 }
 
 /*********************************************************************
@@ -181,7 +176,7 @@ void AfterTargetReset (void) {
 */
 void TargetDownload (void) 
 {
-   Exec.Download("$(ProjectDir)/../../out/variant_stm32g071/MyVariant/bin/MyVariant.hex");
+    Exec.Download("$(ProjectDir)/../../out/variant_gd32f30/MyVariant/bin/MyVariant.hex");
 }
 
 /*********************************************************************
@@ -243,10 +238,8 @@ void AfterTargetDownload (void) {
 *
 **********************************************************************
 */
-void AfterTargetHalt (void) 
-{
-  // RTOS_SaveTraceBufferToFile();
-}
+//void AfterTargetHalt (void) {
+//}
 
 /*********************************************************************
 *
@@ -334,24 +327,25 @@ void AfterTargetHalt (void)
 **********************************************************************
 */
 void _SetupTarget(void) {
-  //
-  // this function is intentionally empty because both inital PC and
-  // initial SP were chosen not to be set
-  //
-}
+  unsigned int SP;
+  unsigned int PC;
+  unsigned int VectorTableAddr;
 
-/*********************************************************************
-*
-*       RTOS_SaveTraceBufferToFile
-*
-* Function description
-*   Routine to store the RTOS_traceBuffer (snapshot) in to RTOS_trace_data.bin file.
-*   The RTOS_trace_data.bin can be used with Percepio Tracealyser.
-*
-**********************************************************************
-*/
-void RTOS_SaveTraceBufferToFile(void)
-{
-  Target.SaveMemory("$(ProjectDir)/Traces/RTOS_trace_data.bin", Elf.GetExprValue ("RTOS_traceBuffer"), Elf.GetExprValue ("sizeof(RTOS_traceBuffer)"));
+  VectorTableAddr = Elf.GetBaseAddr();
+  //
+  // Set up initial stack pointer
+  //
+  SP = Target.ReadU32(VectorTableAddr);
+  if (SP != 0xFFFFFFFF) {
+    Target.SetReg("SP", SP);
+  }
+  //
+  // Set up entry point PC
+  //
+  PC = Elf.GetEntryPointPC();
+  if (PC != 0xFFFFFFFF) {
+    Target.SetReg("PC", PC);
+  } else {
+    Util.Error("Project script error: failed to set up entry point PC", 1);
+  }
 }
-

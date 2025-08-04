@@ -47,10 +47,6 @@ MEMORY
   ROM_FDRV (rwx) : ORIGIN = RAM1_END+1,  LENGTH = 0x800
 
 
-#ifdef FWU_FLEX_PARTITION_START
-  FLEX_PARTITION (rx) : ORIGIN = FWU_FLEX_PARTITION_START, LENGTH = FWU_FLEX_PARTITION_SIZE
-#endif
-
 #ifdef FWU_OTP_MEMORY_START_ADDRESS
   OTP_MEMORY (rx) : ORIGIN = FWU_OTP_MEMORY_START_ADDRESS, LENGTH = FWU_OTP_MEMORY_SIZE
 #endif
@@ -78,14 +74,6 @@ SECTIONS
 #endif
 
 
-#ifdef FWU_FLEX_PARTITION_START
-    .flexpartition :
-    {
-        KEEP(*(.FWU_FLEX_PARTITION_HEADER))
-        KEEP(*(.FWU_FLEX_PARTITION))
-    } > FLEX_PARTITION
-#endif
-
 #ifdef FWU_OTP_MEMORY_START_ADDRESS
     .fwu_otp_memory :
     {
@@ -99,7 +87,6 @@ SECTIONS
         KEEP(*(.FWU_SW_MODULE_HEADER))
         *IntTblArmCM.o(.text*)
         *StdCrc.o(.text*)
-        *hsupArmCM.o(.text*)
         . = VTOR_ALIGN;
 #endif
         KEEP(*(.vectorsCore))
@@ -154,10 +141,12 @@ SECTIONS
     __exidx_start = .;
     .ARM.exidx :
     {
+        . = ALIGN(4);
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
     } > ROM1
     __exidx_end = .;
 
+    . = ALIGN(4);
     __etext = .;
 
     .no_init (NOLOAD) :
