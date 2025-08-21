@@ -1,5 +1,6 @@
 #include "dbus_config.h"
-#include "dbus_app_layer.h" // For DBAL_ReceiveObject, DBALCR_ParticipantType
+#include "dbus_app_layer.h" // Now contains DBAL_ReceiveObject, DBALCR_ParticipantType
+#include <zephyr/sys/printk.h> // For printk
 
 // Placeholder for DBAL_ObjectTable and DBAL_ObjectTableSize
 // In a real application, this table would be populated with actual service objects.

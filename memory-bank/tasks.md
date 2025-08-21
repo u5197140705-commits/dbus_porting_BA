@@ -26,6 +26,9 @@ Initialize a new memory bank according to README.md, one goal is to convert the 
 - [x] Integrate CAN abstraction with DBus driver.
 - [x] Adapt `DBal_cfg.c` to Zephyr configuration.
 - [x] Finalize integration and testing (updated `main.c` for basic test).
+- [x] Add missing definitions/macros to `dbus_app_layer.h` and `dbus_config.h`.
+- [x] Update `dbus_config.c` includes.
+- [x] Create `memory-bank/porting_protocol_detailed.md`.
 - [x] Create `zephyr_dbus_driver/inc/can_abstraction.h`.
 - [x] Create `zephyr_dbus_driver/src/can_abstraction.c`.
 - [x] Update `zephyr_dbus_driver/CMakeLists.txt` to include `can_abstraction.c`.

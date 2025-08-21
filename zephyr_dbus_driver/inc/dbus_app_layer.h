@@ -5,12 +5,100 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// Define uchar for compatibility with original code
+typedef unsigned char uchar;
+
 // Forward declaration for internal instance structure, if needed
 // Define some constants from the original DBAL for Zephyr porting
 #define DBAL_MAX_MSGS2REPEAT        10U // Example value, adjust as needed
 #define DBAL_DBUS_RETRY_MAX         3U  // Example value, adjust as needed
 #define DBAL_RESPONSE_TIME_MS       100 // Example value, adjust as needed
 #define DBAL_DBUS_RECOVERY_TIME_MS  500 // Example value, adjust as needed
+
+// Define message index constants (from original bustypes.h or similar)
+#define DBAL_MSG_INDEX_APP_LAYER_CONNECTION 0U
+#define DBAL_MSG_INDEX_APP_LAYER_REQUEST    1U
+#define DBAL_MSG_INDEX_APP_LAYER_RESPONSE   2U
+#define DBAL_MSG_INDEX_CROSS_OFFSET         3U // Offset for cross-connection messages
+#define DBAL_MSG_INDEX_APP_LAYER_CROSS_CON  (DBAL_MSG_INDEX_APP_LAYER_CONNECTION + DBAL_MSG_INDEX_CROSS_OFFSET)
+#define DBAL_MSG_INDEX_APP_LAYER_CROSS_REQ  (DBAL_MSG_INDEX_APP_LAYER_REQUEST + DBAL_MSG_INDEX_CROSS_OFFSET)
+#define DBAL_MSG_INDEX_APP_LAYER_CROSS_RESP (DBAL_MSG_INDEX_APP_LAYER_RESPONSE + DBAL_MSG_INDEX_CROSS_OFFSET)
+#define DBAL_MSG_INDEX_COUNT                6U // Total number of message indices
+
+// Define offsets within the DBus frame (from original BshDBus2AppLayer.c comments)
+#define DBAL_MSG_SENDER                     0U
+#define DBAL_MSG_PROTOCOL_TYPE              1U
+#define DBAL_MSG_SEQID                      2U
+#define DBAL_CON_MSG_TYPE                   2U
+#define DBAL_CON_MSG_PROTOCOL_VERSION       3U
+#define DBAL_CON_MSG_LEN                    4U // Length of connection message
+
+#define DBAL_FRAME_PAYLOADLEN               1U
+#define DBAL_FRAME_SERVICE_ID_HI            2U
+#define DBAL_FRAME_SERVICE_ID_LO            3U
+#define DBAL_FRAME_COMMAND_ID_HI            4U
+#define DBAL_FRAME_COMMAND_ID_LO            5U
+#define DBAL_FRAME_DATA_OFFSET              6U // Offset to actual data in a DBAL frame
+
+#define BYTE_SIZE                           8U // For bit shifting
+
+// Placeholder for DBAL_LAST_MSG2REPEAT (from original BshDBus2AppLayer.c)
+#define DBAL_LAST_MSG2REPEAT                (DBAL_MAX_MSGS2REPEAT - 1U)
+
+// Placeholder for DBAL_BUFFER_SIZE (from original BshDBus2AppLayer.c)
+#define DBAL_BUFFER_SIZE                    128U // Example buffer size, adjust as needed
+
+// Placeholder for DLL_ACK_STATUS values (from original dbusdll.h or similar)
+#define DLL_ACK_NOT_RECEIVED                0U
+#define DLL_ACK_OK                          1U
+// Add other DLL_ACK_STATUS values as needed (e.g., DLL_ACK_BUSY, DLL_ACK_WRONG, DLL_ACK_TRANSMISSION_ABORTED)
+
+// Placeholder for DBAL_ConnectionSmEvent (from original BshDBus2AppLayer_internal.h or similar)
+enum DBAL_ConnectionSmEvent {
+    DBAL_CON_SM_EVENT_ENABLE_REQUEST,
+    DBAL_CON_SM_EVENT_ACCEPT,
+    DBAL_CON_SM_EVENT_DISABLE_REQUEST,
+    DBAL_CON_SM_EVENT_DISABLE_SILENT,
+    DBAL_CON_SM_EVENT_REJECT,
+    DBAL_CON_SM_EVENT_TEMP_ENABLE_REQUEST,
+    DBAL_CON_SM_EVENT_TEMP_DISABLE_REQUEST
+};
+
+// Placeholder for DBAL_Dbus2FrameType (from original BshDBus2AppLayer_internal.h or similar)
+enum DBAL_Dbus2FrameType {
+    DBAL_DBUS2_FRAME_TYPE_REQ,
+    DBAL_DBUS2_FRAME_TYPE_RESP,
+    DBAL_DBUS2_FRAME_TYPE_CON,
+    DBAL_DBUS2_FRAME_TYPE_UNKNOWN
+};
+
+// Placeholder for DBAL_Msgs2RepeatStatus (from original BshDBus2AppLayer_internal.h or similar)
+enum DBAL_Msgs2RepeatStatus {
+    DBAL_MSG2REPEAT_NONE,
+    DBAL_MSG2REPEAT_EXIST
+};
+
+// Placeholder for DBAL_CODE_SEC_TASK and other code section masks
+#define DBAL_CODE_SEC_TASK                  0x01U
+#define DBAL_CODE_SEC_REQ_RESP_POST         0x02U
+#define DBAL_CODE_SEC_CR_REQ_RESP_POST      0x04U
+#define DBAL_CODE_SEC_REP_TIMER             0x08U
+
+// Placeholder for DBAL_ConnectionState (from original IoConnectionHandling.h or similar)
+enum DBAL_ConnectionState {
+    DBAL_CONNECTIONSTATE_DISCONNECTED,
+    DBAL_CONNECTIONSTATE_CONNECTING,
+    DBAL_CONNECTIONSTATE_CONNECTED,
+    DBAL_CONNECTIONSTATE_DISCONNECTING
+};
+
+// Placeholder for DBALCR_ParticipantType (from original BshDBus2AppLayerCross.h)
+enum DBALCR_ParticipantType
+{
+    DBALCR_PART_TYPE_NONE,
+    DBALCR_PART_TYPE_CLIENT,
+    DBALCR_PART_TYPE_SERVER
+};
 
 // Forward declaration for internal instance structure
 struct dbal_instance;
