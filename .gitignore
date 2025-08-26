@@ -1,6 +1,7 @@
 # ignore out folder and sub-folder
 out/
 lib/
+zephyrproject/
 
 # ignore dynamicaly generated header files in App folder
 app/variant_efr32bg21/prog/build_date.h
