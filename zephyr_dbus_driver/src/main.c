@@ -1,9 +1,9 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include "dbus_app_layer.h" // Include the ported DBus Application Layer
-#include "can_abstraction.h" // Include the CAN abstraction layer
+#include "spi_abstraction.h" // Include the SPI abstraction layer
 
-void main(void)
+int main(void)
 {
     printk("Hello from Zephyr DBus Driver project!\n");
 
@@ -26,4 +26,5 @@ void main(void)
     while (1) {
         k_sleep(K_SECONDS(10));
     }
+    return 0;
 }

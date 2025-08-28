@@ -1,0 +1,25 @@
+&flexcomm0 {
+    compatible = "nxp,lpc-flexcomm"; // Revert to original compatible
+    status = "okay";
+    #address-cells = <2>; // Explicitly set for children
+    #size-cells = <1>; // Explicitly set for children
+
+    spi0: spi@0 {
+        compatible = "nxp,lpc-spi"; // Add compatible for the SPI sub-node
+    spi0: spi@0 {
+        compatible = "nxp,lpc-spi"; // Add compatible for the SPI sub-node
+    spi0: spi@0 {
+        compatible = "nxp,lpc-spi"; // Add compatible for the SPI sub-node
+        reg = <0x0 0x1000>; // Offset 0, size 0x1000 within flexcomm0 (1 address cell, 1 size cell)
+        label = "SPI_0";
+        cs-gpios = <&hsgpio0 0 GPIO_ACTIVE_LOW>; // GPIO[0] as CS
+    };
+};
+
+&pinctrl {
+    spi0_default: spi0_default {
+        group-0 {
+            slew-rate = "normal"; // Set slew-rate to an allowed enum value
+        };
+    };
+};

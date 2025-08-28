@@ -1,7 +1,10 @@
 #include "dbus_app_layer.h"
-#include "can_abstraction.h" // Include the CAN abstraction layer
+#include "spi_abstraction.h" // Include the SPI abstraction layer
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/autoconf.h> // Explicitly include autoconf.h for Kconfig options
+#include <zephyr/arch/cpu.h> // Explicitly include for architecture-specific definitions like ARCH_STACK_PTR_ALIGN
+#include <zephyr/arch/arm/arch.h> // Explicitly include for ARM architecture-specific definitions like ARCH_STACK_PTR_ALIGN
 #include <string.h> // For memset, memcpy
 
 // Internal structure for a message to be repeated
@@ -91,8 +94,8 @@ static void dbal_handle_con_msg(struct dbal_instance* const inst, uint8_t con_ms
 static bool dbal_call_service_callback(const struct dbal_instance* const inst, enum DBAL_MessageType dbal_type, uint16_t service_id, uint16_t command_id, const uint8_t* const bytes, uint8_t dbal_payload_len);
 
 // Function to initialize the DBus Application Layer
-// Forward declaration for the CAN RX callback
-static void dbal_can_rx_callback(uint32_t id, const uint8_t *data, uint8_t len);
+// Forward declaration for the SPI RX callback (if needed, or polling)
+// static void dbal_spi_rx_callback(const uint8_t *data, uint8_t len); // Placeholder if an RX callback is implemented for SPI
 
 // Function to initialize the DBus Application Layer
 void dbal_init(void)
@@ -126,68 +129,18 @@ void dbal_init(void)
     dbal_clear_msgs_to_repeat(&g_dbal_main_instance);
     dbal_clear_both_io_tx_buffers(&g_dbal_main_instance);
 
-    // Initialize CAN abstraction layer and register callback
-    if (can_abstraction_init() == true) {
-        can_abstraction_register_rx_callback(dbal_can_rx_callback);
-        printk("DBAL: CAN abstraction initialized and RX callback registered.\n");
+    // Initialize SPI abstraction layer
+    if (spi_abstraction_init() == true) {
+        // If SPI has an RX callback mechanism, register it here.
+        // For now, assuming polling or a different RX mechanism.
+        printk("DBAL: SPI abstraction initialized.\n");
     } else {
-        printk("DBAL_ERROR: Failed to initialize CAN abstraction.\n");
+        printk("DBAL_ERROR: Failed to initialize SPI abstraction.\n");
     }
 
     printk("DBAL: Zephyr DBus Application Layer initialized.\n");
 }
 
-// CAN RX callback handler
-static void dbal_can_rx_callback(uint32_t id, const uint8_t *data, uint8_t len)
-{
-    // This function will be called by the CAN abstraction layer when a message is received.
-    // It needs to extract the target address from the CAN ID (if applicable)
-    // and then call the appropriate DBAL reception handler.
-    // For now, we'll assume the CAN ID directly maps to the DBUS_ComPartner for simplicity
-    // and that the received data is the DBus frame payload.
-
-    // Placeholder for DBAL_MSG_SENDER, DBAL_MSG_PROTOCOL_TYPE, etc.
-    const uint8_t DBAL_MSG_SENDER_OFFSET = 0;
-    const uint8_t DBAL_MSG_PROTOCOL_TYPE_OFFSET = 1;
-    const uint8_t DBAL_APPLIANCE_LAYER = 0x01; // Example value
-
-    // Create a dummy buffer to simulate the full DBus frame for dbal_look_for_msg_reception
-    // In a real scenario, the CAN frame might be part of a larger DBus frame.
-    // For simplicity, assume CAN data is the DBus frame payload for now.
-    uint8_t dbus_frame_buffer[128]; // Max size, adjust as needed
-    uint8_t dbus_frame_len = 0;
-
-    // Simulate generic frame header (sender, protocol type, sequence ID)
-    // This is a simplification; actual mapping depends on DBus protocol details
-    dbus_frame_buffer[DBAL_MSG_SENDER_OFFSET] = (uint8_t)id; // Using CAN ID as sender for now
-    dbus_frame_buffer[DBAL_MSG_PROTOCOL_TYPE_OFFSET] = DBAL_APPLIANCE_LAYER;
-    dbus_frame_buffer[2] = g_dbal_main_instance.SeqId2Send; // Use current sequence ID for simplicity
-
-    dbus_frame_len = 3; // Size of simulated header
-
-    // Append actual CAN data as payload
-    if ((dbus_frame_len + len) <= sizeof(dbus_frame_buffer)) {
-        memcpy(&dbus_frame_buffer[dbus_frame_len], data, len);
-        dbus_frame_len += len;
-    } else {
-        printk("DBAL_ERROR: Received CAN data too large for DBus frame buffer.\n");
-        return;
-    }
-
-    struct dbal_instance* const inst = &g_dbal_main_instance; // Assuming single instance for now
-
-    // Simplified logic: determine if it's a connection message or req/resp
-    // This would typically involve inspecting the protocol type and connection type bytes
-    // For now, we'll just pass it to the general message reception handler.
-    if (len == 4) { // Assuming connection messages are 4 bytes
-        // This is a very rough heuristic; proper parsing is needed
-        // dbal_handle_con_msg(inst, dbus_frame_buffer[DBAL_CON_MSG_TYPE_OFFSET]);
-        printk("DBAL: Simulating connection message reception from CAN (ID: 0x%x, Len: %d)\n", id, len);
-    } else {
-        dbal_look_for_msg_reception(inst, dbus_frame_buffer, dbus_frame_len);
-        dbal_look_for_ack_msg_reception(inst, dbus_frame_buffer, dbus_frame_len);
-    }
-}
 
 // Placeholder for sending command responses
 bool dbal_send_cmd_response(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len)
@@ -481,10 +434,8 @@ static bool dbal_io_dbus_handler_send(struct dbal_instance* const inst, enum DBA
 {
     bool ret_val = false;
     // Placeholder for DBAL_MSG_INDEX_COUNT, DBAL_DBUS2_FRAME_TYPE_REQ, DBAL_DBUS2_FRAME_TYPE_RESP, etc.
-    const uint8_t DBAL_MSG_INDEX_COUNT = 6; // Example value
     const uint8_t DBAL_DBUS2_FRAME_TYPE_REQ = 0; // Example value
     const uint8_t DBAL_DBUS2_FRAME_TYPE_RESP = 1; // Example value
-    const uint8_t DBAL_DBUS2_FRAME_TYPE_CON = 2; // Example value
 
     if ((inst->IoCurrentConnectionState == DBAL_COMMSTATE_NOT_READY) || ((bytes == NULL) && (data_len != 0U))) {
         printk("DBAL_INFO: Reject send request, CommState %u, Addr 0x%x\n", inst->IoCurrentConnectionState, inst->DBUS_ComPartner);
@@ -509,11 +460,11 @@ static bool dbal_io_dbus_handler_send(struct dbal_instance* const inst, enum DBA
                     //     (inst != &g_dbal_main_instance)) { // Simplified main instance check
                         inst->SendRetryCounter[tx_index] = 0;
                         dbal_prepare_tx_entry(inst, tx_index, inst->TransmitDataLen);
-                        if (can_abstraction_send(inst->DBUS_ComPartner, inst->TransmitBuffer, inst->TransmitDataLen) == true) {
-                            printk("DBAL: Message transmitted via CAN (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
+                        if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen) == true) {
+                            printk("DBAL: Message transmitted via SPI (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
                         } else {
-                            printk("DBAL_ERROR: Failed to send message via CAN (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
-                            ret_val = false; // Indicate failure if CAN send fails
+                            printk("DBAL_ERROR: Failed to send message via SPI (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
+                            ret_val = false; // Indicate failure if SPI send fails
                         }
                     // }
                 // } else { /* Queue for cross-connection */ }
