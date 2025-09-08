@@ -17,7 +17,7 @@ zephyr/linker.cmd: \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/sys/util_internal_util_inc.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/sys/util_internal_util_dec.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/sys/util_internal_util_x2.h \
-  /mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/arm-zephyr-eabi/lib/gcc/arm-zephyr-eabi/12.2.0/include/stdbool.h \
+  /home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/lib/gcc/arm-zephyr-eabi/12.2.0/include/stdbool.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/devicetree/io-channels.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/devicetree/clocks.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/devicetree/gpio.h \

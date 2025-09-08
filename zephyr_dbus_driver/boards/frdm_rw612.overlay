@@ -3,12 +3,3 @@
         spi0 = &flexcomm1;
     };
 };
-
-&pinctrl {
-    spi0_default: spi0_default {
-        group-0 {
-            pinmux = <IO_MUX_FC1_SPI_SS0>;
-            slew-rate = "ultra";
-        };
-    };
-};

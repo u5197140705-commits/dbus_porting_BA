@@ -6,6 +6,13 @@
 // Placeholder for the SPI device pointer
 static const struct device *spi_dev;
 
+// Global SPI configuration
+static struct spi_config spi_cfg = {
+    .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_MASTER,
+    .frequency = 1000000, // 1 MHz
+    .slave = 0 // Assuming slave select 0
+};
+
 // Initializes the SPI abstraction layer.
 bool spi_abstraction_init(void)
 {
@@ -32,14 +39,6 @@ bool spi_abstraction_send(const uint8_t *data, uint8_t len)
         .count = 1
     };
 
-    // Assuming a default SPI configuration for now.
-    // This should be configured in the device tree or a specific SPI configuration struct.
-    struct spi_config spi_cfg = {
-        .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_MASTER,
-        .frequency = 1000000, // 1 MHz
-        .slave = 0 // Assuming slave select 0
-    };
-
     if (spi_write(spi_dev, &spi_cfg, &tx_bufs) != 0) {
         printk("SPI: Failed to send message\n");
         return false;
@@ -57,12 +56,6 @@ bool spi_abstraction_receive(uint8_t *buffer, uint8_t len)
     struct spi_buf_set rx_bufs = {
         .buffers = &rx_buf,
         .count = 1
-    };
-
-    struct spi_config spi_cfg = {
-        .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_MASTER,
-        .frequency = 1000000, // 1 MHz
-        .slave = 0 // Assuming slave select 0
     };
 
     if (spi_read(spi_dev, &spi_cfg, &rx_bufs) != 0) {
@@ -91,12 +84,6 @@ bool spi_abstraction_transceive(const uint8_t *tx_data, uint8_t *rx_buffer, uint
     struct spi_buf_set rx_bufs = {
         .buffers = &rx_buf,
         .count = 1
-    };
-
-    struct spi_config spi_cfg = {
-        .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_MASTER,
-        .frequency = 1000000, // 1 MHz
-        .slave = 0 // Assuming slave select 0
     };
 
     if (spi_transceive(spi_dev, &spi_cfg, &tx_bufs, &rx_bufs) != 0) {

@@ -1,4 +1,4 @@
-set(CMAKE_C_COMPILER "/mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc")
+set(CMAKE_C_COMPILER "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc")
 set(CMAKE_C_COMPILER_ARG1 "")
 set(CMAKE_C_COMPILER_ID "GNU")
 set(CMAKE_C_COMPILER_VERSION "12.2.0")
@@ -21,11 +21,11 @@ set(CMAKE_C_SIMULATE_VERSION "")
 
 
 
-set(CMAKE_AR "/mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/arm-zephyr-eabi/bin/arm-zephyr-eabi-ar")
-set(CMAKE_C_COMPILER_AR "/mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ar")
-set(CMAKE_RANLIB "/mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/arm-zephyr-eabi/bin/arm-zephyr-eabi-ranlib")
-set(CMAKE_C_COMPILER_RANLIB "/mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ranlib")
-set(CMAKE_LINKER "/mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/arm-zephyr-eabi/arm-zephyr-eabi/bin/ld.bfd")
+set(CMAKE_AR "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-ar")
+set(CMAKE_C_COMPILER_AR "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ar")
+set(CMAKE_RANLIB "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-ranlib")
+set(CMAKE_C_COMPILER_RANLIB "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ranlib")
+set(CMAKE_LINKER "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/arm-zephyr-eabi/bin/ld.bfd")
 set(CMAKE_MT "")
 set(CMAKE_COMPILER_IS_GNUCC 1)
 set(CMAKE_C_COMPILER_LOADED 1)

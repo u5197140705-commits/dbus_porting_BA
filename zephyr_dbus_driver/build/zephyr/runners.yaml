@@ -16,10 +16,7 @@ config:
   elf_file: zephyr.elf
   bin_file: zephyr.bin
   # Host tools:
-  gdb: /mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb
-  openocd: /mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/sysroots/x86_64-pokysdk-linux/usr/bin/openocd
-  openocd_search:
-    - /mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/sysroots/x86_64-pokysdk-linux/usr/share/openocd/scripts
+  gdb: /home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb-py
 
 # Runner specific arguments
 args:

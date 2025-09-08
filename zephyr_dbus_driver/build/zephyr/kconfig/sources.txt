@@ -9,6 +9,7 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/soc/Kconfig
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/soc/Kconfig.defconfig
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/soc/Kconfig.soc
+/home/wis3re/zephyr-sdk-0.17.4/cmake/zephyr/Kconfig
 /home/wis3re/zephyrproject/modules/debug/percepio/DFM/kernelports/Zephyr/Kconfig
 /home/wis3re/zephyrproject/modules/debug/percepio/DFM/kernelports/Zephyr/storageports/Filesystem/Kconfig
 /home/wis3re/zephyrproject/modules/debug/percepio/DFM/kernelports/Zephyr/storageports/Flash/Kconfig
@@ -3974,4 +3975,3 @@
 /home/wis3re/zephyrproject/zephyr/subsys/usb/host/Kconfig.usbip
 /home/wis3re/zephyrproject/zephyr/subsys/usb/usb_c/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/zbus/Kconfig
-/mnt/c/Users/WIS3RE/Documents/transfer_data/ssb_ref_project/zephyrproject/zephyr-sdk-0.16.5/cmake/zephyr/Kconfig

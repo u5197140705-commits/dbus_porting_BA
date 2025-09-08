@@ -44,4 +44,7 @@ bool spi_abstraction_receive(uint8_t *buffer, uint8_t len);
  */
 bool spi_abstraction_transceive(const uint8_t *tx_data, uint8_t *rx_buffer, uint8_t len);
 
+// TODO: Add a function prototype for registering an SPI RX interrupt callback
+// void spi_abstraction_register_rx_callback(spi_rx_callback_t callback);
+
 #endif // ZEPHYR_SPI_ABSTRACTION_H__

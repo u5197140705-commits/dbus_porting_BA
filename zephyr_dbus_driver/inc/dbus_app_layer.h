@@ -48,6 +48,11 @@ typedef unsigned char uchar;
 // Placeholder for DBAL_BUFFER_SIZE (from original BshDBus2AppLayer.c)
 #define DBAL_BUFFER_SIZE                    128U // Example buffer size, adjust as needed
 
+// SPI Message Framing
+#define SPI_SOF_BYTE                        0xAA // Start of Frame byte
+#define SPI_LENGTH_OFFSET                   1U   // Offset for length byte after SOF
+#define SPI_HEADER_LEN                      2U   // SOF + Length byte
+
 // Placeholder for DLL_ACK_STATUS values (from original dbusdll.h or similar)
 #define DLL_ACK_NOT_RECEIVED                0U
 #define DLL_ACK_OK                          1U

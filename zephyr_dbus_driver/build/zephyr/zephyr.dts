@@ -310,16 +310,6 @@
 						slew-rate = "normal";     /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:110 */
 					};
 				};
-
-				/* node '/soc/peripheral@50000000/mci_iomux@4000/spi0_default' defined in ../dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay:8 */
-				spi0_default: spi0_default {
-
-					/* node '/soc/peripheral@50000000/mci_iomux@4000/spi0_default/group-0' defined in ../dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay:9 */
-					group-0 {
-						pinmux = < 0x18806 0x18807 0x18808 0x18809 >; /* in ../dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay:10 */
-						slew-rate = "ultra";                          /* in ../dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay:11 */
-					};
-				};
 			};
 
 			/* node '/soc/peripheral@50000000/clkctl@21000' defined in zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi:165 */

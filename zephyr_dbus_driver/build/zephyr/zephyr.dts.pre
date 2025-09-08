@@ -1217,14 +1217,5 @@ nxp_pmod_touch_panel_i2c: &arduino_i2c {
         spi0 = &flexcomm1;
     };
 };
-
-&pinctrl {
-    spi0_default: spi0_default {
-        group-0 {
-            pinmux = <(((6) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((7) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((8) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((9) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15))>;
-            slew-rate = "ultra";
-        };
-    };
-};
 # 0 "<command-line>" 2
 # 1 "/home/wis3re/zephyrproject/zephyr/misc/empty_file.c"
