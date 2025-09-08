@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "dbus_app_layer.h" // Include for DBAL_ReceiveObject and DBAL_Identifier
 
 // Define constants from original DBal_cfg.c or derived from it
 #define DBAL_OWN_NODE_ADDRESS       0x10U // Example: Own node address

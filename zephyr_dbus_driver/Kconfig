@@ -1,0 +1,14 @@
+config PRINTK_WAITTIME_MS
+    int "Waittime in ms"
+    default 100
+    help
+      Defines the waittime in ms after which
+      "Hello World!" is printed to the console
+
+source "Kconfig.zephyr"
+
+config DBAL_CROSS_CONNECTION
+	bool "Enable DBAL Cross Connection"
+	default n
+	help
+		Enable this option to allow cross-connection functionality in the DBus Application Layer.

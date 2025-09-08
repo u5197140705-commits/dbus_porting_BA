@@ -184,18 +184,19 @@ struct DBAL_ReceiveObject
     DBAL_Service                Service;
 };
 
-/** \struct DBAL_ObjectTableEntry
+#ifdef CONFIG_DBAL_CROSS_CONNECTION
+/** \struct DBALCR_ObjectTableEntry
  *
- * \brief   Structure describing a receiving object table for all the DBal frames defined under a specific ServiceId.
- *
- * \details For meaning of parameter "ServiceId" see general DBal specification.
-**/
-struct DBAL_ObjectTableEntry
+ * \brief   Structure for handling an incoming dbal cross-connection message.
+ **/
+struct DBALCR_ObjectTableEntry
 {
-    const struct DBAL_ReceiveObject *ReceiveObject;
-    const uint16_t                  ServiceId;
-    const uint8_t                   ReceiveObjectCount;
+    const void*                 ReceiveObject;
+    uint16_t                    ServiceId;
+    uint8_t                     ReceiveObjectSize;
 };
+#endif // CONFIG_DBAL_CROSS_CONNECTION
+
 
 // Public function declarations (placeholders for now)
 void dbal_init(void);

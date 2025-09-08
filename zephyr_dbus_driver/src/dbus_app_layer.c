@@ -206,6 +206,12 @@ void dbal_tx_thread_entry(void *p1, void *p2, void *p3)
     ARG_UNUSED(p3);
 
     printk("DBAL: Transmit thread started.\n");
+    uint8_t dummy_tx_data[] = {0xAA, 0xBB, 0xCC, 0xDD};
+    if (spi_abstraction_send(dummy_tx_data, sizeof(dummy_tx_data))) {
+        printk("DBAL: Dummy SPI message sent from TX thread.\n");
+    } else {
+        printk("DBAL_ERROR: Failed to send dummy SPI message from TX thread.\n");
+    }
     while (1) {
         // This thread would typically wait on a message queue for outgoing messages
         // and then send them via the underlying CAN/UART driver.
@@ -222,11 +228,16 @@ void dbal_rx_thread_entry(void *p1, void *p2, void *p3)
     ARG_UNUSED(p3);
 
     printk("DBAL: Receive thread started.\n");
+    uint8_t rx_buffer[64]; // Example buffer size
     while (1) {
-        // This thread would typically wait for incoming data from CAN/UART driver,
-        // parse DBus frames, and dispatch to application callbacks.
-        // For now, it's a placeholder.
-        k_sleep(K_MSEC(100)); // Simulate work
+        if (spi_abstraction_receive(rx_buffer, sizeof(rx_buffer))) {
+            printk("DBAL: Received SPI data: ");
+            for (size_t i = 0; i < sizeof(rx_buffer); i++) {
+                printk("0x%02x ", rx_buffer[i]);
+            }
+            printk("\n");
+        }
+        k_sleep(K_MSEC(100)); // Simulate work and prevent busy-waiting
     }
 }
 
