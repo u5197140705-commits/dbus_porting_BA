@@ -7,6 +7,22 @@
 #include <zephyr/arch/arm/arch.h> // Explicitly include for ARM architecture-specific definitions like ARCH_STACK_PTR_ALIGN
 #include <string.h> // For memset, memcpy
 
+// Helper function to calculate CRC-8
+static uint8_t calculate_crc8(const uint8_t *data, uint8_t len) {
+    uint8_t crc = CRC8_INITIAL_VALUE;
+    for (uint8_t i = 0; i < len; i++) {
+        crc ^= data[i];
+        for (uint8_t j = 0; j < 8; j++) {
+            if (crc & 0x80) {
+                crc = (crc << 1) ^ CRC8_POLYNOMIAL;
+            } else {
+                crc <<= 1;
+            }
+        }
+    }
+    return crc;
+}
+
 // Internal structure for a message to be repeated
 struct dbal_msg_to_repeat {
     bool IsSlotOccupied;
@@ -45,6 +61,10 @@ struct dbal_instance {
 
 // Global instance for simplicity, or could be managed via a context pointer
 static struct dbal_instance g_dbal_main_instance;
+
+// Array to store registered service handlers
+static struct DBAL_ServiceHandler g_service_handlers[DBAL_MAX_SERVICE_HANDLERS];
+static uint8_t g_num_service_handlers = 0;
 
 // Helper function prototypes (simplified from original)
 static bool __attribute__((unused)) dbal_is_con_transmit_index(uint8_t message_index);
@@ -86,16 +106,12 @@ static bool __attribute__((unused)) dbal_check_for_next_msgs_to_send_and_trigger
 static void __attribute__((unused)) dbal_prepare_tx_entry(const struct dbal_instance* const inst, uint8_t tx_index, uint8_t data_len);
 static uint8_t __attribute__((unused)) dbal_get_tx_index(const struct dbal_instance* const inst, uint8_t frame_type); // Simplified frame_type for now
 static void __attribute__((unused)) dbal_send_connection_message(struct dbal_instance* const inst, enum DBAL_ConnectionMessageType con_message_type);
-static void __attribute__((unused)) dbal_look_for_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len);
-static void __attribute__((unused)) dbal_look_for_ack_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len);
+static void dbal_look_for_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len);
+static void dbal_look_for_ack_msg_reception(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len);
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_corrupt(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len);
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_to_be_ignored(const struct dbal_instance* const inst, const uint8_t* const bytes);
-static void __attribute__((unused)) dbal_handle_con_msg(struct dbal_instance* const inst, uint8_t con_msg_type);
-static bool __attribute__((unused)) dbal_call_service_callback(const struct dbal_instance* const inst, enum DBAL_MessageType dbal_type, uint16_t service_id, uint16_t command_id, const uint8_t* const bytes, uint8_t dbal_payload_len) { return false; }
-
-// Function to initialize the DBus Application Layer
-// Forward declaration for the SPI RX callback (if needed, or polling)
-// static void dbal_spi_rx_callback(const uint8_t *data, uint8_t len); // Placeholder if an RX callback is implemented for SPI
+// Callback function for SPI received data
+static void dbal_spi_rx_callback(const uint8_t *data, uint8_t len);
 
 // Function to initialize the DBus Application Layer
 void dbal_init(void)
@@ -131,9 +147,9 @@ void dbal_init(void)
 
     // Initialize SPI abstraction layer
     if (spi_abstraction_init() == true) {
-        // If SPI has an RX callback mechanism, register it here.
-        // For now, assuming polling or a different RX mechanism.
-        printk("DBAL: SPI abstraction initialized.\n");
+        // Register the DBAL's receive function as the SPI RX callback
+        spi_abstraction_register_rx_callback(dbal_spi_rx_callback);
+        printk("DBAL: SPI abstraction initialized and RX callback registered.\n");
     } else {
         printk("DBAL_ERROR: Failed to initialize SPI abstraction.\n");
     }
@@ -229,32 +245,12 @@ void dbal_rx_thread_entry(void *p1, void *p2, void *p3)
     ARG_UNUSED(p3);
 
     printk("DBAL: Receive thread started.\n");
-    struct dbal_instance* const inst = &g_dbal_main_instance;
-    uint8_t rx_buffer[DBAL_BUFFER_SIZE]; // Use DBAL_BUFFER_SIZE for consistency
+    // The receive thread will now primarily wait for data to be processed by the ISR callback.
+    // The polling mechanism is removed as the ISR will handle data reception.
+    // The dbal_spi_rx_callback will be responsible for calling dbal_look_for_msg_reception
+    // and dbal_look_for_ack_msg_reception.
     while (1) {
-        // Attempt to receive data
-        // Attempt to receive data
-        if (spi_abstraction_receive(rx_buffer, sizeof(rx_buffer))) {
-            if (rx_buffer[0] == SPI_SOF_BYTE) {
-                uint8_t payload_len = rx_buffer[SPI_LENGTH_OFFSET];
-                if ((payload_len > 0) && (payload_len <= (sizeof(rx_buffer) - SPI_HEADER_LEN))) {
-                    printk("DBAL: Received SPI data (Payload Len: %u): ", payload_len);
-                    for (size_t i = 0; i < (payload_len + SPI_HEADER_LEN); i++) {
-                        printk("0x%02x ", rx_buffer[i]);
-                    }
-                    printk("\n");
-
-                    // Process received message (offset by SPI_HEADER_LEN)
-                    dbal_look_for_msg_reception(inst, &rx_buffer[SPI_HEADER_LEN], payload_len);
-                    dbal_look_for_ack_msg_reception(inst, &rx_buffer[SPI_HEADER_LEN], payload_len);
-                } else {
-                    printk("DBAL_ERROR: Invalid SPI payload length received: %u\n", payload_len);
-                }
-            } else {
-                printk("DBAL_INFO: Received SPI data without SOF byte. Ignoring.\n");
-            }
-        }
-        k_sleep(K_MSEC(10)); // Shorter sleep for more responsive receiving
+        k_sleep(K_FOREVER); // Sleep indefinitely, woken up by ISR or other events
     }
 }
 
@@ -476,7 +472,7 @@ static void __attribute__((unused)) dbal_prepare_header_and_seq_id(struct dbal_i
     inst->TransmitBuffer[SPI_HEADER_LEN + DBAL_MSG_SEQID] = inst->SeqId2Send;
     inst->SeqId2Send++; // Increment for next message
     if (inst->SeqId2Send == 0) { // Wrap around at 255
-        inst->SeqId2Send = 1;
+        inst->TransmitDataLen = 1;
     }
     inst->TransmitDataLen = SPI_HEADER_LEN + DBAL_FRAME_DATA_OFFSET; // Header length (including SPI framing)
 }
@@ -536,11 +532,16 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
                         inst->SendRetryCounter[tx_index] = 0;
                         // Add SPI framing bytes
                         inst->TransmitBuffer[0] = SPI_SOF_BYTE;
-                        inst->TransmitBuffer[SPI_LENGTH_OFFSET] = inst->TransmitDataLen - SPI_HEADER_LEN; // Length of payload after header
+                        uint8_t payload_len = inst->TransmitDataLen - SPI_HEADER_LEN;
+                        inst->TransmitBuffer[SPI_LENGTH_OFFSET] = payload_len; // Length of payload after header
+
+                        // Calculate and append CRC-8
+                        uint8_t crc = calculate_crc8(&inst->TransmitBuffer[SPI_HEADER_LEN], payload_len);
+                        inst->TransmitBuffer[SPI_CRC_OFFSET] = crc;
                         
                         dbal_prepare_tx_entry(inst, tx_index, inst->TransmitDataLen);
                         if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen) == true) {
-                            printk("DBAL: Message transmitted via SPI (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
+                            printk("DBAL: Message transmitted via SPI (TxIndex: %u, DataLen: %u, CRC: 0x%02x)\n", tx_index, inst->TransmitDataLen, crc);
                         } else {
                             printk("DBAL_ERROR: Failed to send message via SPI (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
                             ret_val = false; // Indicate failure if SPI send fails
@@ -576,8 +577,37 @@ static uint8_t __attribute__((unused)) dbal_get_tx_index(const struct dbal_insta
     return 0; // Default or error
 }
 static void __attribute__((unused)) dbal_send_connection_message(struct dbal_instance* const inst, enum DBAL_ConnectionMessageType con_message_type) {}
-static void __attribute__((unused)) dbal_look_for_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {}
-static void __attribute__((unused)) dbal_look_for_ack_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {}
+static void dbal_look_for_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {}
+static void dbal_look_for_ack_msg_reception(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {}
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_corrupt(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) { return false; }
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_to_be_ignored(const struct dbal_instance* const inst, const uint8_t* const bytes) { return false; }
-static void __attribute__((unused)) dbal_handle_con_msg(struct dbal_instance* const inst, uint8_t con_msg_type) {}
+// Callback function for SPI received data
+static void dbal_spi_rx_callback(const uint8_t *data, uint8_t len) {
+    struct dbal_instance* const inst = &g_dbal_main_instance;
+
+    if (len > 0) {
+        if (data[0] == SPI_SOF_BYTE) {
+            uint8_t payload_len = data[SPI_LENGTH_OFFSET];
+            uint8_t received_crc = data[SPI_CRC_OFFSET];
+
+            if ((payload_len > 0) && (payload_len <= (len - SPI_HEADER_LEN))) {
+                uint8_t calculated_crc = calculate_crc8(&data[SPI_HEADER_LEN], payload_len);
+
+                if (calculated_crc == received_crc) {
+                    printk("DBAL: Received SPI data via ISR (Payload Len: %u, CRC: 0x%02x) - CRC OK.\n", payload_len, received_crc);
+                    // Process received message (offset by SPI_HEADER_LEN)
+                    dbal_look_for_msg_reception(inst, &data[SPI_HEADER_LEN], payload_len);
+                    dbal_look_for_ack_msg_reception(inst, &data[SPI_HEADER_LEN], payload_len);
+                } else {
+                    printk("DBAL_ERROR: CRC mismatch in ISR! Received: 0x%02x, Calculated: 0x%02x. Discarding message.\n", received_crc, calculated_crc);
+                }
+            } else {
+                printk("DBAL_ERROR: Invalid SPI payload length received in ISR: %u\n", payload_len);
+            }
+        } else {
+            printk("DBAL_INFO: Received SPI data without SOF byte in ISR. Ignoring.\n");
+        }
+    } else {
+        printk("DBAL_INFO: Received empty SPI data in ISR. Ignoring.\n");
+    }
+}

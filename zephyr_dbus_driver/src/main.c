@@ -3,12 +3,24 @@
 #include "dbus_app_layer.h" // Include the ported DBus Application Layer
 #include "spi_abstraction.h" // Include the SPI abstraction layer
 
+// Example DBus service callback for testing
+void my_test_service_handler(const uint8_t* const data, uint8_t data_len) {
+    printk("Main: Received DBus message in test service handler! DataLen: %u, Data: ", data_len);
+    for (uint8_t i = 0; i < data_len; i++) {
+        printk("0x%02x ", data[i]);
+    }
+    printk("\n");
+}
+
 int main(void)
 {
     printk("Hello from Zephyr DBus Driver project!\n");
 
     // Initialize the DBus Application Layer
     dbal_init();
+
+    // TODO: Register DBus service handlers here for testing purposes
+    // For example: dbal_register_service_handler(0x1001, DBAL_TYPE_CMD, my_test_service_handler);
 
     // Simulate sending a command response after a delay
     k_sleep(K_SECONDS(2));

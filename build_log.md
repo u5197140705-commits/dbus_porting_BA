@@ -135,3 +135,52 @@ Memory region         Used Size  Region Size  %age Used
             SMU2:        140 KB       140 KB    100.00%
         IDT_LIST:          0 GB        32 KB      0.00%
 Generating files from /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/zephyr.elf for board: frdm_rw612
+```
+
+## Build Output (After implementing CRC-8 in `dbus_app_layer.h` and `dbus_app_layer.c`)
+```
+Loading Zephyr default modules (Zephyr base).
+-- Application: /home/wis3re/dbus_porting/zephyr_dbus_driver
+-- CMake version: 3.22.1
+-- Found Python3: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.10") found components: Interpreter 
+-- Cache files will be written to: /home/wis3re/.cache/zephyr
+-- Zephyr version: 4.2.99 (/home/wis3re/zephyrproject/zephyr)
+-- Found west (found suitable version "1.4.0", minimum required is "0.14.0")
+-- Board: frdm_rw612, qualifiers: rw612
+-- Found host-tools: zephyr 0.17.4 (/home/wis3re/zephyr-sdk-0.17.4)
+-- Found toolchain: zephyr 0.17.4 (/home/wis3re/zephyr-sdk-0.17.4)
+-- Found Dtc: /usr/bin/dtc (found suitable version "1.6.1", minimum required is "1.4.6") 
+-- Found BOARD.dts: /home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts
+-- Found devicetree overlay: /home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay
+-- Generated zephyr.dts: /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/zephyr.dts
+-- Generated pickled edt: /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/edt.pickle
+-- Generated devicetree_generated.h: /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/include/generated/zephyr/devicetree_generated.h
+Parsing /home/wis3re/dbus_porting/zephyr_dbus_driver/Kconfig
+Loaded configuration '/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612_defconfig'
+Merged configuration '/home/wis3re/dbus_porting/zephyr_dbus_driver/prj.conf'
+Configuration saved to '/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/.config'
+Kconfig header saved to '/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/include/generated/zephyr/autoconf.h'
+-- Found GnuLd: /home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/arm-zephyr-eabi/bin/ld.bfd (found version "2.38") 
+-- The C compiler identification is GNU 12.2.0
+-- The CXX compiler identification is GNU 12.2.0
+-- The ASM compiler identification is GNU
+-- Found assembler: /home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc
+-- Looking for device RW612 in /home/wis3re/zephyrproject/modules/hal/nxp/mcux/mcux-sdk-ng/devices/
+-- Found device folder: /home/wis3re/zephyrproject/modules/hal/nxp/mcux/mcux-sdk-ng/devices/Wireless/RW/RW612
+-- Using ccache: /usr/bin/ccache
+-- Found gen_kobject_list: /home/wis3re/zephyrproject/zephyr/scripts/build/gen_kobject_list.py
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/wis3re/dbus_porting/zephyr_dbus_driver/build
+[1/161] Preparing syscall dependency handlingersion.h
+
+[3/161] Generating include/generated/zephyr/version.h/generated/struct_tags.json
+-- Zephyr version: 4.2.99 (/home/wis3re/zephyrproject/zephyr), build: v4.2.0-2872-g81413f07ce18
+[161/161] Linking C executable zephyr/zephyr.elfphyr_final.dir/isr_tables.c.objc.objbje/zephyrproject/modules/hal/nxp/mcux/mcux-sdk-ng/devices/Wireless/RW/RW612/drivers/fsl_power.c.obj
+Memory region         Used Size  Region Size  %age Used
+           FLASH:       37360 B        64 MB      0.06%
+             RAM:       10776 B       960 KB      1.10%
+            SMU1:        510 KB       510 KB    100.00%
+            SMU2:        140 KB       140 KB    100.00%
+        IDT_LIST:          0 GB        32 KB      0.00%
+Generating files from /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/zephyr.elf for board: frdm_rw612

@@ -13,6 +13,18 @@ static struct spi_config spi_cfg = {
     .slave = 0 // Assuming slave select 0
 };
 
+// Static variable to store the registered RX callback
+static spi_rx_callback_t rx_callback = NULL;
+
+// Placeholder for the SPI ISR
+static void spi_rx_isr(const struct device *dev, void *user_data) {
+    // In a real implementation, this ISR would read data from the SPI peripheral
+    // and then call the registered rx_callback.
+    // For now, it's a placeholder.
+    printk("SPI: RX ISR triggered (placeholder).\n");
+    // Example: if (rx_callback) { rx_callback(received_data, received_len); }
+}
+
 // Initializes the SPI abstraction layer.
 bool spi_abstraction_init(void)
 {
@@ -24,7 +36,21 @@ bool spi_abstraction_init(void)
     }
 
     printk("SPI: Abstraction layer initialized.\n");
+
+    // TODO: Configure SPI peripheral for interrupt-driven operation here.
+    // This would involve setting up interrupt lines, enabling SPI RX interrupts,
+    // and associating spi_rx_isr with the appropriate interrupt.
+    // For example: spi_set_cs_gpio(spi_dev, &cs_gpio);
+    //              spi_set_interrupt_handler(spi_dev, spi_rx_isr, NULL);
+    //              spi_enable_rx_interrupt(spi_dev);
+
     return true;
+}
+
+// Registers a callback function for SPI receive interrupts.
+void spi_abstraction_register_rx_callback(spi_rx_callback_t callback) {
+    rx_callback = callback;
+    printk("SPI: RX callback registered.\n");
 }
 
 // Sends data over SPI.

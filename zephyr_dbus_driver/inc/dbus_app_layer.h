@@ -51,7 +51,12 @@ typedef unsigned char uchar;
 // SPI Message Framing
 #define SPI_SOF_BYTE                        0xAA // Start of Frame byte
 #define SPI_LENGTH_OFFSET                   1U   // Offset for length byte after SOF
-#define SPI_HEADER_LEN                      2U   // SOF + Length byte
+#define SPI_CRC_OFFSET                      2U   // Offset for CRC byte after SOF and Length
+#define SPI_HEADER_LEN                      3U   // SOF + Length + CRC byte
+
+// CRC-8 definitions (example, adjust polynomial and initial value as needed)
+#define CRC8_POLYNOMIAL                     0x07 // CRC-8-SAE J1850 polynomial
+#define CRC8_INITIAL_VALUE                  0xFF
 
 // Placeholder for DLL_ACK_STATUS values (from original dbusdll.h or similar)
 #define DLL_ACK_NOT_RECEIVED                0U
@@ -202,11 +207,29 @@ struct DBALCR_ObjectTableEntry
 };
 #endif // CONFIG_DBAL_CROSS_CONNECTION
 
+// Structure to hold registered service handlers
+#define DBAL_MAX_SERVICE_HANDLERS 5 // Example max number of service handlers
+struct DBAL_ServiceHandler {
+    uint16_t ServiceId;
+    enum DBAL_MessageType Type;
+    DBAL_Service Handler;
+};
 
-// Public function declarations (placeholders for now)
+// Public function declarations
 void dbal_init(void);
 bool dbal_send_cmd_response(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len);
 bool dbal_send_query_response(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len);
 bool dbal_send_event(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len);
+
+/**
+ * @brief Registers a DBus service handler.
+ *
+ * @param service_id The ID of the service to register.
+ * @param type The message type (CMD, QUERY, EVENT) this handler is for.
+ * @param handler The callback function to be executed when a matching message is received.
+ *
+ * @return True if registration is successful, false otherwise.
+ */
+bool dbal_register_service_handler(uint16_t service_id, enum DBAL_MessageType type, DBAL_Service handler);
 
 #endif // ZEPHYR_DBUS_APP_LAYER_H__
