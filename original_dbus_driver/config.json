@@ -1,0 +1,25 @@
+{
+    "scheduler_tasks":[
+        {
+            "name":"BAL",
+            "handle_function":"BAL_HandleTask",
+            "include_file":"dbus/bal.h",
+            "priority":"high",
+            "dependency":"DEPLIB_BAL"
+        },
+        {
+            "name":"DBPL",
+            "handle_function":"DBPL_HandleTask",
+            "include_file":"dbus/dbuspresentation.h",
+            "priority":"high",
+            "dependency":"DEPLIB_DBPL"
+        },
+        {
+            "name":"DLL",
+            "handle_function":"DLL_HandleTask",
+            "include_file":"dbusdll.h",
+            "priority":"low",
+            "dependency":"DEPLIB_DLL"
+        }
+    ]
+}

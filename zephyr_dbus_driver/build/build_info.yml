@@ -55,3 +55,7 @@ cmake:
     version: '4.2.99'
     zephyr-base: '/home/wis3re/zephyrproject/zephyr'
 version: '0.1.0'
+west:
+  command: '/home/wis3re/.local/bin/west build --build-dir zephyr_dbus_driver/build --pristine --board frdm_rw612 zephyr_dbus_driver'
+  topdir: '/home/wis3re/zephyrproject'
+  version: '1.4.0'

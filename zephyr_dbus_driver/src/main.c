@@ -19,8 +19,8 @@ int main(void)
     // Initialize the DBus Application Layer
     dbal_init();
 
-    // TODO: Register DBus service handlers here for testing purposes
-    // For example: dbal_register_service_handler(0x1001, DBAL_TYPE_CMD, my_test_service_handler);
+    // Register DBus service handlers here for testing purposes
+    dbal_register_service_handler(0x1001, DBAL_TYPE_CMD, my_test_service_handler);
 
     // Simulate sending a command response after a delay
     k_sleep(K_SECONDS(2));

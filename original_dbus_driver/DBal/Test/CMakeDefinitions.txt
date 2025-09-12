@@ -1,0 +1,18 @@
+add_definitions(-D__PCGCC__ -D__BIG_ENDIAN_ADAPTATION -DDBM_EXTERNAL_INTERRUPT_MAPPING)
+add_definitions(-DDLL_TRANSMIT_BUFFER_DATA_LENGTH=50 -D__DBUS_NODE_ADDRESS=5 -DDBUS_DEFAULT_BAUDRATE=96)
+add_definitions(-DVARIANT=dummy_variant)
+
+#add_definitions(-DDBAL_CROSS_CONNECTION -DDBAL_CROSS_CONNECT_COUNT=2)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dummys)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dummys/dbus/DBal)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../mem_utility)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../MSP)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../MSP/compiler/gccIntel)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../ped_fw)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../ped_fw/utility)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../ped_fw/timer)

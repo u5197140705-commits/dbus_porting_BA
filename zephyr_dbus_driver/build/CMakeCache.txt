@@ -351,9 +351,6 @@ Picolibc_IS_TOP_LEVEL:STATIC=OFF
 //Value Computed by CMake
 Picolibc_SOURCE_DIR:STATIC=/home/wis3re/zephyrproject/modules/lib/picolibc
 
-//Path to a program.
-Python3_EXECUTABLE:FILEPATH=/usr/bin/python3
-
 //Path to the SoC directory.
 SOC_FULL_DIR:PATH=/home/wis3re/zephyrproject/zephyr/soc/nxp/rw
 
@@ -365,6 +362,9 @@ TOOLCHAIN_HAS_PICOLIBC:BOOL=ON
 
 //Zephyr toolchain root
 TOOLCHAIN_ROOT:STRING=/home/wis3re/zephyrproject/zephyr
+
+//No help, variable specified on the command line.
+WEST_PYTHON:UNINITIALIZED=/usr/bin/python3
 
 //Zephyr base
 ZEPHYR_BASE:PATH=/home/wis3re/zephyrproject/zephyr

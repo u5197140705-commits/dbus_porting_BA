@@ -63,8 +63,23 @@ struct dbal_instance {
 static struct dbal_instance g_dbal_main_instance;
 
 // Array to store registered service handlers
-static struct DBAL_ServiceHandler g_service_handlers[DBAL_MAX_SERVICE_HANDLERS];
+static struct DBAL_ServiceHandler g_service_handlers[DBAL_MAX_SERVICE_HANDLERS] = {0}; // Initialize to all zeros
 static uint8_t g_num_service_handlers = 0;
+
+bool dbal_register_service_handler(uint16_t service_id, enum DBAL_MessageType type, DBAL_Service handler) {
+    if (g_num_service_handlers >= DBAL_MAX_SERVICE_HANDLERS) {
+        printk("DBAL_ERROR: Max service handlers reached. Cannot register new handler.\n");
+        return false;
+    }
+
+    g_service_handlers[g_num_service_handlers].ServiceId = service_id;
+    g_service_handlers[g_num_service_handlers].Type = type;
+    g_service_handlers[g_num_service_handlers].Handler = handler;
+    g_num_service_handlers++;
+
+    printk("DBAL: Registered service handler for ServiceId: 0x%04x, Type: %u\n", service_id, type);
+    return true;
+}
 
 // Helper function prototypes (simplified from original)
 static bool __attribute__((unused)) dbal_is_con_transmit_index(uint8_t message_index);
@@ -577,8 +592,37 @@ static uint8_t __attribute__((unused)) dbal_get_tx_index(const struct dbal_insta
     return 0; // Default or error
 }
 static void __attribute__((unused)) dbal_send_connection_message(struct dbal_instance* const inst, enum DBAL_ConnectionMessageType con_message_type) {}
-static void dbal_look_for_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {}
-static void dbal_look_for_ack_msg_reception(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {}
+static void dbal_look_for_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {
+    uint16_t service_id = (uint16_t)((bytes[DBAL_FRAME_SERVICE_ID_HI] << BYTE_SIZE) | bytes[DBAL_FRAME_SERVICE_ID_LO]);
+    uint16_t command_id = (uint16_t)((bytes[DBAL_FRAME_COMMAND_ID_HI] << BYTE_SIZE) | bytes[DBAL_FRAME_COMMAND_ID_LO]);
+    enum DBAL_MessageType msg_type = dbal_convert_uint8_to_dbal_type(bytes[DBAL_MSG_PROTOCOL_TYPE]);
+    const uint8_t* payload = &bytes[DBAL_FRAME_DATA_OFFSET];
+    uint8_t payload_len = data_len - DBAL_FRAME_DATA_OFFSET;
+
+    printk("DBAL: Processing received message - ServiceId: 0x%04x, CommandId: 0x%04x, Type: %u, PayloadLen: %u\n",
+           service_id, command_id, msg_type, payload_len);
+
+    for (uint8_t i = 0; i < g_num_service_handlers; i++) {
+        if (g_service_handlers[i].ServiceId == service_id && g_service_handlers[i].Type == msg_type) {
+            if (g_service_handlers[i].Handler != NULL) {
+                g_service_handlers[i].Handler(payload, payload_len);
+                return;
+            }
+        }
+    }
+    printk("DBAL_WARN: No handler found for ServiceId: 0x%04x, Type: %u\n", service_id, msg_type);
+}
+
+static void dbal_look_for_ack_msg_reception(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {
+    // This function would typically handle ACKs for messages sent by this device.
+    // For now, we'll just log that an ACK-type message was received.
+    uint16_t service_id = (uint16_t)((bytes[DBAL_FRAME_SERVICE_ID_HI] << BYTE_SIZE) | bytes[DBAL_FRAME_SERVICE_ID_LO]);
+    uint16_t command_id = (uint16_t)((bytes[DBAL_FRAME_COMMAND_ID_HI] << BYTE_SIZE) | bytes[DBAL_FRAME_COMMAND_ID_LO]);
+    enum DBAL_MessageType msg_type = dbal_convert_uint8_to_dbal_type(bytes[DBAL_MSG_PROTOCOL_TYPE]);
+
+    printk("DBAL: Received ACK-type message - ServiceId: 0x%04x, CommandId: 0x%04x, Type: %u\n",
+           service_id, command_id, msg_type);
+}
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_corrupt(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) { return false; }
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_to_be_ignored(const struct dbal_instance* const inst, const uint8_t* const bytes) { return false; }
 // Callback function for SPI received data
