@@ -231,5 +231,9 @@ bool dbal_send_event(uint16_t service_id, uint16_t command_id, const uint8_t* da
  * @return True if registration is successful, false otherwise.
  */
 bool dbal_register_service_handler(uint16_t service_id, enum DBAL_MessageType type, DBAL_Service handler);
+// Public function declarations for DBus Lock functionality
+bool dbal_apply_dbus_lock(void);
+void dbal_release_dbus_lock(void);
+bool dbal_is_dbus_lock_active(void);
 
 #endif // ZEPHYR_DBUS_APP_LAYER_H__

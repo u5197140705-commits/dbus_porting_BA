@@ -6,6 +6,11 @@
 #include <zephyr/arch/cpu.h> // Explicitly include for architecture-specific definitions like ARCH_STACK_PTR_ALIGN
 #include <zephyr/arch/arm/arch.h> // Explicitly include for ARM architecture-specific definitions like ARCH_STACK_PTR_ALIGN
 #include <string.h> // For memset, memcpy
+#include <zephyr/sys/atomic.h> // For atomic operations if needed, or just mutex
+
+// Declare a mutex for DBus lock functionality
+static struct k_mutex dbal_bus_mutex;
+static atomic_t dbal_is_locked = ATOMIC_INIT(0); // Atomic flag to track lock status
 
 // Helper function to calculate CRC-8
 static uint8_t calculate_crc8(const uint8_t *data, uint8_t len) {
@@ -142,6 +147,9 @@ void dbal_init(void)
     k_timer_init(&g_dbal_main_instance.ConMsgTimer, dbal_con_msg_timer_cb, NULL);
     k_timer_init(&g_dbal_main_instance.MsgTimer, dbal_msg_timer_cb, NULL);
 
+    // Initialize the DBus lock mutex
+    k_mutex_init(&dbal_bus_mutex);
+
     // Initialize other instance members
     g_dbal_main_instance.DBUS_ComPartner = 0x00; // Placeholder, actual address from config
     g_dbal_main_instance.DBUS_ComBackup = 0x00;
@@ -176,27 +184,36 @@ void dbal_init(void)
 // Placeholder for sending command responses
 bool dbal_send_cmd_response(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len)
 {
+    if (dbal_is_dbus_lock_active() == true) {
+        printk("DBAL_INFO: DBus locked. Cannot send Command Response (ServiceId: 0x%04x, CommandId: 0x%04x).\n", service_id, command_id);
+        return false;
+    }
     printk("DBAL: Sending Command Response (ServiceId: 0x%04x, CommandId: 0x%04x, DataLen: %d)\n",
            service_id, command_id, data_len);
-    // Logic to put message into transmit queue
     return dbal_io_dbus_handler_send(&g_dbal_main_instance, DBAL_TYPE_CMD_ACK, service_id, command_id, data, data_len, 0U);
 }
 
 // Placeholder for sending query responses
 bool dbal_send_query_response(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len)
 {
+    if (dbal_is_dbus_lock_active() == true) {
+        printk("DBAL_INFO: DBus locked. Cannot send Query Response (ServiceId: 0x%04x, CommandId: 0x%04x).\n", service_id, command_id);
+        return false;
+    }
     printk("DBAL: Sending Query Response (ServiceId: 0x%04x, CommandId: 0x%04x, DataLen: %d)\n",
            service_id, command_id, data_len);
-    // Logic to put message into transmit queue
     return dbal_io_dbus_handler_send(&g_dbal_main_instance, DBAL_TYPE_QUERY_ACK, service_id, command_id, data, data_len, 0U);
 }
 
 // Placeholder for sending events
 bool dbal_send_event(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len)
 {
+    if (dbal_is_dbus_lock_active() == true) {
+        printk("DBAL_INFO: DBus locked. Cannot send Event (ServiceId: 0x%04x, CommandId: 0x%04x).\n", service_id, command_id);
+        return false;
+    }
     printk("DBAL: Sending Event (ServiceId: 0x%04x, CommandId: 0x%04x, DataLen: %d)\n",
            service_id, command_id, data_len);
-    // Logic to put message into transmit queue
     return dbal_io_dbus_handler_send(&g_dbal_main_instance, DBAL_TYPE_EVENT, service_id, command_id, data, data_len, 0U);
 }
 
@@ -272,6 +289,43 @@ void dbal_rx_thread_entry(void *p1, void *p2, void *p3)
 // Define Zephyr threads
 K_THREAD_DEFINE(dbal_tx_thread, 1024, dbal_tx_thread_entry, NULL, NULL, NULL, 7, 0, 0);
 K_THREAD_DEFINE(dbal_rx_thread, 1024, dbal_rx_thread_entry, NULL, NULL, NULL, 7, 0, 0);
+
+// --- DBus Lock (DBLK) Functionality ---
+
+// Placeholder for DLL_bIsDbusCommunicating() - needs to be properly implemented
+// based on SPI driver status or message queue status.
+// For now, a simplified version.
+static bool dbal_is_dbus_communicating(void) {
+    // Check if TX buffer has data or if RX is active
+    return (g_dbal_main_instance.TransmitDataLen > 0); // Simplified check
+}
+
+bool dbal_apply_dbus_lock(void) {
+    // Only apply lock if not already locked and bus is not communicating
+    if (atomic_get(&dbal_is_locked) == 0 && dbal_is_dbus_communicating() == false) {
+        if (k_mutex_lock(&dbal_bus_mutex, K_NO_WAIT) == 0) { // Try to acquire mutex non-blocking
+            atomic_set(&dbal_is_locked, 1);
+            printk("DBAL: DBus lock applied.\n");
+            return true;
+        }
+    }
+    printk("DBAL: Failed to apply DBus lock (locked: %d, communicating: %d).\n", (int)atomic_get(&dbal_is_locked), dbal_is_dbus_communicating());
+    return false;
+}
+
+void dbal_release_dbus_lock(void) {
+    if (atomic_get(&dbal_is_locked) == 1) {
+        k_mutex_unlock(&dbal_bus_mutex);
+        atomic_set(&dbal_is_locked, 0);
+        printk("DBAL: DBus lock released.\n");
+    } else {
+        printk("DBAL_WARN: Attempted to release unlocked DBus mutex.\n");
+    }
+}
+
+bool dbal_is_dbus_lock_active(void) {
+    return atomic_get(&dbal_is_locked) == 1;
+}
 
 // --- Private Helper Function Implementations (Simplified/Placeholder) ---
 
@@ -522,6 +576,11 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
     // Placeholder for DBAL_MSG_INDEX_COUNT, DBAL_DBUS2_FRAME_TYPE_REQ, DBAL_DBUS2_FRAME_TYPE_RESP, etc.
     const uint8_t DBAL_DBUS2_FRAME_TYPE_REQ = 0; // Example value
     const uint8_t DBAL_DBUS2_FRAME_TYPE_RESP = 1; // Example value
+
+    if (dbal_is_dbus_lock_active() == true) {
+        printk("DBAL_INFO: Reject send request, DBus locked.\n");
+        return false;
+    }
 
     if ((inst->IoCurrentConnectionState == DBAL_COMMSTATE_NOT_READY) || ((bytes == NULL) && (data_len != 0U))) {
         printk("DBAL_INFO: Reject send request, CommState %u, Addr 0x%x\n", inst->IoCurrentConnectionState, inst->DBUS_ComPartner);
