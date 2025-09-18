@@ -12,3 +12,10 @@ config DBAL_CROSS_CONNECTION
 	default n
 	help
 		Enable this option to allow cross-connection functionality in the DBus Application Layer.
+
+config DBAL_TARGET_ADDRESS
+	hex "DBAL Target Address"
+	default 0x00
+	help
+		Defines the target address for the DBus Application Layer.
+		This address is used to identify the communication partner.

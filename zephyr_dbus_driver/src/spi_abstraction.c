@@ -2,6 +2,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/spi.h>
 #include <zephyr/sys/printk.h>
+#include "dbus_app_layer.h" // For dbal_spi_rx_msg and K_MSGQ
 
 // Placeholder for the SPI device pointer
 static const struct device *spi_dev;
@@ -16,13 +17,39 @@ static struct spi_config spi_cfg = {
 // Static variable to store the registered RX callback
 static spi_rx_callback_t rx_callback = NULL;
 
+// Static variable to store the message queue for received data
+static struct k_msgq *spi_rx_msg_queue = NULL;
+
 // Placeholder for the SPI ISR
 static void spi_rx_isr(const struct device *dev, void *user_data) {
-    // In a real implementation, this ISR would read data from the SPI peripheral
-    // and then call the registered rx_callback.
-    // For now, it's a placeholder.
-    printk("SPI: RX ISR triggered (placeholder).\n");
-    // Example: if (rx_callback) { rx_callback(received_data, received_len); }
+    // This is a placeholder ISR. In a real implementation, this would read data
+    // from the SPI peripheral. For now, we simulate receiving a message.
+    // The actual data reception mechanism (e.g., DMA, polling in ISR) is board-specific.
+
+    // For demonstration, let's assume we received a dummy message
+    static uint8_t dummy_rx_data[DBAL_SPI_RX_MSG_MAX_SIZE] = {
+        SPI_SOF_BYTE, 0x0A, 0xCC, // SOF, Length (10 bytes), Dummy CRC
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A // Dummy payload
+    };
+    uint8_t dummy_rx_len = 13; // SPI_HEADER_LEN + 10 bytes payload
+
+    struct dbal_spi_rx_msg rx_msg;
+    if (dummy_rx_len <= DBAL_SPI_RX_MSG_MAX_SIZE) {
+        memcpy(rx_msg.data, dummy_rx_data, dummy_rx_len);
+        rx_msg.len = dummy_rx_len;
+
+        if (spi_rx_msg_queue != NULL) {
+            if (k_msgq_put(spi_rx_msg_queue, &rx_msg, K_NO_WAIT) != 0) {
+                printk("SPI_ERROR: Failed to put RX message into queue (queue full).\n");
+            } else {
+                printk("SPI: RX ISR put message into queue (len: %u).\n", rx_msg.len);
+            }
+        } else {
+            printk("SPI_ERROR: RX message queue not set in ISR.\n");
+        }
+    } else {
+        printk("SPI_ERROR: Received data too large for buffer in ISR.\n");
+    }
 }
 
 // Initializes the SPI abstraction layer.
@@ -37,12 +64,16 @@ bool spi_abstraction_init(void)
 
     printk("SPI: Abstraction layer initialized.\n");
 
-    // TODO: Configure SPI peripheral for interrupt-driven operation here.
-    // This would involve setting up interrupt lines, enabling SPI RX interrupts,
-    // and associating spi_rx_isr with the appropriate interrupt.
-    // For example: spi_set_cs_gpio(spi_dev, &cs_gpio);
-    //              spi_set_interrupt_handler(spi_dev, spi_rx_isr, NULL);
-    //              spi_enable_rx_interrupt(spi_dev);
+    // Configure SPI peripheral for interrupt-driven operation.
+    // NOTE: The actual interrupt line setup (GPIO, IRQ controller) is board-specific
+    // and typically handled via Device Tree overlays. This is a placeholder for
+    // enabling the SPI RX interrupt at the driver level if supported.
+    // For a real implementation, you would need to consult your board's documentation
+    // and Zephyr's SPI driver API for interrupt configuration.
+    // Example (conceptual):
+    // spi_set_interrupt_handler(spi_dev, spi_rx_isr, NULL);
+    // spi_enable_rx_interrupt(spi_dev);
+    printk("SPI: Placeholder for interrupt configuration executed.\n");
 
     return true;
 }
@@ -51,6 +82,11 @@ bool spi_abstraction_init(void)
 void spi_abstraction_register_rx_callback(spi_rx_callback_t callback) {
     rx_callback = callback;
     printk("SPI: RX callback registered.\n");
+}
+
+void spi_abstraction_set_rx_msg_queue(struct k_msgq *msg_q) {
+    spi_rx_msg_queue = msg_q;
+    printk("SPI: RX message queue set.\n");
 }
 
 // Sends data over SPI.

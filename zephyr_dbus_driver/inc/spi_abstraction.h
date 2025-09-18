@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <zephyr/kernel.h> // For struct k_msgq
 
 /**
  * @brief Initializes the SPI abstraction layer.
@@ -53,5 +54,15 @@ typedef void (*spi_rx_callback_t)(const uint8_t *data, uint8_t len);
  * @param callback The function to be called when SPI data is received.
  */
 void spi_abstraction_register_rx_callback(spi_rx_callback_t callback);
+
+/**
+ * @brief Sets the message queue for SPI received data.
+ *
+ * This function provides the SPI abstraction layer with a message queue
+ * to put received SPI frames into.
+ *
+ * @param msg_q Pointer to the Zephyr message queue.
+ */
+void spi_abstraction_set_rx_msg_queue(struct k_msgq *msg_q);
 
 #endif // ZEPHYR_SPI_ABSTRACTION_H__

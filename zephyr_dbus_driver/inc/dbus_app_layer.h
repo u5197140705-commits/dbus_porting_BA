@@ -5,6 +5,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+// Define a structure for SPI received messages to be put into a message queue
+#define DBAL_SPI_RX_MSG_MAX_SIZE    128 // Max size of an SPI message payload
+#define DBAL_SPI_RX_MSG_QUEUE_DEPTH 10  // Depth of the message queue
+
+struct dbal_spi_rx_msg {
+    uint8_t data[DBAL_SPI_RX_MSG_MAX_SIZE];
+    uint8_t len;
+};
+
 // Define uchar for compatibility with original code
 typedef unsigned char uchar;
 
@@ -68,6 +77,7 @@ enum DBAL_ConnectionSmEvent {
     DBAL_CON_SM_EVENT_ENABLE_REQUEST,
     DBAL_CON_SM_EVENT_ACCEPT,
     DBAL_CON_SM_EVENT_DISABLE_REQUEST,
+    DBAL_CON_SM_EVENT_DISABLE_RESPONSE, // Added
     DBAL_CON_SM_EVENT_DISABLE_SILENT,
     DBAL_CON_SM_EVENT_REJECT,
     DBAL_CON_SM_EVENT_TEMP_ENABLE_REQUEST,
@@ -125,8 +135,11 @@ void dbal_msg_timer_cb(struct k_timer *timer_id);
 **/
 enum DBAL_CommState
 {
-    DBAL_COMMSTATE_NOT_READY = 0,
-    DBAL_COMMSTATE_READY
+    DBAL_COMMSTATE_DISCONNECTED = 0, // Initial state
+    DBAL_COMMSTATE_NOT_READY,        // Renamed from 0 to 1
+    DBAL_COMMSTATE_CONNECTING,       // Added
+    DBAL_COMMSTATE_CONNECTED,
+    DBAL_COMMSTATE_DISCONNECTING     // Added
 };
 
 /** \enum   DBAL_MessageType
@@ -235,5 +248,16 @@ bool dbal_register_service_handler(uint16_t service_id, enum DBAL_MessageType ty
 bool dbal_apply_dbus_lock(void);
 void dbal_release_dbus_lock(void);
 bool dbal_is_dbus_lock_active(void);
+
+/**
+ * @brief Sends an ACK or NACK message in response to a received message.
+ *
+ * @param service_id The service ID of the received message.
+ * @param command_id The command ID of the received message.
+ * @param success True if the received message was processed successfully, false for NACK.
+ * @return True if the ACK/NACK message was successfully sent, false otherwise.
+ */
+bool dbal_send_ack_nack(uint16_t service_id, uint16_t command_id, bool success);
+
 
 #endif // ZEPHYR_DBUS_APP_LAYER_H__

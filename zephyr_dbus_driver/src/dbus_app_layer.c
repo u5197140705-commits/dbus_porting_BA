@@ -3,10 +3,13 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/autoconf.h> // Explicitly include autoconf.h for Kconfig options
-#include <zephyr/arch/cpu.h> // Explicitly include for architecture-specific definitions like ARCH_STACK_PTR_ALIGN
-#include <zephyr/arch/arm/arch.h> // Explicitly include for ARM architecture-specific definitions like ARCH_STACK_PTR_ALIGN
+#include <zephyr/arch/cpu.h> // Re-add for ARCH_STACK_PTR_ALIGN
+#include <zephyr/settings/settings.h> // For runtime settings if needed, but Kconfig is compile-time
 #include <string.h> // For memset, memcpy
 #include <zephyr/sys/atomic.h> // For atomic operations if needed, or just mutex
+
+// Declare a message queue for SPI received data
+K_MSGQ_DEFINE(dbal_spi_rx_msg_queue, sizeof(struct dbal_spi_rx_msg), DBAL_SPI_RX_MSG_QUEUE_DEPTH, 4);
 
 // Declare a mutex for DBus lock functionality
 static struct k_mutex dbal_bus_mutex;
@@ -130,6 +133,7 @@ static void dbal_look_for_msg_reception(struct dbal_instance* const inst, const 
 static void dbal_look_for_ack_msg_reception(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len);
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_corrupt(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len);
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_to_be_ignored(const struct dbal_instance* const inst, const uint8_t* const bytes);
+static void dbal_connection_sm(struct dbal_instance* const inst, enum DBAL_ConnectionSmEvent event); // Prototype for state machine
 // Callback function for SPI received data
 static void dbal_spi_rx_callback(const uint8_t *data, uint8_t len);
 
@@ -151,7 +155,7 @@ void dbal_init(void)
     k_mutex_init(&dbal_bus_mutex);
 
     // Initialize other instance members
-    g_dbal_main_instance.DBUS_ComPartner = 0x00; // Placeholder, actual address from config
+    g_dbal_main_instance.DBUS_ComPartner = CONFIG_DBAL_TARGET_ADDRESS; // Use Kconfig value
     g_dbal_main_instance.DBUS_ComBackup = 0x00;
     g_dbal_main_instance.ConnectDataLen = 0;
     g_dbal_main_instance.TransmitDataLen = 0;
@@ -159,7 +163,7 @@ void dbal_init(void)
     g_dbal_main_instance.SeqId2Send = 0;
     g_dbal_main_instance.LastSeqIdReceived = 0;
     g_dbal_main_instance.DisableReqReceived = false;
-    g_dbal_main_instance.IoCurrentConnectionState = DBAL_COMMSTATE_NOT_READY;
+    g_dbal_main_instance.IoCurrentConnectionState = DBAL_COMMSTATE_DISCONNECTED; // Initial state
     g_dbal_main_instance.ConRepeatCnt = 0;
     g_dbal_main_instance.IoMsgLostCbCounter = 0;
     g_dbal_main_instance.CodeSectionBitMask = 0;
@@ -172,7 +176,9 @@ void dbal_init(void)
     if (spi_abstraction_init() == true) {
         // Register the DBAL's receive function as the SPI RX callback
         spi_abstraction_register_rx_callback(dbal_spi_rx_callback);
-        printk("DBAL: SPI abstraction initialized and RX callback registered.\n");
+        // Provide the message queue to the SPI abstraction layer
+        spi_abstraction_set_rx_msg_queue(&dbal_spi_rx_msg_queue);
+        printk("DBAL: SPI abstraction initialized, RX callback registered, and message queue provided.\n");
     } else {
         printk("DBAL_ERROR: Failed to initialize SPI abstraction.\n");
     }
@@ -184,10 +190,6 @@ void dbal_init(void)
 // Placeholder for sending command responses
 bool dbal_send_cmd_response(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len)
 {
-    if (dbal_is_dbus_lock_active() == true) {
-        printk("DBAL_INFO: DBus locked. Cannot send Command Response (ServiceId: 0x%04x, CommandId: 0x%04x).\n", service_id, command_id);
-        return false;
-    }
     printk("DBAL: Sending Command Response (ServiceId: 0x%04x, CommandId: 0x%04x, DataLen: %d)\n",
            service_id, command_id, data_len);
     return dbal_io_dbus_handler_send(&g_dbal_main_instance, DBAL_TYPE_CMD_ACK, service_id, command_id, data, data_len, 0U);
@@ -196,10 +198,6 @@ bool dbal_send_cmd_response(uint16_t service_id, uint16_t command_id, const uint
 // Placeholder for sending query responses
 bool dbal_send_query_response(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len)
 {
-    if (dbal_is_dbus_lock_active() == true) {
-        printk("DBAL_INFO: DBus locked. Cannot send Query Response (ServiceId: 0x%04x, CommandId: 0x%04x).\n", service_id, command_id);
-        return false;
-    }
     printk("DBAL: Sending Query Response (ServiceId: 0x%04x, CommandId: 0x%04x, DataLen: %d)\n",
            service_id, command_id, data_len);
     return dbal_io_dbus_handler_send(&g_dbal_main_instance, DBAL_TYPE_QUERY_ACK, service_id, command_id, data, data_len, 0U);
@@ -208,10 +206,6 @@ bool dbal_send_query_response(uint16_t service_id, uint16_t command_id, const ui
 // Placeholder for sending events
 bool dbal_send_event(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len)
 {
-    if (dbal_is_dbus_lock_active() == true) {
-        printk("DBAL_INFO: DBus locked. Cannot send Event (ServiceId: 0x%04x, CommandId: 0x%04x).\n", service_id, command_id);
-        return false;
-    }
     printk("DBAL: Sending Event (ServiceId: 0x%04x, CommandId: 0x%04x, DataLen: %d)\n",
            service_id, command_id, data_len);
     return dbal_io_dbus_handler_send(&g_dbal_main_instance, DBAL_TYPE_EVENT, service_id, command_id, data, data_len, 0U);
@@ -277,12 +271,17 @@ void dbal_rx_thread_entry(void *p1, void *p2, void *p3)
     ARG_UNUSED(p3);
 
     printk("DBAL: Receive thread started.\n");
-    // The receive thread will now primarily wait for data to be processed by the ISR callback.
-    // The polling mechanism is removed as the ISR will handle data reception.
-    // The dbal_spi_rx_callback will be responsible for calling dbal_look_for_msg_reception
-    // and dbal_look_for_ack_msg_reception.
+    // The receive thread will now wait for data to be put into the message queue by the SPI ISR.
+    struct dbal_spi_rx_msg rx_msg;
     while (1) {
-        k_sleep(K_FOREVER); // Sleep indefinitely, woken up by ISR or other events
+        // Wait indefinitely for a message to be available in the queue
+        if (k_msgq_get(&dbal_spi_rx_msg_queue, &rx_msg, K_FOREVER) == 0) {
+            printk("DBAL: RX thread received message from queue (len: %u).\n", rx_msg.len);
+            // Process the received message using the existing callback logic
+            dbal_spi_rx_callback(rx_msg.data, rx_msg.len);
+        } else {
+            printk("DBAL_ERROR: Failed to get message from RX queue.\n");
+        }
     }
 }
 
@@ -475,7 +474,7 @@ static void __attribute__((unused)) dbal_handle_con_msg_tx_fail(struct dbal_inst
     // Simplified: In original, this would trigger next cross-connection msg or state machine event
     printk("DBAL: Connection message TX failed for Addr 0x%x, MsgType %d\n", inst->DBUS_ComPartner, inst->ConnectTransmitBuffer[0]);
     dbal_clear_retry_counters(inst);
-    // dbal_connection_sm(inst, DBAL_CON_SM_EVENT_REJECT); // Placeholder for state machine transition
+    dbal_connection_sm(inst, DBAL_CON_SM_EVENT_REJECT); // Trigger state machine transition
 }
 
 static void __attribute__((unused)) dbal_handle_req_resp_msg_tx_fail(struct dbal_instance* const inst)
@@ -484,7 +483,7 @@ static void __attribute__((unused)) dbal_handle_req_resp_msg_tx_fail(struct dbal
     printk("DBAL: Request/Response message TX failed for Addr 0x%x\n", inst->DBUS_ComPartner);
     dbal_clear_msgs_to_repeat(inst);
     dbal_clear_retry_counters(inst);
-    // dbal_connection_sm(inst, DBAL_CON_SM_EVENT_DISABLE_SILENT); // Placeholder for state machine transition
+    dbal_connection_sm(inst, DBAL_CON_SM_EVENT_DISABLE_SILENT); // Trigger state machine transition
 }
 static void __attribute__((unused)) dbal_msg_timer_action(struct dbal_instance* const inst)
 {
@@ -503,7 +502,7 @@ static void __attribute__((unused)) dbal_msg_timer_action(struct dbal_instance* 
                            inst->DBUS_ComPartner, inst->MsgRptPtrs[i]->ServiceId, inst->MsgRptPtrs[i]->CommandId);
                     dbal_clear_msgs_to_repeat(inst);
                     dbal_clear_retry_counters(inst);
-                    // dbal_connection_sm(inst, DBAL_CON_SM_EVENT_DISABLE_SILENT);
+                    dbal_connection_sm(inst, DBAL_CON_SM_EVENT_DISABLE_SILENT); // Trigger state machine transition
                 }
             }
         } else if ((inst->MsgRptPtrs[i]->MsgRetryCounter >= (uint8_t)DBAL_DBUS_RETRY_MAX) &&
@@ -512,7 +511,7 @@ static void __attribute__((unused)) dbal_msg_timer_action(struct dbal_instance* 
                    inst->DBUS_ComPartner, inst->MsgRptPtrs[i]->ServiceId, inst->MsgRptPtrs[i]->CommandId);
             dbal_clear_msgs_to_repeat(inst);
             dbal_clear_retry_counters(inst);
-            // dbal_connection_sm(inst, DBAL_CON_SM_EVENT_DISABLE_SILENT);
+            dbal_connection_sm(inst, DBAL_CON_SM_EVENT_DISABLE_SILENT); // Trigger state machine transition
         }
     }
     dbal_organize_msgs_to_repeat(inst);
@@ -577,8 +576,9 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
     const uint8_t DBAL_DBUS2_FRAME_TYPE_REQ = 0; // Example value
     const uint8_t DBAL_DBUS2_FRAME_TYPE_RESP = 1; // Example value
 
-    if (dbal_is_dbus_lock_active() == true) {
-        printk("DBAL_INFO: Reject send request, DBus locked.\n");
+
+    if (k_mutex_lock(&dbal_bus_mutex, K_FOREVER) != 0) {
+        printk("DBAL_ERROR: Failed to acquire DBus mutex in dbal_io_dbus_handler_send.\n");
         return false;
     }
 
@@ -628,6 +628,7 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
             printk("DBAL_ERROR: Invalid TxIndex %u, Addr 0x%x\n", tx_index, inst->DBUS_ComPartner);
         }
     }
+    k_mutex_unlock(&dbal_bus_mutex); // Release the mutex
     return ret_val;
 }
 static uint8_t __attribute__((unused)) dbal_get_last_sending_status(const struct dbal_instance* const inst, uint8_t msg_index) { return 0; }
@@ -650,7 +651,27 @@ static uint8_t __attribute__((unused)) dbal_get_tx_index(const struct dbal_insta
     }
     return 0; // Default or error
 }
-static void __attribute__((unused)) dbal_send_connection_message(struct dbal_instance* const inst, enum DBAL_ConnectionMessageType con_message_type) {}
+static void __attribute__((unused)) dbal_send_connection_message(struct dbal_instance* const inst, enum DBAL_ConnectionMessageType con_message_type) {
+    // Prepare the connection message in ConnectTransmitBuffer
+    memset(inst->ConnectTransmitBuffer, 0, sizeof(inst->ConnectTransmitBuffer));
+
+    inst->ConnectTransmitBuffer[DBAL_CON_MSG_TYPE] = (uint8_t)con_message_type;
+    inst->ConnectTransmitBuffer[DBAL_CON_MSG_PROTOCOL_VERSION] = 0x01; // Example protocol version
+    // DBAL_CON_MSG_LEN is typically the length of the payload, which for simple connection messages might be 0 or 1 (for protocol version)
+    // For now, we'll assume a fixed length for connection messages if no additional data is needed.
+    inst->ConnectDataLen = DBAL_CON_MSG_LEN; // Use the defined length for connection messages
+
+    printk("DBAL: Sending connection message (Type: %u, Protocol Version: %u) to Addr 0x%x\n",
+           con_message_type, inst->ConnectTransmitBuffer[DBAL_CON_MSG_PROTOCOL_VERSION], inst->DBUS_ComPartner);
+
+    // Use dbal_io_dbus_handler_send to transmit the connection message
+    // Connection messages are typically not repeated by the application layer, but by the timer if no response.
+    // So, repetition count is 0 here.
+    if (dbal_io_dbus_handler_send(inst, DBAL_TYPE_UNKNOWN, 0, 0, inst->ConnectTransmitBuffer, inst->ConnectDataLen, 0U) == false) {
+        printk("DBAL_ERROR: Failed to send connection message (Type: %u) to Addr 0x%x\n",
+               con_message_type, inst->DBUS_ComPartner);
+    }
+}
 static void dbal_look_for_msg_reception(struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) {
     uint16_t service_id = (uint16_t)((bytes[DBAL_FRAME_SERVICE_ID_HI] << BYTE_SIZE) | bytes[DBAL_FRAME_SERVICE_ID_LO]);
     uint16_t command_id = (uint16_t)((bytes[DBAL_FRAME_COMMAND_ID_HI] << BYTE_SIZE) | bytes[DBAL_FRAME_COMMAND_ID_LO]);
@@ -682,11 +703,24 @@ static void dbal_look_for_ack_msg_reception(const struct dbal_instance* const in
     printk("DBAL: Received ACK-type message - ServiceId: 0x%04x, CommandId: 0x%04x, Type: %u\n",
            service_id, command_id, msg_type);
 }
+
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_corrupt(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) { return false; }
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_to_be_ignored(const struct dbal_instance* const inst, const uint8_t* const bytes) { return false; }
+
+bool dbal_send_ack_nack(uint16_t service_id, uint16_t command_id, bool success) {
+    uint8_t response_data[1] = {success ? DLL_ACK_OK : DLL_ACK_NOT_RECEIVED}; // Simplified ACK/NACK status
+    enum DBAL_MessageType response_type = success ? DBAL_TYPE_CMD_ACK : DBAL_TYPE_CMD_ACK; // Use CMD_ACK for both, with status in data
+
+    printk("DBAL: Sending %s for ServiceId: 0x%04x, CommandId: 0x%04x\n",
+           success ? "ACK" : "NACK", service_id, command_id);
+
+    return dbal_io_dbus_handler_send(&g_dbal_main_instance, response_type, service_id, command_id, response_data, sizeof(response_data), 0U);
+}
+
 // Callback function for SPI received data
 static void dbal_spi_rx_callback(const uint8_t *data, uint8_t len) {
     struct dbal_instance* const inst = &g_dbal_main_instance;
+    bool message_processed_successfully = false; // Flag to track if message was processed without errors
 
     if (len > 0) {
         if (data[0] == SPI_SOF_BYTE) {
@@ -701,16 +735,76 @@ static void dbal_spi_rx_callback(const uint8_t *data, uint8_t len) {
                     // Process received message (offset by SPI_HEADER_LEN)
                     dbal_look_for_msg_reception(inst, &data[SPI_HEADER_LEN], payload_len);
                     dbal_look_for_ack_msg_reception(inst, &data[SPI_HEADER_LEN], payload_len);
+                    message_processed_successfully = true; // CRC OK, assume successful processing for now
                 } else {
                     printk("DBAL_ERROR: CRC mismatch in ISR! Received: 0x%02x, Calculated: 0x%02x. Discarding message.\n", received_crc, calculated_crc);
+                    message_processed_successfully = false; // CRC failed
                 }
             } else {
                 printk("DBAL_ERROR: Invalid SPI payload length received in ISR: %u\n", payload_len);
+                message_processed_successfully = false; // Invalid length
             }
         } else {
             printk("DBAL_INFO: Received SPI data without SOF byte in ISR. Ignoring.\n");
+            message_processed_successfully = false; // No SOF byte
         }
     } else {
         printk("DBAL_INFO: Received empty SPI data in ISR. Ignoring.\n");
+        message_processed_successfully = false; // Empty data
+    }
+
+    // Trigger ACK/NACK generation based on processing result
+    // Extract service_id and command_id from the received message for ACK/NACK
+    // This assumes the received message format is consistent with DBAL_FRAME_SERVICE_ID_HI/LO and DBAL_FRAME_COMMAND_ID_HI/LO
+    if (len >= (SPI_HEADER_LEN + DBAL_FRAME_DATA_OFFSET)) { // Ensure enough bytes for header + service/command IDs
+        uint16_t received_service_id = (uint16_t)((data[SPI_HEADER_LEN + DBAL_FRAME_SERVICE_ID_HI] << BYTE_SIZE) | data[SPI_HEADER_LEN + DBAL_FRAME_SERVICE_ID_LO]);
+        uint16_t received_command_id = (uint16_t)((data[SPI_HEADER_LEN + DBAL_FRAME_COMMAND_ID_HI] << BYTE_SIZE) | data[SPI_HEADER_LEN + DBAL_FRAME_COMMAND_ID_LO]);
+        dbal_send_ack_nack(received_service_id, received_command_id, message_processed_successfully);
+    } else {
+        printk("DBAL_WARN: Cannot send ACK/NACK, received message too short to extract Service/Command IDs.\n");
+    }
+}
+
+static void dbal_connection_sm(struct dbal_instance* const inst, enum DBAL_ConnectionSmEvent event) {
+    printk("DBAL_SM: Current State: %u, Event: %u\n", inst->IoCurrentConnectionState, event);
+
+    switch (inst->IoCurrentConnectionState) {
+        case DBAL_COMMSTATE_DISCONNECTED:
+            if (event == DBAL_CON_SM_EVENT_ENABLE_REQUEST) {
+                inst->IoCurrentConnectionState = DBAL_COMMSTATE_CONNECTING;
+                printk("DBAL_SM: State changed to CONNECTING.\n");
+            }
+            break;
+        case DBAL_COMMSTATE_CONNECTING:
+            if (event == DBAL_CON_SM_EVENT_ACCEPT) {
+                inst->IoCurrentConnectionState = DBAL_COMMSTATE_CONNECTED;
+                printk("DBAL_SM: State changed to CONNECTED.\n");
+            } else if (event == DBAL_CON_SM_EVENT_REJECT || event == DBAL_CON_SM_EVENT_DISABLE_SILENT) {
+                inst->IoCurrentConnectionState = DBAL_COMMSTATE_DISCONNECTED;
+                printk("DBAL_SM: State changed to DISCONNECTED (from CONNECTING).\n");
+            }
+            break;
+        case DBAL_COMMSTATE_CONNECTED:
+            if (event == DBAL_CON_SM_EVENT_DISABLE_REQUEST || event == DBAL_CON_SM_EVENT_DISABLE_SILENT) {
+                inst->IoCurrentConnectionState = DBAL_COMMSTATE_DISCONNECTING;
+                printk("DBAL_SM: State changed to DISCONNECTING.\n");
+            }
+            break;
+        case DBAL_COMMSTATE_DISCONNECTING:
+            if (event == DBAL_CON_SM_EVENT_DISABLE_RESPONSE) {
+                inst->IoCurrentConnectionState = DBAL_COMMSTATE_DISCONNECTED;
+                printk("DBAL_SM: State changed to DISCONNECTED (from DISCONNECTING).\n");
+            }
+            break;
+        case DBAL_COMMSTATE_NOT_READY: // Handle this state if it's reachable, or remove if always starting from DISCONNECTED
+            // For now, if in NOT_READY and an enable request comes, move to CONNECTING
+            if (event == DBAL_CON_SM_EVENT_ENABLE_REQUEST) {
+                inst->IoCurrentConnectionState = DBAL_COMMSTATE_CONNECTING;
+                printk("DBAL_SM: State changed from NOT_READY to CONNECTING.\n");
+            }
+            break;
+        default:
+            printk("DBAL_SM_WARN: Unhandled state or event: State %u, Event %u\n", inst->IoCurrentConnectionState, event);
+            break;
     }
 }
