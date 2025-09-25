@@ -55,7 +55,7 @@ static void spi_rx_isr(const struct device *dev, void *user_data) {
 // Initializes the SPI abstraction layer.
 bool spi_abstraction_init(void)
 {
-    spi_dev = DEVICE_DT_GET(DT_ALIAS(spi0)); // Use DT_ALIAS for SPI device
+    spi_dev = DEVICE_DT_GET(DT_NODELABEL(flexcomm1)); // Use DT_NODELABEL for SPI device
 
     if (!device_is_ready(spi_dev)) {
         printk("SPI: Device %s is not ready\n", spi_dev->name);

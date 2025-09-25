@@ -6,3 +6,4 @@ project(zephyr_dbus_driver)
 # Add your source files here
 target_sources(app PRIVATE src/main.c src/dbus_app_layer.c src/spi_abstraction.c src/dbus_config.c)
 target_include_directories(app PRIVATE inc)
+

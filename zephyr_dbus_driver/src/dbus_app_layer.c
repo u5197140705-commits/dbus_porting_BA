@@ -1,5 +1,5 @@
 #include "dbus_app_layer.h"
-#include "spi_abstraction.h" // Include the SPI abstraction layer
+#include "spi_abstraction.h" // Include the mock SPI abstraction layer for testing
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/autoconf.h> // Explicitly include autoconf.h for Kconfig options

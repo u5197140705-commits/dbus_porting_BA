@@ -1,0 +1,8 @@
+tests:
+  dbus_driver.unit_tests:
+    build_only: true
+    platform_allow:
+      - frdm_rw612
+    tags:
+      - dbus_driver
+      - unit_test

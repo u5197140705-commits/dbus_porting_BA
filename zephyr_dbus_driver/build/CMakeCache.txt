@@ -79,7 +79,7 @@ CMAKE_ASM_COMPILER_AR:FILEPATH=/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bi
 // for the GCC compiler
 CMAKE_ASM_COMPILER_RANLIB:FILEPATH=/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ranlib
 
-CMAKE_ASM_FLAGS:STRING= -DUSE_RTOS=1
+CMAKE_ASM_FLAGS:STRING= -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1
 
 //Flags used by the ASM compiler during DEBUG builds.
 CMAKE_ASM_FLAGS_DEBUG:STRING=-g
@@ -108,7 +108,7 @@ CMAKE_CXX_COMPILER_AR:FILEPATH=/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bi
 // for the GCC compiler
 CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ranlib
 
-CMAKE_CXX_FLAGS:STRING= -DUSE_RTOS=1
+CMAKE_CXX_FLAGS:STRING= -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1
 
 //Flags used by the CXX compiler during DEBUG builds.
 CMAKE_CXX_FLAGS_DEBUG:STRING=-g
@@ -122,8 +122,8 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
-//C compiler
-CMAKE_C_COMPILER:STRING=/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc
+//Path to a program.
+CMAKE_C_COMPILER:FILEPATH=/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -133,7 +133,7 @@ CMAKE_C_COMPILER_AR:FILEPATH=/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/
 // for the GCC compiler
 CMAKE_C_COMPILER_RANLIB:FILEPATH=/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ranlib
 
-CMAKE_C_FLAGS:STRING= -DUSE_RTOS=1
+CMAKE_C_FLAGS:STRING= -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1
 
 //Flags used by the C compiler during DEBUG builds.
 CMAKE_C_FLAGS_DEBUG:STRING=-g
@@ -363,6 +363,9 @@ TOOLCHAIN_HAS_PICOLIBC:BOOL=ON
 //Zephyr toolchain root
 TOOLCHAIN_ROOT:STRING=/home/wis3re/zephyrproject/zephyr
 
+//Path to a program.
+VALGRIND_PROGRAM:FILEPATH=VALGRIND_PROGRAM-NOTFOUND
+
 //No help, variable specified on the command line.
 WEST_PYTHON:UNINITIALIZED=/usr/bin/python3
 
@@ -395,6 +398,15 @@ ZephyrBuildConfiguration_DIR:PATH=ZephyrBuildConfiguration_DIR-NOTFOUND
 
 //The directory containing a CMake configuration file for Zephyr.
 Zephyr_DIR:PATH=/home/wis3re/zephyrproject/zephyr/share/zephyr-package/cmake
+
+//Value Computed by CMake
+app_BINARY_DIR:STATIC=/home/wis3re/dbus_porting/zephyr_dbus_driver/build/tests
+
+//Value Computed by CMake
+app_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+app_SOURCE_DIR:STATIC=/home/wis3re/dbus_porting/zephyr_dbus_driver/tests
 
 //The variable core_id_suffix_name: 
 core_id_suffix_name:STRING=
@@ -483,8 +495,6 @@ CMAKE_CXX_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
 CMAKE_CXX_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_CXX_FLAGS_RELWITHDEBINFO
 CMAKE_CXX_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_C_COMPILER
-CMAKE_C_COMPILER-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_C_COMPILER_AR
 CMAKE_C_COMPILER_AR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_C_COMPILER_RANLIB

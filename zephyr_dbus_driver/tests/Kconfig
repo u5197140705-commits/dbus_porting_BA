@@ -1,0 +1,3 @@
+# Kconfig for DBus driver tests
+
+source "/home/wis3re/dbus_porting/zephyr_dbus_driver/Kconfig"
