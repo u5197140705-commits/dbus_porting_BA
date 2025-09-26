@@ -9,18 +9,14 @@ graph TD
         DBAL --> DBPL
         DBAL --> STIM[STIM: System Timer]
         DBAL_CFG[DBAL_cfg: Configuration] --> DBAL
-        DBUSCAN_DRV[DBusCAN Driver] --> DLL
-        DBUSCAN_DRV --> MSPI[MSPI: SPI MCAL]
-        DBUSCAN_DRV --> MDMA[MDMA: DMA MCAL]
-        DBUSCAN_DRV --> MDIO[MDIO: Digital I/O MCAL]
+        SPI_ABSTRACTION[SPI Abstraction] --> DLL
+        SPI_ABSTRACTION --> MSPI[MSPI: SPI MCAL]
     end
 
     subgraph External Dependencies
         DBM[DBM: DBus Mapping]
         STIM[STIM: System Timer]
         MSPI[MSPI: SPI MCAL]
-        MDMA[MDMA: DMA MCAL]
-        MDIO[MDIO: Digital I/O MCAL]
         BUSTYPE[BUSTYPE: Bus Types]
         LIBTYPE[LIBTYPE: Library Types]
         BSH_STDINC[BSH_STDINC: Standard Includes]
@@ -28,8 +24,6 @@ graph TD
         HSUP[HSUP: Helper Support]
         MCAL_TYPES[MCAL_TYPES: MCAL Types]
         MCAL_CHANNELS[MCAL_CHANNELS: MCAL Channels]
-        DBUSCAN_TYPES[DBUSCAN_TYPES: DBusCAN Types]
-        DBUSCAN[DBUSCAN: DBusCAN Core]
     end
 
     BAL --> BUSTYPE
@@ -51,14 +45,12 @@ graph TD
     DBAL --> BSH_STDINC
     DBAL --> LIBDEFINE
 
-    DBUSCAN_DRV --> BSH_STDINC
-    DBUSCAN_DRV --> MCAL_CHANNELS
-    DBUSCAN_DRV --> DBUSCAN_TYPES
-    DBUSCAN_DRV --> DBUSCAN
+    SPI_ABSTRACTION --> BSH_STDINC
+    SPI_ABSTRACTION --> MCAL_CHANNELS
 
     style BAL fill:#f9f,stroke:#333,stroke-width:2px
     style DLL fill:#bbf,stroke:#333,stroke-width:2px
     style DBPL fill:#9cf,stroke:#333,stroke-width:2px
     style DBAL fill:#ffc,stroke:#333,stroke-width:2px
     style DBAL_CFG fill:#ccf,stroke:#333,stroke-width:2px
-    style DBUSCAN_DRV fill:#cff,stroke:#333,stroke-width:2px
+    style SPI_ABSTRACTION fill:#cff,stroke:#333,stroke-width:2px

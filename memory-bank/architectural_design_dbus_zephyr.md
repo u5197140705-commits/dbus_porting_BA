@@ -10,8 +10,8 @@ This document outlines the architectural design for porting the existing DBus dr
 
 The existing DBus driver likely operates within a single main loop or a simple bare-metal scheduler. In Zephyr, we will leverage its multi-threading capabilities to handle DBus communication efficiently and asynchronously.
 
--   **DBus Transmit Thread:** A dedicated Zephyr thread will be responsible for queuing and sending DBus messages. This thread will manage the transmission buffer and interact with the underlying CAN/UART device driver.
--   **DBus Receive Thread:** Another dedicated Zephyr thread will handle incoming DBus messages. This thread will read data from the CAN/UART device driver, parse DBus frames, and dispatch them to the appropriate application layer callbacks.
+-   **DBus Transmit Thread:** A dedicated Zephyr thread will be responsible for queuing and sending DBus messages. This thread will manage the transmission buffer and interact with the underlying SPI device driver.
+-   **DBus Receive Thread:** Another dedicated Zephyr thread will handle incoming DBus messages. This thread will read data from the SPI device driver, parse DBus frames, and dispatch them to the appropriate application layer callbacks.
 -   **Application Interaction:** Application modules will interact with the DBus driver through a set of public APIs, which will internally use Zephyr's IPC mechanisms to communicate with the DBus transmit/receive threads.
 
 ### 2.2. Inter-Process Communication (IPC)
@@ -26,10 +26,10 @@ Zephyr offers various IPC mechanisms. For the DBus driver, the following will be
 
 ### 2.3. Device Driver Integration (CAN/UART)
 
-The existing DBus driver relies on low-level peripheral drivers (CAN or UART). In Zephyr, these will be integrated using Zephyr's unified device model.
-
--   **Zephyr Device API:** The DBus driver will interact with the underlying communication peripheral (CAN or UART) through Zephyr's generic device API. This promotes portability across different hardware platforms supported by Zephyr.
--   **Callbacks/Interrupts:** The Zephyr CAN/UART drivers will be configured to generate callbacks or signal events upon message reception or transmission completion. These will trigger the DBus Receive/Transmit threads.
+The existing DBus driver relies on low-level peripheral drivers (SPI). In Zephyr, these will be integrated using Zephyr's unified device model.
+ 
+-   **Zephyr Device API:** The DBus driver will interact with the underlying communication peripheral (SPI) through Zephyr's generic device API. This promotes portability across different hardware platforms supported by Zephyr.
+-   **Callbacks/Interrupts:** The Zephyr SPI drivers will be configured to generate callbacks or signal events upon message reception or transmission completion. These will trigger the DBus Receive/Transmit threads.
 
 ### 2.4. Configuration Management
 
@@ -57,76 +57,76 @@ graph TD
 
     subgraph Zephyr RTOS
         Kernel[Zephyr Kernel: Threads, IPC, Timers]
-        DeviceDriver[Zephyr Device Driver: CAN/UART]
+        DeviceDriver[Zephyr Device Driver: SPI]
         Kconfig[Kconfig]
         DeviceTree[Device Tree]
     end
-
+ 
     subgraph Hardware
-        CAN_UART_HW[CAN/UART Hardware]
+        SPI_HW[SPI Hardware]
     end
-
+ 
     AppModule1 --> DBusAPI
     AppModule2 --> DBusAPI
-
+ 
     DBusAPI --> MessageQueueTx[Message Queue (Tx)]
     MessageQueueTx --> DBusTxThread
-
+ 
     DBusTxThread --> DeviceDriver: Send Data
-    DeviceDriver --> CAN_UART_HW: Transmit
-
-    CAN_UART_HW --> DeviceDriver: Receive Data
+    DeviceDriver --> SPI_HW: Transmit
+ 
+    SPI_HW --> DeviceDriver: Receive Data
     DeviceDriver --> DBusRxThread
-
+ 
     DBusRxThread --> DBusInternalLogic: Parse & Dispatch
     DBusInternalLogic --> Callbacks[Application Callbacks]
-
+ 
     DBusAPI --> DBusInternalLogic: Direct Calls/Config
     DBusInternalLogic --> Kernel: OS Services
     DBusTxThread --> Kernel: OS Services
     DBusRxThread --> Kernel: OS Services
-
+ 
     Kernel --> DeviceDriver
     Kconfig --> ZephyrRTOS[Zephyr RTOS Build]
     DeviceTree --> ZephyrRTOS
     ZephyrRTOS --> DeviceDriver
 ```
-
+ 
 ## 4. Detailed Design Considerations
-
+ 
 ### 4.1. DBus Public API
-
+ 
 The existing `DBAL_sendCmdResponse`, `DBAL_sendQueryResponse`, `DBAL_sendEvent` (and their `DBALCR_` counterparts for cross-connection) will be retained as the primary interface for the application. These functions will be adapted to:
 -   Place messages into the `MessageQueueTx`.
 -   Handle return status based on queueing success.
-
+ 
 ### 4.2. DBus Transmit Thread
-
+ 
 -   **Priority and Stack Size:** Determine appropriate thread priority and stack size based on message volume and real-time requirements.
 -   **Message Processing:** Loop, waiting on `k_msgq_get` for outgoing messages.
--   **Hardware Interaction:** Call Zephyr CAN/UART device driver APIs to send messages. Handle transmission completion callbacks/signals.
+-   **Hardware Interaction:** Call Zephyr SPI device driver APIs to send messages. Handle transmission completion callbacks/signals.
 -   **Retransmission Logic:** Adapt the existing retransmission logic (`DBAL_isMsgOfDBalType2Repeat`, `DBAL_saveMsg2Repeat`, `DBAL_msgTimerAction`) to use Zephyr timers (`k_timer`) and potentially a separate workqueue for deferred processing if needed.
-
+ 
 ### 4.3. DBus Receive Thread
-
+ 
 -   **Priority and Stack Size:** Determine appropriate thread priority and stack size.
--   **Hardware Interaction:** Loop, waiting on `k_poll` or `k_sem_take` (signaled by the CAN/UART driver's ISR) for incoming data.
+-   **Hardware Interaction:** Loop, waiting on `k_poll` or `k_sem_take` (signaled by the SPI driver's ISR) for incoming data.
 -   **Frame Parsing:** Implement the existing DBus frame parsing logic (`DBAL_look4MsgReception`, `DBAL_look4AckMsgReception`).
 -   **Callback Dispatch:** Invoke the appropriate application callbacks (`DBAL_Service`, `DBALCR_Service`) for received messages.
 -   **Acknowledgement Handling:** Process acknowledgements and update the retransmission queue.
-
+ 
 ### 4.4. Error Handling and Logging
-
+ 
 -   Integrate existing error handling (`DBAL_ntfUnknownDBalFrameReceived`, `DBAL_ntfCorruptReqRespDbus2FrameReceived`) with Zephyr's logging subsystem (`LOG_INF`, `LOG_WRN`, `LOG_ERR`).
 -   Utilize Zephyr's `k_panic` or `k_oops` for unrecoverable errors.
-
+ 
 ### 4.5. Timer Management
-
+ 
 -   Replace existing `STIM` (System Timer) usage with Zephyr's `k_timer` API for message retransmission and connection state management.
-
+ 
 ## 5. Open Questions / Areas for Further Investigation
-
+ 
 -   **Exact Zephyr Board Support:** Which specific Zephyr BSP will be used for the target microcontroller (e.g., `stm32g071` or `gd32f30`)? This will influence the specific device driver APIs.
 -   **Existing `bsh_stdinc.h` and other common includes:** How will these common utility headers be integrated or replaced with Zephyr equivalents?
 -   **Memory Management:** Detailed analysis of memory usage for message queues, thread stacks, and buffers to ensure fit within target constraints.
--   **Interrupt Handling:** How are the current low-level CAN/UART interrupts handled, and how will this map to Zephyr's interrupt handling mechanisms?
+-   **Interrupt Handling:** How are the current low-level SPI interrupts handled, and how will this map to Zephyr's interrupt handling mechanisms?

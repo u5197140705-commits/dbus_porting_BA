@@ -11,7 +11,7 @@ This document provides a detailed breakdown of how each significant function, ma
 *   **Original Configuration:** `app/variant_gd32f30/prog/dbus/DBal/DBal_cfg.c`
     *   **Zephyr Counterparts:** `zephyr_dbus_driver/inc/dbus_config.h` and `zephyr_dbus_driver/src/dbus_config.c`
 *   **Original Bus Abstraction (Conceptual):** `bal.h`, `dbusdll.h`, `bustypes.h` (and underlying MCALs like SPI, DMA, DIO)
-    *   **Zephyr Counterparts:** `zephyr_dbus_driver/inc/can_abstraction.h` and `zephyr_dbus_driver/src/can_abstraction.c` (for CAN bus interaction)
+    *   **Zephyr Counterparts:** `zephyr_dbus_driver/inc/spi_abstraction.h` and `zephyr_dbus_driver/src/spi_abstraction.c` (for SPI bus interaction)
 
 ---
 
@@ -31,23 +31,23 @@ This section details the replacement or adaptation of key functions and concepts
                 k_timer_init(&g_dbal_main_instance.ConMsgTimer, dbal_con_msg_timer_cb, NULL);
                 k_timer_init(&g_dbal_main_instance.MsgTimer, dbal_msg_timer_cb, NULL);
                 ```
-            *   Initialization of the CAN communication interface (which `DBAL_Enable()` would typically handle) is now explicitly done via the `can_abstraction` layer:
+            *   Initialization of the SPI communication interface (which `DBAL_Enable()` would typically handle) is now explicitly done via the `spi_abstraction` layer:
                 ```c
-                if (can_abstraction_init() == true) {
-                    can_abstraction_register_rx_callback(dbal_can_rx_callback);
-                    printk("DBAL: CAN abstraction initialized and RX callback registered.\n");
+                if (spi_abstraction_init() == true) {
+                    spi_abstraction_register_rx_callback(dbal_spi_rx_callback);
+                    printk("DBAL: SPI abstraction initialized and RX callback registered.\n");
                 } else {
-                    printk("DBAL_ERROR: Failed to initialize CAN abstraction.\n");
+                    printk("DBAL_ERROR: Failed to initialize SPI abstraction.\n");
                 }
                 ```
             *   Other instance member initializations (e.g., `DBUS_ComPartner`, `ConnectDataLen`) are directly performed.
             *   Calls to `dbal_clear_retry_counters`, `dbal_clear_msgs_to_repeat`, `dbal_clear_both_io_tx_buffers` are retained for state cleanup.
-        *   **Why this way:** Aligns with Zephyr's standard practice of a single `init` function for module setup. Decouples the DBAL from direct hardware access by introducing `can_abstraction`.
-
+        *   **Why this way:** Aligns with Zephyr's standard practice of a single `init` function for module setup. Decouples the DBAL from direct hardware access by introducing `spi_abstraction`.
+ 
 *   **Original Function:** `void DBAL_Enable()` (conceptual, often part of `DBAL_appLayerDBus2Init` or a separate call)
     *   **Purpose:** Activates the DBus communication.
     *   **Zephyr Replacement/Adaptation:** Its functionality is implicitly handled by the `dbal_init()` function in [`zephyr_dbus_driver/src/dbus_app_layer.c`](zephyr_dbus_driver/src/dbus_app_layer.c:98).
-        *   **How it's replaced:** The `can_abstraction_init()` and `can_abstraction_register_rx_callback()` calls within `dbal_init()` are the primary replacements for bringing the communication interface online. The state machine (conceptual `dbal_connection_sm`) would then handle the transition to a "ready" state.
+        *   **How it's replaced:** The `spi_abstraction_init()` and `spi_abstraction_register_rx_callback()` calls within `dbal_init()` are the primary replacements for bringing the communication interface online. The state machine (conceptual `dbal_connection_sm`) would then handle the transition to a "ready" state.
         *   **Why this way:** Follows Zephyr's idiom where module initialization (including hardware setup) is typically done once at startup.
 
 ### 2. Message Sending (Public API)
@@ -76,12 +76,12 @@ This section details the replacement or adaptation of key functions and concepts
 *   **Original Function:** `static bool DBAL_ioDbusHandler_send(...)` (from `BshDBus2AppLayer.c`)
     *   **Purpose:** Central function for preparing and sending DBus frames.
     *   **Zephyr Replacement/Adaptation:** `static bool dbal_io_dbus_handler_send(...)` in [`zephyr_dbus_driver/src/dbus_app_layer.c`](zephyr_dbus_driver/src/dbus_app_layer.c:480).
-        *   **How it's replaced:** This function now calls `can_abstraction_send()` to perform the actual transmission over the CAN bus. This is a critical point of integration with the new hardware abstraction.
+        *   **How it's replaced:** This function now calls `spi_abstraction_send()` to perform the actual transmission over the SPI bus. This is a critical point of integration with the new hardware abstraction.
             ```c
-            if (can_abstraction_send(inst->DBUS_ComPartner, inst->TransmitBuffer, inst->TransmitDataLen) == true) {
-                printk("DBAL: Message transmitted via CAN (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
+            if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen) == true) {
+                printk("DBAL: Message transmitted via SPI (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
             } else {
-                printk("DBAL_ERROR: Failed to send message via CAN (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
+                printk("DBAL_ERROR: Failed to send message via SPI (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
                 ret_val = false;
             }
             ```
@@ -94,16 +94,16 @@ This section details the replacement or adaptation of key functions and concepts
     *   `static void DBAL_look4AckMsgReception(...)` (from `BshDBus2AppLayer.c`)
     *   **Purpose:** Parse incoming DBus frames and handle acknowledgements.
     *   **Zephyr Replacement/Adaptation:** `static void dbal_look_for_msg_reception(...)` in [`zephyr_dbus_driver/src/dbus_app_layer.c`](zephyr_dbus_driver/src/dbus_app_layer.c:494) and `static void dbal_look_for_ack_msg_reception(...)` in [`zephyr_dbus_driver/src/dbus_app_layer.c`](zephyr_dbus_driver/src/dbus_app_layer.c:549).
-        *   **How it's replaced:** The core parsing logic is retained. These functions are now called by the `dbal_can_rx_callback` when a CAN message is received.
-        *   **Why this way:** To integrate the existing parsing logic with the new Zephyr-based CAN reception mechanism.
-
-*   **New Zephyr-Specific Function:** `static void dbal_can_rx_callback(uint32_t id, const uint8_t *data, uint8_t len)` (in [`zephyr_dbus_driver/src/dbus_app_layer.c`](zephyr_dbus_driver/src/dbus_app_layer.c:141))
-    *   **Purpose:** Serves as the callback registered with the `can_abstraction` layer for incoming CAN messages.
-    *   **How it works:** It receives raw CAN data, constructs a simulated DBus frame (including sender, protocol type, sequence ID), and then calls `dbal_look_for_msg_reception` and `dbal_look_for_ack_msg_reception` to process the data.
-    *   **Why this way:** This is the bridge between the generic CAN abstraction and the DBus-specific parsing logic.
-
+        *   **How it's replaced:** The core parsing logic is retained. These functions are now called by the `dbal_spi_rx_callback` when an SPI message is received.
+        *   **Why this way:** To integrate the existing parsing logic with the new Zephyr-based SPI reception mechanism.
+ 
+*   **New Zephyr-Specific Function:** `static void dbal_spi_rx_callback(const uint8_t *data, uint8_t len)` (in [`zephyr_dbus_driver/src/dbus_app_layer.c`](zephyr_dbus_driver/src/dbus_app_layer.c:721))
+    *   **Purpose:** Serves as the callback registered with the `spi_abstraction` layer for incoming SPI messages.
+    *   **How it works:** It receives raw SPI data, validates the frame (SOF, length, CRC), and then calls `dbal_look_for_msg_reception` and `dbal_look_for_ack_msg_reception` to process the data. It also handles ACK/NACK generation.
+    *   **Why this way:** This is the bridge between the generic SPI abstraction and the DBus-specific parsing logic.
+ 
 ### 5. Timers and Callbacks
-
+ 
 *   **Original Timer Module:** `system_timer.h` (STIM)
     *   **Zephyr Replacement/Adaptation:** Zephyr's `k_timer` API.
     *   **How it's replaced:**
@@ -112,19 +112,19 @@ This section details the replacement or adaptation of key functions and concepts
         *   Timer disable (`STIM_DisableTimer`) is replaced by `k_timer_stop()`.
         *   Original timer callbacks (`DBAL_conMsgTimerCallback`, `DBAL_msgTimerCallback`) are adapted to Zephyr's `k_timer_handler_t` signature (`dbal_con_msg_timer_cb`, `dbal_msg_timer_cb`).
         *   **Why this way:** To leverage Zephyr's native and robust kernel timer services.
-
-### 6. Hardware Abstraction (CAN/UART)
-
+ 
+### 6. Hardware Abstraction (SPI)
+ 
 *   **Original Modules:** `bal.h`, `dbusdll.h` (and underlying MCALs like SPI, DMA, DIO)
-    *   **Zephyr Replacement/Adaptation:** `zephyr_dbus_driver/inc/can_abstraction.h` and `zephyr_dbus_driver/src/can_abstraction.c`.
+    *   **Zephyr Replacement/Adaptation:** `zephyr_dbus_driver/inc/spi_abstraction.h` and `zephyr_dbus_driver/src/spi_abstraction.c`.
     *   **How it's replaced:**
-        *   `can_abstraction_init()` replaces the low-level initialization of the bus peripheral.
-        *   `can_abstraction_send()` replaces `BAL_vTransmitMessage` for sending data.
-        *   `can_abstraction_register_rx_callback()` provides the mechanism for receiving data, replacing polling or interrupt-driven reception in the original.
-        *   **Why this way:** To provide a clean, portable abstraction layer for CAN communication that uses Zephyr's unified device model, decoupling the DBus logic from specific hardware details.
-
+        *   `spi_abstraction_init()` replaces the low-level initialization of the bus peripheral.
+        *   `spi_abstraction_send()` replaces `BAL_vTransmitMessage` for sending data.
+        *   `spi_abstraction_register_rx_callback()` provides the mechanism for receiving data, replacing polling or interrupt-driven reception in the original.
+        *   **Why this way:** To provide a clean, portable abstraction layer for SPI communication that uses Zephyr's unified device model, decoupling the DBus logic from specific hardware details.
+ 
 ### 7. Configuration
-
+ 
 *   **Original File:** `app/variant_gd32f30/prog/dbus/DBal/DBal_cfg.c`
     *   **Zephyr Replacement/Adaptation:** `zephyr_dbus_driver/inc/dbus_config.h` and `zephyr_dbus_driver/src/dbus_config.c`.
     *   **How it's replaced:**
@@ -133,24 +133,24 @@ This section details the replacement or adaptation of key functions and concepts
         *   Notification functions (`DBAL_ntfUnknownDBalFrameReceived`, etc.) are also moved to `dbus_config.c` with `printk` statements for basic logging.
         *   Zephyr's Kconfig system (`prj.conf`) is used to enable/disable features like `CONFIG_DBAL_CROSS_CONNECTION`, replacing `#ifdef` blocks in the original configuration.
         *   **Why this way:** To align with Zephyr's modular configuration system and separate application-specific configurations from the core driver logic.
-
+ 
 ### 8. Critical Sections / Interrupt Handling
-
+ 
 *   **Original Macros/Functions:** `DBM_DISABLE_INT()`, `DBM_ENABLE_INT()`, `DBAL_setCodeSectionFlag()`, `DBAL_checkTaskCodeSectionFlag()`, `DBAL_executeSetNonTaskCodeSections()`
     *   **Zephyr Replacement/Adaptation:**
         *   `DBM_DISABLE_INT()` and `DBM_ENABLE_INT()` are conceptually replaced by Zephyr's interrupt locking primitives (`k_spin_lock`, `k_irq_lock`) or by ensuring critical sections are handled within Zephyr threads with appropriate priorities and synchronization. In the ported code, these are currently simplified or commented out, implying that proper Zephyr synchronization primitives would be used.
         *   `DBAL_setCodeSectionFlag()`, `DBAL_checkTaskCodeSectionFlag()`, `DBAL_executeSetNonTaskCodeSections()` are ported as direct functions in `dbus_app_layer.c` to manage a `CodeSectionBitMask`, which is a custom mechanism for handling critical sections. This might need further refinement to fully leverage Zephyr's kernel object synchronization (e.g., mutexes, semaphores) for thread safety.
         *   **Why this way:** To transition from a potentially bare-metal or simpler RTOS's interrupt management to Zephyr's more structured and robust kernel-level synchronization mechanisms.
-
+ 
 ### 9. Data Structures
-
+ 
 *   **Original Structures:** `DBAL_Instance`, `DBAL_Event2Ack`, `DBAL_Identifier`, `DBAL_ReceiveObject`, `DBAL_ObjectTableEntry`, `DBALCR_ReceiveObject`, `DBALCR_ObjectTableEntry`, `TbusReceiveObject`, `TbusTransmitObject`
     *   **Zephyr Replacement/Adaptation:** Adapted to `dbal_instance`, `dbal_msg_to_repeat`, `DBAL_Event2Ack`, `DBAL_Identifier`, `DBAL_ReceiveObject`, `DBAL_ObjectTableEntry`, `DBALCR_ReceiveObject`, `DBALCR_ObjectTableEntry` (where applicable) in `dbus_app_layer.h` and `dbus_config.h`.
     *   **How it's replaced:** Structures are largely retained with minor naming changes (e.g., `DBAL_Instance` to `dbal_instance`) and adjusted to use standard C types (`uint8_t`, `uint16_t`, `bool`) and Zephyr kernel objects (`struct k_timer`).
     *   **Why this way:** To maintain data compatibility where possible while integrating with Zephyr's kernel types.
-
+ 
 ---
-
+ 
 This detailed protocol should provide a comprehensive understanding of the porting decisions and the current state of the `zephyr_dbus_driver` codebase. The "placeholders" indicate areas where further Zephyr-specific integration or full implementation of original complex logic is required during the actual build and testing phase in your environment.
 </result>
 </attempt_completion>

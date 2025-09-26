@@ -24,7 +24,7 @@
 - Other files within `common/prog/dbus/DBal/` and variant-specific `app/variant_XXX/prog/dbus/DBal/` directories.
 
 ### Low-Level Peripheral Drivers
-- Existing CAN/UART drivers that the dbus driver currently interfaces with will need to be replaced or adapted to Zephyr's device driver model.
+- Existing SPI drivers that the dbus driver currently interfaces with will need to be replaced or adapted to Zephyr's device driver model.
 
 ### Build System
 - The existing Makefiles will need to be replaced or integrated with Zephyr's CMake-based build system.
@@ -37,7 +37,7 @@
 ### Zephyr RTOS Integration
 - **Threads:** Dedicated Zephyr threads for dbus transmission and reception.
 - **Inter-Process Communication (IPC):** Utilize Zephyr's message queues or pipes for communication between the dbus driver threads and the application layer.
-- **Device Drivers:** Leverage Zephyr's device driver model for CAN/UART communication. This may involve writing new Zephyr-compatible drivers or adapting existing ones.
+- **Device Drivers:** Leverage Zephyr's device driver model for SPI communication. This may involve writing new Zephyr-compatible drivers or adapting existing ones.
 - **Synchronization:** Use Zephyr semaphores or mutexes for protecting shared resources (e.g., message buffers).
 - **Error Handling:** Integrate with Zephyr's logging and error reporting mechanisms.
 
@@ -78,12 +78,12 @@
     - [ ] Implement a simple message sending function using Zephyr threads and a placeholder for hardware interaction.
     - [ ] Implement a simple message reception function using Zephyr threads and a placeholder for hardware interaction.
     - [ ] Compile and run a minimal test to verify basic thread creation and message passing within Zephyr.
-
-4. **Hardware Abstraction Layer (HAL) Integration:**
-    - [ ] Identify the specific CAN/UART peripheral used by the existing dbus driver.
-    - [ ] Check for existing Zephyr device drivers for this peripheral.
-    - [ ] If no suitable driver exists, develop a new Zephyr-compatible device driver or adapt an existing one.
-    - [ ] Integrate the Zephyr dbus driver with the chosen Zephyr CAN/UART device driver.
+     
+    4. **Hardware Abstraction Layer (HAL) Integration:**
+        - [ ] Identify the specific SPI peripheral used by the existing dbus driver.
+        - [ ] Check for existing Zephyr device drivers for this peripheral.
+        - [ ] If no suitable driver exists, develop a new Zephyr-compatible device driver or adapt an existing one.
+        - [ ] Integrate the Zephyr dbus driver with the chosen Zephyr SPI device driver.
 
 5. **Full Feature Porting (Phase 2):**
     - [ ] Port all remaining dbus message types and data handling logic.
@@ -119,7 +119,7 @@
     - **Mitigation:** Isolate the Zephyr build process and link the resulting library/executable with the main project.
 - **Challenge: Debugging:** Debugging RTOS-based applications can be more complex.
     - **Mitigation:** Utilize Zephyr's built-in debugging tools, logging, and potentially Segger Ozone/Keil uVision if compatible.
-- **Challenge: Hardware Abstraction:** Porting or creating new Zephyr device drivers for specific peripherals.
+- **Challenge: Hardware Abstraction:** Porting or creating new Zephyr device drivers for specific SPI peripherals.
     - **Mitigation:** Prioritize using existing Zephyr drivers; if not available, develop new ones following Zephyr's driver model.
 
 ## 8. Creative Phase Components
