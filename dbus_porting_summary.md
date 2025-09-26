@@ -360,10 +360,14 @@ bool spi_abstraction_init(void)
 
     // Start asynchronous receive in slave mode
     if (spi_transceive_cb(spi_dev, &spi_cfg, NULL, &spi_rx_buf_set, spi_transceive_callback, NULL) != 0) {
-        printk("SPI_ERROR: Failed to start asynchronous SPI receive.\n");
+        printk("SPI_CRITICAL: Failed to start asynchronous SPI receive. SPI RX functionality will not be available.\n");
         return false;
     }
     printk("SPI: Asynchronous receive started in slave mode.\n");
+
+    // Start the receive timeout timer
+    k_timer_start(&spi_rx_timeout_timer, K_MSEC(SPI_RX_TIMEOUT_MS), K_NO_WAIT);
+    printk("SPI: RX timeout timer started.\n");
 
     return true;
 }
@@ -376,6 +380,8 @@ bool spi_abstraction_init(void)
 -   **Device Readiness Check:** Employs `device_is_ready()` to ensure the SPI peripheral is initialized and ready for use.
 -   **Asynchronous Receive:** The `spi_abstraction_init` now starts an asynchronous SPI receive operation using `spi_transceive_cb` in slave mode. This function will continuously attempt to receive data and trigger `spi_transceive_callback` upon completion.
 -   **Interrupt Configuration:** The previous placeholder for interrupt configuration has been replaced with the actual asynchronous receive initiation. The `spi_transceive_callback` is responsible for putting received data into the `dbal_spi_rx_msg_queue`.
+-   **SPI Timeout Mechanism:** A `k_timer` named `spi_rx_timeout_timer` has been defined and started in `spi_abstraction_init`. This timer will trigger `spi_rx_timeout_handler` if no SPI data is received within `SPI_RX_TIMEOUT_MS`. The timer is reset upon successful reception of an SPI message in `spi_transceive_callback`.
+-   **Error Reporting:** Enhanced `printk` messages with `SPI_ERROR` and `SPI_CRITICAL` prefixes for better diagnostic information.
 
 ### 2.5 DBus Lock (DBLK) Functionality
 

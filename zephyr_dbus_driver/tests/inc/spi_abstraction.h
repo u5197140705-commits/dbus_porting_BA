@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <zephyr/kernel.h> // For struct k_msgq
 #include "mock_types.h" // Include the standalone mock types
+#include <zephyr/drivers/spi.h> // For spi_callback_t and spi_transceive_cb
 
 
 

@@ -4,6 +4,7 @@
 // Include the application headers to be tested
 #include "dbus_app_layer.h"
 #include "spi_abstraction.h"
+#include "mock_types.h" // Include mock types for test_dbus_app_layer.c
 
 // Test suite for DBAL initialization
 ZTEST_SUITE(dbal_app_layer_init_suite, NULL, NULL, dbal_setup, dbal_teardown, NULL);
@@ -27,7 +28,7 @@ ZTEST(dbal_app_layer_init_suite, test_dbal_app_layer_init_basic) {
 }
 
 // Test suite for DBAL message sending
-ZTEST_SUITE(dbal_send_suite, NULL, NULL, NULL, NULL, NULL); // No setup/teardown for now
+ZTEST_SUITE(dbal_send_suite, NULL, NULL, dbal_setup, dbal_teardown, NULL);
 
 ZTEST(dbal_send_suite, test_dbal_send_cmd_response) {
     // Reset mock state (manual setup for this test)
