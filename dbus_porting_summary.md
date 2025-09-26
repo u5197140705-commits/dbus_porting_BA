@@ -349,7 +349,7 @@ K_THREAD_DEFINE(dbal_rx_thread, 1024, dbal_rx_thread_entry, NULL, NULL, NULL, 7,
 ```c
 bool spi_abstraction_init(void)
 {
-    spi_dev = DEVICE_DT_GET(DT_ALIAS(spi0));
+    spi_dev = DEVICE_DT_GET(DT_NODELABEL(flexcomm1)); // Use DT_NODELABEL for SPI device
 
     if (!device_is_ready(spi_dev)) {
         printk("SPI: Device %s is not ready\n", spi_dev->name);
@@ -358,16 +358,12 @@ bool spi_abstraction_init(void)
 
     printk("SPI: Abstraction layer initialized.\n");
 
-    // Configure SPI peripheral for interrupt-driven operation.
-    // NOTE: The actual interrupt line setup (GPIO, IRQ controller) is board-specific
-    // and typically handled via Device Tree overlays. This is a placeholder for
-    // enabling the SPI RX interrupt at the driver level if supported.
-    // For a real implementation, you would need to consult your board's documentation
-    // and Zephyr's SPI driver API for interrupt configuration.
-    // Example (conceptual):
-    // spi_set_interrupt_handler(spi_dev, spi_rx_isr, NULL);
-    // spi_enable_rx_interrupt(spi_dev);
-    printk("SPI: Placeholder for interrupt configuration executed.\n");
+    // Start asynchronous receive in slave mode
+    if (spi_transceive_cb(spi_dev, &spi_cfg, NULL, &spi_rx_buf_set, spi_transceive_callback, NULL) != 0) {
+        printk("SPI_ERROR: Failed to start asynchronous SPI receive.\n");
+        return false;
+    }
+    printk("SPI: Asynchronous receive started in slave mode.\n");
 
     return true;
 }
@@ -376,9 +372,10 @@ bool spi_abstraction_init(void)
 **Purpose and Changes:**
 -   **Functionality Equivalence:** **New Functionality.** This function provides the necessary initialization for the new SPI communication.
 -   **New Layer:** This is a new abstraction layer specifically for Zephyr's SPI driver. It encapsulates the Zephyr-specific SPI device initialization and management.
--   **Device Tree Integration:** Uses `DEVICE_DT_GET(DT_ALIAS(spi0))` to retrieve the SPI device instance based on the Zephyr Device Tree, which is a fundamental Zephyr concept for hardware configuration.
+-   **Device Tree Integration:** Uses `DEVICE_DT_GET(DT_NODELABEL(flexcomm1))` to retrieve the SPI device instance based on the Zephyr Device Tree, which is a fundamental Zephyr concept for hardware configuration.
 -   **Device Readiness Check:** Employs `device_is_ready()` to ensure the SPI peripheral is initialized and ready for use.
--   **Interrupt Configuration:** The `TODO` comment has been replaced with a placeholder for enabling interrupt-driven operation. The `spi_abstraction_set_rx_msg_queue` function is now used to provide the message queue for received data.
+-   **Asynchronous Receive:** The `spi_abstraction_init` now starts an asynchronous SPI receive operation using `spi_transceive_cb` in slave mode. This function will continuously attempt to receive data and trigger `spi_transceive_callback` upon completion.
+-   **Interrupt Configuration:** The previous placeholder for interrupt configuration has been replaced with the actual asynchronous receive initiation. The `spi_transceive_callback` is responsible for putting received data into the `dbal_spi_rx_msg_queue`.
 
 ### 2.5 DBus Lock (DBLK) Functionality
 

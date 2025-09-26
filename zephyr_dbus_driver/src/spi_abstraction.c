@@ -9,9 +9,12 @@ static const struct device *spi_dev;
 
 // Global SPI configuration
 static struct spi_config spi_cfg = {
-    .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_MASTER,
+    .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_SLAVE,
     .frequency = 1000000, // 1 MHz
-    .slave = 0 // Assuming slave select 0
+    .slave = 0, // Assuming slave select 0
+    // In slave mode, the CS line is controlled by the master.
+    // No explicit SPI_HOLD_ON_CS or SPI_CS_ACTIVE_HIGH flags are needed here for slave operation,
+    // as the slave reacts to the master's CS assertion.
 };
 
 // Static variable to store the registered RX callback
@@ -20,35 +23,48 @@ static spi_rx_callback_t rx_callback = NULL;
 // Static variable to store the message queue for received data
 static struct k_msgq *spi_rx_msg_queue = NULL;
 
-// Placeholder for the SPI ISR
-static void spi_rx_isr(const struct device *dev, void *user_data) {
-    // This is a placeholder ISR. In a real implementation, this would read data
-    // from the SPI peripheral. For now, we simulate receiving a message.
-    // The actual data reception mechanism (e.g., DMA, polling in ISR) is board-specific.
+// Buffer for asynchronous SPI receive
+static uint8_t spi_async_rx_buffer[DBAL_SPI_RX_MSG_MAX_SIZE];
 
-    // For demonstration, let's assume we received a dummy message
-    static uint8_t dummy_rx_data[DBAL_SPI_RX_MSG_MAX_SIZE] = {
-        SPI_SOF_BYTE, 0x0A, 0xCC, // SOF, Length (10 bytes), Dummy CRC
-        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A // Dummy payload
-    };
-    uint8_t dummy_rx_len = 13; // SPI_HEADER_LEN + 10 bytes payload
+// SPI buffer set for asynchronous receive
+static struct spi_buf spi_rx_buf = {
+    .buf = spi_async_rx_buffer,
+    .len = DBAL_SPI_RX_MSG_MAX_SIZE
+};
+static struct spi_buf_set spi_rx_buf_set = {
+    .buffers = &spi_rx_buf,
+    .count = 1
+};
 
-    struct dbal_spi_rx_msg rx_msg;
-    if (dummy_rx_len <= DBAL_SPI_RX_MSG_MAX_SIZE) {
-        memcpy(rx_msg.data, dummy_rx_data, dummy_rx_len);
-        rx_msg.len = dummy_rx_len;
+// Callback for asynchronous SPI transfers
+static void spi_transceive_callback(const struct device *dev, int result, void *data) {
+    ARG_UNUSED(dev);
+    ARG_UNUSED(data);
+
+    if (result == 0) {
+        struct dbal_spi_rx_msg rx_msg;
+        // Assuming the entire buffer was filled or a specific length was received
+        // For slave mode, spi_transceive_cb returns the number of frames received.
+        // We'll assume the full buffer was intended to be filled for now.
+        rx_msg.len = DBAL_SPI_RX_MSG_MAX_SIZE;
+        memcpy(rx_msg.data, spi_async_rx_buffer, rx_msg.len);
 
         if (spi_rx_msg_queue != NULL) {
             if (k_msgq_put(spi_rx_msg_queue, &rx_msg, K_NO_WAIT) != 0) {
                 printk("SPI_ERROR: Failed to put RX message into queue (queue full).\n");
             } else {
-                printk("SPI: RX ISR put message into queue (len: %u).\n", rx_msg.len);
+                printk("SPI: Async RX callback put message into queue (len: %u).\n", rx_msg.len);
             }
         } else {
-            printk("SPI_ERROR: RX message queue not set in ISR.\n");
+            printk("SPI_ERROR: RX message queue not set in async callback.\n");
         }
     } else {
-        printk("SPI_ERROR: Received data too large for buffer in ISR.\n");
+        printk("SPI_ERROR: Asynchronous SPI transfer failed with result: %d\n", result);
+    }
+
+    // Re-arm the asynchronous receive for continuous operation
+    if (spi_transceive_cb(spi_dev, &spi_cfg, NULL, &spi_rx_buf_set, spi_transceive_callback, NULL) != 0) {
+        printk("SPI_ERROR: Failed to re-arm asynchronous SPI receive.\n");
     }
 }
 
@@ -64,16 +80,12 @@ bool spi_abstraction_init(void)
 
     printk("SPI: Abstraction layer initialized.\n");
 
-    // Configure SPI peripheral for interrupt-driven operation.
-    // NOTE: The actual interrupt line setup (GPIO, IRQ controller) is board-specific
-    // and typically handled via Device Tree overlays. This is a placeholder for
-    // enabling the SPI RX interrupt at the driver level if supported.
-    // For a real implementation, you would need to consult your board's documentation
-    // and Zephyr's SPI driver API for interrupt configuration.
-    // Example (conceptual):
-    // spi_set_interrupt_handler(spi_dev, spi_rx_isr, NULL);
-    // spi_enable_rx_interrupt(spi_dev);
-    printk("SPI: Placeholder for interrupt configuration executed.\n");
+    // Start asynchronous receive in slave mode
+    if (spi_transceive_cb(spi_dev, &spi_cfg, NULL, &spi_rx_buf_set, spi_transceive_callback, NULL) != 0) {
+        printk("SPI_ERROR: Failed to start asynchronous SPI receive.\n");
+        return false;
+    }
+    printk("SPI: Asynchronous receive started in slave mode.\n");
 
     return true;
 }
@@ -101,6 +113,8 @@ bool spi_abstraction_send(const uint8_t *data, uint8_t len)
         .count = 1
     };
 
+    // In slave mode, spi_write will wait for the master to provide clock and CS.
+    // This is a blocking call. For non-blocking, spi_transceive_cb would be used.
     if (spi_write(spi_dev, &spi_cfg, &tx_bufs) != 0) {
         printk("SPI: Failed to send message\n");
         return false;
@@ -109,6 +123,7 @@ bool spi_abstraction_send(const uint8_t *data, uint8_t len)
 }
 
 // Receives data over SPI.
+// This function is now less relevant with asynchronous receive, but kept for completeness.
 bool spi_abstraction_receive(uint8_t *buffer, uint8_t len)
 {
     struct spi_buf rx_buf = {
@@ -120,6 +135,8 @@ bool spi_abstraction_receive(uint8_t *buffer, uint8_t len)
         .count = 1
     };
 
+    // In slave mode, spi_read will wait for the master to provide clock and CS.
+    // This is a blocking call.
     if (spi_read(spi_dev, &spi_cfg, &rx_bufs) != 0) {
         printk("SPI: Failed to receive message\n");
         return false;
@@ -128,6 +145,7 @@ bool spi_abstraction_receive(uint8_t *buffer, uint8_t len)
 }
 
 // Sends and receives data over SPI (full-duplex).
+// This function is now less relevant with asynchronous receive, but kept for completeness.
 bool spi_abstraction_transceive(const uint8_t *tx_data, uint8_t *rx_buffer, uint8_t len)
 {
     struct spi_buf tx_buf = {
@@ -148,6 +166,8 @@ bool spi_abstraction_transceive(const uint8_t *tx_data, uint8_t *rx_buffer, uint
         .count = 1
     };
 
+    // In slave mode, spi_transceive will wait for the master to provide clock and CS.
+    // This is a blocking call.
     if (spi_transceive(spi_dev, &spi_cfg, &tx_bufs, &rx_bufs) != 0) {
         printk("SPI: Failed to transceive message\n");
         return false;

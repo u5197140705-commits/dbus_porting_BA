@@ -1,4 +1,58 @@
+cmake:
+  application:
+    configuration-dir: '/home/wis3re/dbus_porting/zephyr_dbus_driver/tests'
+    source-dir: '/home/wis3re/dbus_porting/zephyr_dbus_driver/tests'
+  board:
+    name: 'frdm_rw612'
+    path:
+     - '/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612'
+    qualifiers: 'rw612'
+    revision: ''
+  devicetree:
+    bindings-dirs:
+     - '/home/wis3re/zephyrproject/zephyr/dts/bindings'
+    files:
+     - '/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts'
+    include-dirs:
+     - '/home/wis3re/zephyrproject/modules/hal/ambiq/dts'
+     - '/home/wis3re/zephyrproject/modules/hal/atmel/include'
+     - '/home/wis3re/zephyrproject/modules/hal/bouffalolab/include'
+     - '/home/wis3re/zephyrproject/modules/hal/bouffalolab/include/zephyr'
+     - '/home/wis3re/zephyrproject/modules/hal/gigadevice/include'
+     - '/home/wis3re/zephyrproject/modules/hal/microchip/include'
+     - '/home/wis3re/zephyrproject/modules/hal/microchip/dts'
+     - '/home/wis3re/zephyrproject/modules/hal/nuvoton/dts'
+     - '/home/wis3re/zephyrproject/modules/hal/nxp/dts'
+     - '/home/wis3re/zephyrproject/modules/hal/stm32/dts'
+     - '/home/wis3re/zephyrproject/modules/hal/ti/dts'
+     - '/home/wis3re/zephyrproject/zephyr/include'
+     - '/home/wis3re/zephyrproject/zephyr/include/zephyr'
+     - '/home/wis3re/zephyrproject/zephyr/dts/common'
+     - '/home/wis3re/zephyrproject/zephyr/dts/vendor'
+     - '/home/wis3re/zephyrproject/zephyr/dts/rx'
+     - '/home/wis3re/zephyrproject/zephyr/dts/x86'
+     - '/home/wis3re/zephyrproject/zephyr/dts/xtensa'
+     - '/home/wis3re/zephyrproject/zephyr/dts/sparc'
+     - '/home/wis3re/zephyrproject/zephyr/dts/riscv'
+     - '/home/wis3re/zephyrproject/zephyr/dts/posix'
+     - '/home/wis3re/zephyrproject/zephyr/dts/arm64'
+     - '/home/wis3re/zephyrproject/zephyr/dts/arm'
+     - '/home/wis3re/zephyrproject/zephyr/dts/arc'
+     - '/home/wis3re/zephyrproject/zephyr/dts'
+  kconfig:
+    files:
+     - '/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612_defconfig'
+     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/tests/prj.conf'
+    user-files:
+     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/tests/prj.conf'
+  toolchain:
+    name: 'zephyr'
+    path: '/home/wis3re/zephyr-sdk-0.17.4'
+  zephyr:
+    version: '4.2.99'
+    zephyr-base: '/home/wis3re/zephyrproject/zephyr'
+version: '0.1.0'
 west:
-  command: /home/wis3re/.local/bin/west build --board frdm_rw612
-  topdir: /home/wis3re/zephyrproject
-  version: 1.4.0
+  command: '/home/wis3re/.local/bin/west build -b frdm_rw612 -p'
+  topdir: '/home/wis3re/zephyrproject'
+  version: '1.4.0'
