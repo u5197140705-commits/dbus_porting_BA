@@ -2,7 +2,16 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/spi.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/sys/util.h> // Required for K_MSEC_TO_MS
+#include <zephyr/timing/timing.h> // Potentially required for K_MSEC_TO_MS
 #include "dbus_app_layer.h" // For dbal_spi_rx_msg and K_MSGQ
+
+#define SPI_RX_TIMEOUT_MS 100 // Define a timeout for SPI receive operations in milliseconds
+
+// Define K_MSEC_TO_MS if not already defined (workaround for build issues)
+#ifndef K_MSEC_TO_MS
+#define K_MSEC_TO_MS(ms) (ms)
+#endif
 
 // Placeholder for the SPI device pointer
 static const struct device *spi_dev;
@@ -51,22 +60,33 @@ static void spi_transceive_callback(const struct device *dev, int result, void *
 
         if (spi_rx_msg_queue != NULL) {
             if (k_msgq_put(spi_rx_msg_queue, &rx_msg, K_NO_WAIT) != 0) {
-                printk("SPI_ERROR: Failed to put RX message into queue (queue full).\n");
+                printk("SPI_ERROR: Failed to put RX message into queue (queue full). Data lost.\n");
             } else {
                 printk("SPI: Async RX callback put message into queue (len: %u).\n", rx_msg.len);
             }
         } else {
-            printk("SPI_ERROR: RX message queue not set in async callback.\n");
+            printk("SPI_ERROR: RX message queue not set in async callback. Data lost.\n");
         }
     } else {
-        printk("SPI_ERROR: Asynchronous SPI transfer failed with result: %d\n", result);
+        printk("SPI_ERROR: Asynchronous SPI transfer failed with result: %d. Data might be incomplete or corrupted.\n", result);
     }
 
     // Re-arm the asynchronous receive for continuous operation
     if (spi_transceive_cb(spi_dev, &spi_cfg, NULL, &spi_rx_buf_set, spi_transceive_callback, NULL) != 0) {
-        printk("SPI_ERROR: Failed to re-arm asynchronous SPI receive.\n");
+        printk("SPI_CRITICAL: Failed to re-arm asynchronous SPI receive. Further RX operations may be halted.\n");
     }
 }
+
+// Function to handle SPI receive timeouts
+void spi_rx_timeout_handler(struct k_timer *timer_id) {
+    ARG_UNUSED(timer_id);
+    printk("SPI_WARN: RX timeout occurred. No SPI data received within %d ms.\n", (int)K_MSEC_TO_MS(SPI_RX_TIMEOUT_MS));
+    // Optionally, you could clear the RX buffer or reset the SPI peripheral here.
+    // For now, we just log a warning.
+}
+
+// Timer for SPI receive timeout
+K_TIMER_DEFINE(spi_rx_timeout_timer, spi_rx_timeout_handler, NULL);
 
 // Initializes the SPI abstraction layer.
 bool spi_abstraction_init(void)
@@ -82,10 +102,14 @@ bool spi_abstraction_init(void)
 
     // Start asynchronous receive in slave mode
     if (spi_transceive_cb(spi_dev, &spi_cfg, NULL, &spi_rx_buf_set, spi_transceive_callback, NULL) != 0) {
-        printk("SPI_ERROR: Failed to start asynchronous SPI receive.\n");
+        printk("SPI_CRITICAL: Failed to start asynchronous SPI receive. SPI RX functionality will not be available.\n");
         return false;
     }
     printk("SPI: Asynchronous receive started in slave mode.\n");
+
+    // Start the receive timeout timer
+    k_timer_start(&spi_rx_timeout_timer, K_MSEC(SPI_RX_TIMEOUT_MS), K_NO_WAIT);
+    printk("SPI: RX timeout timer started.\n");
 
     return true;
 }
@@ -116,7 +140,7 @@ bool spi_abstraction_send(const uint8_t *data, uint8_t len)
     // In slave mode, spi_write will wait for the master to provide clock and CS.
     // This is a blocking call. For non-blocking, spi_transceive_cb would be used.
     if (spi_write(spi_dev, &spi_cfg, &tx_bufs) != 0) {
-        printk("SPI: Failed to send message\n");
+        printk("SPI_ERROR: Failed to send message over SPI. Check master connection and configuration.\n");
         return false;
     }
     return true;
@@ -138,7 +162,7 @@ bool spi_abstraction_receive(uint8_t *buffer, uint8_t len)
     // In slave mode, spi_read will wait for the master to provide clock and CS.
     // This is a blocking call.
     if (spi_read(spi_dev, &spi_cfg, &rx_bufs) != 0) {
-        printk("SPI: Failed to receive message\n");
+        printk("SPI_ERROR: Failed to receive message over SPI. Check master connection and configuration.\n");
         return false;
     }
     return true;
@@ -169,7 +193,7 @@ bool spi_abstraction_transceive(const uint8_t *tx_data, uint8_t *rx_buffer, uint
     // In slave mode, spi_transceive will wait for the master to provide clock and CS.
     // This is a blocking call.
     if (spi_transceive(spi_dev, &spi_cfg, &tx_bufs, &rx_bufs) != 0) {
-        printk("SPI: Failed to transceive message\n");
+        printk("SPI_ERROR: Failed to transceive message over SPI. Check master connection and configuration.\n");
         return false;
     }
     return true;

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <zephyr/kernel.h> // For struct k_msgq
+#include <zephyr/drivers/spi.h> // For spi_callback_t and spi_transceive_cb
 
 /**
  * @brief Initializes the SPI abstraction layer.
