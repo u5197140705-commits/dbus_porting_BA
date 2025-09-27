@@ -2,6 +2,7 @@
 runners:
 - jlink
 - linkserver
+- openocd
 
 # Default flash runner if --runner is not given.
 flash-runner: jlink
@@ -30,3 +31,8 @@ args:
   linkserver:
     - --dt-flash=y
     - --device=RW612:FRDM-RW612
+  openocd:
+    - --cmd-load
+    - flash write_image erase
+    - --cmd-verify
+    - verify_image

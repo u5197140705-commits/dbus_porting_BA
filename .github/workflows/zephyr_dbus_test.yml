@@ -1,0 +1,69 @@
+name: Zephyr D-Bus Driver CI
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install west and Zephyr dependencies
+      run: |
+        pip install west
+        west init -l zephyr_dbus_driver
+        west update
+        pip install -r zephyr/scripts/requirements.txt
+
+    - name: Build Zephyr D-Bus tests (QEMU)
+      run: |
+        west build -b qemu_x86 zephyr_dbus_driver/tests
+
+    - name: Run Zephyr D-Bus tests (QEMU) and capture output
+      run: |
+        west flash --runner qemu -- -serial stdio > test_output.log
+      continue-on-error: true # Allow pipeline to continue even if tests fail
+
+    - name: Upload test output log
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-output-log
+        path: test_output.log
+
+    - name: Install Python dependencies for report generation
+      run: pip install junit_xml
+
+    - name: Generate JUnit XML report
+      run: python scripts/ci/generate_test_report.py test_output.log test_report.xml
+      continue-on-error: true # Allow pipeline to continue even if report generation has issues
+
+    - name: Upload JUnit XML report
+      uses: actions/upload-artifact@v4
+      with:
+        name: junit-test-report
+        path: test_report.xml
+
+    - name: Determine test outcome
+      id: check_tests
+      run: |
+        if grep -q "FAIL" test_output.log; then
+          echo "TEST_STATUS=failure" >> $GITHUB_ENV
+        else
+          echo "TEST_STATUS=success" >> $GITHUB_ENV
+        fi
+
+    - name: Update GitHub commit status
+      if: always()
+      uses: Sibz/github-status-action@v1.2.0
+      with:
+        authToken: ${{ secrets.GITHUB_TOKEN }}
+        state: ${{ env.TEST_STATUS }}
+        description: 'Zephyr D-Bus tests: ${{ env.TEST_STATUS }}'
+        context: 'ci/zephyr-dbus-tests'
+        sha: ${{ github.sha }}

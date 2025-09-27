@@ -1,0 +1,119 @@
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <string.h>
+
+#include "dbus_message.h"
+
+LOG_MODULE_REGISTER(dbus_message_module, LOG_LEVEL_INF);
+
+/* CRC-8 lookup table (polynomial 0x07, initial value 0x00, final XOR 0x00) */
+static const uint8_t crc8_table[256] = {
+    0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15, 0x38, 0x3F, 0x36, 0x31, 0x24, 0x23, 0x2A, 0x2D,
+    0x70, 0x77, 0x7E, 0x79, 0x6C, 0x6B, 0x62, 0x65, 0x48, 0x4F, 0x46, 0x41, 0x54, 0x53, 0x5A, 0x5D,
+    0xE0, 0xE7, 0xEE, 0xE9, 0xFC, 0xFB, 0xF2, 0xF5, 0xD8, 0xDF, 0xD6, 0xD1, 0xC4, 0xC3, 0xCA, 0xCD,
+    0x90, 0x97, 0x9E, 0x99, 0x8C, 0x8B, 0x82, 0x85, 0xA8, 0xAF, 0xA6, 0xA1, 0xB4, 0xB3, 0xBA, 0xBDB,
+    0xC0, 0xC7, 0xCE, 0xC9, 0xDC, 0xDB, 0xD2, 0xD5, 0xF8, 0xFF, 0xF6, 0xF1, 0xE4, 0xE3, 0xEA, 0xED,
+    0xB0, 0xB7, 0xBE, 0xB9, 0xAC, 0xAB, 0xA2, 0xA5, 0x88, 0x8F, 0x86, 0x81, 0x94, 0x93, 0x9A, 0x9D,
+    0x20, 0x27, 0x2E, 0x29, 0x3C, 0x3B, 0x32, 0x35, 0x18, 0x1F, 0x16, 0x11, 0x04, 0x03, 0x0A, 0x0D,
+    0x50, 0x57, 0x5E, 0x59, 0x4C, 0x4B, 0x42, 0x45, 0x68, 0x6F, 0x66, 0x61, 0x74, 0x73, 0x7A, 0x7D,
+    0x80, 0x87, 0x8E, 0x89, 0x9C, 0x9B, 0x92, 0x95, 0xB8, 0xBF, 0xB6, 0xB1, 0xA4, 0xA3, 0xAA, 0xAD,
+    0xF0, 0xF7, 0xFE, 0xF9, 0xEC, 0xEB, 0xE2, 0xE5, 0xC8, 0xCF, 0xC6, 0xC1, 0xD4, 0xD3, 0xDA, 0xDD,
+    0x60, 0x67, 0x6E, 0x69, 0x7C, 0x7B, 0x72, 0x75, 0x58, 0x5F, 0x56, 0x51, 0x44, 0x43, 0x4A, 0x4D,
+    0x10, 0x17, 0x1E, 0x19, 0x0C, 0x0B, 0x02, 0x05, 0x28, 0x2F, 0x26, 0x21, 0x34, 0x33, 0x3A, 0x3D,
+    0xCE, 0xC9, 0xDC, 0xDB, 0xD2, 0xD5, 0xF8, 0xFF, 0xF6, 0xF1, 0xE4, 0xE3, 0xEA, 0xED, 0xB0, 0xB7,
+    0xBE, 0xB9, 0xAC, 0xAB, 0xA2, 0xA5, 0x88, 0x8F, 0x86, 0x81, 0x94, 0x93, 0x9A, 0x9D, 0xF0, 0xF7,
+    0xFE, 0xF9, 0xEC, 0xEB, 0xE2, 0xE5, 0xC8, 0xCF, 0xC6, 0xC1, 0xD4, 0xD3, 0xDA, 0xDD, 0x60, 0x67,
+    0x6E, 0x69, 0x7C, 0x7B, 0x72, 0x75, 0x58, 0x5F, 0x56, 0x51, 0x44, 0x43, 0x4A, 0x4D, 0x10, 0x17
+};
+
+uint8_t calculate_crc8(const uint8_t *data, size_t len)
+{
+    uint8_t crc = 0x00;
+    for (size_t i = 0; i < len; i++) {
+        crc = crc8_table[crc ^ data[i]];
+    }
+    return crc;
+}
+
+static bool dbus_message_create_generic(dbus_message_t *msg, dbal_message_type_t type,
+                                        uint16_t service_id, uint16_t command_id,
+                                        const uint8_t *data, uint8_t data_len)
+{
+    if (msg == NULL) {
+        LOG_ERR("Message pointer is NULL.");
+        return false;
+    }
+
+    if (data_len > (DBUS_MAX_PAYLOAD_LEN - DBAL_FRAME_DATA_OFFSET)) {
+        LOG_ERR("Data length (%u) exceeds maximum allowed (%u).",
+                data_len, (DBUS_MAX_PAYLOAD_LEN - DBAL_FRAME_DATA_OFFSET));
+        return false;
+    }
+
+    msg->type = type;
+    msg->service_id = service_id;
+    msg->command_id = command_id;
+    msg->data_len = data_len;
+    if (data != NULL && data_len > 0) {
+        memcpy(msg->data, data, data_len);
+    } else {
+        memset(msg->data, 0, sizeof(msg->data));
+    }
+
+    return true;
+}
+
+bool dbus_message_create_command(dbus_message_t *msg, uint16_t service_id, uint16_t command_id, const uint8_t *data, uint8_t data_len)
+{
+    return dbus_message_create_generic(msg, DBAL_TYPE_CMD, service_id, command_id, data, data_len);
+}
+
+bool dbus_message_create_query(dbus_message_t *msg, uint16_t service_id, uint16_t command_id, const uint8_t *data, uint8_t data_len)
+{
+    return dbus_message_create_generic(msg, DBAL_TYPE_QUERY, service_id, command_id, data, data_len);
+}
+
+bool dbus_message_create_event(dbus_message_t *msg, uint16_t service_id, uint16_t command_id, const uint8_t *data, uint8_t data_len)
+{
+    return dbus_message_create_generic(msg, DBAL_TYPE_EVENT, service_id, command_id, data, data_len);
+}
+
+bool dbus_message_to_spi_frame(const dbus_message_t *msg, uint8_t *spi_frame_buffer, size_t buffer_size, size_t *frame_len)
+{
+    if (msg == NULL || spi_frame_buffer == NULL || frame_len == NULL) {
+        LOG_ERR("Invalid input parameters (NULL pointer).");
+        return false;
+    }
+
+    uint8_t payload_len = DBAL_FRAME_DATA_OFFSET + msg->data_len;
+    size_t required_size = SPI_HEADER_LEN + payload_len;
+
+    if (buffer_size < required_size) {
+        LOG_ERR("Buffer size (%zu) too small for SPI frame (required: %zu).", buffer_size, required_size);
+        return false;
+    }
+
+    // Construct DBus payload
+    uint8_t dbus_payload[DBUS_MAX_PAYLOAD_LEN];
+    dbus_payload[DBAL_FRAME_MESSAGE_TYPE_OFFSET] = msg->type;
+    dbus_payload[DBAL_FRAME_SERVICE_ID_HI] = (uint8_t)(msg->service_id >> 8);
+    dbus_payload[DBAL_FRAME_SERVICE_ID_LO] = (uint8_t)(msg->service_id & 0xFF);
+    dbus_payload[DBAL_FRAME_COMMAND_ID_HI] = (uint8_t)(msg->command_id >> 8);
+    dbus_payload[DBAL_FRAME_COMMAND_ID_LO] = (uint8_t)(msg->command_id & 0xFF);
+    if (msg->data_len > 0) {
+        memcpy(&dbus_payload[DBAL_FRAME_DATA_OFFSET], msg->data, msg->data_len);
+    }
+
+    // Calculate CRC for the DBus payload
+    uint8_t crc = calculate_crc8(dbus_payload, payload_len);
+
+    // Construct SPI frame
+    spi_frame_buffer[0] = SPI_SOF_BYTE;
+    spi_frame_buffer[SPI_LENGTH_OFFSET] = payload_len;
+    spi_frame_buffer[SPI_CRC_OFFSET] = crc;
+    memcpy(&spi_frame_buffer[SPI_HEADER_LEN], dbus_payload, payload_len);
+
+    *frame_len = required_size;
+
+    return true;
+}

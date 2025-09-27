@@ -24,4 +24,8 @@ bool spi_abstraction_transceive(const uint8_t *tx_data, uint8_t *rx_buffer, uint
 void spi_abstraction_register_rx_callback(spi_rx_callback_t callback);
 void spi_abstraction_set_rx_msg_queue(struct k_msgq *msg_q);
 
+// Functions for testing SPI RX timeout
+uint32_t spi_abstraction_get_rx_timeout_count(void);
+void spi_abstraction_reset_rx_timeout_count(void);
+
 #endif // ZEPHYR_SPI_ABSTRACTION_H__

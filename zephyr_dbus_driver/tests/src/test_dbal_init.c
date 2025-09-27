@@ -25,3 +25,18 @@ ZTEST(dbal_init_suite, test_dbal_init_basic) {
 
     printk("DBAL Init Test: Basic initialization passed.\n");
 }
+
+ZTEST(dbal_init_suite, test_dbal_init_spi_fail) {
+    // Set mock to simulate spi_abstraction_init failure
+    mock_spi_init_return_value = false;
+    mock_printk_reset(); // Clear printk buffer for this test
+
+    // Call the initialization function
+    dbal_init();
+
+    // Verify that SPI abstraction initialization failed
+    zassert_true(strstr(mock_printk_buffer, "DBAL_ERROR: Failed to initialize SPI abstraction.") != NULL, "SPI init failure not logged");
+    zassert_equal(dbal_get_connection_state(), DBAL_COMMSTATE_DISCONNECTED, "Connection state should remain DISCONNECTED on SPI init failure");
+
+    printk("DBAL Init Test: SPI abstraction initialization failure passed.\n");
+}

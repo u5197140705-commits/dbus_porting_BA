@@ -16,6 +16,8 @@
 // Placeholder for the SPI device pointer
 static const struct device *spi_dev;
 
+// Temporary define for testing if Kconfig is not fully available
+
 // Global SPI configuration
 static struct spi_config spi_cfg = {
     .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_SLAVE,
@@ -77,12 +79,26 @@ static void spi_transceive_callback(const struct device *dev, int result, void *
     }
 }
 
+// Counter for SPI RX timeout handler calls
+static volatile uint32_t spi_rx_timeout_count = 0;
+
 // Function to handle SPI receive timeouts
 void spi_rx_timeout_handler(struct k_timer *timer_id) {
     ARG_UNUSED(timer_id);
-    printk("SPI_WARN: RX timeout occurred. No SPI data received within %d ms.\n", (int)K_MSEC_TO_MS(SPI_RX_TIMEOUT_MS));
+    spi_rx_timeout_count++;
+    printk("SPI_WARN: RX timeout occurred. No SPI data received within %d ms. Timeout count: %u\n", (int)K_MSEC_TO_MS(SPI_RX_TIMEOUT_MS), spi_rx_timeout_count);
     // Optionally, you could clear the RX buffer or reset the SPI peripheral here.
     // For now, we just log a warning.
+}
+
+// Function to get the SPI RX timeout count for testing
+uint32_t spi_abstraction_get_rx_timeout_count(void) {
+    return spi_rx_timeout_count;
+}
+
+// Function to reset the SPI RX timeout count for testing
+void spi_abstraction_reset_rx_timeout_count(void) {
+    spi_rx_timeout_count = 0;
 }
 
 // Timer for SPI receive timeout
@@ -197,4 +213,44 @@ bool spi_abstraction_transceive(const uint8_t *tx_data, uint8_t *rx_buffer, uint
         return false;
     }
     return true;
+}
+
+// Test helper to inject simulated SPI RX data.
+void spi_abstraction_test_inject_rx_data(const uint8_t *data, uint8_t len)
+{
+    if (spi_rx_msg_queue == NULL) {
+        printk("SPI_ERROR: RX message queue not set. Cannot inject test data.\n");
+        return;
+    }
+
+    if (len > DBAL_SPI_RX_MSG_MAX_SIZE) {
+        printk("SPI_WARN: Injected data length (%u) exceeds max RX message size (%u). Truncating.\n",
+               len, DBAL_SPI_RX_MSG_MAX_SIZE);
+        len = DBAL_SPI_RX_MSG_MAX_SIZE;
+    }
+
+    struct dbal_spi_rx_msg rx_msg;
+    rx_msg.len = len;
+    memcpy(rx_msg.data, data, len);
+
+    if (k_msgq_put(spi_rx_msg_queue, &rx_msg, K_NO_WAIT) != 0) {
+        printk("SPI_ERROR: Failed to put injected RX message into queue (queue full). Data lost.\n");
+    } else {
+        printk("SPI: Injected RX data into queue (len: %u).\n", rx_msg.len);
+    }
+}
+
+// Test-only wrapper to expose the static spi_transceive_callback
+void spi_abstraction_test_transceive_callback(const struct device *dev, int result, void *data) {
+    spi_transceive_callback(dev, result, data);
+}
+
+// Test-only getter for spi_rx_timeout_count
+uint32_t spi_abstraction_get_rx_timeout_count_for_test(void) {
+    return spi_rx_timeout_count;
+}
+
+// Test-only function to reset spi_rx_timeout_count
+void spi_abstraction_reset_rx_timeout_count_for_test(void) {
+    spi_rx_timeout_count = 0;
 }

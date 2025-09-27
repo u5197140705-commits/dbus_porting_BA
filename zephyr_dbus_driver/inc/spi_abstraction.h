@@ -66,4 +66,25 @@ void spi_abstraction_register_rx_callback(spi_rx_callback_t callback);
  */
 void spi_abstraction_set_rx_msg_queue(struct k_msgq *msg_q);
 
+/**
+ * @brief Test helper to inject simulated SPI RX data.
+ *
+ * This function is intended for testing purposes to simulate incoming SPI data
+ * without actual hardware interaction. It directly puts the data into the
+ * internal message queue.
+ *
+ * @param data Pointer to the simulated data to inject.
+ * @param len Length of the simulated data.
+ */
+void spi_abstraction_test_inject_rx_data(const uint8_t *data, uint8_t len);
+
 #endif // ZEPHYR_SPI_ABSTRACTION_H__
+
+// Test-only wrapper to expose the static spi_transceive_callback
+void spi_abstraction_test_transceive_callback(const struct device *dev, int result, void *data);
+
+// Test-only getter for spi_rx_timeout_count
+uint32_t spi_abstraction_get_rx_timeout_count_for_test(void);
+
+// Test-only function to reset spi_rx_timeout_count
+void spi_abstraction_reset_rx_timeout_count_for_test(void);

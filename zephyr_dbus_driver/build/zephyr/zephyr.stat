@@ -8,9 +8,9 @@ ELF Header:
   Type:                              EXEC (Executable file)
   Machine:                           ARM
   Version:                           0x1
-  Entry point address:               0x18002ccd
+  Entry point address:               0x18002cdd
   Start of program headers:          52 (bytes into file)
-  Start of section headers:          1020264 (bytes into file)
+  Start of section headers:          1022428 (bytes into file)
   Flags:                             0x5000200, Version5 EABI, soft-float ABI
   Size of this header:               52 (bytes)
   Size of program headers:           32 (bytes)
@@ -23,43 +23,43 @@ Section Headers:
   [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
   [ 0]                   NULL            00000000 000000 000000 00      0   0  0
   [ 1] rom_start         PROGBITS        18000000 000138 001644 00  AX  0   0  4
-  [ 2] text              PROGBITS        18001648 001780 0067b0 00  AX  0   0  8
-  [ 3] .ARM.exidx        ARM_EXIDX       18007df8 007f30 000008 00  AL  2   0  4
-  [ 4] initlevel         PROGBITS        18007e00 007f38 000070 00   A  0   0  4
-  [ 5] device_area       PROGBITS        18007e70 007fa8 000120 00   A  0   0  4
-  [ 6] sw_isr_table      PROGBITS        18007f90 0080c8 000408 00   A  0   0  4
-  [ 7] _static_thre[...] PROGBITS        18008398 0084d0 000060 00  WA  0   0  8
-  [ 8] gpio_driver_[...] PROGBITS        180083f8 008530 000024 00   A  0   0  4
-  [ 9] reset_driver[...] PROGBITS        1800841c 008554 000010 00   A  0   0  4
-  [10] spi_driver_a[...] PROGBITS        1800842c 008564 00000c 00   A  0   0  4
-  [11] clock_contro[...] PROGBITS        18008438 008570 00001c 00   A  0   0  4
-  [12] uart_driver_[...] PROGBITS        18008454 00858c 00004c 00   A  0   0  4
-  [13] tbss              NOBITS          180084a0 0085d8 000004 00 WAT  0   0  4
-  [14] rodata            PROGBITS        180084a0 0085d8 001868 00   A  0   0  8
-  [15] .ramfunc          PROGBITS        10040000 009e40 000920 00  AX  0   0  8
-  [16] .SMU1             NOBITS          41380000 00a8e8 07f800 00  WA  0   0  1
-  [17] .SMU2             NOBITS          443c0000 00a8e8 023000 00  WA  0   0  1
-  [18] datas             PROGBITS        10040920 00a760 0000f4 00  WA  0   0  4
-  [19] device_states     PROGBITS        10040a14 00a854 000014 00  WA  0   0  1
-  [20] k_timer_area      PROGBITS        10040a28 00a868 000038 00  WA  0   0  8
-  [21] k_heap_area       PROGBITS        10040a60 00a8a0 000014 00  WA  0   0  4
-  [22] k_msgq_area       PROGBITS        10040a74 00a8b4 000030 00  WA  0   0  4
-  [23] .comment          PROGBITS        00000000 00a8e8 000020 01  MS  0   0  1
-  [24] .debug_aranges    PROGBITS        00000000 00a908 001b60 00      0   0  8
-  [25] .debug_info       PROGBITS        00000000 00c468 05f107 00      0   0  1
-  [26] .debug_abbrev     PROGBITS        00000000 06b56f 00ea53 00      0   0  1
-  [27] .debug_line       PROGBITS        00000000 079fc2 02918a 00      0   0  1
-  [28] .debug_frame      PROGBITS        00000000 0a314c 004288 00      0   0  4
-  [29] .debug_str        PROGBITS        00000000 0a73d4 0175e7 01  MS  0   0  1
-  [30] .debug_loc        PROGBITS        00000000 0be9bb 024c9d 00      0   0  1
-  [31] .debug_ranges     PROGBITS        00000000 0e3658 0056b8 00      0   0  8
-  [32] .ARM.attributes   ARM_ATTRIBUTES  00000000 0e8d10 000036 00      0   0  1
-  [33] .last_section     PROGBITS        1800a7ac 00a8e4 000004 00  WA  0   0  4
-  [34] bss               NOBITS          10040aa8 000138 000b31 00  WA  0   0  8
+  [ 2] text              PROGBITS        18001648 001780 0067c0 00  AX  0   0  8
+  [ 3] .ARM.exidx        ARM_EXIDX       18007e08 007f40 000008 00  AL  2   0  4
+  [ 4] initlevel         PROGBITS        18007e10 007f48 000070 00   A  0   0  4
+  [ 5] device_area       PROGBITS        18007e80 007fb8 000120 00   A  0   0  4
+  [ 6] sw_isr_table      PROGBITS        18007fa0 0080d8 000408 00   A  0   0  4
+  [ 7] _static_thre[...] PROGBITS        180083a8 0084e0 000060 00  WA  0   0  8
+  [ 8] gpio_driver_[...] PROGBITS        18008408 008540 000024 00   A  0   0  4
+  [ 9] reset_driver[...] PROGBITS        1800842c 008564 000010 00   A  0   0  4
+  [10] spi_driver_a[...] PROGBITS        1800843c 008574 00000c 00   A  0   0  4
+  [11] clock_contro[...] PROGBITS        18008448 008580 00001c 00   A  0   0  4
+  [12] uart_driver_[...] PROGBITS        18008464 00859c 00004c 00   A  0   0  4
+  [13] tbss              NOBITS          180084b0 0085e8 000004 00 WAT  0   0  4
+  [14] rodata            PROGBITS        180084b0 0085e8 001878 00   A  0   0  8
+  [15] .ramfunc          PROGBITS        10040000 009e60 000920 00  AX  0   0  8
+  [16] .SMU1             NOBITS          41380000 00a908 07f800 00  WA  0   0  1
+  [17] .SMU2             NOBITS          443c0000 00a908 023000 00  WA  0   0  1
+  [18] datas             PROGBITS        10040920 00a780 0000f4 00  WA  0   0  4
+  [19] device_states     PROGBITS        10040a14 00a874 000014 00  WA  0   0  1
+  [20] k_timer_area      PROGBITS        10040a28 00a888 000038 00  WA  0   0  8
+  [21] k_heap_area       PROGBITS        10040a60 00a8c0 000014 00  WA  0   0  4
+  [22] k_msgq_area       PROGBITS        10040a74 00a8d4 000030 00  WA  0   0  4
+  [23] .comment          PROGBITS        00000000 00a908 000020 01  MS  0   0  1
+  [24] .debug_aranges    PROGBITS        00000000 00a928 001ba8 00      0   0  8
+  [25] .debug_info       PROGBITS        00000000 00c4d0 05f342 00      0   0  1
+  [26] .debug_abbrev     PROGBITS        00000000 06b812 00ead0 00      0   0  1
+  [27] .debug_line       PROGBITS        00000000 07a2e2 0292ec 00      0   0  1
+  [28] .debug_frame      PROGBITS        00000000 0a35d0 004338 00      0   0  4
+  [29] .debug_str        PROGBITS        00000000 0a7908 017748 01  MS  0   0  1
+  [30] .debug_loc        PROGBITS        00000000 0bf050 024e00 00      0   0  1
+  [31] .debug_ranges     PROGBITS        00000000 0e3e50 005700 00      0   0  8
+  [32] .ARM.attributes   ARM_ATTRIBUTES  00000000 0e9550 000036 00      0   0  1
+  [33] .last_section     PROGBITS        1800a7cc 00a904 000004 00  WA  0   0  4
+  [34] bss               NOBITS          10040aa8 000138 000b35 00  WA  0   0  8
   [35] noinit            NOBITS          100415e0 000138 001f4a 00  WA  0   0  8
-  [36] .symtab           SYMTAB          00000000 0e8d48 008910 10     37 1208  4
-  [37] .strtab           STRTAB          00000000 0f1658 00793c 00      0   0  1
-  [38] .shstrtab         STRTAB          00000000 0f8f94 0001d1 00      0   0  1
+  [36] .symtab           SYMTAB          00000000 0e9588 008930 10     37 1210  4
+  [37] .strtab           STRTAB          00000000 0f1eb8 007951 00      0   0  1
+  [38] .shstrtab         STRTAB          00000000 0f9809 0001d1 00      0   0  1
 Key to Flags:
   W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
   L (link order), O (extra OS processing required), G (group), T (TLS),
@@ -68,14 +68,14 @@ Key to Flags:
 
 Program Headers:
   Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
-  EXIDX          0x007f30 0x18007df8 0x18007df8 0x00008 0x00008 R   0x4
+  EXIDX          0x007f40 0x18007e08 0x18007e08 0x00008 0x00008 R   0x4
   LOAD           0x000000 0x10040aa8 0x10040aa8 0x00000 0x02a82 RW  0x8
-  LOAD           0x000138 0x18000000 0x18000000 0x09d08 0x09d08 RWE 0x8
-  LOAD           0x009e40 0x10040000 0x18009d08 0x00aa4 0x00aa4 RWE 0x8
-  LOAD           0x00a8e4 0x1800a7ac 0x1800a7ac 0x00004 0x00004 RW  0x4
+  LOAD           0x000138 0x18000000 0x18000000 0x09d28 0x09d28 RWE 0x8
+  LOAD           0x009e60 0x10040000 0x18009d28 0x00aa4 0x00aa4 RWE 0x8
+  LOAD           0x00a904 0x1800a7cc 0x1800a7cc 0x00004 0x00004 RW  0x4
   LOAD           0x000000 0x41380000 0x41380000 0x00000 0x7f800 RW  0x1
   LOAD           0x000000 0x443c0000 0x443c0000 0x00000 0x23000 RW  0x1
-  TLS            0x0085d8 0x180084a0 0x180084a0 0x00000 0x00004 R   0x4
+  TLS            0x0085e8 0x180084b0 0x180084b0 0x00000 0x00004 R   0x4
 
  Section to Segment mapping:
   Segment Sections...

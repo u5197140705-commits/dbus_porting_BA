@@ -707,6 +707,11 @@ static void dbal_look_for_ack_msg_reception(const struct dbal_instance* const in
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_corrupt(const struct dbal_instance* const inst, const uint8_t* const bytes, uint8_t data_len) { return false; }
 static bool __attribute__((unused)) dbal_is_received_req_resp_msg_to_be_ignored(const struct dbal_instance* const inst, const uint8_t* const bytes) { return false; }
 
+// Getter for IoCurrentConnectionState for testing purposes
+enum DBAL_CommState dbal_get_connection_state(void) {
+    return g_dbal_main_instance.IoCurrentConnectionState;
+}
+
 bool dbal_send_ack_nack(uint16_t service_id, uint16_t command_id, bool success) {
     uint8_t response_data[1] = {success ? DLL_ACK_OK : DLL_ACK_NOT_RECEIVED}; // Simplified ACK/NACK status
     enum DBAL_MessageType response_type = success ? DBAL_TYPE_CMD_ACK : DBAL_TYPE_CMD_ACK; // Use CMD_ACK for both, with status in data
@@ -807,4 +812,15 @@ static void dbal_connection_sm(struct dbal_instance* const inst, enum DBAL_Conne
             printk("DBAL_SM_WARN: Unhandled state or event: State %u, Event %u\n", inst->IoCurrentConnectionState, event);
             break;
     }
+}
+
+// Test-only getter for g_num_service_handlers
+uint8_t dbal_get_num_service_handlers(void) {
+    return g_num_service_handlers;
+}
+
+// Test-only function to reset g_service_handlers and g_num_service_handlers
+void dbal_reset_service_handlers_for_test(void) {
+    g_num_service_handlers = 0;
+    memset(g_service_handlers, 0, sizeof(g_service_handlers));
 }

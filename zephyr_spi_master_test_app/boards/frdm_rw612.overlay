@@ -1,0 +1,34 @@
+/ {
+    aliases {
+        spi-master = &flexcomm1;
+        cs-gpio-port = &hsgpio0;
+        dbus-spi-slave = &dbus_spi_slave;
+    };
+};
+
+&flexcomm1 {
+    compatible = "nxp,lpc-spi";
+    status = "okay";
+    pinctrl-0 = <&pinmux_flexcomm1_spi>;
+    pinctrl-names = "default";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    dbus_spi_slave: dbus_spi_slave@0 {
+        compatible = "spi-device"; /* Generic SPI device */
+        reg = <0>; /* Chip select 0 */
+        spi-max-frequency = <4000000>; /* 4 MHz */
+        label = "DBUS_SPI_SLAVE";
+        cs-gpios = <&hsgpio0 10 GPIO_ACTIVE_LOW>; /* Example CS pin */
+        /* Add other SPI properties as needed for the slave */
+        duplex; /* Full-duplex */
+        frame-format = <0>; /* Standard SPI frame format */
+    };
+};
+
+&hsgpio0 {
+    status = "okay";
+};
