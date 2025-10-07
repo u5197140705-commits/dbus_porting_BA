@@ -1,56 +1,50 @@
-#ifndef ZEPHYR_SPI_ABSTRACTION_H__
-#define ZEPHYR_SPI_ABSTRACTION_H__
+#ifndef ZEPHYR_DBUS_DRIVER_INC_SPI_ABSTRACTION_H_
+#define ZEPHYR_DBUS_DRIVER_INC_SPI_ABSTRACTION_H_
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <zephyr/kernel.h> // For struct k_msgq
-#include <zephyr/drivers/spi.h> // For spi_callback_t and spi_transceive_cb
+#include <zephyr/types.h>
+#include <stddef.h>
+#include <zephyr/kernel.h> // Required for struct k_msgq
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Initializes the SPI abstraction layer.
  *
- * This function initializes the underlying Zephyr SPI device.
+ * This function initializes the underlying SPI device.
  *
- * @return True if initialization is successful, false otherwise.
+ * @return 0 on success, or a negative errno code on failure.
  */
-bool spi_abstraction_init(void);
+int spi_abstraction_init(void);
 
 /**
- * @brief Sends data over SPI.
+ * @brief Sends and receives data over SPI.
  *
- * @param data Pointer to the data to send.
- * @param len Length of the data.
+ * This function performs a full-duplex SPI transfer.
  *
- * @return True if the data is successfully sent, false otherwise.
+ * @param tx_data Pointer to the transmit buffer.
+ * @param tx_len Length of the transmit buffer in bytes.
+ * @param rx_data Pointer to the receive buffer.
+ * @param rx_len Length of the receive buffer in bytes.
+ *
+ * @return 0 on success, or a negative errno code on failure.
  */
-bool spi_abstraction_send(const uint8_t *data, uint8_t len);
+int spi_abstraction_send(const uint8_t *tx_data, size_t tx_len, uint8_t *rx_data, size_t rx_len);
+
+// Forward declaration for the message queue structure
+struct dbal_spi_rx_msg;
 
 /**
- * @brief Receives data over SPI.
+ * @brief Type definition for the SPI RX callback function.
  *
- * @param buffer Pointer to the buffer to store received data.
- * @param len Length of the data to receive.
- *
- * @return True if data is successfully received, false otherwise.
+ * @param data Pointer to the received data buffer.
+ * @param len Length of the received data in bytes.
  */
-bool spi_abstraction_receive(uint8_t *buffer, uint8_t len);
-
-/**
- * @brief Sends and receives data over SPI (full-duplex).
- *
- * @param tx_data Pointer to the data to send.
- * @param rx_buffer Pointer to the buffer to store received data.
- * @param len Length of the data to send/receive.
- *
- * @return True if the transaction is successful, false otherwise.
- */
-bool spi_abstraction_transceive(const uint8_t *tx_data, uint8_t *rx_buffer, uint8_t len);
-
-// Define a type for the SPI RX callback function
 typedef void (*spi_rx_callback_t)(const uint8_t *data, uint8_t len);
 
 /**
- * @brief Registers a callback function for SPI receive interrupts.
+ * @brief Registers a callback function for SPI received data.
  *
  * @param callback The function to be called when SPI data is received.
  */
@@ -59,32 +53,12 @@ void spi_abstraction_register_rx_callback(spi_rx_callback_t callback);
 /**
  * @brief Sets the message queue for SPI received data.
  *
- * This function provides the SPI abstraction layer with a message queue
- * to put received SPI frames into.
- *
- * @param msg_q Pointer to the Zephyr message queue.
+ * @param msg_q Pointer to the K_MSGQ object where received data will be put.
  */
 void spi_abstraction_set_rx_msg_queue(struct k_msgq *msg_q);
 
-/**
- * @brief Test helper to inject simulated SPI RX data.
- *
- * This function is intended for testing purposes to simulate incoming SPI data
- * without actual hardware interaction. It directly puts the data into the
- * internal message queue.
- *
- * @param data Pointer to the simulated data to inject.
- * @param len Length of the simulated data.
- */
-void spi_abstraction_test_inject_rx_data(const uint8_t *data, uint8_t len);
+#ifdef __cplusplus
+}
+#endif
 
-#endif // ZEPHYR_SPI_ABSTRACTION_H__
-
-// Test-only wrapper to expose the static spi_transceive_callback
-void spi_abstraction_test_transceive_callback(const struct device *dev, int result, void *data);
-
-// Test-only getter for spi_rx_timeout_count
-uint32_t spi_abstraction_get_rx_timeout_count_for_test(void);
-
-// Test-only function to reset spi_rx_timeout_count
-void spi_abstraction_reset_rx_timeout_count_for_test(void);
+#endif /* ZEPHYR_DBUS_DRIVER_INC_SPI_ABSTRACTION_H_ */

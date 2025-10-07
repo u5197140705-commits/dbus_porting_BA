@@ -252,7 +252,7 @@ void dbal_tx_thread_entry(void *p1, void *p2, void *p3)
     while (1) {
         // Check if there are messages to send
         if (inst->TransmitDataLen > 0) {
-            if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen)) {
+            if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen, NULL, 0) == 0) {
                 printk("DBAL: SPI message sent from TX thread (Len: %u).\n", inst->TransmitDataLen);
                 dbal_clear_io_transmit_buffer(inst); // Clear buffer after successful send
             } else {
@@ -614,7 +614,7 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
                         inst->TransmitBuffer[SPI_CRC_OFFSET] = crc;
                         
                         dbal_prepare_tx_entry(inst, tx_index, inst->TransmitDataLen);
-                        if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen) == true) {
+                        if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen, NULL, 0) == true) {
                             printk("DBAL: Message transmitted via SPI (TxIndex: %u, DataLen: %u, CRC: 0x%02x)\n", tx_index, inst->TransmitDataLen, crc);
                         } else {
                             printk("DBAL_ERROR: Failed to send message via SPI (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);

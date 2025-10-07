@@ -1,5 +1,7 @@
 /home/wis3re/dbus_porting/build/Kconfig/Kconfig.dts
 /home/wis3re/dbus_porting/build/Kconfig/Kconfig.modules
+/home/wis3re/dbus_porting/build/Kconfig/Kconfig.shield
+/home/wis3re/dbus_porting/build/Kconfig/Kconfig.shield.defconfig
 /home/wis3re/dbus_porting/build/Kconfig/arch/Kconfig
 /home/wis3re/dbus_porting/build/Kconfig/boards/Kconfig
 /home/wis3re/dbus_porting/build/Kconfig/boards/Kconfig.defconfig
@@ -10,7 +12,6 @@
 /home/wis3re/dbus_porting/build/Kconfig/soc/Kconfig.soc
 /home/wis3re/dbus_porting/zephyr_dbus_driver/Kconfig
 /home/wis3re/dbus_porting/zephyr_dbus_driver/tests/Kconfig
-/home/wis3re/zephyr-sdk-0.17.4/cmake/zephyr/Kconfig
 /home/wis3re/zephyrproject/modules/debug/percepio/DFM/kernelports/Zephyr/Kconfig
 /home/wis3re/zephyrproject/modules/debug/percepio/DFM/kernelports/Zephyr/storageports/Filesystem/Kconfig
 /home/wis3re/zephyrproject/modules/debug/percepio/DFM/kernelports/Zephyr/storageports/Flash/Kconfig
@@ -3943,6 +3944,8 @@
 /home/wis3re/zephyrproject/zephyr/subsys/task_wdt/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/testsuite/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/testsuite/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/subsys/testsuite/arch/unit_testing/Kconfig
+/home/wis3re/zephyrproject/zephyr/subsys/testsuite/soc/unit_testing/unit_testing/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/subsys/testsuite/ztest/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/timing/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/tracing/Kconfig
