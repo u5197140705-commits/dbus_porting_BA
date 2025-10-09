@@ -1,0 +1,11 @@
+{
+    "scheduler_tasks":[
+        {
+            "name":"DBC",
+            "include_file":"devices/dbuscan/dbuscan_drv.h",
+            "handle_function":"DBCDRV_HandleTask",
+            "priority":"low",
+            "dependency":"DEP_DBC"
+        }
+    ]
+}

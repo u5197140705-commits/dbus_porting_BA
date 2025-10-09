@@ -1,7 +1,7 @@
 cmake:
   application:
-    configuration-dir: '/home/wis3re/dbus_porting/zephyr_dbus_driver/tests'
-    source-dir: '/home/wis3re/dbus_porting/zephyr_dbus_driver/tests'
+    configuration-dir: '/home/wis3re/dbus_porting/zephyr_dbus_driver'
+    source-dir: '/home/wis3re/dbus_porting/zephyr_dbus_driver'
   board:
     name: 'frdm_rw612'
     path:
@@ -13,6 +13,7 @@ cmake:
      - '/home/wis3re/zephyrproject/zephyr/dts/bindings'
     files:
      - '/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts'
+     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay'
     include-dirs:
      - '/home/wis3re/zephyrproject/modules/hal/ambiq/dts'
      - '/home/wis3re/zephyrproject/modules/hal/atmel/include'
@@ -39,12 +40,14 @@ cmake:
      - '/home/wis3re/zephyrproject/zephyr/dts/arm'
      - '/home/wis3re/zephyrproject/zephyr/dts/arc'
      - '/home/wis3re/zephyrproject/zephyr/dts'
+    user-files:
+     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay'
   kconfig:
     files:
      - '/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612_defconfig'
-     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/tests/prj.conf'
+     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/prj.conf'
     user-files:
-     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/tests/prj.conf'
+     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/prj.conf'
   toolchain:
     name: 'zephyr'
     path: '/home/wis3re/zephyr-sdk-0.17.4'
@@ -53,6 +56,6 @@ cmake:
     zephyr-base: '/home/wis3re/zephyrproject/zephyr'
 version: '0.1.0'
 west:
-  command: '/home/wis3re/.local/bin/west build -b frdm_rw612 zephyr_dbus_driver/tests -p'
+  command: '/home/wis3re/.local/bin/west build -s zephyr_dbus_driver -b frdm_rw612 --pristine'
   topdir: '/home/wis3re/zephyrproject'
   version: '1.4.0'

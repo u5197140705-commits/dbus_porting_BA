@@ -3,6 +3,7 @@
 #include <zephyr/autoconf.h> // Explicitly include generated Kconfig definitions
 #include "dbus_app_layer.h" // Include the ported DBus Application Layer
 #include "spi_abstraction.h" // Include the SPI abstraction layer
+#include "dbus_driver_config.h" // Include the DBus driver configuration
 
 // Example DBus service callback for testing
 void my_test_service_handler(const uint8_t* const data, uint8_t data_len) {
@@ -16,6 +17,14 @@ void my_test_service_handler(const uint8_t* const data, uint8_t data_len) {
 int main(void)
 {
     printk("Hello from Zephyr DBus Driver project!\n");
+
+    // Initialize the DBus Driver
+    enum DBC_Error dbus_driver_init_ret = DBCDRV_init();
+    if (dbus_driver_init_ret != DBC_OK) {
+        printk("Main: DBus Driver initialization failed with error: %d!\n", dbus_driver_init_ret);
+        return 0; // Or handle error appropriately
+    }
+    printk("Main: DBus Driver initialized successfully.\n");
 
     // Initialize the DBus Application Layer
     dbal_init();

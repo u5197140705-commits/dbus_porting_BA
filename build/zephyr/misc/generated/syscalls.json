@@ -145,70 +145,6 @@
     ],
     [
         [
-            "void ztest_set_fault_valid",
-            "bool valid"
-        ],
-        "ztest_error_hook.h",
-        true
-    ],
-    [
-        [
-            "void ztest_set_assert_valid",
-            "bool valid"
-        ],
-        "ztest_error_hook.h",
-        true
-    ],
-    [
-        [
-            "int ztest_run_test_suites",
-            "const void *state, bool shuffle,\n\t\t\t\tint suite_iter, int case_iter"
-        ],
-        "ztest_test.h",
-        true
-    ],
-    [
-        [
-            "void __ztest_set_test_result",
-            "enum ztest_result new_result"
-        ],
-        "ztest_test.h",
-        true
-    ],
-    [
-        [
-            "void __ztest_set_test_phase",
-            "enum ztest_phase new_phase"
-        ],
-        "ztest_test.h",
-        true
-    ],
-    [
-        [
-            "void z_test_1cpu_start",
-            "void"
-        ],
-        "ztest_test.h",
-        true
-    ],
-    [
-        [
-            "void z_test_1cpu_stop",
-            "void"
-        ],
-        "ztest_test.h",
-        true
-    ],
-    [
-        [
-            "void sys_clock_tick_set",
-            "uint64_t tick"
-        ],
-        "ztest_test.h",
-        true
-    ],
-    [
-        [
             "int gpio_pin_interrupt_configure",
             "const struct device *port,\n\t\t\t\t\t   gpio_pin_t pin,\n\t\t\t\t\t   gpio_flags_t flags"
         ],
@@ -1373,14 +1309,6 @@
             "void"
         ],
         "time_units.h",
-        true
-    ],
-    [
-        [
-            "int *z_errno",
-            "void"
-        ],
-        "errno_private.h",
         true
     ],
     [
@@ -4781,6 +4709,14 @@
             "atomic_t *target, atomic_val_t value"
         ],
         "atomic_c.h",
+        false
+    ],
+    [
+        [
+            "int *z_errno",
+            "void"
+        ],
+        "errno_private.h",
         false
     ],
     [

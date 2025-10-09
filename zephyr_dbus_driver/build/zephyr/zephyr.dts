@@ -238,76 +238,76 @@
 
 					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:51 */
 					group0 {
-						pinmux = < 0x18806 0x18807 0x18808 0x18809 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:52 */
-						slew-rate = "ultra";                          /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:53 */
+						pinmux = < 0x807 0x48808 0x48809 0x18806 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:52 */
+						slew-rate = "ultra";                        /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:56 */
 					};
 				};
 
-				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:57 */
+				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:60 */
 				pinmux_pwm0: pinmux_pwm0 {
 					phandle = < 0xf >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:255 */
 
-					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:58 */
+					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:61 */
 					group0 {
-						pinmux = < 0x283 >;   /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:59 */
-						slew-rate = "normal"; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:60 */
+						pinmux = < 0x283 >;   /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:62 */
+						slew-rate = "normal"; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:63 */
 					};
 				};
 
-				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:64 */
+				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:67 */
 				pinmux_lcdic: pinmux_lcdic {
 					phandle = < 0xe >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:312 */
 
-					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:65 */
+					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:68 */
 					group0 {
-						pinmux = < 0x60ad 0x60ae 0x60af 0x60b0 0x60b1 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:66 */
-						slew-rate = "ultra";                             /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:71 */
+						pinmux = < 0x60ad 0x60ae 0x60af 0x60b0 0x60b1 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:69 */
+						slew-rate = "ultra";                             /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:74 */
 					};
 
-					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group1' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:73 */
+					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group1' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:76 */
 					group1 {
-						pinmux = < 0x60ac >;   /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:74 */
-						slew-rate = "ultra";   /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:75 */
-						sleep-output = "high"; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:76 */
+						pinmux = < 0x60ac >;   /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:77 */
+						slew-rate = "ultra";   /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:78 */
+						sleep-output = "high"; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:79 */
 					};
 				};
 
-				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:80 */
+				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:83 */
 				pinmux_flexcomm1_i2s: pinmux_flexcomm1_i2s {
 
-					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:81 */
+					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:84 */
 					group0 {
-						pinmux = < 0x10807 0x10808 0x10809 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:82 */
-						slew-rate = "normal";                 /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:83 */
+						pinmux = < 0x10807 0x10808 0x10809 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:85 */
+						slew-rate = "normal";                 /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:86 */
 					};
 				};
 
-				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:87 */
+				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:90 */
 				pinmux_hsgpio0: pinmux_hsgpio0 {
 					phandle = < 0x4 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:106 */
 
-					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:88 */
+					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:91 */
 					group0 {
-						pinmux = < 0x30b 0x312 0x315 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:89 */
-						slew-rate = "normal";           /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:93 */
+						pinmux = < 0x30b 0x312 0x315 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:92 */
+						slew-rate = "normal";           /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:96 */
 					};
 
-					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group1' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:95 */
+					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group1' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:98 */
 					group1 {
-						pinmux = < 0x300 0x301 0x30c >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:96 */
-						slew-rate = "normal";           /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:100 */
-						sleep-output = "high";          /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:101 */
+						pinmux = < 0x300 0x301 0x30c >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:99 */
+						slew-rate = "normal";           /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:103 */
+						sleep-output = "high";          /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:104 */
 					};
 				};
 
-				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:105 */
+				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:108 */
 				pinmux_hsgpio1: pinmux_hsgpio1 {
 					phandle = < 0x5 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:112 */
 
-					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:106 */
+					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:109 */
 					group0 {
-						pinmux = < 0x32c 0x337 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:107 */
-						slew-rate = "normal";     /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:110 */
+						pinmux = < 0x32c 0x337 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:110 */
+						slew-rate = "normal";     /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:113 */
 					};
 				};
 			};

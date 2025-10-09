@@ -14,8 +14,6 @@ static void * const no_syscall_impl Z_GENERIC_SECTION(llext_no_syscall_impl);
  * linker outside this file will be exported as NULL and simply fail when
  * an extension requiring them is loaded.
  */
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl___ztest_set_test_phase;
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl___ztest_set_test_result;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_device_deinit;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_device_get_binding;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_device_get_by_dt_nodelabel;
@@ -146,7 +144,6 @@ extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_sys_clock_getrtoffse
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_sys_clock_hw_cycles_per_sec_runtime_get;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_sys_clock_nanosleep;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_sys_clock_settime;
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_sys_clock_tick_set;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_uart_config_get;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_uart_configure;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_uart_drv_cmd;
@@ -171,19 +168,13 @@ extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_uart_rx_enable_u16;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_uart_tx;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_uart_tx_abort;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_uart_tx_u16;
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_errno;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_log_msg_simple_create_0;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_log_msg_simple_create_1;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_log_msg_simple_create_2;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_log_msg_static_create;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_sys_mutex_kernel_lock;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_sys_mutex_kernel_unlock;
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_test_1cpu_start;
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_z_test_1cpu_stop;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_zephyr_fputc;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_zephyr_fwrite;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_zephyr_read_stdin;
 extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_zephyr_write_stdout;
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_ztest_run_test_suites;
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_ztest_set_assert_valid;
-extern __weak ALIAS_OF(no_syscall_impl) void * const z_impl_ztest_set_fault_valid;

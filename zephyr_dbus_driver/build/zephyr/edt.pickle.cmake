@@ -301,7 +301,7 @@ set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_REG|/soc/peripheral@50
 set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_REG|/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi|ADDR" "")
 set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_REG|/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi|SIZE" "")
 set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_NODE|/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0" TRUE)
-set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_PROP|/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0|pinmux" "100358;100359;100360;100361;")
+set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_PROP|/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0|pinmux" "2055;296968;296969;100358;")
 set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_PROP|/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0|slew-rate" "ultra")
 set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_PROP|/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0|sleep-output" "low")
 set_target_properties(${DEVICETREE_TARGET} PROPERTIES "DT_PROP|/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0|bias-pull-up" "False")

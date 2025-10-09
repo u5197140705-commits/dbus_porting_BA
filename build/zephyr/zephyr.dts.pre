@@ -833,7 +833,10 @@
 
  pinmux_flexcomm1_spi: pinmux_flexcomm1_spi {
   group0 {
-   pinmux = <(((6) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((7) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((8) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((9) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15))>;
+   pinmux = <(((7) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((0) & 0xF) << 15))
+      (((8) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((9) & 0xF) << 15))
+      (((9) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((9) & 0xF) << 15))
+      (((6) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15))>;
    slew-rate = "ultra";
   };
  };
@@ -1210,5 +1213,12 @@ nxp_pmod_touch_panel_i2c: &arduino_i2c {
  status = "okay";
 };
 # 11 "/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts" 2
+# 0 "<command-line>" 2
+# 1 "/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay" 1
+/ {
+    aliases {
+        spi0 = &flexcomm1;
+    };
+};
 # 0 "<command-line>" 2
 # 1 "/home/wis3re/zephyrproject/zephyr/misc/empty_file.c"
