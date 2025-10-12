@@ -3,7 +3,7 @@
 #include <zephyr/autoconf.h> // Explicitly include generated Kconfig definitions
 #include "dbus_app_layer.h" // Include the ported DBus Application Layer
 #include "spi_abstraction.h" // Include the SPI abstraction layer
-#include "dbus_driver_config.h" // Include the DBus driver configuration
+#include "dbus_driver_public.h" // Include the DBus driver public API
 
 // Example DBus service callback for testing
 void my_test_service_handler(const uint8_t* const data, uint8_t data_len) {

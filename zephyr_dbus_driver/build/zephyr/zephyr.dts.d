@@ -2,6 +2,7 @@ empty_file.o: /home/wis3re/zephyrproject/zephyr/misc/empty_file.c \
  /home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts \
  /home/wis3re/zephyrproject/zephyr/dts/arm/nxp/nxp_rw6xx.dtsi \
  /home/wis3re/zephyrproject/zephyr/dts/common/mem.h \
+ /home/wis3re/zephyrproject/zephyr/dts/common/freq.h \
  /home/wis3re/zephyrproject/zephyr/dts/arm/armv8-m.dtsi \
  /home/wis3re/zephyrproject/zephyr/dts/common/skeleton.dtsi \
  /home/wis3re/zephyrproject/zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi \

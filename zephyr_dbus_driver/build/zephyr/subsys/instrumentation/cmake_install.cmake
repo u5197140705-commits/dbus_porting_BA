@@ -1,4 +1,4 @@
-# Install script for directory: /home/wis3re/zephyrproject/zephyr/drivers/misc/coresight
+# Install script for directory: /home/wis3re/zephyrproject/zephyr/subsys/instrumentation
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

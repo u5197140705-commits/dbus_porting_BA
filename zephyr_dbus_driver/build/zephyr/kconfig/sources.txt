@@ -5,7 +5,6 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/boards/Kconfig
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/boards/Kconfig.defconfig
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/boards/Kconfig.frdm_rw612
-/home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/kconfig_module_dirs.env
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/soc/Kconfig
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/soc/Kconfig.defconfig
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/Kconfig/soc/Kconfig.soc
@@ -53,6 +52,8 @@
 /home/wis3re/zephyrproject/zephyr/arch/posix/Kconfig.natsim_optional
 /home/wis3re/zephyrproject/zephyr/arch/riscv/Kconfig
 /home/wis3re/zephyrproject/zephyr/arch/riscv/Kconfig.isa
+/home/wis3re/zephyrproject/zephyr/arch/riscv/core/Kconfig
+/home/wis3re/zephyrproject/zephyr/arch/riscv/core/xuantie/Kconfig
 /home/wis3re/zephyrproject/zephyr/arch/rx/Kconfig
 /home/wis3re/zephyrproject/zephyr/arch/sparc/Kconfig
 /home/wis3re/zephyrproject/zephyr/arch/x86/Kconfig
@@ -68,6 +69,7 @@
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_24lc32/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_2_8_tft_touch_v2/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_2_8_tft_touch_v2/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_8chan_solenoid/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_adalogger_featherwing/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_aht20/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_apds9960/Kconfig.shield
@@ -82,21 +84,27 @@
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_ina237/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_lis2mdl/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_lis3dh/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_ltr329/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_mcp9808/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_neopixel_grid_bff/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_neopixel_grid_bff/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_pca9685/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_pcf8523/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_tsl2591/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_vcnl4040/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_veml7700/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_winc1500/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/adafruit_winc1500/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/amg88xx/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/arceli_eth_w5500/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/arceli_eth_w5500/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/arducam_cu450_ov5640/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/arduino_giga_display_shield/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/arduino_giga_display_shield/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/arduino_modulino_buttons/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/arduino_modulino_movement/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/arduino_modulino_smartleds/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/arduino_modulino_thermo/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/arduino_uno_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/atmel_rf2xx/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/atmel_rf2xx/Kconfig.shield
@@ -148,6 +156,7 @@
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_adc_click/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_adc_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_air_quality_3_click/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_ambient_2_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_ble_tiny_click/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_ble_tiny_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_eth3_click/Kconfig.defconfig
@@ -155,6 +164,7 @@
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_eth_click/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_eth_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_h_bridge_4_click/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_illuminance_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_ir_gesture_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_lsm6dsl_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_lte_iot10_click/Kconfig.defconfig
@@ -162,6 +172,7 @@
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_mcp2518fd_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_pressure_3_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_proximity_9_click/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_rtc_18_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_stepper_18_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_stepper_19_click/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/mikroe_weather_click/Kconfig.shield
@@ -178,6 +189,7 @@
 /home/wis3re/zephyrproject/zephyr/boards/shields/nxp_btb44_ov5640/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/nxp_m2_wifi_bt/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/nxp_m2_wifi_bt/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/olimex_shield_midi/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/openthread_rcp_arduino/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/openthread_rcp_arduino/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/p3t1755dp_ard_i2c/Kconfig.shield
@@ -214,9 +226,11 @@
 /home/wis3re/zephyrproject/zephyr/boards/shields/semtech_sx1272mb2das/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/semtech_sx1276mb1mas/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/sparkfun_carrier_asset_tracker/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/sparkfun_environmental_combo/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/sparkfun_rv8803/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/sparkfun_sara_r4/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/sparkfun_sara_r4/Kconfig.shield
+/home/wis3re/zephyrproject/zephyr/boards/shields/sparkfun_shtc3/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/ssd1306/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/boards/shields/ssd1306/Kconfig.shield
 /home/wis3re/zephyrproject/zephyr/boards/shields/st7735r/Kconfig.defconfig
@@ -285,7 +299,6 @@
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.ene
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.esp32
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.gd32
-/home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.gecko
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.ifx_cat1
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.it51xxx
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.it8xxx2
@@ -309,7 +322,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.sam
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.sam0
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.sam_afec
-/home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.siwx91x
+/home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.silabs
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.smartbond
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.stm32
 /home/wis3re/zephyrproject/zephyr/drivers/adc/Kconfig.test
@@ -342,6 +355,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/bbram/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/bbram/Kconfig.bbram_emul
 /home/wis3re/zephyrproject/zephyr/drivers/bbram/Kconfig.it8xxx2
+/home/wis3re/zephyrproject/zephyr/drivers/bbram/Kconfig.mc146818
 /home/wis3re/zephyrproject/zephyr/drivers/bbram/Kconfig.microchip
 /home/wis3re/zephyrproject/zephyr/drivers/bbram/Kconfig.npcx
 /home/wis3re/zephyrproject/zephyr/drivers/bbram/Kconfig.rts5912
@@ -357,6 +371,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/cache/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/cache/Kconfig.andes
 /home/wis3re/zephyrproject/zephyr/drivers/cache/Kconfig.aspeed
+/home/wis3re/zephyrproject/zephyr/drivers/cache/Kconfig.bflb
 /home/wis3re/zephyrproject/zephyr/drivers/cache/Kconfig.nrf
 /home/wis3re/zephyrproject/zephyr/drivers/cache/Kconfig.nxp_xcache
 /home/wis3re/zephyrproject/zephyr/drivers/cache/Kconfig.stm32
@@ -390,6 +405,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/charger/Kconfig.bq25180
 /home/wis3re/zephyrproject/zephyr/drivers/charger/Kconfig.bq25713
 /home/wis3re/zephyrproject/zephyr/drivers/charger/Kconfig.max20335
+/home/wis3re/zephyrproject/zephyr/drivers/charger/Kconfig.pca9422
 /home/wis3re/zephyrproject/zephyr/drivers/charger/Kconfig.pf1550
 /home/wis3re/zephyrproject/zephyr/drivers/charger/Kconfig.sbs_charger
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig
@@ -426,11 +442,14 @@
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.rcar
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.renesas_ra_cgc
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.renesas_rx_cgc
+/home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.renesas_rz_cgc
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.renesas_rz_cpg
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.rpi_pico
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.rts5912
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.rv32m1
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.sam
+/home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.sf32lb_hxt48
+/home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.sf32lb_rcc
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.si32
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.silabs
 /home/wis3re/zephyrproject/zephyr/drivers/clock_control/Kconfig.siwx91x
@@ -444,9 +463,11 @@
 /home/wis3re/zephyrproject/zephyr/drivers/comparator/Kconfig.mcux_acmp
 /home/wis3re/zephyrproject/zephyr/drivers/comparator/Kconfig.nrf_comp
 /home/wis3re/zephyrproject/zephyr/drivers/comparator/Kconfig.nrf_lpcomp
+/home/wis3re/zephyrproject/zephyr/drivers/comparator/Kconfig.nxp_cmp
 /home/wis3re/zephyrproject/zephyr/drivers/comparator/Kconfig.renesas_ra
 /home/wis3re/zephyrproject/zephyr/drivers/comparator/Kconfig.shell
 /home/wis3re/zephyrproject/zephyr/drivers/comparator/Kconfig.silabs_acmp
+/home/wis3re/zephyrproject/zephyr/drivers/comparator/Kconfig.stm32_comp
 /home/wis3re/zephyrproject/zephyr/drivers/console/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/coredump/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig
@@ -463,6 +484,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.gd32
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.gecko
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.ifx_cat1
+/home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.ifx_tcpwm
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.imx_epit
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.ite_it51xxx
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.ite_it8xxx2
@@ -501,6 +523,8 @@
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.tmr_cmsdk_apb
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.xec
 /home/wis3re/zephyrproject/zephyr/drivers/counter/Kconfig.xlnx
+/home/wis3re/zephyrproject/zephyr/drivers/crc/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/crc/Kconfig.renesas_ra
 /home/wis3re/zephyrproject/zephyr/drivers/crypto/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/crypto/Kconfig.ataes132a
 /home/wis3re/zephyrproject/zephyr/drivers/crypto/Kconfig.cc23x0
@@ -546,6 +570,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/dai/nxp/micfil/Kconfig.micfil
 /home/wis3re/zephyrproject/zephyr/drivers/dai/nxp/sai/Kconfig.sai
 /home/wis3re/zephyrproject/zephyr/drivers/debug/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/debug/Kconfig.nrf
 /home/wis3re/zephyrproject/zephyr/drivers/debug/Kconfig.silabs
 /home/wis3re/zephyrproject/zephyr/drivers/disk/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/disk/Kconfig.flash
@@ -563,6 +588,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.intel_multibootfb
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ist3931
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.led_strip_matrix
+/home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.lpm013m126
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ls0xx
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.max7219
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.mcux_dcnano_lcdif
@@ -582,9 +608,10 @@
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ssd1322
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ssd1327
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ssd1331
-/home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ssd1351
+/home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ssd135x
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ssd1363
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.ssd16xx
+/home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.st730x
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.st75256
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.st7567
 /home/wis3re/zephyrproject/zephyr/drivers/display/Kconfig.st7701
@@ -613,14 +640,17 @@
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.mcux_pxp
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.mcux_smartdma
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.nios2_msgdma
+/home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.npcx
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.nxp_edma
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.nxp_sdma
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.nxp_sof_host_dma
+/home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.renesas_ra
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.renesas_rz
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.rpi_pico
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.sam0
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.sam_xdmac
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.sedi
+/home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.sf32lb
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.si32
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.silabs
 /home/wis3re/zephyrproject/zephyr/drivers/dma/Kconfig.siwx91x
@@ -700,6 +730,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/ethernet/Kconfig.stm32_hal
 /home/wis3re/zephyrproject/zephyr/drivers/ethernet/Kconfig.sy1xx_mac
 /home/wis3re/zephyrproject/zephyr/drivers/ethernet/Kconfig.test
+/home/wis3re/zephyrproject/zephyr/drivers/ethernet/Kconfig.virtio_net
 /home/wis3re/zephyrproject/zephyr/drivers/ethernet/Kconfig.w5500
 /home/wis3re/zephyrproject/zephyr/drivers/ethernet/Kconfig.xilinx_axienet
 /home/wis3re/zephyrproject/zephyr/drivers/ethernet/Kconfig.xlnx_gem
@@ -752,6 +783,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/flash/Kconfig.nxp_s32
 /home/wis3re/zephyrproject/zephyr/drivers/flash/Kconfig.renesas_ra
 /home/wis3re/zephyrproject/zephyr/drivers/flash/Kconfig.renesas_ra_ospi
+/home/wis3re/zephyrproject/zephyr/drivers/flash/Kconfig.renesas_ra_qspi
 /home/wis3re/zephyrproject/zephyr/drivers/flash/Kconfig.renesas_rx
 /home/wis3re/zephyrproject/zephyr/drivers/flash/Kconfig.rpi_pico
 /home/wis3re/zephyrproject/zephyr/drivers/flash/Kconfig.rts5912
@@ -778,6 +810,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/fuel_gauge/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/fuel_gauge/axp2101/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/fuel_gauge/bq27z746/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/fuel_gauge/bq40z50/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/fuel_gauge/composite/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/fuel_gauge/lc709203f/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/fuel_gauge/max17048/Kconfig
@@ -795,6 +828,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.ad559x
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.adp5585
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.ads1x4s0x
+/home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.aesc
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.altera
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.ambiq
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.andes_atcgpio100
@@ -803,6 +837,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.b91
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.bcm2711
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.bd8lb600fs
+/home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.bflb
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.brcmstb
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.cc13xx_cc26xx
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.cc23x0
@@ -838,6 +873,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.max22017
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.max2219x
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.max32
+/home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.mchp
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.mchp_mss
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.mcp23xxx
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.mcux
@@ -857,8 +893,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.nrfx
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.numaker
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.numicro
-/home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.nxp_s32
-/home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.pca6416
+/home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.nxp_siul2
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.pca953x
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.pca95xx
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.pca_series
@@ -881,6 +916,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.sam0
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.sc18im704
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.sedi
+/home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.sf32lb
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.si32
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.sifive
 /home/wis3re/zephyrproject/zephyr/drivers/gpio/Kconfig.silabs
@@ -924,6 +960,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/hwinfo/Kconfig.mcux_src_rev2
 /home/wis3re/zephyrproject/zephyr/drivers/hwinfo/Kconfig.mcux_syscon
 /home/wis3re/zephyrproject/zephyr/drivers/hwinfo/Kconfig.mspm0
+/home/wis3re/zephyrproject/zephyr/drivers/hwinfo/Kconfig.native
 /home/wis3re/zephyrproject/zephyr/drivers/hwinfo/Kconfig.nrf
 /home/wis3re/zephyrproject/zephyr/drivers/hwinfo/Kconfig.numaker
 /home/wis3re/zephyrproject/zephyr/drivers/hwinfo/Kconfig.numaker_rmc
@@ -946,6 +983,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.b91
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.bcm_iproc
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.cc13xx_cc26xx
+/home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.cc23x0
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.cdns
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.dw
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.ene
@@ -977,6 +1015,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.sc18im704
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.sedi
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.sifive
+/home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.silabs
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.smartbond
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.stm32
 /home/wis3re/zephyrproject/zephyr/drivers/i2c/Kconfig.sy1xx
@@ -1021,6 +1060,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/ieee802154/Kconfig.mcxw
 /home/wis3re/zephyrproject/zephyr/drivers/ieee802154/Kconfig.nrf5
 /home/wis3re/zephyrproject/zephyr/drivers/ieee802154/Kconfig.rf2xx
+/home/wis3re/zephyrproject/zephyr/drivers/ieee802154/Kconfig.stm32wba
 /home/wis3re/zephyrproject/zephyr/drivers/ieee802154/Kconfig.uart_pipe
 /home/wis3re/zephyrproject/zephyr/drivers/input/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/input/Kconfig.adc_keys
@@ -1079,6 +1119,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/interrupt_controller/Kconfig.nxp_irqsteer
 /home/wis3re/zephyrproject/zephyr/drivers/interrupt_controller/Kconfig.nxp_pint
 /home/wis3re/zephyrproject/zephyr/drivers/interrupt_controller/Kconfig.nxp_s32
+/home/wis3re/zephyrproject/zephyr/drivers/interrupt_controller/Kconfig.nxp_siul2
 /home/wis3re/zephyrproject/zephyr/drivers/interrupt_controller/Kconfig.plic
 /home/wis3re/zephyrproject/zephyr/drivers/interrupt_controller/Kconfig.renesas_rx
 /home/wis3re/zephyrproject/zephyr/drivers/interrupt_controller/Kconfig.renesas_rz
@@ -1093,7 +1134,6 @@
 /home/wis3re/zephyrproject/zephyr/drivers/interrupt_controller/Kconfig.xmc4xxx
 /home/wis3re/zephyrproject/zephyr/drivers/ipm/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/ipm/Kconfig.imx
-/home/wis3re/zephyrproject/zephyr/drivers/ipm/Kconfig.intel_adsp
 /home/wis3re/zephyrproject/zephyr/drivers/ipm/Kconfig.ivshmem
 /home/wis3re/zephyrproject/zephyr/drivers/ipm/Kconfig.nrfx
 /home/wis3re/zephyrproject/zephyr/drivers/ipm/Kconfig.nrfx_ipc_channel
@@ -1143,6 +1183,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/mbox/Kconfig.nxp_imx
 /home/wis3re/zephyrproject/zephyr/drivers/mbox/Kconfig.nxp_mailbox
 /home/wis3re/zephyrproject/zephyr/drivers/mbox/Kconfig.nxp_s32
+/home/wis3re/zephyrproject/zephyr/drivers/mbox/Kconfig.renesas_ra
 /home/wis3re/zephyrproject/zephyr/drivers/mbox/Kconfig.renesas_rz
 /home/wis3re/zephyrproject/zephyr/drivers/mbox/Kconfig.stm32_hsem
 /home/wis3re/zephyrproject/zephyr/drivers/mbox/Kconfig.ti_omap
@@ -1182,6 +1223,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.adp5585
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.aw9523b
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.axp192
+/home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.axp2101
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.bd8lb600fs
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.ds3231
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.it8801
@@ -1190,11 +1232,13 @@
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.max22017
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.max31790
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.maxq10xx
+/home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.mc146818
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.mchp_sam
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.nct38xx
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.npm13xx
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.npm2100
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.npm6001
+/home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.pca9422
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.pf1550
 /home/wis3re/zephyrproject/zephyr/drivers/mfd/Kconfig.tle9104
 /home/wis3re/zephyrproject/zephyr/drivers/mipi_dbi/Kconfig
@@ -1211,7 +1255,6 @@
 /home/wis3re/zephyrproject/zephyr/drivers/mipi_dsi/Kconfig.stm32
 /home/wis3re/zephyrproject/zephyr/drivers/mipi_dsi/Kconfig.test
 /home/wis3re/zephyrproject/zephyr/drivers/misc/Kconfig
-/home/wis3re/zephyrproject/zephyr/drivers/misc/coresight/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/misc/devmux/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/misc/ethos_u/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/misc/ft8xx/Kconfig
@@ -1245,6 +1288,9 @@
 /home/wis3re/zephyrproject/zephyr/drivers/mspi/Kconfig.dw
 /home/wis3re/zephyrproject/zephyr/drivers/mspi/Kconfig.mspi_emul
 /home/wis3re/zephyrproject/zephyr/drivers/net/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/opamp/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/opamp/Kconfig.mcux_opamp
+/home/wis3re/zephyrproject/zephyr/drivers/opamp/Kconfig.mcux_opamp_fast
 /home/wis3re/zephyrproject/zephyr/drivers/pcie/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/pcie/controller/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/pcie/controller/Kconfig.brcmstb
@@ -1285,12 +1331,13 @@
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.numaker
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.numicro
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.nxp_port
-/home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.nxp_s32
+/home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.nxp_siul2
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.realtek_rts5912
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.rpi_pico
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.rv32m1
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.sam
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.sam0
+/home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.sf32lb52x
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.sifive
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.silabs_dbus
 /home/wis3re/zephyrproject/zephyr/drivers/pinctrl/Kconfig.siwx91x
@@ -1315,6 +1362,8 @@
 /home/wis3re/zephyrproject/zephyr/drivers/power_domain/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/power_domain/Kconfig.nrf_gpio_pad_group
 /home/wis3re/zephyrproject/zephyr/drivers/power_domain/Kconfig.nrfs_gdpwr
+/home/wis3re/zephyrproject/zephyr/drivers/power_domain/Kconfig.nrfs_swext
+/home/wis3re/zephyrproject/zephyr/drivers/power_domain/Kconfig.silabs_siwx91x
 /home/wis3re/zephyrproject/zephyr/drivers/ps2/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/ps2/Kconfig.npcx
 /home/wis3re/zephyrproject/zephyr/drivers/ps2/Kconfig.xec
@@ -1333,7 +1382,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/pwm/Kconfig.fake
 /home/wis3re/zephyrproject/zephyr/drivers/pwm/Kconfig.gd32
 /home/wis3re/zephyrproject/zephyr/drivers/pwm/Kconfig.gecko
-/home/wis3re/zephyrproject/zephyr/drivers/pwm/Kconfig.ifx_cat1
+/home/wis3re/zephyrproject/zephyr/drivers/pwm/Kconfig.ifx_tcpwm
 /home/wis3re/zephyrproject/zephyr/drivers/pwm/Kconfig.imx
 /home/wis3re/zephyrproject/zephyr/drivers/pwm/Kconfig.intel_blinky
 /home/wis3re/zephyrproject/zephyr/drivers/pwm/Kconfig.it51xxx
@@ -1393,7 +1442,9 @@
 /home/wis3re/zephyrproject/zephyr/drivers/regulator/Kconfig.npm2100
 /home/wis3re/zephyrproject/zephyr/drivers/regulator/Kconfig.npm6001
 /home/wis3re/zephyrproject/zephyr/drivers/regulator/Kconfig.nxp_vref
+/home/wis3re/zephyrproject/zephyr/drivers/regulator/Kconfig.nxp_vrefv1
 /home/wis3re/zephyrproject/zephyr/drivers/regulator/Kconfig.pca9420
+/home/wis3re/zephyrproject/zephyr/drivers/regulator/Kconfig.pca9422
 /home/wis3re/zephyrproject/zephyr/drivers/regulator/Kconfig.pf1550
 /home/wis3re/zephyrproject/zephyr/drivers/regulator/Kconfig.rpi_pico
 /home/wis3re/zephyrproject/zephyr/drivers/reset/Kconfig
@@ -1405,6 +1456,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/reset/Kconfig.mmio
 /home/wis3re/zephyrproject/zephyr/drivers/reset/Kconfig.npcx
 /home/wis3re/zephyrproject/zephyr/drivers/reset/Kconfig.numaker
+/home/wis3re/zephyrproject/zephyr/drivers/reset/Kconfig.nxp_mrcc
 /home/wis3re/zephyrproject/zephyr/drivers/reset/Kconfig.nxp_rstctl
 /home/wis3re/zephyrproject/zephyr/drivers/reset/Kconfig.rpi_pico
 /home/wis3re/zephyrproject/zephyr/drivers/reset/Kconfig.stm32
@@ -1415,6 +1467,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.am1805
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.ambiq
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.bq32002
+/home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.counter
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.ds1307
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.ds1337
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.ds3231
@@ -1425,11 +1478,13 @@
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.numaker
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.nxp_irtc
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.pcf2123
+/home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.pcf85063a
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.pcf8523
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.pcf8563
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.rpi_pico
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.rts5912
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.rv3028
+/home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.rv3032
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.rv8263
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.rv8803
 /home/wis3re/zephyrproject/zephyr/drivers/rtc/Kconfig.rx8130ce
@@ -1451,6 +1506,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/sdhc/Kconfig.rcar
 /home/wis3re/zephyrproject/zephyr/drivers/sdhc/Kconfig.renesas_ra
 /home/wis3re/zephyrproject/zephyr/drivers/sdhc/Kconfig.sam_hsmci
+/home/wis3re/zephyrproject/zephyr/drivers/sdhc/Kconfig.sam_sdmmc
 /home/wis3re/zephyrproject/zephyr/drivers/sdhc/Kconfig.sdhc_cdns
 /home/wis3re/zephyrproject/zephyr/drivers/sdhc/Kconfig.spi
 /home/wis3re/zephyrproject/zephyr/drivers/sdhc/Kconfig.stm32
@@ -1589,10 +1645,13 @@
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/nxp/nxp_kinetis_temp/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/nxp/nxp_lpadc_temp40/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/nxp/nxp_tempmon/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/sensor/nxp/nxp_tmpsns/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/nxp/p3t1755/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/nxp/qdec_mcux/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/nxp/qdec_nxp_s32/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/nxp/qdec_tpm/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/sensor/omron/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/sensor/omron/d6f/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/pixart/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/pixart/paa3905/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/pixart/paj7620/Kconfig
@@ -1640,6 +1699,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/st/iis2mdc/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/st/iis328dq/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/st/iis3dhhc/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/sensor/st/iis3dwb/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/st/ism330dhcx/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/st/lis2de12/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/st/lis2dh/Kconfig
@@ -1689,9 +1749,9 @@
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/bq274xx/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/fdc2x1x/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/ina219/Kconfig
-/home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/ina226/Kconfig
-/home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/ina23x/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/ina2xx/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/ina3221/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/ina7xx/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/lm95234/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/opt3001/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/ti/ti_hdc/Kconfig
@@ -1715,6 +1775,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/voltage_divider/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/wsen/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/wsen/wsen_hids_2525020210002/Kconfig
+/home/wis3re/zephyrproject/zephyr/drivers/sensor/wsen/wsen_isds_2536030320001/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/wsen/wsen_itds_2533020201601/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/wsen/wsen_pads_2511020213301/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/sensor/wsen/wsen_pdus_25131308XXXXX/Kconfig
@@ -1792,6 +1853,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.rzt2m
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.sam0
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.sedi
+/home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.sf32lb
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.si32
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.sifive
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.silabs_eusart
@@ -1803,6 +1865,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.test
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.uart_sam
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.usart_sam
+/home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.virtio_console
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.wch_usart
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.xec
 /home/wis3re/zephyrproject/zephyr/drivers/serial/Kconfig.xen
@@ -1925,6 +1988,7 @@
 /home/wis3re/zephyrproject/zephyr/drivers/timer/Kconfig.silabs
 /home/wis3re/zephyrproject/zephyr/drivers/timer/Kconfig.smartbond
 /home/wis3re/zephyrproject/zephyr/drivers/timer/Kconfig.stm32_lptim
+/home/wis3re/zephyrproject/zephyr/drivers/timer/Kconfig.stm32wb0_radio_timer
 /home/wis3re/zephyrproject/zephyr/drivers/timer/Kconfig.sy1xx_sys_timer
 /home/wis3re/zephyrproject/zephyr/drivers/timer/Kconfig.ti_dm_timer
 /home/wis3re/zephyrproject/zephyr/drivers/timer/Kconfig.wch_ch32v00x
@@ -1988,10 +2052,12 @@
 /home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.ov7670
 /home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.ov7725
 /home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.ov9655
+/home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.renesas_ra_ceu
 /home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.shell
 /home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.st_mipid02
 /home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.stm32_dcmi
 /home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.stm32_dcmipp
+/home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.stm32_venc
 /home/wis3re/zephyrproject/zephyr/drivers/video/Kconfig.sw_generator
 /home/wis3re/zephyrproject/zephyr/drivers/virtio/Kconfig
 /home/wis3re/zephyrproject/zephyr/drivers/virtualization/Kconfig
@@ -2076,7 +2142,6 @@
 /home/wis3re/zephyrproject/zephyr/lib/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/acpi/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/cpp/Kconfig
-/home/wis3re/zephyrproject/zephyr/lib/crc/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/hash/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/hash/Kconfig.hash_func
 /home/wis3re/zephyrproject/zephyr/lib/hash/Kconfig.hash_map
@@ -2087,9 +2152,9 @@
 /home/wis3re/zephyrproject/zephyr/lib/libc/newlib/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/libc/picolibc/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/mem_blocks/Kconfig
+/home/wis3re/zephyrproject/zephyr/lib/midi2/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/min_heap/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/net_buf/Kconfig
-/home/wis3re/zephyrproject/zephyr/lib/open-amp/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/os/Kconfig
 /home/wis3re/zephyrproject/zephyr/lib/os/Kconfig.cbprintf
 /home/wis3re/zephyrproject/zephyr/lib/os/zvfs/Kconfig
@@ -2183,6 +2248,7 @@
 /home/wis3re/zephyrproject/zephyr/modules/hal_nxp/mcux/Kconfig.mcux
 /home/wis3re/zephyrproject/zephyr/modules/hal_nxp/s32/Kconfig.nxp_s32
 /home/wis3re/zephyrproject/zephyr/modules/hal_rpi_pico/Kconfig
+/home/wis3re/zephyrproject/zephyr/modules/hal_sifli/Kconfig
 /home/wis3re/zephyrproject/zephyr/modules/hal_silabs/Kconfig
 /home/wis3re/zephyrproject/zephyr/modules/hal_silabs/gecko/Kconfig
 /home/wis3re/zephyrproject/zephyr/modules/hal_silabs/simplicity_sdk/Kconfig
@@ -2430,6 +2496,13 @@
 /home/wis3re/zephyrproject/zephyr/soc/efinix/sapphire/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/efinix/sapphire/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/efinix/sapphire/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/egis/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/egis/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/egis/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/egis/et171/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/egis/et171/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/egis/et171/Kconfig.defconfig.et171
+/home/wis3re/zephyrproject/zephyr/soc/egis/et171/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/ene/kb106x/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/ene/kb106x/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/ene/kb106x/Kconfig.soc
@@ -2469,6 +2542,7 @@
 /home/wis3re/zephyrproject/zephyr/soc/espressif/esp32c6/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/espressif/esp32h2/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/espressif/esp32h2/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/espressif/esp32h2/Kconfig.mac
 /home/wis3re/zephyrproject/zephyr/soc/espressif/esp32h2/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/espressif/esp32s2/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/espressif/esp32s2/Kconfig.defconfig
@@ -2560,6 +2634,12 @@
 /home/wis3re/zephyrproject/zephyr/soc/infineon/cat3/xmc4xxx/Kconfig.defconfig.xmc4500
 /home/wis3re/zephyrproject/zephyr/soc/infineon/cat3/xmc4xxx/Kconfig.defconfig.xmc4700
 /home/wis3re/zephyrproject/zephyr/soc/infineon/cat3/xmc4xxx/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/infineon/edge/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/infineon/edge/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/infineon/edge/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/infineon/edge/pse84/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/infineon/edge/pse84/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/infineon/edge/pse84/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/intel/alder_lake/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/intel/alder_lake/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/intel/alder_lake/Kconfig.soc
@@ -2638,6 +2718,7 @@
 /home/wis3re/zephyrproject/zephyr/soc/ite/ec/it8xxx2/Kconfig.defconfig.it81302bx
 /home/wis3re/zephyrproject/zephyr/soc/ite/ec/it8xxx2/Kconfig.defconfig.it81302cx
 /home/wis3re/zephyrproject/zephyr/soc/ite/ec/it8xxx2/Kconfig.defconfig.it81302dx
+/home/wis3re/zephyrproject/zephyr/soc/ite/ec/it8xxx2/Kconfig.defconfig.it82000bw
 /home/wis3re/zephyrproject/zephyr/soc/ite/ec/it8xxx2/Kconfig.defconfig.it82002aw
 /home/wis3re/zephyrproject/zephyr/soc/ite/ec/it8xxx2/Kconfig.defconfig.it82002bw
 /home/wis3re/zephyrproject/zephyr/soc/ite/ec/it8xxx2/Kconfig.defconfig.it82202ax
@@ -2690,6 +2771,11 @@
 /home/wis3re/zephyrproject/zephyr/soc/microchip/miv/polarfire/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/microchip/miv/polarfire/Kconfig.defconfig.polarfire_u54
 /home/wis3re/zephyrproject/zephyr/soc/microchip/miv/polarfire/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/microchip/pic32c/pic32cm_jh/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/microchip/pic32c/pic32cm_jh/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/microchip/pic32c/pic32cm_jh/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/microchip/pic32c/pic32cm_jh/pic32cm_jh00/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/microchip/pic32c/pic32cm_jh/pic32cm_jh01/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/microchip/sam/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/microchip/sam/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/microchip/sam/Kconfig.soc
@@ -2863,6 +2949,8 @@
 /home/wis3re/zephyrproject/zephyr/soc/nxp/imx/imx9/imx943/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/nxp/imx/imx9/imx943/Kconfig.defconfig.mimx94398.a55
 /home/wis3re/zephyrproject/zephyr/soc/nxp/imx/imx9/imx943/Kconfig.defconfig.mimx94398.m33
+/home/wis3re/zephyrproject/zephyr/soc/nxp/imx/imx9/imx943/Kconfig.defconfig.mimx94398.m7_0
+/home/wis3re/zephyrproject/zephyr/soc/nxp/imx/imx9/imx943/Kconfig.defconfig.mimx94398.m7_1
 /home/wis3re/zephyrproject/zephyr/soc/nxp/imx/imx9/imx943/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/nxp/imx/imx9/imx95/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/nxp/imx/imx9/imx95/Kconfig.defconfig
@@ -2962,6 +3050,12 @@
 /home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/mcxw2xx/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/mcxw2xx/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/mcxw2xx/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/mcxw7xx/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/mcxw7xx/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/nxp/mcx/mcxw/mcxw7xx/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/nxp/rw/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/nxp/rw/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/nxp/rw/Kconfig.defconfig.wifi
@@ -3088,6 +3182,9 @@
 /home/wis3re/zephyrproject/zephyr/soc/renesas/ra/ra8t1/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/renesas/ra/ra8t1/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/renesas/ra/ra8t1/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/renesas/ra/ra8t2/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/renesas/ra/ra8t2/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/renesas/ra/ra8t2/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rcar/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rcar/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rcar/Kconfig.soc
@@ -3107,6 +3204,9 @@
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx261/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx261/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx261/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx26t/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx26t/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx26t/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx62n/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx62n/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/renesas/rx/rx62n/Kconfig.soc
@@ -3203,6 +3303,12 @@
 /home/wis3re/zephyrproject/zephyr/soc/sifive/sifive_freedom/fu700/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/sifive/sifive_freedom/fu700/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/sifive/sifive_freedom/fu700/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/sifli/sf32/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/sifli/sf32/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/sifli/sf32/Kconfig.soc
+/home/wis3re/zephyrproject/zephyr/soc/sifli/sf32/sf32lb52x/Kconfig
+/home/wis3re/zephyrproject/zephyr/soc/sifli/sf32/sf32lb52x/Kconfig.defconfig
+/home/wis3re/zephyrproject/zephyr/soc/sifli/sf32/sf32lb52x/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/silabs/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/silabs/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/silabs/Kconfig.soc
@@ -3347,6 +3453,7 @@
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32c0x/Kconfig.defconfig
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32c0x/Kconfig.defconfig.stm32c011xx
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32c0x/Kconfig.defconfig.stm32c031xx
+/home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32c0x/Kconfig.defconfig.stm32c051xx
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32c0x/Kconfig.defconfig.stm32c071xx
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32c0x/Kconfig.defconfig.stm32c091xx
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32c0x/Kconfig.defconfig.stm32c092xx
@@ -3496,6 +3603,7 @@
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32l0x/Kconfig.defconfig.stm32l072xx
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32l0x/Kconfig.defconfig.stm32l073xx
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32l0x/Kconfig.defconfig.stm32l081xx
+/home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32l0x/Kconfig.defconfig.stm32l083xx
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32l0x/Kconfig.soc
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32l1x/Kconfig
 /home/wis3re/zephyrproject/zephyr/soc/st/stm32/stm32l1x/Kconfig.defconfig
@@ -3742,6 +3850,9 @@
 /home/wis3re/zephyrproject/zephyr/subsys/canbus/Kconfig.canopen
 /home/wis3re/zephyrproject/zephyr/subsys/canbus/isotp/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/console/Kconfig
+/home/wis3re/zephyrproject/zephyr/subsys/cpu_freq/Kconfig
+/home/wis3re/zephyrproject/zephyr/subsys/cpu_load/Kconfig
+/home/wis3re/zephyrproject/zephyr/subsys/crc/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/dap/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/debug/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/debug/coredump/Kconfig
@@ -3771,14 +3882,17 @@
 /home/wis3re/zephyrproject/zephyr/subsys/gnss/rtk/protocol/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/gnss/rtk/serial/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/input/Kconfig
+/home/wis3re/zephyrproject/zephyr/subsys/instrumentation/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/ipc_service/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/ipc_service/backends/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/ipc_service/backends/Kconfig.icbmsg
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/ipc_service/backends/Kconfig.icmsg_me
+/home/wis3re/zephyrproject/zephyr/subsys/ipc/ipc_service/backends/Kconfig.intel_adsp
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/ipc_service/backends/Kconfig.rpmsg
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/ipc_service/lib/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/ipc_service/lib/Kconfig.icmsg
+/home/wis3re/zephyrproject/zephyr/subsys/ipc/open-amp/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/ipc/rpmsg_service/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/jwt/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/llext/Kconfig
@@ -3887,6 +4001,7 @@
 /home/wis3re/zephyrproject/zephyr/subsys/net/lib/lwm2m/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/net/lib/lwm2m/Kconfig.ipso
 /home/wis3re/zephyrproject/zephyr/subsys/net/lib/lwm2m/Kconfig.ucifi
+/home/wis3re/zephyrproject/zephyr/subsys/net/lib/midi2/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/net/lib/mqtt/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/net/lib/mqtt_sn/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/net/lib/ocpp/Kconfig
@@ -3904,6 +4019,7 @@
 /home/wis3re/zephyrproject/zephyr/subsys/net/lib/wifi_credentials/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/net/lib/zperf/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/net/pkt_filter/Kconfig
+/home/wis3re/zephyrproject/zephyr/subsys/nvmem/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/pm/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/pm/policy/Kconfig
 /home/wis3re/zephyrproject/zephyr/subsys/pmci/Kconfig

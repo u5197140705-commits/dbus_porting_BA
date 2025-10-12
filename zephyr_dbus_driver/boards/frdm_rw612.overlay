@@ -1,5 +1,55 @@
+/* frdm_rw612.overlay
+ * Example for SPI-Master-Konfiguration auf NXP FRDM-RW612
+ */
+
+#include <nxp/rw/RW612-pinctrl.h>
+
 / {
     aliases {
-        spi0 = &flexcomm1;
+        dbus-spi = &flexcomm1; // Alias points to the flexcomm1 node itself
+    };
+};
+
+&flexcomm1 {
+    status = "okay";
+    pinctrl-0 = <&pinmux_flexcomm1_spi>;
+    pinctrl-names = "default";
+
+    compatible = "nxp,lpc-spi";
+    #address-cells = <1>;
+    #size-cells = <0>;
+    reg = <0x50107000 0x1000>; // Base address and size for flexcomm1
+    interrupts = <15 0>;
+    clock-frequency = <1000000>; // 1 MHz, adjust as needed
+    label = "DBUS_SPI";
+    cs-gpios = <&hsgpio0 6 GPIO_ACTIVE_LOW>; // Example: Using D10 from Arduino header, adjust as needed
+};
+
+&pinctrl {
+    flexcomm1_spi_default: flexcomm1_spi_default {
+        group-gpios = <&pinctrl_flexcomm1_sck_default
+                       &pinctrl_flexcomm1_mosi_default
+                       &pinctrl_flexcomm1_miso_default
+                       &pinctrl_flexcomm1_ss0_default>;
+    };
+
+    pinctrl_flexcomm1_sck_default: pinctrl_flexcomm1_sck_default {
+        pinmux = <IO_MUX_FC1_USART_SCK_IO7>; // P0_7, assuming this is the SCK for SPI
+        slew-rate = "normal";
+    };
+
+    pinctrl_flexcomm1_mosi_default: pinctrl_flexcomm1_mosi_default {
+        pinmux = <IO_MUX_FC1_USART_DATA_IO9>; // P0_9, assuming this is the MOSI for SPI
+        slew-rate = "normal";
+    };
+
+    pinctrl_flexcomm1_miso_default: pinctrl_flexcomm1_miso_default {
+        pinmux = <IO_MUX_FC1_USART_DATA_IO8>; // P0_8, assuming this is the MISO for SPI
+        slew-rate = "normal";
+    };
+
+    pinctrl_flexcomm1_ss0_default: pinctrl_flexcomm1_ss0_default {
+        pinmux = <IO_MUX_FC1_SPI_SS0_IO6>; // P0_6, Chip Select
+        slew-rate = "normal";
     };
 };

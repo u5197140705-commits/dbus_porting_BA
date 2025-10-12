@@ -29,13 +29,6 @@ struct MEXTI_Handle {
     uint32_t dummy; // Placeholder
 };
 
-enum MEXTI_Trigger {
-    MEXTI_TRIGGER_FALLING = 0, // Placeholder
-};
-
-struct MEXTI_Config {
-    enum MEXTI_Trigger trigger; // Placeholder
-};
 
 struct MSPI_Handle {
     uint32_t dummy; // Placeholder
@@ -257,6 +250,8 @@ enum DBC_RegAddr
 #define DBC_DBUS_FIFO_MAX_MSG_CNT   (8u)  ///< DBus Tx/Rx FIFO can hold up to 8 DBus frames
 #define DBC_SPI_HDR_SIZE            (4u)  ///< Each SPI frame starts with 4-byte SPI header (1 command byte + 2-byte address + 1 data length byte)
 #define DBC_SPI_CRC_SIZE            (0u)  ///< The number of bytes for CRC in SPI frame if CRC is disabled
+#define DBC_SPI_BUFFER_SIZE         (64u) ///< Placeholder for SPI buffer size
+#define DBC_SPI_MAX_DATA_LEN        (60u) ///< Placeholder for max SPI data length (64 - HDR - CRC)
 
 #define DBC_REVISION_WITH_ALL_FEATURES          0x03000200u      ///< Starting revision of DBusCAN chip which supports all features
 
@@ -923,9 +918,9 @@ typedef struct {
 #define DBC_DBUS_BAUD_8M                        0x06u
 
 #define DBC_DBUS_CLKIN_8M                       0x00u
-#define DBC_DBUS_CLKIN_16M                      0x08u
-#define DBC_DBUS_CLKIN_20M                      0x10u
-#define DBC_DBUS_CLKIN_40M                      0x18u
+#define DBC_DBUS_CLKIN_16M                      0x01u
+#define DBC_DBUS_CLKIN_20M                      0x02u
+#define DBC_DBUS_CLKIN_40M                      0x03u
 
 // Enum for EEPROM write state
 enum DBCDRV_EepWriteState {
@@ -941,10 +936,10 @@ enum DBCDRV_EepWriteState {
 
 // Enum for DBC_command
 enum DBC_command {
-    DBC_CMD_READ = 0,
-    DBC_CMD_WRITE,
-    DBC_CMD_READ_BURST,
-    DBC_CMD_WRITE_BURST
+    DBC_CMD_READ = 0x00,
+    DBC_CMD_WRITE = 0x80,
+    DBC_CMD_READ_BURST = 0x20,
+    DBC_CMD_WRITE_BURST = 0xA0
 };
 
 // Enum for DBC_PowerMode
@@ -966,7 +961,6 @@ const struct MDIO_Channel *MEXTI_getPin(uint32_t channel);
 bool MDIO_read(const struct MDIO_Channel *channel);
 void MDIO_toggle(const struct MDIO_Channel *channel);
 void MDIO_write(const struct MDIO_Channel *channel, bool value);
-enum MCAL_Error MEXTI_init(struct MEXTI_Handle *handle, uint32_t channel, const struct MEXTI_Config *config);
 void MCAL_initCallback(MCAL_Callback_t *cb, MCAL_CallbackFunction_t func, void *obj);
 enum MCAL_Error MEXTI_enableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb);
 void MEXTI_disableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb);

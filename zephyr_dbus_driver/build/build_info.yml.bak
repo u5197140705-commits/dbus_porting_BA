@@ -1,4 +1,4 @@
 west:
-  command: /home/wis3re/.local/bin/west build -b frdm_rw612 -p
+  command: /home/wis3re/.local/bin/west build -b frdm_rw612 -p always
   topdir: /home/wis3re/zephyrproject
   version: 1.4.0

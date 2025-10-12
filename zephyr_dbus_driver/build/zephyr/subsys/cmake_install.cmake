@@ -64,6 +64,11 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
+  include("/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/instrumentation/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
   include("/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/ipc/cmake_install.cmake")
 endif()
 

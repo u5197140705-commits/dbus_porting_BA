@@ -19,6 +19,8 @@
 
 # 1 "/home/wis3re/zephyrproject/zephyr/dts/common/mem.h" 1 3 4
 # 8 "/home/wis3re/zephyrproject/zephyr/dts/arm/nxp/nxp_rw6xx.dtsi" 2 3 4
+# 1 "/home/wis3re/zephyrproject/zephyr/dts/common/freq.h" 1 3 4
+# 9 "/home/wis3re/zephyrproject/zephyr/dts/arm/nxp/nxp_rw6xx.dtsi" 2 3 4
 # 1 "/home/wis3re/zephyrproject/zephyr/dts/arm/armv8-m.dtsi" 1 3 4
 
 
@@ -27,8 +29,10 @@
 / {
  #address-cells = <1>;
  #size-cells = <1>;
- chosen { };
- aliases { };
+
+ chosen {};
+
+ aliases {};
 };
 # 4 "/home/wis3re/zephyrproject/zephyr/dts/arm/armv8-m.dtsi" 2 3 4
 
@@ -54,7 +58,7 @@
   };
  };
 };
-# 9 "/home/wis3re/zephyrproject/zephyr/dts/arm/nxp/nxp_rw6xx.dtsi" 2 3 4
+# 10 "/home/wis3re/zephyrproject/zephyr/dts/arm/nxp/nxp_rw6xx.dtsi" 2 3 4
 
 / {
  soc {
@@ -156,33 +160,34 @@
    idle: idle {
     compatible = "zephyr,power-state";
     power-state-name = "runtime-idle";
-    min-residency-us = <0>;
-    exit-latency-us = <0>;
+    min-residency-us = <60>;
+    exit-latency-us = <38>;
    };
+
 
    suspend: suspend {
     compatible = "nxp,pdcfg-power", "zephyr,power-state";
     power-state-name = "suspend-to-idle";
     min-residency-us = <600>;
-    exit-latency-us = <0>;
+    exit-latency-us = <38>;
     deep-sleep-config = <0x180000>,
-       <0x0>,
-       <0x4>,
-       <0x100>,
-       <0x0>;
+          <0x0>,
+          <0x4>,
+          <0x100>,
+          <0x0>;
    };
+
 
    standby: standby {
     compatible = "nxp,pdcfg-power", "zephyr,power-state";
     power-state-name = "standby";
-
-    min-residency-us = <6000>;
-    exit-latency-us = <0>;
+    min-residency-us = <336000>;
+    exit-latency-us = <14000>;
     deep-sleep-config = <0x180000>,
-       <0x0>,
-       <0x4>,
-       <0x100>,
-       <0x0>;
+          <0x0>,
+          <0x4>,
+          <0x100>,
+          <0x0>;
     status = "disabled";
    };
   };
@@ -196,10 +201,11 @@
   ranges = <0x0 0x443C0000 ((140) * 1024)>;
  };
 
- power_mode3_domain: power_mode3_domain {
+ peripheral_domain: peripheral-domain {
   compatible = "power-domain-soc-state-change";
-  onoff-power-states = <&standby>;
   #power-domain-cells = <0>;
+  zephyr,disabling-power-states = <&suspend &standby>;
+  onoff-power-states = <&standby>;
  };
 
  xtal32: xtal32 {
@@ -235,10 +241,10 @@
  #size-cells = <1>;
 
  smu1_data: memory@0 {
-  compatible = "zephyr,memory-region","mmio-sram";
+  compatible = "zephyr,memory-region", "mmio-sram";
   reg = <0x0 ((510) * 1024)>;
   zephyr,memory-region = "SMU1";
-  zephyr,memory-attr = <( (((1UL << (0))) << (20)) )>;
+  zephyr,memory-attr = <(((1UL << (0))) << (20))>;
  };
 };
 
@@ -247,10 +253,10 @@
  #size-cells = <1>;
 
  smu2_data: memory@0 {
-  compatible = "zephyr,memory-region","mmio-sram";
+  compatible = "zephyr,memory-region", "mmio-sram";
   reg = <0x0 ((140) * 1024)>;
   zephyr,memory-region = "SMU2";
-  zephyr,memory-attr = <( (((1UL << (0))) << (20)) )>;
+  zephyr,memory-attr = <(((1UL << (0))) << (20))>;
  };
 };
 
@@ -297,11 +303,13 @@
  pmu: pmu@31000 {
   reg = <0x31000 0x130>;
   compatible = "nxp,rw-pmu";
+
   pin0: pin0 {
    compatible = "nxp,aon-wakeup-pin";
    interrupts = <100 0>;
    status = "disabled";
   };
+
   pin1: pin1 {
    compatible = "nxp,aon-wakeup-pin";
    interrupts = <101 0>;
@@ -314,7 +322,7 @@
   reg = <0x14000 0x1000>;
   status = "okay";
   interrupts = <123 0>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  wwdt: watchdog@e000 {
@@ -322,7 +330,7 @@
   reg = <0xe000 0x1000>;
   interrupts = <0 0>;
   status = "disabled";
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
   clk-divider = <1>;
  };
 
@@ -338,7 +346,7 @@
    #gpio-cells = <2>;
    reg = <0>;
    int-source = "pint";
-   power-domains = <&power_mode3_domain>;
+   power-domains = <&peripheral_domain>;
   };
 
   hsgpio1: gpio@1 {
@@ -347,7 +355,7 @@
    #gpio-cells = <2>;
    reg = <1>;
    int-source = "pint";
-   power-domains = <&power_mode3_domain>;
+   power-domains = <&peripheral_domain>;
   };
  };
 
@@ -357,7 +365,7 @@
   interrupts = <50 1>;
   interrupt-names = "usb_otg";
   num-bidir-endpoints = <8>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
   status = "disabled";
  };
 
@@ -366,7 +374,7 @@
   reg = <0x145000 0x200>;
   interrupts = <50 1>;
   interrupt-names = "usb_otg";
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
   status = "disabled";
  };
 
@@ -380,7 +388,8 @@
   dmas = <&dma0 0>, <&dma0 1>;
   dma-names = "rx", "tx";
   zephyr,disabling-power-states = <&suspend &standby>;
-  power-domains = <&power_mode3_domain>;
+  low-power-states = <&suspend>;
+  power-domains = <&peripheral_domain>;
   status = "disabled";
  };
 
@@ -394,7 +403,8 @@
   dmas = <&dma0 2>, <&dma0 3>;
   dma-names = "rx", "tx";
   zephyr,disabling-power-states = <&suspend &standby>;
-  power-domains = <&power_mode3_domain>;
+  low-power-states = <&suspend>;
+  power-domains = <&peripheral_domain>;
   status = "disabled";
  };
 
@@ -408,7 +418,8 @@
   dmas = <&dma0 4>, <&dma0 5>;
   dma-names = "rx", "tx";
   zephyr,disabling-power-states = <&suspend &standby>;
-  power-domains = <&power_mode3_domain>;
+  low-power-states = <&suspend>;
+  power-domains = <&peripheral_domain>;
   status = "disabled";
  };
 
@@ -422,7 +433,8 @@
   dmas = <&dma0 6>, <&dma0 7>;
   dma-names = "rx", "tx";
   zephyr,disabling-power-states = <&suspend &standby>;
-  power-domains = <&power_mode3_domain>;
+  low-power-states = <&suspend>;
+  power-domains = <&peripheral_domain>;
   status = "disabled";
  };
 
@@ -435,7 +447,7 @@
   dmas = <&dma0 26>, <&dma0 27>;
   dma-names = "rx", "tx";
   zephyr,disabling-power-states = <&suspend &standby>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
   status = "disabled";
  };
 
@@ -458,17 +470,17 @@
   #interrupt-cells = <1>;
   #address-cells = <0>;
   interrupts = <4 2>, <5 2>, <6 2>, <7 2>,
-   <35 2>, <36 2>, <37 2>, <38 2>;
+        <35 2>, <36 2>, <37 2>, <38 2>;
   num-lines = <8>;
   num-inputs = <64>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  imu: nxp_wifi {
   compatible = "nxp,wifi";
 
   interrupts = <72 2>, <64 2>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  dma0: dma-controller@104000 {
@@ -478,7 +490,7 @@
   status = "disabled";
   #dma-cells = <1>;
   dma-channels = <33>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  lcdic: lcdic@128000 {
@@ -491,7 +503,7 @@
   clocks = <&clkctl1 ((0x0E << 8) | (0x00))>;
   dmas = <&dma0 0>;
   zephyr,disabling-power-states = <&suspend &standby>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  rtc: rtc@30000 {
@@ -499,6 +511,7 @@
   reg = <0x30000 0x1000>;
   interrupts = <32 0>;
   status = "disabled";
+
   rtc_highres: rtc_highres {
    compatible = "nxp,lpc-rtc-highres";
    status = "disabled";
@@ -515,7 +528,7 @@
   mode = <0>;
   input = <0>;
   prescale = <0>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  ctimer1: ctimer@29000 {
@@ -528,7 +541,7 @@
   mode = <0>;
   input = <0>;
   prescale = <0>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  ctimer2: ctimer@2a000 {
@@ -541,7 +554,7 @@
   mode = <0>;
   input = <0>;
   prescale = <0>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  ctimer3: ctimer@2b000 {
@@ -554,7 +567,7 @@
   mode = <0>;
   input = <0>;
   prescale = <0>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  sctimer: pwm@146000 {
@@ -565,7 +578,7 @@
   status = "disabled";
   prescaler = <8>;
   #pwm-cells = <3>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  mrt0: mrt@2d000 {
@@ -578,23 +591,26 @@
   resets = <&rstctl1 ((2 << 16) | 8)>;
   #address-cells = <1>;
   #size-cells = <0>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
 
   mrt0_channel0: mrt0_channel@0 {
    compatible = "nxp,mrt-channel";
    reg = <0>;
    status = "disabled";
   };
+
   mrt0_channel1: mrt0_channel@1 {
    compatible = "nxp,mrt-channel";
    reg = <1>;
    status = "disabled";
   };
+
   mrt0_channel2: mrt0_channel@2 {
    compatible = "nxp,mrt-channel";
    reg = <2>;
    status = "disabled";
   };
+
   mrt0_channel3: mrt0_channel@3 {
    compatible = "nxp,mrt-channel";
    reg = <3>;
@@ -612,23 +628,26 @@
   resets = <&rstctl0 ((2 << 16) | 26)>;
   #address-cells = <1>;
   #size-cells = <0>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
 
   mrt1_channel0: mrt1_channel@0 {
    compatible = "nxp,mrt-channel";
    reg = <0>;
    status = "disabled";
   };
+
   mrt1_channel1: mrt1_channel@1 {
    compatible = "nxp,mrt-channel";
    reg = <1>;
    status = "disabled";
   };
+
   mrt1_channel2: mrt1_channel@2 {
    compatible = "nxp,mrt-channel";
    reg = <2>;
    status = "disabled";
   };
+
   mrt1_channel3: mrt1_channel@3 {
    compatible = "nxp,mrt-channel";
    reg = <3>;
@@ -637,14 +656,14 @@
  };
 
  dmic0: dmic@121000 {
-  #address-cells=<1>;
-  #size-cells=<0>;
+  #address-cells = <1>;
+  #size-cells = <0>;
   compatible = "nxp,dmic";
   reg = <0x121000 0x1000>;
   interrupts = <25 0>;
   status = "disabled";
   clocks = <&clkctl1 ((0x0A << 8) | (0x00))>;
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
 
   pdmc0: dmic-channel@0 {
    reg = <0>;
@@ -682,7 +701,7 @@
    interrupts = <112 0>;
    status = "disabled";
    #io-channel-cells = <1>;
-   power-domains = <&power_mode3_domain>;
+   power-domains = <&peripheral_domain>;
   };
 
   adc1: gau_adc1@38100 {
@@ -691,7 +710,7 @@
    interrupts = <111 0>;
    status = "disabled";
    #io-channel-cells = <1>;
-   power-domains = <&power_mode3_domain>;
+   power-domains = <&peripheral_domain>;
   };
 
   dac0: dac@38200 {
@@ -700,7 +719,7 @@
    interrupts = <108 0>;
    status = "disabled";
    #io-channel-cells = <0>;
-   power-domains = <&power_mode3_domain>;
+   power-domains = <&peripheral_domain>;
   };
  };
 
@@ -719,20 +738,21 @@
 
  hci: hci_ble {
   compatible = "nxp,hci-ble";
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  hdlc_rcp_if: hdlc_rcp_if {
   compatible = "nxp,hdlc-rcp-if";
   interrupts = <90 2>, <82 2>;
   interrupt-names = "hdlc_rcp_if_int", "wakeup_int";
-  power-domains = <&power_mode3_domain>;
+  power-domains = <&peripheral_domain>;
  };
 
  enet: enet@138000 {
   compatible = "nxp,enet";
   reg = <0x138000 0x700>;
   clocks = <&clkctl1 ((0x0D << 8) | (0x80))>;
+
   enet_mac: ethernet {
    compatible = "nxp,enet-mac";
    interrupts = <115 0>;
@@ -740,21 +760,23 @@
    nxp,mdio = <&enet_mdio>;
    ptp-clock = <&enet_ptp_clock>;
    status = "disabled";
-   power-domains = <&power_mode3_domain>;
+   power-domains = <&peripheral_domain>;
   };
+
   enet_mdio: mdio {
    compatible = "nxp,enet-mdio";
    status = "disabled";
    #address-cells = <1>;
    #size-cells = <0>;
-   power-domains = <&power_mode3_domain>;
+   power-domains = <&peripheral_domain>;
   };
+
   enet_ptp_clock: ptp-clock {
    compatible = "nxp,enet-ptp-clock";
    interrupts = <116 0>;
    status = "disabled";
    clocks = <&clkctl1 ((0x0D << 8) | (0x81))>;
-   power-domains = <&power_mode3_domain>;
+   power-domains = <&peripheral_domain>;
   };
  };
 };
@@ -771,7 +793,7 @@
 &nvic {
  arm,num-irq-priority-bits = <3>;
 };
-# 24 "/home/wis3re/zephyrproject/zephyr/dts/arm/nxp/nxp_rw6xx.dtsi" 2 3 4
+# 25 "/home/wis3re/zephyrproject/zephyr/dts/arm/nxp/nxp_rw6xx.dtsi" 2 3 4
 # 10 "/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts" 2
 # 1 "/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi" 1
 
@@ -808,10 +830,10 @@
  pinmux_enet: pinmux_enet {
   group0 {
    pinmux = <(((25) & 0x7F) | (((0x1) & 0xF) << 7) | (((16) & 0x1F) << 11))
-    (((22) & 0x7F) | (((0x1) & 0xF) << 7) | (((26) & 0x1F) << 11)) (((23) & 0x7F) | (((0x1) & 0xF) << 7) | (((26) & 0x1F) << 11)) (((62) & 0x7F) | (((0x1) & 0xF) << 7) | (((26) & 0x1F) << 11)) (((63) & 0x7F) | (((0x1) & 0xF) << 7) | (((26) & 0x1F) << 11))
-    (((58) & 0x7F) | (((0x1) & 0xF) << 7) | (((25) & 0x1F) << 11)) (((59) & 0x7F) | (((0x1) & 0xF) << 7) | (((25) & 0x1F) << 11)) (((60) & 0x7F) | (((0x1) & 0xF) << 7) | (((25) & 0x1F) << 11))
-    (((21) & 0x7F) | (((0x6) & 0xF) << 7))
-    (((55) & 0x7F) | (((0x6) & 0xF) << 7))>;
+      (((22) & 0x7F) | (((0x1) & 0xF) << 7) | (((26) & 0x1F) << 11)) (((23) & 0x7F) | (((0x1) & 0xF) << 7) | (((26) & 0x1F) << 11)) (((62) & 0x7F) | (((0x1) & 0xF) << 7) | (((26) & 0x1F) << 11)) (((63) & 0x7F) | (((0x1) & 0xF) << 7) | (((26) & 0x1F) << 11))
+      (((58) & 0x7F) | (((0x1) & 0xF) << 7) | (((25) & 0x1F) << 11)) (((59) & 0x7F) | (((0x1) & 0xF) << 7) | (((25) & 0x1F) << 11)) (((60) & 0x7F) | (((0x1) & 0xF) << 7) | (((25) & 0x1F) << 11))
+      (((21) & 0x7F) | (((0x6) & 0xF) << 7))
+      (((55) & 0x7F) | (((0x6) & 0xF) << 7))>;
    slew-rate = "fast";
   };
  };
@@ -833,10 +855,7 @@
 
  pinmux_flexcomm1_spi: pinmux_flexcomm1_spi {
   group0 {
-   pinmux = <(((7) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((0) & 0xF) << 15))
-      (((8) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((9) & 0xF) << 15))
-      (((9) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((9) & 0xF) << 15))
-      (((6) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15))>;
+   pinmux = <(((6) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((7) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((8) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15)) (((9) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15))>;
    slew-rate = "ultra";
   };
  };
@@ -851,12 +870,13 @@
  pinmux_lcdic: pinmux_lcdic {
   group0 {
    pinmux = <(((45) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))
-    (((46) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))
-    (((47) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))
-    (((48) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))
-    (((49) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))>;
+      (((46) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))
+      (((47) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))
+      (((48) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))
+      (((49) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))>;
    slew-rate = "ultra";
   };
+
   group1 {
    pinmux = <(((44) & 0x7F) | (((0x1) & 0xF) << 7) | (((12) & 0x1F) << 11))>;
    slew-rate = "ultra";
@@ -874,16 +894,15 @@
  pinmux_hsgpio0: pinmux_hsgpio0 {
   group0 {
    pinmux = <(((11) & 0x7F) | (((0x6) & 0xF) << 7))
-    (((18) & 0x7F) | (((0x6) & 0xF) << 7))
-    (((21) & 0x7F) | (((0x6) & 0xF) << 7))
-    >;
+      (((18) & 0x7F) | (((0x6) & 0xF) << 7))
+      (((21) & 0x7F) | (((0x6) & 0xF) << 7))>;
    slew-rate = "normal";
   };
+
   group1 {
    pinmux = <(((0) & 0x7F) | (((0x6) & 0xF) << 7))
-    (((1) & 0x7F) | (((0x6) & 0xF) << 7))
-    (((12) & 0x7F) | (((0x6) & 0xF) << 7))
-    >;
+      (((1) & 0x7F) | (((0x6) & 0xF) << 7))
+      (((12) & 0x7F) | (((0x6) & 0xF) << 7))>;
    slew-rate = "normal";
    sleep-output = "high";
   };
@@ -892,8 +911,7 @@
  pinmux_hsgpio1: pinmux_hsgpio1 {
   group0 {
    pinmux = <(((44) & 0x7F) | (((0x6) & 0xF) << 7))
-    (((55) & 0x7F) | (((0x6) & 0xF) << 7))
-    >;
+      (((55) & 0x7F) | (((0x6) & 0xF) << 7))>;
    slew-rate = "normal";
   };
  };
@@ -929,6 +947,7 @@
 
  leds {
   compatible = "gpio-leds";
+
   green_led: led_1 {
    gpios = <&hsgpio0 12 (1 << 0)>;
   };
@@ -936,6 +955,7 @@
 
  gpio_keys {
   compatible = "gpio-keys";
+
   user_button_0: button_0 {
    label = "User SW2";
    gpios = <&hsgpio0 11 ((1 << 0) | (1 << 4))>;
@@ -1019,6 +1039,7 @@
  rx-clock-source = <1>;
  rx-clock-source-b = <1>;
 
+
  w25q512jvfiq: w25q512jvfiq@0 {
   compatible = "nxp,imx-flexspi-nor";
   reg = <0>;
@@ -1027,7 +1048,7 @@
   jedec-id = [ef 40 20];
   erase-block-size = <4096>;
   write-block-size = <1>;
-  spi-max-frequency = <104000000>;
+  spi-max-frequency = <(((104) * 1000) * 1000)>;
 
   partitions {
    compatible = "fixed-partitions";
@@ -1042,38 +1063,42 @@
     label = "mcuboot";
     reg = <0x00000000 ((128) * 1024)>;
    };
+
    slot0_partition: partition@20000 {
     label = "image-0";
     reg = <0x00020000 (((3) * 1024) * 1024)>;
    };
+
    slot1_partition: partition@320000 {
     label = "image-1";
     reg = <0x00320000 (((3) * 1024) * 1024)>;
    };
+
    storage_partition: partition@620000 {
     label = "storage";
     reg = <0x00620000 ((((58) * 1024) * 1024) - ((128) * 1024))>;
    };
   };
  };
+
  aps6404l: aps6404l@2 {
-   compatible = "nxp,imx-flexspi-aps6404l";
+  compatible = "nxp,imx-flexspi-aps6404l";
 
-   size = <(((8 * 8) * 1024) * 1024)>;
-   reg = <2>;
-   spi-max-frequency = <109000000>;
+  size = <(((8 * 8) * 1024) * 1024)>;
+  reg = <2>;
+  spi-max-frequency = <(((109) * 1000) * 1000)>;
 
 
 
-   status = "disabled";
-   cs-interval-unit = <1>;
-   cs-interval = <2>;
-   cs-hold-time = <3>;
-   cs-setup-time = <3>;
-   data-valid-time = <6>;
-   column-space = <0>;
-   ahb-write-wait-unit = <2>;
-   ahb-write-wait-interval = <0>;
+  status = "disabled";
+  cs-interval-unit = <1>;
+  cs-interval = <2>;
+  cs-hold-time = <3>;
+  cs-setup-time = <3>;
+  data-valid-time = <6>;
+  column-space = <0>;
+  ahb-write-wait-unit = <2>;
+  ahb-write-wait-interval = <0>;
  };
 };
 
@@ -1095,6 +1120,7 @@
  status = "okay";
  pinctrl-0 = <&pinmux_mdio>;
  pinctrl-names = "default";
+
  phy: phy@2 {
   compatible = "microchip,ksz8081";
   reg = <2>;
@@ -1215,9 +1241,59 @@ nxp_pmod_touch_panel_i2c: &arduino_i2c {
 # 11 "/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts" 2
 # 0 "<command-line>" 2
 # 1 "/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay" 1
+
+
+
+
+
+
 / {
     aliases {
-        spi0 = &flexcomm1;
+        dbus-spi = &flexcomm1;
+    };
+};
+
+&flexcomm1 {
+    status = "okay";
+    pinctrl-0 = <&pinmux_flexcomm1_spi>;
+    pinctrl-names = "default";
+
+    compatible = "nxp,lpc-spi";
+    #address-cells = <1>;
+    #size-cells = <0>;
+    reg = <0x50107000 0x1000>;
+    interrupts = <15 0>;
+    clock-frequency = <1000000>;
+    label = "DBUS_SPI";
+    cs-gpios = <&hsgpio0 6 (1 << 0)>;
+};
+
+&pinctrl {
+    flexcomm1_spi_default: flexcomm1_spi_default {
+        group-gpios = <&pinctrl_flexcomm1_sck_default
+                       &pinctrl_flexcomm1_mosi_default
+                       &pinctrl_flexcomm1_miso_default
+                       &pinctrl_flexcomm1_ss0_default>;
+    };
+
+    pinctrl_flexcomm1_sck_default: pinctrl_flexcomm1_sck_default {
+        pinmux = <(((7) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((0) & 0xF) << 15))>;
+        slew-rate = "normal";
+    };
+
+    pinctrl_flexcomm1_mosi_default: pinctrl_flexcomm1_mosi_default {
+        pinmux = <(((9) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((9) & 0xF) << 15))>;
+        slew-rate = "normal";
+    };
+
+    pinctrl_flexcomm1_miso_default: pinctrl_flexcomm1_miso_default {
+        pinmux = <(((8) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((9) & 0xF) << 15))>;
+        slew-rate = "normal";
+    };
+
+    pinctrl_flexcomm1_ss0_default: pinctrl_flexcomm1_ss0_default {
+        pinmux = <(((6) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15))>;
+        slew-rate = "normal";
     };
 };
 # 0 "<command-line>" 2

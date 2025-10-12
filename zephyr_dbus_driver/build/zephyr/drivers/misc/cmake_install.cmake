@@ -39,11 +39,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/drivers/misc/coresight/cmake_install.cmake")
-endif()
-
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
   include("/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/drivers/misc/interconn/cmake_install.cmake")
 endif()
 

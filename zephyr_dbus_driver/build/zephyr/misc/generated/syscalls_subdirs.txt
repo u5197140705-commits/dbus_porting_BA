@@ -7,6 +7,8 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_bluetooth
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_canbus
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_console
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_cpu_freq
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_cpu_load
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_crypto
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_data
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_debug
@@ -19,6 +21,7 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_fs
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_gnss
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_input
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_instrumentation
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_internal
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_ipc
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_kernel
@@ -106,6 +109,7 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_comparator
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_console
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_dac
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_debug
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_disk
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_dma
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_edac
@@ -158,7 +162,6 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_firmware_scmi_nxp
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_i2c_target
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_mic_privacy_intel
-/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_misc_coresight
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_misc_devmux
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_misc_flexram
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_drivers_misc_ft8xx
@@ -203,6 +206,7 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_mipi_dbi
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_mipi_dsi
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_misc
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_opamp
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_pcie
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_pinctrl
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_power
@@ -226,6 +230,7 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_pinctrl_renesas
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_dt-bindings_pinctrl_silabs
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_gnss_rtk
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_ipc_backends
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_kernel_internal
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_kernel_mm
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_linker_common-rom
@@ -244,6 +249,7 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_mgmt_mcumgr_grp_shell_mgmt
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_mgmt_mcumgr_grp_stat_mgmt
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_mgmt_mcumgr_grp_zephyr
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_modem_at
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_modem_backend
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_modem_ubx
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/misc/generated/syscalls_links/include_zephyr_net_conn_mgr

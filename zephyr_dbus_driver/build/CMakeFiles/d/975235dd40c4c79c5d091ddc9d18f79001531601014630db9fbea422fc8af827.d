@@ -32,6 +32,7 @@ zephyr/linker.cmd: \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/devicetree/mbox.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/devicetree/port-endpoint.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/devicetree/display.h \
+  /home/wis3re/zephyrproject/zephyr/include/zephyr/devicetree/hwspinlock.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/linker/devicetree_regions.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/linker/linker-defs.h \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/toolchain/common.h \
