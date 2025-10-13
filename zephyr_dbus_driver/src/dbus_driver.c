@@ -3,17 +3,21 @@
 #include "dbus_driver_public.h" // Include for public function prototypes
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/spi.h> // Include for Zephyr SPI API
+#include <zephyr/drivers/can.h> // Include for Zephyr CAN API
 #include <string.h> // For memcpy
 
 LOG_MODULE_REGISTER(dbus_driver, LOG_LEVEL_DBG);
 
 // Define the SPI device from device tree
-// Define the SPI device from device tree (temporarily bypassed)
-// #define SPI_DEV_NODE DT_NODELABEL(dbus_spi)
-// static const struct spi_dt_spec dbus_spi_dev = SPI_DT_SPEC_GET(SPI_DEV_NODE,
-//                                                 SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_HOLD_ON_CS, 0);
+// Define the SPI device from device tree
+#define SPI_DEV_NODE DT_INST(0, nxp_lpc_spi)
+static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Pointer to the SPI bus
 
-static const struct device *dbus_spi_dev_ptr; // Pointer to the SPI device
+static struct spi_config dbus_spi_cfg = {
+    .frequency = 1000000, // Placeholder frequency
+    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_HOLD_ON_CS,
+    .slave = 0, // Assuming slave select 0
+};
 
 // Placeholder for MCAL functions
 struct MDIO_Channel MDIO_INPUT_PULL_UP; // Placeholder
@@ -64,13 +68,8 @@ void MEXTI_disableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb) {
 enum MCAL_Error MSPI_init(struct MSPI_Handle *handle, const void *channel, const void *config) {
     LOG_DBG("MSPI_init called.");
 
-    dbus_spi_dev_ptr = device_get_binding("FLEXCOMM1_SPI"); // Placeholder name
-    if (!dbus_spi_dev_ptr) {
-        LOG_ERR("SPI device not found!");
-        return MCAL_ERROR;
-    }
-    if (!device_is_ready(dbus_spi_dev_ptr)) {
-        LOG_ERR("SPI device is not ready!");
+    if (!device_is_ready(dbus_spi_bus)) {
+        LOG_ERR("SPI device not ready!");
         return MCAL_ERROR;
     }
     return MCAL_OK;
@@ -129,15 +128,7 @@ enum MCAL_Error MSPI_transferBlocking(struct MSPI_Handle *handle, const uint8_t 
         .count = 1
     };
 
-    struct spi_dt_spec temp_spi_spec = {
-        .bus = dbus_spi_dev_ptr,
-        .config = {
-            .frequency = 1000000, // Placeholder frequency
-            .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_HOLD_ON_CS,
-            .slave = 0, // Assuming slave select 0
-        },
-    };
-    int ret = spi_transceive_dt(&temp_spi_spec, &tx_bufs, &rx_bufs);
+    int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
     if (ret) {
         LOG_ERR("SPI transceive failed: %d", ret);
         return MCAL_ERROR;
@@ -182,6 +173,10 @@ uint32_t MTDIV_div_32_32(uint32_t numerator, uint32_t denominator) {
     LOG_DBG("MTDIV_div_32_32 placeholder called.");
     return numerator / denominator; // Simple division for now
 }
+
+// CAN device binding
+// #define CAN_DEV_NODE DT_NODELABEL(can0)
+// static const struct device *dbus_can_dev = DEVICE_DT_GET(CAN_DEV_NODE);
 
 // Private data definitions
 static bool DBCDRV_isPwrOnReset = false; // Indicates that power on reset of the device has occurred
@@ -230,8 +225,44 @@ void DBCDRV_setSpiFrameHdr(enum DBC_RegAddr addr, uint16_t len, enum DBC_command
 enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 {
     LOG_DBG("Reading register 0x%x", addr);
-    // Placeholder for actual SPI transfer logic
-    *data = 0x00000000; // Dummy return
+
+    uint8_t tx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
+    uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
+
+    // Prepare the SPI header for a read command
+    DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_READ, tx_buffer);
+
+    struct spi_buf tx_spi_buf = {
+        .buf = tx_buffer,
+        .len = sizeof(tx_buffer)
+    };
+    struct spi_buf_set tx_bufs = {
+        .buffers = &tx_spi_buf,
+        .count = 1
+    };
+
+    struct spi_buf rx_spi_buf = {
+        .buf = rx_buffer,
+        .len = sizeof(rx_buffer)
+    };
+    struct spi_buf_set rx_bufs = {
+        .buffers = &rx_spi_buf,
+        .count = 1
+    };
+
+    int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
+    if (ret) {
+        LOG_ERR("SPI read transceive failed: %d", ret);
+        return DBC_ERROR;
+    }
+
+    // Extract the 32-bit data from the received buffer
+    // Assuming the 32-bit data starts after the header
+    *data = (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE] << 24 |
+            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 1] << 16 |
+            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 2] << 8 |
+            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 3];
+
     return DBC_OK;
 }
 
@@ -239,7 +270,43 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
 {
     LOG_DBG("Writing 0x%x to register 0x%x", data, addr);
-    // Placeholder for actual SPI transfer logic
+
+    uint8_t tx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)];
+    uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)]; // Required for spi_transceive, even if data is not used
+
+    // Prepare the SPI header for a write command
+    DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_WRITE, tx_buffer);
+
+    // Copy the 32-bit data into the transmit buffer after the header
+    tx_buffer[DBC_SPI_HDR_SIZE]     = (uint8_t)(data >> 24);
+    tx_buffer[DBC_SPI_HDR_SIZE + 1] = (uint8_t)(data >> 16);
+    tx_buffer[DBC_SPI_HDR_SIZE + 2] = (uint8_t)(data >> 8);
+    tx_buffer[DBC_SPI_HDR_SIZE + 3] = (uint8_t)(data);
+
+    struct spi_buf tx_spi_buf = {
+        .buf = tx_buffer,
+        .len = sizeof(tx_buffer)
+    };
+    struct spi_buf_set tx_bufs = {
+        .buffers = &tx_spi_buf,
+        .count = 1
+    };
+
+    struct spi_buf rx_spi_buf = {
+        .buf = rx_buffer,
+        .len = sizeof(rx_buffer)
+    };
+    struct spi_buf_set rx_bufs = {
+        .buffers = &rx_spi_buf,
+        .count = 1
+    };
+
+    int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
+    if (ret) {
+        LOG_ERR("SPI write transceive failed: %d", ret);
+        return DBC_ERROR;
+    }
+
     return DBC_OK;
 }
 
@@ -595,12 +662,6 @@ enum DBC_Error DBCDRV_configure(DBC_Cfg_t cfg)
             DBC_RETURN_ON_ERROR(DBCDRV_disableCfgDbus()); // lock DBus regs for write access
         }
 
-        // configuration of CAN register bits
-        if ((currCfg.word & DBC_EEP_BITS_REG_CAN_MASK) != (cfg.word & DBC_EEP_BITS_REG_CAN_MASK))
-        {
-            //(void)DBCDRV_writeRegIpec(1uL, DBC_IPEC_MCAN_EN_POS, DBC_IPEC_MCAN_EN_MASK); // Enable CAN part
-            // todo
-        }
 
         // configuration of IPEC register bits
         if ((currCfg.word & DBC_EEP_BITS_REG_IPEC_MASK) != (cfg.word & DBC_EEP_BITS_REG_IPEC_MASK))

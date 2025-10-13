@@ -56,6 +56,6 @@ cmake:
     zephyr-base: '/home/wis3re/zephyrproject/zephyr'
 version: '0.1.0'
 west:
-  command: '/home/wis3re/.local/bin/west build -b frdm_rw612 -p always'
+  command: '/home/wis3re/.local/bin/west build -b frdm_rw612 -p'
   topdir: '/home/wis3re/zephyrproject'
   version: '1.4.0'
