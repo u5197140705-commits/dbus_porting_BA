@@ -5,6 +5,8 @@
 #include <zephyr/drivers/spi.h> // Include for Zephyr SPI API
 #include <zephyr/drivers/can.h> // Include for Zephyr CAN API
 #include <string.h> // For memcpy
+#include "StdCrc.h" // Include for CRC functions
+#include "bsh_stdinc.h" // Include for standard definitions
 
 LOG_MODULE_REGISTER(dbus_driver, LOG_LEVEL_DBG);
 
@@ -15,7 +17,7 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 
 static struct spi_config dbus_spi_cfg = {
     .frequency = 1000000, // Placeholder frequency
-    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_HOLD_ON_CS,
+    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8), // Removed SPI_HOLD_ON_CS
     .slave = 0, // Assuming slave select 0
 };
 
@@ -188,6 +190,14 @@ static bool DBCDRV_eepromWriteEnable = false; // Placeholder for global variable
 static uint8_t DBCDRV_readRegBuf[DBC_SPI_BUFFER_SIZE];   ///< Buffer for reading DBusCAN registers via non-blocking SPI communication
 static uint8_t DBCDRV_readHdrBuf[DBC_SPI_BUFFER_SIZE];   ///< Buffer for the SPI read command header data
 
+#define DBCDRV_RESET_TIME_US                   (700u) ///< The time (in microseconds) after a reset event before the device is ready
+#define DBCDRV_REG_SIZE                          (4u) ///< The number of bytes of DBusCAN chip registers
+#define DBCDRV_DBUS_TXS_FIFO_SIZE               (64u) ///< The number of bytes to be allocated in DBusCAN's RAM for the DBus Tx Status FIFO buffer. 64 bytes is maximum, must be a multiple of 8 bytes.
+#define DBCDRV_DBUS_TX_FIFO_SIZE               (512u) ///< The number of bytes to be allocated in DBusCAN's RAM for the DBus Tx FIFO buffer. Must be a multiple of 4 bytes.
+#define DBCDRV_DBUS_RX_FIFO_SIZE               (512u) ///< The number of bytes to be allocated in DBusCAN's RAM for the DBus Rx FIFO buffer. Must be a multiple of 4 bytes.
+#define DBCDRV_DBUS_BASE_RAM_ADDR                (0u) ///< Start (offset) address of DBusCAN's RAM space allocated for DBus buffers
+#define DBCDRV_MOPC_STANDBY_MODE_MASK            ((uint32_t)DBC_POWER_MODE_STANDBY << DBC_MOPC_MODE_SEL_POS) ///< Mask for setting the standby mode in the MOPC register
+
 // Placeholder for DBCDRV_getConfig
 DBC_Cfg_t DBCDRV_getConfig(void)
 {
@@ -258,10 +268,10 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 
     // Extract the 32-bit data from the received buffer
     // Assuming the 32-bit data starts after the header
-    *data = (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE] << 24 |
-            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 1] << 16 |
-            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 2] << 8 |
-            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 3];
+    *data = (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 3] << 24 |
+            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 2] << 16 |
+            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE + 1] << 8 |
+            (uint32_t)rx_buffer[DBC_SPI_HDR_SIZE];
 
     return DBC_OK;
 }
@@ -278,10 +288,10 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
     DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_WRITE, tx_buffer);
 
     // Copy the 32-bit data into the transmit buffer after the header
-    tx_buffer[DBC_SPI_HDR_SIZE]     = (uint8_t)(data >> 24);
-    tx_buffer[DBC_SPI_HDR_SIZE + 1] = (uint8_t)(data >> 16);
-    tx_buffer[DBC_SPI_HDR_SIZE + 2] = (uint8_t)(data >> 8);
-    tx_buffer[DBC_SPI_HDR_SIZE + 3] = (uint8_t)(data);
+    tx_buffer[DBC_SPI_HDR_SIZE]     = (uint8_t)(data);
+    tx_buffer[DBC_SPI_HDR_SIZE + 1] = (uint8_t)(data >> 8);
+    tx_buffer[DBC_SPI_HDR_SIZE + 2] = (uint8_t)(data >> 16);
+    tx_buffer[DBC_SPI_HDR_SIZE + 3] = (uint8_t)(data >> 24);
 
     struct spi_buf tx_spi_buf = {
         .buf = tx_buffer,
@@ -479,22 +489,22 @@ enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address
     }
 
     // Prepare transmit buffer
-    DBCDRV_setSpiFrameHdr(address, len, command, DBCDRV_spiBuff.byte);
+    DBCDRV_setSpiFrameHdr(address, len, command, DBCDRV_spiBuff.array);
     if (txBuff != NULL && len > 0) {
-        memcpy(&DBCDRV_spiBuff.byte[DBC_SPI_HDR_SIZE], txBuff, len);
+        memcpy(&DBCDRV_spiBuff.array[DBC_SPI_HDR_SIZE], txBuff, len);
     }
 
 #ifdef DBUSCAN_SPI_CRC_USED
-    uint16_t crc = DBCDRV_calculateCrc(DBCDRV_spiBuff.byte, DBC_SPI_HDR_SIZE + len);
-    DBCDRV_spiBuff.byte[DBC_SPI_HDR_SIZE + len] = (uint8_t)(crc >> BYTE_SIZE);
-    DBCDRV_spiBuff.byte[DBC_SPI_HDR_SIZE + len + 1] = (uint8_t)crc;
+    uint16_t crc = DBCDRV_calculateCrc(DBCDRV_spiBuff.array, DBC_SPI_HDR_SIZE + len);
+    DBCDRV_spiBuff.array[DBC_SPI_HDR_SIZE + len] = (uint8_t)(crc >> BYTE_SIZE);
+    DBCDRV_spiBuff.array[DBC_SPI_HDR_SIZE + len + 1] = (uint8_t)crc;
     uint32_t total_len = DBC_SPI_HDR_SIZE + len + DBC_SPI_CRC_SIZE;
 #else
     uint32_t total_len = DBC_SPI_HDR_SIZE + len;
 #endif
 
     // Perform non-blocking SPI transfer (currently mapped to blocking)
-    enum MCAL_Error mcal_err = MSPI_transferDma(NULL, DBCDRV_spiBuff.byte, total_len, DBCDRV_readHdrBuf, total_len);
+    enum MCAL_Error mcal_err = MSPI_transferDma(NULL, DBCDRV_spiBuff.array, total_len, DBCDRV_readHdrBuf, total_len);
     if (mcal_err != MCAL_OK) {
         LOG_ERR("SPI non-blocking transfer failed in DBCDRV_sendSpiFrameNbl: %d", mcal_err);
         return DBC_ERROR;
@@ -524,24 +534,142 @@ enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address
     return DBC_OK;
 }
 
-// DBCDRV_setPowerModeStandby function
-enum DBC_Error DBCDRV_setPowerModeStandby(bool enable)
+// DBCDRV_setPowerMode function
+enum DBC_Error DBCDRV_setPowerMode(enum DBC_PowerMode mode)
 {
-    LOG_DBG("DBCDRV_setPowerModeStandby placeholder called. Enable: %d", enable);
+    uint32_t regVal;
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_MOPC_ADDR, &regVal));
+    uint32_t chipMode = (regVal & DBC_MOPC_MODE_SEL_MASK) >> DBC_MOPC_MODE_SEL_POS;
+    const uint32_t INVALID_REG_VAL = ~0uL;
+    if(regVal == INVALID_REG_VAL)
+    {
+        return DBC_ERROR;
+    }
+    if (chipMode != (uint32_t)mode)
+    {
+        if ((DBC_POWER_MODE_NORMAL == mode) && (chipMode != (uint32_t)DBC_POWER_MODE_STANDBY))
+        {   // changing to NORMAL mode is only possible from STANDBY mode
+            regVal &= ~DBC_MOPC_MODE_SEL_MASK;
+            regVal |= DBCDRV_MOPC_STANDBY_MODE_MASK;
+            DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_MOPC_ADDR, regVal));
+        }
+        regVal &= ~DBC_MOPC_MODE_SEL_MASK;
+        regVal |= (uint32_t)mode << DBC_MOPC_MODE_SEL_POS;
+        DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_MOPC_ADDR, regVal));
+        uint32_t read_back_regVal;
+        DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_MOPC_ADDR, &read_back_regVal));
+        regVal &= DBC_MOPC_MODE_SEL_MASK;
+        return ((read_back_regVal & DBC_MOPC_MODE_SEL_MASK) != regVal) ? DBC_ERROR : DBC_OK;
+    }
+    return DBC_OK;
+}
+
+// DBCDRV_setPowerModeStandby function
+enum DBC_Error DBCDRV_setPowerModeStandby(void)
+{
+    uint32_t regVal;
+    // The original code sends the command twice, once without CRC and once with CRC,
+    // to ensure the chip enters standby mode correctly, especially if the CRC setting is unknown.
+    // DBCDRV_writeReg32 handles CRC internally if enabled.
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_MOPC_ADDR, DBCDRV_MOPC_STANDBY_MODE_MASK));
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_MOPC_ADDR, DBCDRV_MOPC_STANDBY_MODE_MASK));
+
+    // Verify the chip is in STANDBY mode
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_MOPC_ADDR, &regVal));
+    if ((regVal & DBC_MOPC_MODE_SEL_MASK) != DBCDRV_MOPC_STANDBY_MODE_MASK)
+    {
+        LOG_ERR("Chip is not in STANDBY mode after setting.");
+        return DBC_ERROR; // the chip is not in STANDBY mode
+    }
+    return DBC_OK;
+}
+
+// DBCDRV_reset function
+enum DBC_Error DBCDRV_reset(enum DBC_Reset rstType)
+{
+    struct MSUP_TimeoutHandle resetTimeHandle;
+    uint32_t regVal;
+    if (rstType == DBC_RST_FULL)
+    {
+        DBC_RETURN_ON_ERROR(DBCDRV_setPowerMode(DBC_POWER_MODE_STANDBY)); // Full reset is only achievable in STANDBY or NORMAL mode
+#ifdef DBUSCAN_SPI_CRC_USED
+        // Error is always returned here because chip does not send CRC OK as the last byte due to reset
+        (void)DBCDRV_writeReg32(DBC_MOPC_ADDR, DBC_MOPC_DEVICE_RESET_MASK);
+#else
+        DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_MOPC_ADDR, DBC_MOPC_DEVICE_RESET_MASK));
+#endif
+        // DBCDRV_setSpiHdrSize(0u); // This function is not used in Zephyr port
+    }
+    else if((rstType == DBC_RST_DBUS_SOFT) || (rstType == DBC_RST_DBUS_HARD))
+    {
+        DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_DBUS_BCC_ADDR, (uint32_t)rstType));
+    }
+    else
+    {
+        // invalid reset mode
+        return DBC_ERROR;
+    }
+    MSUP_setTimeOutExt(&resetTimeHandle, DBCDRV_RESET_TIME_US);
+    while(!MSUP_isTimeOutExt(&resetTimeHandle)) {};
     return DBC_OK;
 }
 
 // DBCDRV_doReset function
-enum DBC_Error DBCDRV_doReset(enum DBC_Reset resetType)
+enum DBC_Error DBCDRV_doReset(bool *internalEepromError)
 {
-    LOG_DBG("DBCDRV_doReset placeholder called. Reset Type: %u", resetType);
+    uint32_t regVal;
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IF_ADDR, &regVal));
+    if(0u != (regVal & DBC_IF_ECCERR_INT_MASK)) // check if an Internal EEPROM CRC error is detected
+    {
+        DBC_RETURN_ON_ERROR(DBCDRV_reset(DBC_RST_DBUS_HARD));
+        *internalEepromError = true;
+        return DBC_ERROR;
+    }
+    if (DBCDRV_isAllFeatureRevision())
+    {
+        DBC_RETURN_ON_ERROR(DBCDRV_reset(DBC_RST_DBUS_HARD));
+        return DBC_OK;
+    }
+    bool isPwrOnReset = (0u != (regVal & DBC_IF_PWRON_MASK));
+    uint32_t dpc_reg_val;
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_DBUS_DPC_ADDR, &dpc_reg_val));
+    bool isAdvPwrMgmt = (0u != (dpc_reg_val & DBC_DBUS_DPC_ADV_PWR_MGMT_MASK));
+    if (isPwrOnReset && !isAdvPwrMgmt)
+    {   // full reset as a workaround for the issue of the 1p0 DBusCAN chip (not signalling interrupts when booting in simple power management)
+        DBC_RETURN_ON_ERROR(DBCDRV_reset(DBC_RST_FULL));
+#ifdef DBUSCAN_SPI_CRC_USED
+        DBC_RETURN_ON_ERROR(DBCDRV_enableSpiCrc());
+#endif
+    }
+    else
+    {
+        DBC_RETURN_ON_ERROR(DBCDRV_reset(DBC_RST_DBUS_HARD));
+    }
     return DBC_OK;
+}
+
+// DBCDRV_isAllFeatureRevision function
+extern bool DBCDRV_isAllFeatureRevision(void)
+{
+    uint32_t revision_val;
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_REVISION_ADDR, &revision_val));
+    return (revision_val >= DBC_REVISION_WITH_ALL_FEATURES) ? true : false;
 }
 
 // DBCDRV_enableAndClearIrqFlags function
 enum DBC_Error DBCDRV_enableAndClearIrqFlags(uint32_t flags)
 {
     LOG_DBG("DBCDRV_enableAndClearIrqFlags placeholder called. Flags: 0x%x", flags);
+    uint32_t regVal;
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IE_ADDR, &regVal));
+    regVal &= ~DBC_IF_UVCC_MASK; // disable interrupt on UVCC event (as this flag cannot be cleared by SW)
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_IE_ADDR, regVal));
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_DBUS_IE_ADDR, (DBC_DBUS_IE_ALL_BIT_MASK & ~DBC_DBUS_IE_DBUSSLNT_EN_MASK))); //enable all DBus interrupts except DBus silent flag
+    // Clear global interrupt and SPI status flags
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IF_ADDR, &regVal));
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_IF_ADDR, regVal));
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_STATUS_ADDR, &regVal));
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_STATUS_ADDR, regVal));
     return DBC_OK;
 }
 
@@ -575,35 +703,96 @@ enum DBC_Error DBCDRV_disableCfgDbus(void)
 enum DBC_Error DBCDRV_configureRestForDbus(DBC_Cfg_t *config)
 {
     LOG_DBG("DBCDRV_configureRestForDbus placeholder called.");
-    // Placeholder for configuring RAM buffers, communication mode, and node filters.
+    uint32_t regVal;
+    // Configuration of DBus buffers in chip's RAM
+    // DBCDRV_setSpiFrameHdr(DBC_DBUS_BSA_ADDR, (DBCDRV_REG_SIZE * 3u), DBC_WRITE_L, DBCDRV_spiBuff.array); // DBCDRV_REG_SIZE is not defined here
+    // For now, directly write to registers
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_DBUS_BSA_ADDR, DBCDRV_DBUS_BASE_RAM_ADDR)); // Dbus Base Address reg (0x4060) => set start address of DBusCAN's RAM allocated for DBus buffers
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_DBUS_BSC0_ADDR, ((uint32_t)DBCDRV_DBUS_RX_FIFO_SIZE << DBC_DBUS_BSC0_RX_BUF_SIZE_POS) + DBCDRV_DBUS_TX_FIFO_SIZE)); // DBus Buffer Size Control 0 reg (0x4064) => set DBus Rx & Tx FIFO size
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_DBUS_BSC1_ADDR, DBCDRV_DBUS_TXS_FIFO_SIZE)); // Dbus buff Size Control 1 reg (0x4068) => set DBus Tx Status FIFO size
+
+    // Allow maximum number of DBus Node ID filters
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_DBUS_SIDFC_ADDR, &regVal));
+    regVal |= DBC_DBUS_SIDFC_LSS_MASK;
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_DBUS_SIDFC_ADDR, regVal));
+    // Enable message reception for all subsystems by using node filter
+    // Assuming APP_VARIANT behavior for now
+    // DBCDBUS_setMultipleAddresses(); // This function is not defined yet
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_DBUS_NF0_ADDR, DBC_DBUS_NF_ALL_SUBSYS_EN_MASK | ((uint32_t)config->NODE_ID << DBC_DBUS_NF_PID_POS)));
+
     return DBC_OK;
 }
 
 // DBCDRV_calculateCrc function
 uint16_t DBCDRV_calculateCrc(uint8_t *data, uint32_t len)
 {
-    LOG_DBG("DBCDRV_calculateCrc placeholder called. Length: %u", len);
-    return 0; // Dummy CRC
+    uint16_t crc = CRC_Ccitt_Init();
+    for(; len != 0u; len--)
+    {
+        crc = CRC_Ccitt_UpdateByte(crc, *data);
+        data++;
+    }
+    return (uint16_t)(crc << BYTE_SIZE) | (crc >> BYTE_SIZE);
 }
 
 // DBCDRV_enableSpiCrc function
 enum DBC_Error DBCDRV_enableSpiCrc(void)
 {
-    LOG_DBG("DBCDRV_enableSpiCrc placeholder called.");
+    bool isSpiCrcEnabled, isSpiError;
+    const uint32_t SPI_CRC_CFG_MASK = ((uint32_t)DBC_SPI_CRC_POLY_CCITT | (uint32_t)DBC_SPI_CRC_SEED_0XFFFF | DBC_SPI_CRC_CFG_EN_MASK); // Mask for SPI CRC configuration - CRC-16/CCITT-FALSE
+    uint32_t regVal;
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_CRC_CFG_ADDR, &regVal)); // read CRC configuration
+    isSpiCrcEnabled = (0u != (regVal & DBC_SPI_CRC_CFG_EN_MASK)) ? true : false;
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_STATUS_ADDR, &regVal));
+    isSpiError = (0u != (regVal & DBC_IF_SPIERR_MASK)) ? true : false;
+    // DBCDRV_setSpiHdrSize((isSpiCrcEnabled) ? DBC_SPI_CRC_SIZE : 0u); // This function is not used in Zephyr port
+    if(isSpiError)
+    {
+        if(isSpiCrcEnabled)
+        {
+            uint32_t crcSeedVal;
+            DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_CRC_SEED_ADDR, &crcSeedVal));
+            if((regVal != SPI_CRC_CFG_MASK) || (0u != crcSeedVal))
+            {
+                // (void)DBCDRV_spiReset();  // non expected CRC configuration detected, reset the chip
+                return DBC_ERROR; // For now, just return error
+            }
+        }
+        DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_STATUS_ADDR, regVal)); // clear SPI error flag - still returns DBC_ERROR
+    }
+    if(!isSpiCrcEnabled)
+    {
+        DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_SPI_CRC_SEED_ADDR, 0u));              // set CRC seed value to 0
+        DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_SPI_CRC_CFG_ADDR, SPI_CRC_CFG_MASK)); // enable CRC
+        // DBCDRV_setSpiHdrSize(DBC_SPI_CRC_SIZE); // This function is not used in Zephyr port
+        DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_CRC_CFG_ADDR, &regVal)); // read CRC configuration
+        // DBCDRV_spiCrcReadError = false; // This flag is not used in Zephyr port
+        // DBCDRV_checkSpiCrcInReadOp(DBCDRV_spiBuff.array); // This function is not used in Zephyr port
+        uint32_t crcSeedVal;
+        DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_CRC_SEED_ADDR, &crcSeedVal));
+        if((regVal != SPI_CRC_CFG_MASK) || (0u != crcSeedVal))
+        {
+            return DBC_ERROR;   // CRC is not correctly enabled
+        }
+    }
     return DBC_OK;
 }
 
 // DBCDRV_disableSpiCrc function
 enum DBC_Error DBCDRV_disableSpiCrc(void)
 {
-    LOG_DBG("DBCDRV_disableSpiCrc placeholder called.");
-    return DBC_OK;
+    const uint32_t SPI_CRC_FOR_SPI_CRC_DISABLE_CMD = 0xF20Au; // Precalculated CRC value for the SPI frame which disables SPI CRC
+    // DBCDRV_setSpiHdrSize(0u); // This function is not used in Zephyr port
+    uint32_t regVal;
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_SPI_CRC_CFG_ADDR, 0u)); // Disable CRC
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_CRC_CFG_ADDR, &regVal)); // read CRC configuration
+    return (0u == (regVal & DBC_SPI_CRC_CFG_EN_MASK)) ? DBC_OK : DBC_ERROR;                   // check if CRC was disabled
 }
 
 // DBCDRV_dmaInit function
 enum MCAL_Error DBCDRV_dmaInit(void)
 {
-    LOG_DBG("DBCDRV_dmaInit placeholder called.");
+    LOG_DBG("MDMA_init placeholder called.");
     return MCAL_OK;
 }
 
@@ -715,19 +904,19 @@ enum DBC_Error DBCDRV_init(void)
         return DBC_ERROR;
     }
     DBC_RETURN_ON_ERROR(DBCDRV_initComChannels());
-    DBC_RETURN_ON_ERROR(DBCDRV_setPowerModeStandby(true)); // Set to standby mode
+    DBC_RETURN_ON_ERROR(DBCDRV_setPowerMode(DBC_POWER_MODE_STANDBY)); // Set to standby mode
 #ifdef DBUSCAN_SPI_CRC_USED
     DBC_RETURN_ON_ERROR(DBCDRV_enableSpiCrc());
 #else
     DBC_RETURN_ON_ERROR(DBCDRV_disableSpiCrc());
 #endif
-    DBC_RETURN_ON_ERROR(DBCDRV_doReset(DBC_RST_FULL)); // Assuming full reset for now, will refine based on original logic
+    DBC_RETURN_ON_ERROR(DBCDRV_doReset(&DBCDRV_isInternalEepromError));
     DBC_RETURN_ON_ERROR(DBCDRV_configure(cfg));
     DBC_RETURN_ON_ERROR(DBCDRV_writeRegIpec(0uL, DBC_IPEC_NWKRQ_DELAY_POS, DBC_IPEC_NWKRQ_DELAY_MASK)); // clear NWKRQ_DELAY bit to disable nWKRQ pin delayed de-assertion in sleep mode
     // DBC_RETURN_ON_ERROR(DBCDRV_enableCfgDbus()); // This is handled within DBCDRV_configure
     DBC_RETURN_ON_ERROR(DBCDRV_enableAndClearIrqFlags(0)); // Placeholder for flags
     DBC_RETURN_ON_ERROR(DBCDRV_configureRestForDbus(&cfg));
-    DBC_RETURN_ON_ERROR(DBCDRV_setPowerModeStandby(false)); // Set to normal mode (false for standby means normal)
+    DBC_RETURN_ON_ERROR(DBCDRV_setPowerMode(DBC_POWER_MODE_NORMAL)); // Set to normal mode
 
     DBCDRV_isPwrOnReset = false; // Assuming APP_VARIANT behavior
 

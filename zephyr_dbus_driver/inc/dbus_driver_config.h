@@ -938,10 +938,10 @@ enum DBCDRV_EepWriteState {
 
 // Enum for DBC_command
 enum DBC_command {
-    DBC_CMD_READ = 0x00,
-    DBC_CMD_WRITE = 0x80,
-    DBC_CMD_READ_BURST = 0x20,
-    DBC_CMD_WRITE_BURST = 0xA0
+    DBC_CMD_READ = 0x40u,    // Read  - Low data byte first
+    DBC_CMD_WRITE = 0x60u,   // Write - Low data byte first
+    DBC_CMD_READ_BURST = 0x20, // Assuming these remain the same, verify if needed
+    DBC_CMD_WRITE_BURST = 0xA0 // Assuming these remain the same, verify if needed
 };
 
 // Enum for DBC_PowerMode
@@ -952,8 +952,25 @@ enum DBC_PowerMode {
 
 // Union for DBC_SpiBuf
 union DBC_SpiBuf {
-    uint32_t word[10]; // Example size, adjust as needed
-    uint8_t byte[40]; // Example size, adjust as needed
+    uint8_t array[64]; // DBC_SPI_BUFFER_SIZE is 64
+    struct {
+        uint8_t spiHdr[4]; // DBC_SPI_HDR_SIZE is 4
+        uint32_t data0;
+        uint32_t crc;
+    } d0;
+    struct {
+        uint8_t spiHdr[4]; // DBC_SPI_HDR_SIZE is 4
+        uint32_t data0;
+        uint32_t data1;
+        uint32_t crc;
+    } d1;
+    struct {
+        uint8_t spiHdr[4]; // DBC_SPI_HDR_SIZE is 4
+        uint32_t data0;
+        uint32_t data1;
+        uint32_t data2;
+        uint32_t crc;
+    } d2;
 };
 
 // Function Prototypes
@@ -995,8 +1012,8 @@ enum DBC_Error DBCDRV_setAnyDbusBaudrate(uint32_t baudrate, uint32_t clockInput)
 uint32_t DBCDRV_getClockInputInHz(uint32_t clockInput);
 enum DBC_Error DBCDRV_sendSpiFrame(enum DBC_command command, uint32_t address, uint8_t *txBuff, uint8_t *rxBuff, uint32_t len);
 enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address, uint8_t *txBuff, uint8_t *rxBuff, uint32_t len);
-enum DBC_Error DBCDRV_setPowerModeStandby(bool enable);
-enum DBC_Error DBCDRV_doReset(enum DBC_Reset resetType);
+enum DBC_Error DBCDRV_setPowerModeStandby(void);
+enum DBC_Error DBCDRV_doReset(bool *internalEepromError);
 enum DBC_Error DBCDRV_enableAndClearIrqFlags(uint32_t flags);
 enum DBC_Error DBCDRV_configureRestForDbus(DBC_Cfg_t *config);
 uint16_t DBCDRV_calculateCrc(uint8_t *data, uint32_t len);

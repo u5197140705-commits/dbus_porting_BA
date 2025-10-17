@@ -1241,12 +1241,7 @@ nxp_pmod_touch_panel_i2c: &arduino_i2c {
 # 11 "/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts" 2
 # 0 "<command-line>" 2
 # 1 "/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay" 1
-
-
-
-
-
-
+# 20 "/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay"
 / {
     aliases {
         dbus-spi = &flexcomm1;
@@ -1255,7 +1250,7 @@ nxp_pmod_touch_panel_i2c: &arduino_i2c {
 
 &flexcomm1 {
     status = "okay";
-    pinctrl-0 = <&pinmux_flexcomm1_spi>;
+    pinctrl-0 = <&flexcomm1_spi_default>;
     pinctrl-names = "default";
 
     compatible = "nxp,lpc-spi";
@@ -1270,29 +1265,10 @@ nxp_pmod_touch_panel_i2c: &arduino_i2c {
 
 &pinctrl {
     flexcomm1_spi_default: flexcomm1_spi_default {
-        group-gpios = <&pinctrl_flexcomm1_sck_default
-                       &pinctrl_flexcomm1_mosi_default
-                       &pinctrl_flexcomm1_miso_default
-                       &pinctrl_flexcomm1_ss0_default>;
-    };
-
-    pinctrl_flexcomm1_sck_default: pinctrl_flexcomm1_sck_default {
-        pinmux = <(((7) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((0) & 0xF) << 15))>;
-        slew-rate = "normal";
-    };
-
-    pinctrl_flexcomm1_mosi_default: pinctrl_flexcomm1_mosi_default {
-        pinmux = <(((9) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((9) & 0xF) << 15))>;
-        slew-rate = "normal";
-    };
-
-    pinctrl_flexcomm1_miso_default: pinctrl_flexcomm1_miso_default {
-        pinmux = <(((8) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((9) & 0xF) << 15))>;
-        slew-rate = "normal";
-    };
-
-    pinctrl_flexcomm1_ss0_default: pinctrl_flexcomm1_ss0_default {
-        pinmux = <(((6) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15))>;
+        pinmux = <(((7) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((0) & 0xF) << 15))>,
+                 <(((9) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((2) & 0xF) << 15))>,
+                 <(((8) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((1) & 0xF) << 15))>,
+                 <(((6) & 0x7F) | (((0x0) & 0xF) << 7) | (((1) & 0xF) << 11) | (((3) & 0xF) << 15))>;
         slew-rate = "normal";
     };
 };

@@ -55,8 +55,9 @@ enum DBC_Error DBCDRV_setAnyDbusBaudrate(uint32_t baudrate, uint32_t clockInput)
 uint32_t DBCDRV_getClockInputInHz(uint32_t clockInput);
 enum DBC_Error DBCDRV_sendSpiFrame(enum DBC_command command, uint32_t address, uint8_t *txBuff, uint8_t *rxBuff, uint32_t len);
 enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address, uint8_t *txBuff, uint8_t *rxBuff, uint32_t len);
-enum DBC_Error DBCDRV_setPowerModeStandby(bool enable);
-enum DBC_Error DBCDRV_doReset(enum DBC_Reset resetType);
+enum DBC_Error DBCDRV_setPowerModeStandby(void);
+enum DBC_Error DBCDRV_doReset(bool *internalEepromError);
+bool DBCDRV_isAllFeatureRevision(void);
 enum DBC_Error DBCDRV_enableAndClearIrqFlags(uint32_t flags);
 enum DBC_Error DBCDRV_configureRestForDbus(DBC_Cfg_t *config);
 uint16_t DBCDRV_calculateCrc(uint8_t *data, uint32_t len);
