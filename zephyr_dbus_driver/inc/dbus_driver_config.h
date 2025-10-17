@@ -899,6 +899,8 @@ typedef struct {
 #define DBC_CAN_TXEF_ELEMENT_SIZE                        8u    ///< The number of bytes for the TX Event FIFO element
 
 // Additional definitions from dbuscan.h that might be missing or needed
+#define DBC_IPEC_EP_CC_VAL                 0x17CAu
+#define DBC_IPEC_EP_CC_POS                 16u
 #define DBC_SPI_HDR_BYTE_CMD               0u
 #define DBC_SPI_HDR_BYTE_ADDR_HIGH         1u
 #define DBC_SPI_HDR_BYTE_ADDR_LOW          2u

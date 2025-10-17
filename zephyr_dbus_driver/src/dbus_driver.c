@@ -314,30 +314,49 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
 enum DBC_Error DBCDRV_writeRegIpec(uint32_t bitVal, uint32_t bitPos, uint32_t bitMask)
 {
     uint32_t regVal;
+    uint32_t written_val;
+    uint32_t read_val;
+
+    LOG_DBG("DBCDRV_writeRegIpec: bitVal=0x%x, bitPos=%u, bitMask=0x%x", bitVal, bitPos, bitMask);
+
     DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IPEC_ADDR, &regVal));
+    LOG_DBG("DBCDRV_writeRegIpec: Initial read of DBC_IPEC_ADDR (0x%x): 0x%x", DBC_IPEC_ADDR, regVal);
+
     if (((regVal & bitMask) >> bitPos) == bitVal)
     {
+        LOG_DBG("DBCDRV_writeRegIpec: Desired bitfield already set. Returning OK.");
         return DBC_OK;
     }
 
     // enable write access to IPEC reg
-    regVal |= DBC_IPEC_CCE_MASK;
-    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_IPEC_ADDR, regVal));
+    written_val = regVal | DBC_IPEC_CCE_MASK;
+    LOG_DBG("DBCDRV_writeRegIpec: Enabling write access to IPEC. Writing 0x%x to DBC_IPEC_ADDR (0x%x)", written_val, DBC_IPEC_ADDR);
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_IPEC_ADDR, written_val));
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IPEC_ADDR, &read_val));
+    LOG_DBG("DBCDRV_writeRegIpec: After enabling write access. Read back: 0x%x. Match: %d", read_val, (written_val == read_val));
+    regVal = read_val; // Update regVal with the actual read-back value
 
     // configure desired bit/bitfield value
     regVal &= ~bitMask;
     regVal |= (bitVal << bitPos);
 
     // disable write access to IPEC reg
-    regVal &= ~DBC_IPEC_CCE_MASK;
+    written_val = regVal & ~DBC_IPEC_CCE_MASK;
+    LOG_DBG("DBCDRV_writeRegIpec: Configuring bitfield and disabling write access. Writing 0x%x to DBC_IPEC_ADDR (0x%x)", written_val, DBC_IPEC_ADDR);
 
     // apply new IPEC reg settings
-    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_IPEC_ADDR, regVal));
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_IPEC_ADDR, written_val));
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IPEC_ADDR, &read_val));
+    LOG_DBG("DBCDRV_writeRegIpec: After configuring bitfield. Read back: 0x%x. Match: %d", read_val, (written_val == read_val));
+    regVal = read_val; // Update regVal with the actual read-back value
 
     DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IPEC_ADDR, &regVal));
-    regVal &= bitMask;
-    regVal &= ~DBC_IPEC_EP_CC_MASK; // do not include EP_CC bitfield as it always reads zeros
-    return (regVal != (bitVal << bitPos)) ? DBC_ERROR : DBC_OK;
+    uint32_t final_reg_val_masked = regVal & bitMask;
+    final_reg_val_masked &= ~DBC_IPEC_EP_CC_MASK; // do not include EP_CC bitfield as it always reads zeros
+    uint32_t expected_val = (bitVal << bitPos);
+    LOG_DBG("DBCDRV_writeRegIpec: Final verification. Read 0x%x, Masked 0x%x, Expected 0x%x. Result: %d", regVal, final_reg_val_masked, expected_val, (final_reg_val_masked == expected_val));
+
+    return (final_reg_val_masked != expected_val) ? DBC_ERROR : DBC_OK;
 }
 
 // DBCDRV_writeEeprom function

@@ -1,0 +1,22 @@
+/ {
+    aliases {
+        bvd-nwrq-gpio = &bvd_nwrq_gpio;
+        dbus2can-gpio = &dbus2can_gpio;
+    };
+
+    // Assuming &gpio0 is the correct GPIO controller for frdm_rw612.
+    // If not, this needs to be adjusted based on the board's actual device tree.
+    bvd_nwrq_gpio: bvd_nwrq_gpio {
+        compatible = "gpio-leds"; // Use a compatible that allows simple GPIO output
+        gpios = <&gpio0 10 GPIO_ACTIVE_HIGH>; // Placeholder: GPIO pin 10, active high
+        label = "BVD_NWRQ_GPIO";
+        status = "okay";
+    };
+
+    dbus2can_gpio: dbus2can_gpio {
+        compatible = "gpio-leds"; // Use a compatible that allows simple GPIO output
+        gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>; // Placeholder: GPIO pin 11, active high
+        label = "DBUS2CAN_GPIO";
+        status = "okay";
+    };
+};

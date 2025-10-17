@@ -1,0 +1,5 @@
+west:
+  command: /home/wis3re/.local/bin/west build -b frdm_rw612 . --pristine=always --build-dir
+    build_app -- -DDTC_OVERLAY_FILE=boards/frdm_rw612.overlay
+  topdir: /home/wis3re/zephyrproject
+  version: 1.4.0

@@ -1,0 +1,6 @@
+west:
+  command: /home/wis3re/.local/bin/west build -b frdm_rw612 /home/wis3re/dbus_porting/zephyr_dbus_driver/tests
+    --pristine=always --build-dir /home/wis3re/dbus_porting/zephyr_dbus_driver/build_tests
+    -- -DDTC_OVERLAY_FILE=/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay
+  topdir: /home/wis3re/zephyrproject
+  version: 1.4.0

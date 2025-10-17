@@ -1,0 +1,3 @@
+config BOARD_FRDM_RW612
+	bool "FRDM-RW612"
+	depends on SOC_RW61X
