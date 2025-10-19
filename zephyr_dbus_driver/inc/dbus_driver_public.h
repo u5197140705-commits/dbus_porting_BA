@@ -4,6 +4,7 @@
 #include "dbus_driver_config.h" // For MCAL_Error, DBC_Error, DBC_Cfg_t, etc.
 #include <stdint.h>
 #include <stdbool.h>
+#include <zephyr/drivers/gpio.h> // Required for struct gpio_callback
 
 enum MEXTI_Trigger {
     MEXTI_TRIGGER_FALLING = 0, // Placeholder
@@ -12,6 +13,16 @@ enum MEXTI_Trigger {
 
 struct MEXTI_Config {
     enum MEXTI_Trigger trigger; // Placeholder
+};
+
+// Forward declaration for gpio_callback
+struct gpio_callback;
+
+// MEXTI_Handle definition
+struct MEXTI_Handle {
+    struct gpio_callback gpio_cb;
+    MCAL_Callback_t *mcal_cb;
+    uint32_t channel; // Store the channel for context in the callback
 };
 
 struct MSPI_Channel {

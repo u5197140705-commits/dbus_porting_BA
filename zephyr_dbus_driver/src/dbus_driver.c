@@ -61,6 +61,15 @@ const struct spi_config DBCDRV_mspiCfg = { // Placeholder for MSPI_Config, using
 struct MEXTI_Handle DBCDRV_mextiHandle;
 MCAL_Callback_t DBCDRV_cbIrqHandle;
 
+// Static Zephyr GPIO callback function
+static void zephyr_gpio_callback(const struct device *port, struct gpio_callback *cb, gpio_port_pins_t pins) {
+    struct MEXTI_Handle *handle = CONTAINER_OF(cb, struct MEXTI_Handle, gpio_cb);
+    if (handle && handle->mcal_cb && handle->mcal_cb->cbFunction) {
+        // Pass the pins as flags and NULL for eventResponse for now
+        handle->mcal_cb->cbFunction(handle->mcal_cb->obj, pins, NULL);
+    }
+}
+
 // Define MEXTID3 as a specific MDIO_Channel
 
 // DBCDRV_getMextiChannel function
@@ -118,21 +127,84 @@ void MDIO_write(const struct MDIO_Channel *channel, bool value) {
 }
 
 enum MCAL_Error MEXTI_init(struct MEXTI_Handle *handle, uint32_t channel, const struct MEXTI_Config *config) {
-    LOG_DBG("MEXTI_init placeholder called.");
+    LOG_DBG("MEXTI_init called for channel %u.", channel);
+
+    if (!device_is_ready(mextid3_gpio_dev)) {
+        LOG_ERR("GPIO device not ready!");
+        return MCAL_ERROR;
+    }
+
+    handle->channel = channel; // Store channel in handle
+
+    // Initialize the gpio_callback structure
+    gpio_init_callback(&handle->gpio_cb, zephyr_gpio_callback, BIT(MEXTID3_GPIO_PIN));
+
+    // Add the callback to the GPIO pin
+    int ret = gpio_add_callback(mextid3_gpio_dev, &handle->gpio_cb);
+    if (ret < 0) {
+        LOG_ERR("Failed to add GPIO callback: %d", ret);
+        return MCAL_ERROR;
+    }
+
+    // Configure the interrupt trigger type
+    gpio_flags_t flags = GPIO_INPUT | GPIO_PULL_UP; // Default to input with pull-up
+    if (config->trigger == MEXTI_TRIGGER_FALLING) {
+        flags |= GPIO_INT_EDGE_FALLING;
+    } else if (config->trigger == MEXTI_TRIGGER_RISING) {
+        flags |= GPIO_INT_EDGE_RISING;
+    } else {
+        LOG_ERR("Unsupported MEXTI trigger type.");
+        return MCAL_ERROR;
+    }
+
+    ret = gpio_pin_interrupt_configure(mextid3_gpio_dev, MEXTID3_GPIO_PIN, flags);
+    if (ret < 0) {
+        LOG_ERR("Failed to configure MEXTID3 interrupt: %d", ret);
+        return MCAL_ERROR;
+    }
+
     return MCAL_OK;
 }
 
 void MCAL_initCallback(MCAL_Callback_t *cb, MCAL_CallbackFunction_t func, void *obj) {
-    LOG_DBG("MCAL_initCallback placeholder called.");
+    if (cb != NULL) {
+        cb->cbFunction = func;
+        cb->obj = obj;
+        LOG_DBG("MCAL_initCallback initialized. Function: %p, Object: %p", (void*)func, obj);
+    } else {
+        LOG_ERR("MCAL_initCallback called with NULL callback handle.");
+    }
 }
 
 enum MCAL_Error MEXTI_enableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb) {
-    LOG_DBG("MEXTI_enableEvent placeholder called.");
+    LOG_DBG("MEXTI_enableEvent called.");
+    if (handle == NULL || cb == NULL) {
+        LOG_ERR("MEXTI_enableEvent called with NULL handle or callback.");
+        return MCAL_ERROR;
+    }
+    handle->mcal_cb = cb; // Store the MCAL callback in the MEXTI handle
+    // The interrupt is already configured and added in MEXTI_init.
+    // This function primarily associates the MCAL callback with the MEXTI handle.
     return MCAL_OK;
 }
 
 void MEXTI_disableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb) {
-    LOG_DBG("MEXTI_disableEvent placeholder called.");
+    LOG_DBG("MEXTI_disableEvent called.");
+    if (handle == NULL || cb == NULL) {
+        LOG_ERR("MEXTI_disableEvent called with NULL handle or callback.");
+        return;
+    }
+    // Remove the GPIO callback
+    int ret = gpio_remove_callback(mextid3_gpio_dev, &handle->gpio_cb);
+    if (ret < 0) {
+        LOG_ERR("Failed to remove GPIO callback: %d", ret);
+    }
+    // Disable the interrupt
+    ret = gpio_pin_interrupt_configure(mextid3_gpio_dev, MEXTID3_GPIO_PIN, GPIO_INT_DISABLE);
+    if (ret < 0) {
+        LOG_ERR("Failed to disable MEXTID3 interrupt: %d", ret);
+    }
+    handle->mcal_cb = NULL; // Clear the MCAL callback
 }
 
 enum MCAL_Error MSPI_init(struct MSPI_Handle *handle, const void *channel, const void *config) {
@@ -1008,6 +1080,10 @@ enum DBC_Error DBCDRV_init(void)
     DBC_RETURN_ON_ERROR(DBCDRV_enableAndClearIrqFlags(0)); // Placeholder for flags
     DBC_RETURN_ON_ERROR(DBCDRV_configureRestForDbus(&cfg));
     DBC_RETURN_ON_ERROR(DBCDRV_setPowerMode(DBC_POWER_MODE_NORMAL)); // Set to normal mode
+
+#ifdef APP_VARIANT
+    MEXTI_enableEvent(&DBCDRV_mextiHandle, &DBCDRV_cbIrqHandle);
+#endif //APP_VARIANT
 
     DBCDRV_isPwrOnReset = false; // Assuming APP_VARIANT behavior
 

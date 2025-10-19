@@ -25,9 +25,6 @@ struct MDIO_Channel {
     uint32_t dummy; // Placeholder
 };
 
-struct MEXTI_Handle {
-    uint32_t dummy; // Placeholder
-};
 
 
 struct MSPI_Handle {
@@ -982,8 +979,6 @@ bool MDIO_read(const struct MDIO_Channel *channel);
 void MDIO_toggle(const struct MDIO_Channel *channel);
 void MDIO_write(const struct MDIO_Channel *channel, bool value);
 void MCAL_initCallback(MCAL_Callback_t *cb, MCAL_CallbackFunction_t func, void *obj);
-enum MCAL_Error MEXTI_enableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb);
-void MEXTI_disableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb);
 enum MCAL_Error MSPI_init(struct MSPI_Handle *handle, const void *channel, const void *config);
 uint32_t MSPI_getStatus(struct MSPI_Handle *handle);
 enum MCAL_Error MSPI_transferDma(struct MSPI_Handle *handle, const uint8_t *writeBuf, uint16_t writeLen, uint8_t *readBuf, uint16_t readLen);
