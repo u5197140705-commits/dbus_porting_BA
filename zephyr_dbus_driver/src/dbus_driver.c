@@ -4,6 +4,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/spi.h> // Include for Zephyr SPI API
 #include <zephyr/drivers/can.h> // Include for Zephyr CAN API
+#include <zephyr/drivers/gpio.h> // Include for Zephyr GPIO API
 #include <string.h> // For memcpy
 #include "StdCrc.h" // Include for CRC functions
 #include "bsh_stdinc.h" // Include for standard definitions
@@ -33,6 +34,15 @@ const struct MDIO_Channel MDIOB13_MSPI2_SCK = {0};
 const struct MDIO_Channel MDIOB14_MSPI2_MISO = {0};
 const struct MDIO_Channel MDIOB15_MSPI2_MOSI = {0};
 const struct MDIO_Channel MDIOB12 = {0};
+// Define MEXTID3 as a specific MDIO_Channel, assuming GPIO port 0 and pin 13
+const struct MDIO_Channel MEXTID3 = { .dummy = 13 }; // Using dummy to store pin number, actual GPIO handled by Zephyr API
+
+// Define the GPIO device for MEXTID3
+#define MEXTID3_GPIO_PORT_NODE DT_NODELABEL(hsgpio0)
+#define MEXTID3_GPIO_PIN 13
+
+// Global variable to hold the GPIO device pointer
+static const struct device *mextid3_gpio_dev = DEVICE_DT_GET(MEXTID3_GPIO_PORT_NODE);
 
 const struct MSPI_Channel DBCDRV_mspiChannel = {
     .mspi = NULL, // Placeholder, as Zephyr's SPI API doesn't directly use this
@@ -51,10 +61,11 @@ const struct spi_config DBCDRV_mspiCfg = { // Placeholder for MSPI_Config, using
 struct MEXTI_Handle DBCDRV_mextiHandle;
 MCAL_Callback_t DBCDRV_cbIrqHandle;
 
-// Placeholder for DBCDRV_getMextiChannel
+// Define MEXTID3 as a specific MDIO_Channel
+
+// DBCDRV_getMextiChannel function
 uint32_t DBCDRV_getMextiChannel(void) {
-    LOG_DBG("DBCDRV_getMextiChannel placeholder called.");
-    return 0; // Dummy return
+    return 3;
 }
 
 // Dummy callback function for IRQ
@@ -63,13 +74,34 @@ void DBCDRV_irqCallback(void *obj, uint32_t flags, const struct MCAL_EventRespon
 }
 
 enum MCAL_Error MDIO_init(const struct MDIO_Channel *channel, const void *config) {
-    LOG_DBG("MDIO_init placeholder called.");
+    LOG_DBG("MDIO_init called for pin %d.", channel->dummy);
+
+    if (!device_is_ready(mextid3_gpio_dev)) {
+        LOG_ERR("GPIO device not ready!");
+        return MCAL_ERROR;
+    }
+
+    int ret = gpio_pin_configure(mextid3_gpio_dev, MEXTID3_GPIO_PIN, GPIO_INPUT | GPIO_PULL_UP);
+    if (ret < 0) {
+        LOG_ERR("Failed to configure MEXTID3 pin: %d", ret);
+        return MCAL_ERROR;
+    }
+
+    ret = gpio_pin_interrupt_configure(mextid3_gpio_dev, MEXTID3_GPIO_PIN, GPIO_INT_EDGE_FALLING);
+    if (ret < 0) {
+        LOG_ERR("Failed to configure MEXTID3 interrupt: %d", ret);
+        return MCAL_ERROR;
+    }
+
     return MCAL_OK;
 }
 
 const struct MDIO_Channel *MEXTI_getPin(uint32_t channel) {
-    LOG_DBG("MEXTI_getPin placeholder called.");
-    return &MDIO_INPUT_PULL_UP; // Dummy return
+    LOG_DBG("MEXTI_getPin called for channel %u.", channel);
+    if (channel == 3) {
+        return &MEXTID3;
+    }
+    return NULL; // Return NULL for unsupported channels
 }
 
 bool MDIO_read(const struct MDIO_Channel *channel) {
