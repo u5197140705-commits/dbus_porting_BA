@@ -14,6 +14,14 @@ struct MEXTI_Config {
     enum MEXTI_Trigger trigger; // Placeholder
 };
 
+struct MSPI_Channel {
+    void *mspi;
+    const struct MDIO_Channel *sclk;
+    const struct MDIO_Channel *miso;
+    const struct MDIO_Channel *mosi;
+    const struct MDIO_Channel *cs;
+};
+
 // MCAL function prototypes
 enum MCAL_Error MDIO_init(const struct MDIO_Channel *channel, const void *config);
 const struct MDIO_Channel *MEXTI_getPin(uint32_t channel);
@@ -65,7 +73,7 @@ enum DBC_Error DBCDRV_enableSpiCrc(void);
 enum DBC_Error DBCDRV_disableSpiCrc(void);
 enum MCAL_Error DBCDRV_dmaInit(void);
 void DBCDRV_dmaCbFunction(void *obj, uint32_t flags, const void *eventResponse);
-enum DBC_Error DBCDRV_initComChannels(void);
+enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc);
 enum DBC_Error DBCDRV_configure(DBC_Cfg_t cfg);
 enum DBC_Error DBCDRV_init(void);
 

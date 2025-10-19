@@ -26,6 +26,42 @@ struct MDIO_Channel MDIO_INPUT_PULL_UP; // Placeholder
 struct MDIO_Channel MDIO_OUTPUT; // Placeholder
 struct MDIO_Channel MDIO_ALTERNATE_FUNCTION; // Placeholder
 
+// Global variables for DBusCAN driver
+struct MSPI_Handle DBCDRV_mspiHandle;
+// Dummy MDIO_Channel instances for SPI pins
+const struct MDIO_Channel MDIOB13_MSPI2_SCK = {0};
+const struct MDIO_Channel MDIOB14_MSPI2_MISO = {0};
+const struct MDIO_Channel MDIOB15_MSPI2_MOSI = {0};
+const struct MDIO_Channel MDIOB12 = {0};
+
+const struct MSPI_Channel DBCDRV_mspiChannel = {
+    .mspi = NULL, // Placeholder, as Zephyr's SPI API doesn't directly use this
+    .sclk = &MDIOB13_MSPI2_SCK,
+    .miso = &MDIOB14_MSPI2_MISO,
+    .mosi = &MDIOB15_MSPI2_MOSI,
+    .cs   = &MDIOB12
+};
+const struct spi_config DBCDRV_mspiCfg = { // Placeholder for MSPI_Config, using Zephyr's spi_config
+    .frequency = 1000000,
+    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8),
+    .slave = 0,
+};
+
+// MEXTI related definitions
+struct MEXTI_Handle DBCDRV_mextiHandle;
+MCAL_Callback_t DBCDRV_cbIrqHandle;
+
+// Placeholder for DBCDRV_getMextiChannel
+uint32_t DBCDRV_getMextiChannel(void) {
+    LOG_DBG("DBCDRV_getMextiChannel placeholder called.");
+    return 0; // Dummy return
+}
+
+// Dummy callback function for IRQ
+void DBCDRV_irqCallback(void *obj, uint32_t flags, const struct MCAL_EventResponse *eventResponse) {
+    LOG_DBG("DBCDRV_irqCallback placeholder called.");
+}
+
 enum MCAL_Error MDIO_init(const struct MDIO_Channel *channel, const void *config) {
     LOG_DBG("MDIO_init placeholder called.");
     return MCAL_OK;
@@ -183,11 +219,8 @@ uint32_t MTDIV_div_32_32(uint32_t numerator, uint32_t denominator) {
 // Private data definitions
 static bool DBCDRV_isPwrOnReset = false; // Indicates that power on reset of the device has occurred
 static union DBC_SpiBuf DBCDRV_spiBuff;              ///< Buffer for writing data to the DBusCAN chip over SPI
-static uint8_t DBCDRV_spiHdrSize = DBC_SPI_HDR_SIZE; ///< Size of CRC in SPI frame
-static bool DBCDRV_spiCrcReadError = false;          ///< Flag indicating that CRC error occurred during SPI read operation
-static uint16_t DBCDRV_spiBuffCrcPtr;                ///< Pointer to the CRC field in the SPI buffer
+// Removed unused variables: DBCDRV_spiHdrSize, DBCDRV_spiCrcReadError, DBCDRV_spiBuffCrcPtr, DBCDRV_readRegBuf
 static bool DBCDRV_eepromWriteEnable = false; // Placeholder for global variable
-static uint8_t DBCDRV_readRegBuf[DBC_SPI_BUFFER_SIZE];   ///< Buffer for reading DBusCAN registers via non-blocking SPI communication
 static uint8_t DBCDRV_readHdrBuf[DBC_SPI_BUFFER_SIZE];   ///< Buffer for the SPI read command header data
 
 #define DBCDRV_RESET_TIME_US                   (700u) ///< The time (in microseconds) after a reset event before the device is ready
@@ -588,7 +621,6 @@ enum DBC_Error DBCDRV_setPowerModeStandby(void)
 enum DBC_Error DBCDRV_reset(enum DBC_Reset rstType)
 {
     struct MSUP_TimeoutHandle resetTimeHandle;
-    uint32_t regVal;
     if (rstType == DBC_RST_FULL)
     {
         DBC_RETURN_ON_ERROR(DBCDRV_setPowerMode(DBC_POWER_MODE_STANDBY)); // Full reset is only achievable in STANDBY or NORMAL mode
@@ -781,7 +813,6 @@ enum DBC_Error DBCDRV_enableSpiCrc(void)
 // DBCDRV_disableSpiCrc function
 enum DBC_Error DBCDRV_disableSpiCrc(void)
 {
-    const uint32_t SPI_CRC_FOR_SPI_CRC_DISABLE_CMD = 0xF20Au; // Precalculated CRC value for the SPI frame which disables SPI CRC
     // DBCDRV_setSpiHdrSize(0u); // This function is not used in Zephyr port
     uint32_t regVal;
     DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_SPI_CRC_CFG_ADDR, 0u)); // Disable CRC
@@ -802,10 +833,38 @@ void DBCDRV_dmaCbFunction(void *obj, uint32_t flags, const void *eventResponse)
     LOG_DBG("DBCDRV_dmaCbFunction placeholder called.");
 }
 
-// DBCDRV_initComChannels function
-enum DBC_Error DBCDRV_initComChannels(void)
+enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc)
 {
-    LOG_DBG("DBCDRV_initComChannels placeholder called.");
+    /* Configuration of IO pin used for IRQ sensing from DBusCAN */
+    const struct MDIO_Channel *intPin = MEXTI_getPin(DBCDRV_getMextiChannel());
+
+    if(MCAL_OK != MDIO_init(intPin, &MDIO_INPUT_PULL_UP))
+    {
+        return DBC_ERROR;
+    }
+
+#ifdef APP_VARIANT
+    const struct MEXTI_Config mextiCfg = {.trigger = MEXTI_TRIGGER_FALLING};
+    if(MCAL_OK == MEXTI_init(&DBCDRV_mextiHandle, DBCDRV_getMextiChannel(), &mextiCfg))
+    {
+        MCAL_initCallback(&DBCDRV_cbIrqHandle, irqHandleCbFunc, (void*)&DBCDRV_mextiHandle);
+    }
+    else
+    {
+        return DBC_ERROR;
+    }
+#else
+    (void)irqHandleCbFunc; //lint !e920 Cast from pointer to void - callback function is not used in bootloader variants
+    DBCDRV_mspiHandle.status = MCAL_STATUS_RESET; // set reset status explicitly (necessary for bootloader variants due to the uninitialized RAM)
+#endif //APP_VARIANT
+
+    if(MCAL_OK != MSPI_init(&DBCDRV_mspiHandle, &DBCDRV_mspiChannel, &DBCDRV_mspiCfg))
+    {
+        return DBC_ERROR;
+    }
+    // #ifdef DBUSCAN_DMA_USED // DMA is not used in this Zephyr port
+    // DBC_RETURN_ON_ERROR(DBCDRV_dmaInit());
+    // #endif
     return DBC_OK;
 }
 
@@ -903,7 +962,7 @@ enum DBC_Error DBCDRV_init(void)
     {
         return DBC_ERROR;
     }
-    DBC_RETURN_ON_ERROR(DBCDRV_initComChannels());
+    DBC_RETURN_ON_ERROR(DBCDRV_initComChannels((MCAL_CallbackFunction_t)DBCDRV_irqCallback)); // Cast to correct type
     DBC_RETURN_ON_ERROR(DBCDRV_setPowerMode(DBC_POWER_MODE_STANDBY)); // Set to standby mode
 #ifdef DBUSCAN_SPI_CRC_USED
     DBC_RETURN_ON_ERROR(DBCDRV_enableSpiCrc());

@@ -52,7 +52,7 @@ int spi_abstraction_send(const uint8_t *tx_data, size_t tx_len, uint8_t *rx_data
         .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_MASTER,
         .frequency = 8000000, // Matches device tree
         .slave = 0, // Assuming single slave on CS0
-        .cs = SPI_CS_CONTROL_INIT(SPI_DEV_NODE, 0),
+        .cs = SPI_CS_CONTROL_INIT(SPI_DEV_NODE),
     };
 
     LOG_DBG("Calling spi_transceive for %s...", spi_dev->name);

@@ -57,8 +57,9 @@ struct MCAL_EventResponse {
     uint32_t dummy; // Placeholder
 };
 
-#define MCAL_STATUS_READY 0x00000000u // Placeholder
-#define MCAL_STATUS_BUSY  0x00000001u // Placeholder
+#define MCAL_STATUS_RESET 0x00000000u // Placeholder
+#define MCAL_STATUS_READY 0x00000001u // Placeholder
+#define MCAL_STATUS_BUSY  0x00000002u // Placeholder
 #define MCAL_OK           0x00000000u // Placeholder
 #define MCAL_EVENT_TRANSFER_COMPLETE 0x00000001u // Placeholder
 
@@ -1021,7 +1022,7 @@ enum DBC_Error DBCDRV_enableSpiCrc(void);
 enum DBC_Error DBCDRV_disableSpiCrc(void);
 enum MCAL_Error DBCDRV_dmaInit(void);
 void DBCDRV_dmaCbFunction(void *obj, uint32_t flags, const void *eventResponse);
-enum DBC_Error DBCDRV_initComChannels(void);
+enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc);
 enum DBC_Error DBCDRV_configure(DBC_Cfg_t cfg);
 enum DBC_Error DBCDRV_init(void);
 
