@@ -3804,7 +3804,7 @@ initlevel       0x000000001800b270       0x78
                 0x000000001800b2d0        0x8 zephyr/lib/libc/common/liblib__libc__common.a(malloc.c.obj)
  .z_init_POST_KERNEL_P_40_SUB_0_
                 0x000000001800b2d8        0x8 zephyr/kernel/libkernel.a(system_work_q.c.obj)
- .z_init_POST_KERNEL_P_50_SUB_00038_
+ .z_init_POST_KERNEL_P_70_SUB_00038_
                 0x000000001800b2e0        0x8 zephyr/drivers/spi/libdrivers__spi.a(spi_mcux_flexcomm.c.obj)
  *(SORT_BY_NAME(SORT_BY_ALIGNMENT(.z_init_POST_KERNEL_P_???_*)))
                 0x000000001800b2e8                __init_APPLICATION_start = .
@@ -3839,7 +3839,7 @@ device_area     0x000000001800b2e8      0x120
  ._device.static.1_50_
                 0x000000001800b3c8       0x20 zephyr/drivers/serial/libdrivers__serial.a(uart_mcux_flexcomm.c.obj)
                 0x000000001800b3c8                __device_dts_ord_40
- ._device.static.3_50_
+ ._device.static.3_70_
                 0x000000001800b3e8       0x20 zephyr/drivers/spi/libdrivers__spi.a(spi_mcux_flexcomm.c.obj)
                 0x000000001800b3e8                __device_dts_ord_38
  *(SORT_BY_NAME(SORT_BY_ALIGNMENT(._device.static.*_???_*)))

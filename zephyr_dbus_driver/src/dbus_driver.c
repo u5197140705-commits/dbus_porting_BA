@@ -13,7 +13,7 @@ LOG_MODULE_REGISTER(dbus_driver, LOG_LEVEL_DBG);
 
 // Define the SPI device from device tree
 // Define the SPI device from device tree
-#define SPI_DEV_NODE DT_INST(0, nxp_lpc_spi)
+#define SPI_DEV_NODE DT_NODELABEL(flexcomm1)
 static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Pointer to the SPI bus
 
 // Define the CS GPIO device and pin directly from the overlay
