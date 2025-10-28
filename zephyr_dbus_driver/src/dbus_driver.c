@@ -24,8 +24,8 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 static const struct device *dbus_cs_gpio_dev = DEVICE_DT_GET(DBUS_CS_GPIO_NODE);
 
 static struct spi_config dbus_spi_cfg = {
-    .frequency = 1000000, // Placeholder frequency
-    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8), // Removed SPI_HOLD_ON_CS
+    .frequency = 125000, // Placeholder frequency
+    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8),
     .slave = 0, // Assuming slave select 0
 };
 
@@ -60,7 +60,7 @@ const struct MSPI_Channel DBCDRV_mspiChannel = {
 };
 const struct spi_config DBCDRV_mspiCfg = { // Placeholder for MSPI_Config, using Zephyr's spi_config
     .frequency = 1000000,
-    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8),
+    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_MODE_CPOL | SPI_MODE_CPHA,
     .slave = 0,
 };
 
@@ -96,7 +96,7 @@ void DBCDRV_irqCallback(void *obj, uint32_t flags, const struct MCAL_EventRespon
         // Clear the flags after reading
         (void)DBCDRV_writeReg32(DBC_IF_ADDR, if_reg_val);
     } else {
-        LOG_ERR("DBCDRV_irqCallback: Failed to read DBC_IF_ADDR");
+        printk("DBCDRV_irqCallback: Failed to read DBC_IF_ADDR\n");
     }
 
     // Read and log the DBus Interrupt Flags register
@@ -105,7 +105,7 @@ void DBCDRV_irqCallback(void *obj, uint32_t flags, const struct MCAL_EventRespon
         // Clear the flags after reading
         (void)DBCDRV_writeReg32(DBC_DBUS_IF_ADDR, dbus_if_reg_val);
     } else {
-        LOG_ERR("DBCDRV_irqCallback: Failed to read DBC_DBUS_IF_ADDR");
+        printk("DBCDRV_irqCallback: Failed to read DBC_DBUS_IF_ADDR\n");
     }
 
     // Further processing of interrupt flags would go here
@@ -115,19 +115,19 @@ enum MCAL_Error MDIO_init(const struct MDIO_Channel *channel, const void *config
     LOG_DBG("MDIO_init called for pin %d.", channel->dummy);
 
     if (!device_is_ready(mextid3_gpio_dev)) {
-        LOG_ERR("GPIO device not ready!");
+        printk("MDIO_init: GPIO device not ready!\n");
         return MCAL_ERROR;
     }
 
     int ret = gpio_pin_configure(mextid3_gpio_dev, MEXTID3_GPIO_PIN, GPIO_INPUT | GPIO_PULL_UP);
     if (ret < 0) {
-        LOG_ERR("Failed to configure MEXTID3 pin: %d", ret);
+        printk("MDIO_init: Failed to configure MEXTID3 pin: %d\n", ret);
         return MCAL_ERROR;
     }
 
     ret = gpio_pin_interrupt_configure(mextid3_gpio_dev, MEXTID3_GPIO_PIN, GPIO_INT_EDGE_FALLING);
     if (ret < 0) {
-        LOG_ERR("Failed to configure MEXTID3 interrupt: %d", ret);
+        printk("MDIO_init: Failed to configure MEXTID3 interrupt: %d\n", ret);
         return MCAL_ERROR;
     }
 
@@ -159,7 +159,7 @@ enum MCAL_Error MEXTI_init(struct MEXTI_Handle *handle, uint32_t channel, const 
     LOG_DBG("MEXTI_init called for channel %u.", channel);
 
     if (!device_is_ready(mextid3_gpio_dev)) {
-        LOG_ERR("GPIO device not ready!");
+        printk("MEXTI_init: GPIO device not ready!\n");
         return MCAL_ERROR;
     }
 
@@ -171,7 +171,7 @@ enum MCAL_Error MEXTI_init(struct MEXTI_Handle *handle, uint32_t channel, const 
     // Add the callback to the GPIO pin
     int ret = gpio_add_callback(mextid3_gpio_dev, &handle->gpio_cb);
     if (ret < 0) {
-        LOG_ERR("Failed to add GPIO callback: %d", ret);
+        printk("MEXTI_init: Failed to add GPIO callback: %d\n", ret);
         return MCAL_ERROR;
     }
 
@@ -182,13 +182,13 @@ enum MCAL_Error MEXTI_init(struct MEXTI_Handle *handle, uint32_t channel, const 
     } else if (config->trigger == MEXTI_TRIGGER_RISING) {
         flags |= GPIO_INT_EDGE_RISING;
     } else {
-        LOG_ERR("Unsupported MEXTI trigger type.");
+        printk("MEXTI_init: Unsupported MEXTI trigger type.\n");
         return MCAL_ERROR;
     }
 
     ret = gpio_pin_interrupt_configure(mextid3_gpio_dev, MEXTID3_GPIO_PIN, flags);
     if (ret < 0) {
-        LOG_ERR("Failed to configure MEXTID3 interrupt: %d", ret);
+        printk("MEXTI_init: Failed to configure MEXTID3 interrupt: %d\n", ret);
         return MCAL_ERROR;
     }
 
@@ -201,14 +201,14 @@ void MCAL_initCallback(MCAL_Callback_t *cb, MCAL_CallbackFunction_t func, void *
         cb->obj = obj;
         LOG_DBG("MCAL_initCallback initialized. Function: %p, Object: %p", (void*)func, obj);
     } else {
-        LOG_ERR("MCAL_initCallback called with NULL callback handle.");
+        printk("MCAL_initCallback called with NULL callback handle.\n");
     }
 }
 
 enum MCAL_Error MEXTI_enableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb) {
     LOG_DBG("MEXTI_enableEvent called.");
     if (handle == NULL || cb == NULL) {
-        LOG_ERR("MEXTI_enableEvent called with NULL handle or callback.");
+        printk("MEXTI_enableEvent called with NULL handle or callback.\n");
         return MCAL_ERROR;
     }
     handle->mcal_cb = cb; // Store the MCAL callback in the MEXTI handle
@@ -220,18 +220,18 @@ enum MCAL_Error MEXTI_enableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *
 void MEXTI_disableEvent(struct MEXTI_Handle *handle, MCAL_Callback_t *cb) {
     LOG_DBG("MEXTI_disableEvent called.");
     if (handle == NULL || cb == NULL) {
-        LOG_ERR("MEXTI_disableEvent called with NULL handle or callback.");
+        printk("MEXTI_disableEvent called with NULL handle or callback.\n");
         return;
     }
     // Remove the GPIO callback
     int ret = gpio_remove_callback(mextid3_gpio_dev, &handle->gpio_cb);
     if (ret < 0) {
-        LOG_ERR("Failed to remove GPIO callback: %d", ret);
+        printk("MEXTI_disableEvent: Failed to remove GPIO callback: %d\n", ret);
     }
     // Disable the interrupt
     ret = gpio_pin_interrupt_configure(mextid3_gpio_dev, MEXTID3_GPIO_PIN, GPIO_INT_DISABLE);
     if (ret < 0) {
-        LOG_ERR("Failed to disable MEXTID3 interrupt: %d", ret);
+        printk("MEXTI_disableEvent: Failed to disable MEXTID3 interrupt: %d\n", ret);
     }
     handle->mcal_cb = NULL; // Clear the MCAL callback
 }
@@ -240,7 +240,7 @@ enum MCAL_Error MSPI_init(struct MSPI_Handle *handle, const void *channel, const
     LOG_DBG("MSPI_init called.");
 
     if (!device_is_ready(dbus_spi_bus)) {
-        LOG_ERR("SPI device not ready!");
+        printk("MSPI_init: SPI device not ready!\n");
         return MCAL_ERROR;
     }
     return MCAL_OK;
@@ -282,7 +282,7 @@ enum MCAL_Error MSPI_transferBlocking(struct MSPI_Handle *handle, const uint8_t 
     LOG_DBG("MSPI_transferBlocking called. WriteLen: %u, ReadLen: %u", writeLen, readLen);
 
     if (!device_is_ready(dbus_cs_gpio_dev)) {
-        LOG_ERR("MSPI_transferBlocking: CS GPIO device not ready!");
+        printk("MSPI_transferBlocking: CS GPIO device not ready!\n");
         return MCAL_ERROR;
     }
 
@@ -310,11 +310,15 @@ enum MCAL_Error MSPI_transferBlocking(struct MSPI_Handle *handle, const uint8_t 
 
     int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
     if (ret) {
-        LOG_ERR("MSPI_transferBlocking: SPI transceive failed: %d", ret);
+        printk("MSPI_transferBlocking: SPI transceive failed: %d\n", ret);
         return MCAL_ERROR;
     }
     LOG_DBG("MSPI_transferBlocking: SPI transceive successful. Read %u bytes.", readLen);
     LOG_HEXDUMP_DBG(readBuf, readLen, "MSPI_transferBlocking RX:");
+
+    // Deassert CS (drive high)
+    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+    k_usleep(5); // Small delay after deasserting CS
 
     return MCAL_OK;
 }
@@ -443,6 +447,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         return DBC_ERROR;
     }
     LOG_DBG("DBCDRV_readReg32: SPI transceive successful for addr 0x%x. Read %u bytes.", addr, sizeof(rx_buffer));
+    LOG_HEXDUMP_DBG(tx_buffer, sizeof(tx_buffer), "DBCDRV_readReg32 TX:");
     LOG_HEXDUMP_DBG(rx_buffer, sizeof(rx_buffer), "DBCDRV_readReg32 RX:");
 
     // Extract the 32-bit data from the received buffer
@@ -496,6 +501,8 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
         return DBC_ERROR;
     }
     LOG_DBG("DBCDRV_writeReg32: SPI transceive successful for addr 0x%x, data 0x%x.", addr, data);
+    LOG_HEXDUMP_DBG(tx_buffer, sizeof(tx_buffer), "DBCDRV_writeReg32 TX:");
+    LOG_HEXDUMP_DBG(rx_buffer, sizeof(rx_buffer), "DBCDRV_writeReg32 RX:");
 
     return DBC_OK;
 }
@@ -664,7 +671,7 @@ enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address
     LOG_DBG("DBCDRV_sendSpiFrameNbl placeholder called. Command: %u, Address: 0x%x, Length: %u (Note: DMA not fully implemented, using blocking transfer)", command, address, len);
 
     if (len > DBC_SPI_MAX_DATA_LEN) {
-        LOG_ERR("SPI data length exceeds max allowed: %u", len);
+        printk("DBCDRV_sendSpiFrameNbl: SPI data length exceeds max allowed: %u\n", len);
         return DBC_ERROR;
     }
 
@@ -686,7 +693,7 @@ enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address
     // Perform non-blocking SPI transfer (currently mapped to blocking)
     enum MCAL_Error mcal_err = MSPI_transferDma(NULL, DBCDRV_spiBuff.array, total_len, DBCDRV_readHdrBuf, total_len);
     if (mcal_err != MCAL_OK) {
-        LOG_ERR("SPI non-blocking transfer failed in DBCDRV_sendSpiFrameNbl: %d", mcal_err);
+        printk("DBCDRV_sendSpiFrameNbl: SPI non-blocking transfer failed: %d\n", mcal_err);
         return DBC_ERROR;
     }
 
@@ -703,11 +710,11 @@ enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address
     uint16_t calculated_crc = DBCDRV_calculateCrc(DBCDRV_readHdrBuf, DBC_SPI_HDR_SIZE + len);
 
     if (received_crc != calculated_crc) {
-        LOG_ERR("SPI CRC mismatch in NBL! Received: 0x%x, Calculated: 0x%x", received_crc, calculated_crc);
-        DBCDRV_spiCrcReadError = true;
+        printk("DBCDRV_sendSpiFrameNbl: SPI CRC mismatch in NBL! Received: 0x%x, Calculated: 0x%x\n", received_crc, calculated_crc);
+        // DBCDRV_spiCrcReadError = true; // Removed unused variable
         return DBC_ERROR;
     } else {
-        DBCDRV_spiCrcReadError = false;
+        // DBCDRV_spiCrcReadError = false; // Removed unused variable
     }
 #endif
 
@@ -724,7 +731,7 @@ enum DBC_Error DBCDRV_setPowerMode(enum DBC_PowerMode mode)
     const uint32_t INVALID_REG_VAL = ~0uL;
     if(regVal == INVALID_REG_VAL)
     {
-        LOG_ERR("DBCDRV_setPowerMode: Read INVALID_REG_VAL (0x%x) from DBC_MOPC_ADDR (0x%x)", INVALID_REG_VAL, DBC_MOPC_ADDR);
+        printk("DBCDRV_setPowerMode: Read INVALID_REG_VAL (0x%x) from DBC_MOPC_ADDR (0x%x)\n", INVALID_REG_VAL, DBC_MOPC_ADDR);
         return DBC_ERROR;
     }
     if (chipMode != (uint32_t)mode)
@@ -765,7 +772,7 @@ enum DBC_Error DBCDRV_setPowerModeStandby(void)
     DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_MOPC_ADDR, &regVal));
     if ((regVal & DBC_MOPC_MODE_SEL_MASK) != DBCDRV_MOPC_STANDBY_MODE_MASK)
     {
-        LOG_ERR("Chip is not in STANDBY mode after setting.");
+        printk("DBCDRV_setPowerModeStandby: Chip is not in STANDBY mode after setting.\n");
         return DBC_ERROR; // the chip is not in STANDBY mode
     }
     return DBC_OK;
@@ -940,7 +947,7 @@ enum DBC_Error DBCDRV_enableSpiCrc(void)
             DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_CRC_SEED_ADDR, &crcSeedVal));
             if((regVal != SPI_CRC_CFG_MASK) || (0u != crcSeedVal))
             {
-                // (void)DBCDRV_spiReset();  // non expected CRC configuration detected, reset the chip
+                printk("DBCDRV_enableSpiCrc: Non-expected CRC configuration detected, returning error.\n");
                 return DBC_ERROR; // For now, just return error
             }
         }
@@ -958,6 +965,7 @@ enum DBC_Error DBCDRV_enableSpiCrc(void)
         DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_CRC_SEED_ADDR, &crcSeedVal));
         if((regVal != SPI_CRC_CFG_MASK) || (0u != crcSeedVal))
         {
+            printk("DBCDRV_enableSpiCrc: CRC is not correctly enabled, returning error.\n");
             return DBC_ERROR;   // CRC is not correctly enabled
         }
     }
@@ -971,7 +979,7 @@ enum DBC_Error DBCDRV_disableSpiCrc(void)
     uint32_t regVal;
     DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_SPI_CRC_CFG_ADDR, 0u)); // Disable CRC
     DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_CRC_CFG_ADDR, &regVal)); // read CRC configuration
-    return (0u == (regVal & DBC_SPI_CRC_CFG_EN_MASK)) ? DBC_OK : DBC_ERROR;                   // check if CRC was disabled
+    return (0u == (regVal & DBC_SPI_CRC_CFG_EN_MASK)) ? DBC_OK : DBC_ERROR; // check if CRC was disabled
 }
 
 // DBCDRV_dmaInit function
@@ -993,13 +1001,13 @@ enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc)
     const struct MDIO_Channel *intPin = MEXTI_getPin(DBCDRV_getMextiChannel());
 
     if (!device_is_ready(dbus_cs_gpio_dev)) {
-        LOG_ERR("DBCDRV_initComChannels: CS GPIO device not ready!");
+        printk("DBCDRV_initComChannels: Error point N - CS GPIO device not ready!\n");
         return DBC_ERROR;
     }
 
     int ret = gpio_pin_configure(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, DBUS_CS_GPIO_FLAGS);
     if (ret < 0) {
-        LOG_ERR("DBCDRV_initComChannels: Failed to configure CS GPIO pin: %d", ret);
+        printk("DBCDRV_initComChannels: Error point O - Failed to configure CS GPIO pin: %d\n", ret);
         return DBC_ERROR;
     }
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1); // Ensure CS is de-asserted initially
@@ -1007,6 +1015,7 @@ enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc)
 
     if(MCAL_OK != MDIO_init(intPin, &MDIO_INPUT_PULL_UP))
     {
+        printk("DBCDRV_initComChannels: Error point P - MDIO_init failed.\n");
         return DBC_ERROR;
     }
 
@@ -1015,9 +1024,13 @@ enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc)
     if(MCAL_OK == MEXTI_init(&DBCDRV_mextiHandle, DBCDRV_getMextiChannel(), &mextiCfg))
     {
         MCAL_initCallback(&DBCDRV_cbIrqHandle, irqHandleCbFunc, (void*)&DBCDRV_mextiHandle);
+        LOG_DBG("DBCDRV_init: Enabling MEXTI event.");
+        DBC_RETURN_ON_ERROR(MEXTI_enableEvent(&DBCDRV_mextiHandle, &DBCDRV_cbIrqHandle));
+        LOG_DBG("DBCDRV_init: MEXTI event enabled.");
     }
     else
     {
+        printk("DBCDRV_initComChannels: Error point Q - MEXTI_init failed.\n");
         return DBC_ERROR;
     }
 #else
@@ -1027,6 +1040,7 @@ enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc)
 
     if(MCAL_OK != MSPI_init(&DBCDRV_mspiHandle, &DBCDRV_mspiChannel, &DBCDRV_mspiCfg))
     {
+        printk("DBCDRV_initComChannels: Error point R - MSPI_init failed.\n");
         return DBC_ERROR;
     }
     // #ifdef DBUSCAN_DMA_USED // DMA is not used in this Zephyr port
@@ -1127,60 +1141,109 @@ enum DBC_Error DBCDRV_init(void)
     DBC_Cfg_t cfg = DBCDRV_getConfig();
     uint32_t regVal;
 
+    printk("DBCDRV_init: Entry point.\n");
+    printk("DBCDRV_init: Checking SPI_DEV_NODE readiness.\n");
+    if (!device_is_ready(dbus_spi_bus)) {
+        printk("DBCDRV_init: SPI_DEV_NODE (flexcomm1) is NOT ready!\n");
+        return DBC_ERROR;
+    } else {
+        printk("DBCDRV_init: SPI_DEV_NODE (flexcomm1) is ready.\n");
+    }
+
+    printk("DBCDRV_init: Checking DBUS_CS_GPIO_NODE readiness.\n");
+    if (!device_is_ready(dbus_cs_gpio_dev)) {
+        printk("DBCDRV_init: DBUS_CS_GPIO_NODE (hsgpio0) is NOT ready!\n");
+        return DBC_ERROR;
+    } else {
+        printk("DBCDRV_init: DBUS_CS_GPIO_NODE (hsgpio0) is ready.\n");
+    }
+
     // 1. Introduce initial stabilization delay
+    printk("DBCDRV_init: Starting initial 100ms delay.\n");
     k_msleep(100); // Wait 100ms for chip to stabilize after power-up
-    LOG_DBG("DBCDRV_init: Initial 100ms delay completed.");
+    printk("DBCDRV_init: Initial 100ms delay completed.\n");
 
     if(DBCDRV_isInternalEepromError)
     {
-        LOG_ERR("DBCDRV_init: Internal EEPROM error detected previously. Aborting initialization.");
+        printk("DBCDRV_init: Error point A - Internal EEPROM error detected previously. Aborting initialization.\n");
         return DBC_ERROR;
     }
+    printk("DBCDRV_init: After Error point A check.\n");
+
+    printk("DBCDRV_init: Before CS GPIO device ready check.\n");
 
     // Ensure CS is de-asserted before starting SPI communication
     if (!device_is_ready(dbus_cs_gpio_dev)) {
-        LOG_ERR("DBCDRV_init: CS GPIO device not ready at start of init!");
+        printk("DBCDRV_init: Error point B - CS GPIO device not ready at start of init!\n");
         return DBC_ERROR;
     }
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
     k_msleep(1); // Small delay
+    printk("DBCDRV_init: After CS de-assertion and delay.\n");
 
     // 2. Add a dummy SPI read/write to help "wake up" the peripheral or synchronize the SPI bus
     uint32_t dummy_data = 0;
-    LOG_DBG("DBCDRV_init: Performing dummy read from DBC_SCRATCHPAD_ADDR (0x%x).", DBC_SCRATCHPAD_ADDR);
+    printk("DBCDRV_init: Performing dummy read from DBC_SCRATCHPAD_ADDR (0x%x).\n", DBC_SCRATCHPAD_ADDR);
     (void)DBCDRV_readReg32(DBC_SCRATCHPAD_ADDR, &dummy_data); // Dummy read, ignore error for now
-    LOG_DBG("DBCDRV_init: Dummy read returned 0x%x.", dummy_data);
+    printk("DBCDRV_init: Dummy read returned 0x%x.\n", dummy_data);
 
+    printk("DBCDRV_init: Calling DBCDRV_initComChannels.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_initComChannels((MCAL_CallbackFunction_t)DBCDRV_irqCallback)); // Cast to correct type
+    printk("DBCDRV_init: DBCDRV_initComChannels returned OK.\n");
 
     // 3. Verify Power-On Reset (POR) Status
+    printk("DBCDRV_init: Reading DBC_IF_ADDR for POR status.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IF_ADDR, &regVal));
+    printk("DBCDRV_init: DBC_IF_ADDR read returned 0x%x.\n", regVal);
     if (0u != (regVal & DBC_IF_PWRON_MASK)) {
-        LOG_DBG("DBCDRV_init: Power-On Reset (POR) flag detected (0x%x).", regVal);
+        printk("DBCDRV_init: Power-On Reset (POR) flag detected (0x%x).\n", regVal);
         DBCDRV_isPwrOnReset = true;
     } else {
-        LOG_DBG("DBCDRV_init: Power-On Reset (POR) flag not set (0x%x).", regVal);
+        printk("DBCDRV_init: Power-On Reset (POR) flag not set (0x%x).\n", regVal);
         DBCDRV_isPwrOnReset = false;
     }
 
+    printk("DBCDRV_init: Setting power mode to STANDBY.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_setPowerMode(DBC_POWER_MODE_STANDBY)); // Set to standby mode
+    printk("DBCDRV_init: Power mode set to STANDBY.\n");
 #ifdef DBUSCAN_SPI_CRC_USED
+    printk("DBCDRV_init: Enabling SPI CRC.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_enableSpiCrc());
+    printk("DBCDRV_init: SPI CRC enabled.\n");
 #else
+    printk("DBCDRV_init: Disabling SPI CRC.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_disableSpiCrc());
+    printk("DBCDRV_init: SPI CRC disabled.\n");
 #endif
+    printk("DBCDRV_init: Performing DBCDRV_doReset.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_doReset(&DBCDRV_isInternalEepromError));
+    printk("DBCDRV_init: DBCDRV_doReset completed.\n");
+    printk("DBCDRV_init: Configuring DBus driver.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_configure(cfg));
+    printk("DBCDRV_init: DBus driver configured.\n");
+    printk("DBCDRV_init: Writing IPEC register for NWKRQ_DELAY.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_writeRegIpec(0uL, DBC_IPEC_NWKRQ_DELAY_POS, DBC_IPEC_NWKRQ_DELAY_MASK)); // clear NWKRQ_DELAY bit to disable nWKRQ pin delayed de-assertion in sleep mode
+    printk("DBCDRV_init: IPEC register updated.\n");
     // DBC_RETURN_ON_ERROR(DBCDRV_enableCfgDbus()); // This is handled within DBCDRV_configure
+    printk("DBCDRV_init: Enabling and clearing IRQ flags.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_enableAndClearIrqFlags(0)); // Placeholder for flags
+    printk("DBCDRV_init: IRQ flags enabled and cleared.\n");
+    printk("DBCDRV_init: Configuring rest for DBus.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_configureRestForDbus(&cfg));
+    printk("DBCDRV_init: Rest for DBus configured.\n");
+    printk("DBCDRV_init: Setting power mode to NORMAL.\n");
     DBC_RETURN_ON_ERROR(DBCDRV_setPowerMode(DBC_POWER_MODE_NORMAL)); // Set to normal mode
+    printk("DBCDRV_init: Power mode set to NORMAL.\n");
+    printk("DBCDRV_init: Starting 10ms delay after setting to normal mode.\n");
     k_msleep(10); // Add delay after setting to normal mode
+    printk("DBCDRV_init: 10ms delay completed.\n");
 
 #ifdef APP_VARIANT
-    MEXTI_enableEvent(&DBCDRV_mextiHandle, &DBCDRV_cbIrqHandle);
+    printk("DBCDRV_init: Enabling MEXTI event.\n");
+    DBC_RETURN_ON_ERROR(MEXTI_enableEvent(&DBCDRV_mextiHandle, &DBCDRV_cbIrqHandle));
+    printk("DBCDRV_init: MEXTI event enabled.\n");
 #endif //APP_VARIANT
+    printk("DBCDRV_init: Initialization complete.\n");
 
     DBCDRV_isPwrOnReset = false; // Reset flag after successful initialization
 

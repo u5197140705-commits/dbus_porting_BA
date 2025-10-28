@@ -313,7 +313,7 @@ DTC:FILEPATH=/home/wis3re/zephyr-sdk-0.17.4/sysroots/x86_64-pokysdk-linux/usr/bi
 // parameter. These settings will override the settings in the
 // board's .dts file. Multiple files may be listed, e.g. DTC_OVERLAY_FILE="dts1.overlay
 // dts2.overlay"
-DTC_OVERLAY_FILE:STRING=/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay
+DTC_OVERLAY_FILE:STRING=boards/frdm_rw612/frdm_rw612.overlay
 
 //Path to a program.
 GEN_KOBJECT_LIST:FILEPATH=/home/wis3re/zephyrproject/zephyr/scripts/build/gen_kobject_list.py
@@ -541,7 +541,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=617
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=618
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

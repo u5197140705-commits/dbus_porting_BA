@@ -13,7 +13,7 @@ cmake:
      - '/home/wis3re/zephyrproject/zephyr/dts/bindings'
     files:
      - '/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts'
-     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay'
+     - 'boards/frdm_rw612/frdm_rw612.overlay'
     include-dirs:
      - '/home/wis3re/zephyrproject/modules/hal/ambiq/dts'
      - '/home/wis3re/zephyrproject/modules/hal/atmel/include'
@@ -41,7 +41,7 @@ cmake:
      - '/home/wis3re/zephyrproject/zephyr/dts/arc'
      - '/home/wis3re/zephyrproject/zephyr/dts'
     user-files:
-     - '/home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay'
+     - 'boards/frdm_rw612/frdm_rw612.overlay'
   kconfig:
     files:
      - '/home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612_defconfig'
@@ -56,6 +56,6 @@ cmake:
     zephyr-base: '/home/wis3re/zephyrproject/zephyr'
 version: '0.1.0'
 west:
-  command: '/home/wis3re/.local/bin/west build -b frdm_rw612 -p always'
+  command: '/home/wis3re/.local/bin/west build -b frdm_rw612 -p always -- -DDTC_OVERLAY_FILE=boards/frdm_rw612/frdm_rw612.overlay'
   topdir: '/home/wis3re/zephyrproject'
   version: '1.4.0'

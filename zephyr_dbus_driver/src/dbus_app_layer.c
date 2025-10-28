@@ -3,7 +3,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/autoconf.h> // Explicitly include autoconf.h for Kconfig options
-#include <zephyr/arch/cpu.h> // Re-add for ARCH_STACK_PTR_ALIGN
+#include <zephyr/arch/cpu.h> // For ARCH_STACK_PTR_ALIGN
 #include <zephyr/settings/settings.h> // For runtime settings if needed, but Kconfig is compile-time
 #include <string.h> // For memset, memcpy
 #include <zephyr/sys/atomic.h> // For atomic operations if needed, or just mutex
@@ -248,6 +248,7 @@ void dbal_tx_thread_entry(void *p1, void *p2, void *p3)
     ARG_UNUSED(p3);
 
     printk("DBAL: Transmit thread started.\n");
+    k_thread_name_set(k_current_get(), "dbal_tx_thread");
     struct dbal_instance* const inst = &g_dbal_main_instance;
     while (1) {
         // Check if there are messages to send
@@ -271,6 +272,7 @@ void dbal_rx_thread_entry(void *p1, void *p2, void *p3)
     ARG_UNUSED(p3);
 
     printk("DBAL: Receive thread started.\n");
+    k_thread_name_set(k_current_get(), "dbal_rx_thread");
     // The receive thread will now wait for data to be put into the message queue by the SPI ISR.
     struct dbal_spi_rx_msg rx_msg;
     while (1) {
@@ -286,8 +288,8 @@ void dbal_rx_thread_entry(void *p1, void *p2, void *p3)
 }
 
 // Define Zephyr threads
-K_THREAD_DEFINE(dbal_tx_thread, 1024, dbal_tx_thread_entry, NULL, NULL, NULL, 7, 0, 0);
-K_THREAD_DEFINE(dbal_rx_thread, 1024, dbal_rx_thread_entry, NULL, NULL, NULL, 7, 0, 0);
+K_THREAD_DEFINE(dbal_tx_thread, CONFIG_DBAL_TX_THREAD_STACK_SIZE, dbal_tx_thread_entry, NULL, NULL, NULL, 7, 0, 0);
+K_THREAD_DEFINE(dbal_rx_thread, CONFIG_DBAL_RX_THREAD_STACK_SIZE, dbal_rx_thread_entry, NULL, NULL, NULL, 7, 0, 0);
 
 // --- DBus Lock (DBLK) Functionality ---
 

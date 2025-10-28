@@ -19,3 +19,15 @@ config DBAL_TARGET_ADDRESS
 	help
 		Defines the target address for the DBus Application Layer.
 		This address is used to identify the communication partner.
+
+config DBAL_TX_THREAD_STACK_SIZE
+	int "DBAL Transmit Thread Stack Size"
+	default 4096
+	help
+		Stack size for the DBus Application Layer Transmit thread.
+
+config DBAL_RX_THREAD_STACK_SIZE
+	int "DBAL Receive Thread Stack Size"
+	default 4096
+	help
+		Stack size for the DBus Application Layer Receive thread.

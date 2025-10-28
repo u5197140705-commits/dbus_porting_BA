@@ -1,0 +1,4 @@
+west:
+  command: /home/wis3re/.local/bin/west build -b nucleo_g071rb -p always -- -DDTC_OVERLAY_FILE=boards/nucleo_g071rb.overlay
+  topdir: /home/wis3re/zephyrproject
+  version: 1.4.0

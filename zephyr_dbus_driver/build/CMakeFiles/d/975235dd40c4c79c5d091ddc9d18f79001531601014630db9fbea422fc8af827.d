@@ -73,6 +73,7 @@ zephyr/linker.cmd: \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/linker/kobject-rom.ld \
   /home/wis3re/zephyrproject/zephyr/include/zephyr/linker/cplusplus-rom.ld \
   zephyr/include/generated/snippets-ram-sections.ld \
+  /home/wis3re/zephyrproject/zephyr/modules/segger/segger_rtt.ld \
   /home/wis3re/zephyrproject/zephyr/arch/common/ramfunc.ld \
   zephyr/include/generated/snippets-ramfunc-section.ld \
   /home/wis3re/zephyrproject/modules/hal/nxp/mcux/quick_access_code.ld \

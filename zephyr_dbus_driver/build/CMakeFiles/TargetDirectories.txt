@@ -105,6 +105,8 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/canbus/CMakeFiles/rebuild_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/debug/CMakeFiles/edit_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/debug/CMakeFiles/rebuild_cache.dir
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/debug/thread_analyzer/CMakeFiles/edit_cache.dir
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/debug/thread_analyzer/CMakeFiles/rebuild_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/fb/CMakeFiles/edit_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/fb/CMakeFiles/rebuild_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/zephyr/subsys/fs/CMakeFiles/edit_cache.dir
@@ -1265,6 +1267,7 @@
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/modules/percepio/CMakeFiles/rebuild_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/modules/picolibc/CMakeFiles/edit_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/modules/picolibc/CMakeFiles/rebuild_cache.dir
+/home/wis3re/dbus_porting/zephyr_dbus_driver/build/modules/segger/CMakeFiles/modules__segger.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/modules/segger/CMakeFiles/edit_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/modules/segger/CMakeFiles/rebuild_cache.dir
 /home/wis3re/dbus_porting/zephyr_dbus_driver/build/modules/trusted-firmware-a/CMakeFiles/edit_cache.dir

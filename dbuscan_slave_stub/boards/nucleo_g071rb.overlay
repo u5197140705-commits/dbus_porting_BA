@@ -1,0 +1,47 @@
+/*
+ * nucleo_g071rb.overlay
+ * SPI1 configuration for STM32G071 acting as a DBusCAN SPI slave
+ * Copyright (c) 2020 STMicroelectronics
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ / {
+    aliases {
+        spi-slave = &spi1;   /* matches DT_ALIAS(spi_slave) in your C code */
+    };
+};
+
+/* --- Enable SPI1 in slave mode --- */
+&spi1 {
+    status = "okay";
+    compatible = "st,stm32-spi";  /* ✅ use generic SPI compatible string */
+              /* ✅ Zephyr property that tells it to use slave mode */
+    
+    pinctrl-0 = <&spi1_sck_pa5 &spi1_miso_pa6 &spi1_mosi_pa7 &spi1_nss_pa4>;
+    pinctrl-names = "default";
+
+    cs-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+};
+
+/* --- Define the SPI1 pin configuration --- */
+&pinctrl {
+    spi1_sck_pa5: spi1_sck_pa5 {
+        pinmux = <STM32_PINMUX('A', 5, AF0)>;  /* ✅ Correct 3-arg form */
+        bias-pull-down;
+    };
+
+    spi1_miso_pa6: spi1_miso_pa6 {
+        pinmux = <STM32_PINMUX('A', 6, AF0)>;
+        bias-pull-down;
+    };
+
+    spi1_mosi_pa7: spi1_mosi_pa7 {
+        pinmux = <STM32_PINMUX('A', 7, AF0)>;
+        bias-pull-down;
+    };
+
+    spi1_nss_pa4: spi1_nss_pa4 {
+        pinmux = <STM32_PINMUX('A', 4, AF0)>;
+        bias-pull-up;
+    };
+};

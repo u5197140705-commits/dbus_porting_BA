@@ -29,4 +29,4 @@ empty_file.o: /home/wis3re/zephyrproject/zephyr/misc/empty_file.c \
  /home/wis3re/zephyrproject/modules/hal/nxp/dts/nxp/rw/RW612-pinctrl.h \
  /home/wis3re/zephyrproject/zephyr/include/zephyr/dt-bindings/gpio/arduino-header-r3.h \
  /home/wis3re/zephyrproject/zephyr/include/zephyr/dt-bindings/input/input-event-codes.h \
- /home/wis3re/dbus_porting/zephyr_dbus_driver/boards/frdm_rw612.overlay
+ boards/frdm_rw612/frdm_rw612.overlay
