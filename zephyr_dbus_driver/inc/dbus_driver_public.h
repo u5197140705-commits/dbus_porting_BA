@@ -67,13 +67,17 @@ void DBCDRV_setSpiFrameHdr(enum DBC_RegAddr addr, uint16_t len, enum DBC_command
 enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data);
 enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data);
 enum DBC_Error DBCDRV_writeRegIpec(uint32_t bitVal, uint32_t bitPos, uint32_t bitMask);
+enum DBC_Error DBCDRV_unlockIpec(void); // New unlock function for IPEC
 enum DBC_Error DBCDRV_writeEeprom(void);
 bool DBCDRV_isSupplyForEepromWrite(void);
 enum DBC_Error DBCDRV_setTableDbusBaudrate(uint32_t baudrate, uint32_t clockInput);
 enum DBC_Error DBCDRV_setAnyDbusBaudrate(uint32_t baudrate, uint32_t clockInput);
 uint32_t DBCDRV_getClockInputInHz(uint32_t clockInput);
-enum DBC_Error DBCDRV_sendSpiFrame(enum DBC_command command, uint32_t address, uint8_t *txBuff, uint8_t *rxBuff, uint32_t len);
+enum DBC_Error DBCDRV_sendSpiFrame(const uint8_t *writeBuf, uint16_t writeLen, uint8_t *readBuf, uint16_t readLen);
 enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address, uint8_t *txBuff, uint8_t *rxBuff, uint32_t len);
+enum DBC_Error DBCDBUS_unlockDbusPin(bool pinLevel); // New prototype
+enum DBC_Error DBCDBUS_lockDbusPin(void); // New prototype
+enum DBC_Error DBCDRV_spiReset(void); // New prototype
 enum DBC_Error DBCDRV_setPowerModeStandby(void);
 enum DBC_Error DBCDRV_doReset(bool *internalEepromError);
 bool DBCDRV_isAllFeatureRevision(void);

@@ -75,6 +75,10 @@ int main(void)
     // Perform loopback test using DBCDRV functions
     test_dbus_driver_loopback();
     
+    // Initialize the DBus Application Layer
+    dbal_init();
+    printk("Main: DBus Application Layer initialized.\n");
+
     // Initialize the DBus Driver
     enum DBC_Error dbus_driver_init_ret = DBCDRV_init();
     if (dbus_driver_init_ret != DBC_OK) {
@@ -82,11 +86,6 @@ int main(void)
         return 0; // Or handle error appropriately
     }
     printk("Main: DBus Driver initialized successfully.\n");
-
-
-
-    // Initialize the DBus Application Layer
-    dbal_init();
 
     // Initialize the SPI abstraction layer
     int ret_spi_init = spi_abstraction_init();

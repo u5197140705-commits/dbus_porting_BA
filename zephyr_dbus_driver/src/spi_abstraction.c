@@ -19,12 +19,18 @@ static const struct device *spi_dev = DEVICE_DT_GET(SPI_DEV_NODE);
 
 int spi_abstraction_init(void)
 {
-    LOG_DBG("Checking SPI device readiness for %s...", spi_dev->name);
+    LOG_DBG("spi_abstraction_init: Entry.");
+    LOG_DBG("spi_abstraction_init: Checking SPI device readiness for %s...", spi_dev->name);
     if (!device_is_ready(spi_dev)) {
-        LOG_ERR("SPI device %s not ready!", spi_dev->name);
+        LOG_ERR("spi_abstraction_init: SPI device %s not ready!", spi_dev->name);
         return -ENODEV;
     }
-    LOG_INF("SPI device %s is ready.", spi_dev->name);
+    LOG_INF("spi_abstraction_init: SPI device %s is ready.", spi_dev->name);
+
+    // Additional checks or initialization steps can be added here if needed.
+    // For now, simply returning 0 if the device is ready.
+
+    LOG_DBG("spi_abstraction_init: Exit OK.");
     return 0;
 }
 
@@ -49,10 +55,10 @@ int spi_abstraction_send(const uint8_t *tx_data, size_t tx_len, uint8_t *rx_data
     };
 
     struct spi_config spi_cfg = {
-        .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_MASTER,
-        .frequency = 8000000, // Matches device tree
+        .operation = SPI_WORD_SET(8) | SPI_OP_MODE_MASTER, // SPI Mode 0 (CPOL=0, CPHA=0)
+        .frequency = 125000, // Aligned with dbus_driver.c
         .slave = 0, // Assuming single slave on CS0
-        .cs = SPI_CS_CONTROL_INIT(SPI_DEV_NODE),
+        // .cs = SPI_CS_CONTROL_INIT(SPI_DEV_NODE), // CS is handled manually in dbus_driver.c
     };
 
     LOG_DBG("Calling spi_transceive for %s...", spi_dev->name);

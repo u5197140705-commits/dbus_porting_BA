@@ -129,6 +129,7 @@ enum DBC_RegAddr
     DBC_SPI_CRC_CFG_ADDR = 0x0014u,    /* SPI CRC Configuration register */
     DBC_SPI_CRC_SEED_ADDR= 0x0018u,    /* SPI CRC Seed value register */
     DBC_SCRATCHPAD_ADDR  = 0x001Cu,    /* Scratchpad register */
+    DBC_STATUS_PROT_ADDR = 0x0020u,    /* Protection Status register */
     /* DCR - Device Configuration Registers, addresses: 0x0800 - 0x08FF */
     DBC_MOPC_ADDR        = 0x0800u,    /* Modes of Operation and Pin Configuration register */
     DBC_TSP_ADDR         = 0x0804u,    /* TimeStamp Prescalar register*/
@@ -292,6 +293,12 @@ enum DBC_RegAddr
 #define DBC_STATUS_INERR_POS                             2u      ///< Position for unmasked Internal Error interrupt set- RO
 #define DBC_STATUS_SPIERR_POS                            1u      ///< Position for unmasked SPI Error interrupt set- RO
 #define DBC_STATUS_IR_POS                                0u      ///< Position for value of Interrupt input level (active low)- RO
+
+/* DIFR->STATUS_PROT (0x0020) */
+/* Definitions of Bit-Masks */
+#define DBC_STATUS_PROT_LOCK_ERR_MASK           0x00000001u      ///< Mask for Protection or Lock Error
+/* Definitions of Bit-Positions */
+#define DBC_STATUS_PROT_LOCK_ERR_POS                     0u      ///< Position for Protection or Lock Error
 
 /* DIFR->SPI_ERR_MASK (0x0010) */
 /* When any of the following bits is set the corresponding error bit will be masked */
@@ -942,6 +949,8 @@ enum DBC_command {
     DBC_CMD_WRITE_BURST = 0xA0 // Assuming these remain the same, verify if needed
 };
 
+#define SPI_CRC_FOR_SET_STANDBY_CMD 0xE6EBu // Precalculated CRC value for the SPI frame which sets device to the STANDBY power mode
+
 // Enum for DBC_PowerMode
 enum DBC_PowerMode {
     DBC_POWER_MODE_NORMAL = 0,
@@ -1006,7 +1015,7 @@ bool DBCDRV_isSupplyForEepromWrite(void);
 enum DBC_Error DBCDRV_setTableDbusBaudrate(uint32_t baudrate, uint32_t clockInput);
 enum DBC_Error DBCDRV_setAnyDbusBaudrate(uint32_t baudrate, uint32_t clockInput);
 uint32_t DBCDRV_getClockInputInHz(uint32_t clockInput);
-enum DBC_Error DBCDRV_sendSpiFrame(enum DBC_command command, uint32_t address, uint8_t *txBuff, uint8_t *rxBuff, uint32_t len);
+enum DBC_Error DBCDRV_sendSpiFrame(const uint8_t *writeBuf, uint16_t writeLen, uint8_t *readBuf, uint16_t readLen);
 enum DBC_Error DBCDRV_sendSpiFrameNbl(enum DBC_command command, uint32_t address, uint8_t *txBuff, uint8_t *rxBuff, uint32_t len);
 enum DBC_Error DBCDRV_setPowerModeStandby(void);
 enum DBC_Error DBCDRV_doReset(bool *internalEepromError);

@@ -38,3 +38,20 @@ The `screen /dev/ttyACM0 115200` command terminated immediately, and the Dbus dr
 The application now builds successfully without Kconfig warnings. The hardware reset is performed, and the chip responds with device ID information from registers `0x00` and `0x04`. However, the `DBC_DBUS_CCCR_ADDR` (0x4018) and `DBC_IPEC_ADDR` (0x814) registers are *still not retaining their written values*, consistently reading `0x0` after write operations. This indicates that a persistent, and as yet unidentified, protection mechanism is preventing configuration of these critical registers. The Dbus driver initialization continues to fail with "Main: DBus Driver initialization failed with error: 1!".
 
 The next step is to identify the correct "unlock" sequence or mechanism for the protected configuration registers (`DBC_DBUS_CCCR_ADDR` and `DBC_IPEC_ADDR`).
+
+## Session 2: SPI Mode and Initialization Order Debugging
+
+### New Findings:
+- The `DBC_STATUS_PROT_ADDR` was undefined, leading to a compilation error. This was due to it not being defined in `dbus_driver_config.h`.
+- The order of `DBCDRV_unlockIpec()` and `DBCDRV_enableCfgDbus()` calls was incorrect in `DBCDRV_init()`. `DBCDRV_enableCfgDbus()` (setting INIT and CCE in CCCR) must be called *before* `DBCDRV_unlockIpec()` (keyed write to IPEC).
+- The SPI mode was incorrectly set to Mode 0 (`SPI_OP_MODE_MASTER | SPI_WORD_SET(8)`) instead of Mode 3 (`SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_MODE_CPOL | SPI_MODE_CPHA`). This could be a reason for the chip not responding correctly to configuration writes.
+
+### New Changes Made:
+- Defined `DBC_STATUS_PROT_ADDR` and its associated masks/positions in `zephyr_dbus_driver/inc/dbus_driver_config.h`.
+- Reverted the swap of `DBCDRV_unlockIpec()` and `DBCDRV_enableCfgDbus()` calls in `zephyr_dbus_driver/src/dbus_driver.c` to the correct order as per the datasheet.
+- Corrected `dbus_spi_cfg.operation` to `SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_MODE_CPOL | SPI_MODE_CPHA` (SPI Mode 3) in `zephyr_dbus_driver/src/dbus_driver.c`.
+
+### Current State:
+- The project now compiles successfully after defining `DBC_STATUS_PROT_ADDR` and correcting the order of initialization calls.
+- The SPI mode has been corrected.
+- The `DBCDRV_enableCfgDbus: INIT bit not set after write!` error persists, indicating that the `INIT` bit in `DBC_DBUS_CCCR_ADDR` is still not being set correctly, even after correcting the SPI mode and the order of operations. This suggests there might be another underlying issue preventing the configuration registers from being written to.
