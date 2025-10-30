@@ -8,6 +8,7 @@
 #include <string.h> // For memset, memcpy
 #include <zephyr/sys/atomic.h> // For atomic operations if needed, or just mutex
 
+
 // Declare a message queue for SPI received data
 K_MSGQ_DEFINE(dbal_spi_rx_msg_queue, sizeof(struct dbal_spi_rx_msg), DBAL_SPI_RX_MSG_QUEUE_DEPTH, 4);
 

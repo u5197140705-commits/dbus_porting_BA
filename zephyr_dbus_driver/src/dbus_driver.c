@@ -23,6 +23,13 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 
 static const struct device *dbus_cs_gpio_dev = DEVICE_DT_GET(DBUS_CS_GPIO_NODE);
 
+// Define the RESET GPIO device and pin
+#define DBUS_RESET_GPIO_NODE DT_NODELABEL(hsgpio0) // Assuming hsgpio0 for now, confirm if different
+#define DBUS_RESET_GPIO_PIN 52 // Updated based on user feedback
+#define DBUS_RESET_GPIO_FLAGS (GPIO_ACTIVE_LOW | GPIO_OUTPUT)
+
+static const struct device *dbus_reset_gpio_dev = DEVICE_DT_GET(DBUS_RESET_GPIO_NODE);
+
 static struct spi_config dbus_spi_cfg = {
     .frequency = 125000, // Placeholder frequency
     .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8),
@@ -288,7 +295,7 @@ enum MCAL_Error MSPI_transferBlocking(struct MSPI_Handle *handle, const uint8_t 
 
     // Assert CS (drive low)
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
-    k_usleep(10); // Small delay after asserting CS
+    k_usleep(100); // Increased delay after asserting CS
 
     struct spi_buf tx_buf = {
         .buf = (void *)writeBuf,
@@ -308,17 +315,18 @@ enum MCAL_Error MSPI_transferBlocking(struct MSPI_Handle *handle, const uint8_t 
         .count = 1
     };
 
+    LOG_HEXDUMP_DBG(writeBuf, writeLen, "MSPI_transferBlocking TX (before transceive):");
     int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
     if (ret) {
         printk("MSPI_transferBlocking: SPI transceive failed: %d\n", ret);
         return MCAL_ERROR;
     }
-    LOG_DBG("MSPI_transferBlocking: SPI transceive successful. Read %u bytes.", readLen);
-    LOG_HEXDUMP_DBG(readBuf, readLen, "MSPI_transferBlocking RX:");
+    LOG_DBG("MSPI_transferBlocking: SPI transceive successful. Read %u bytes. Return code: %d", readLen, ret);
+    LOG_HEXDUMP_DBG(readBuf, readLen, "MSPI_transferBlocking RX (after transceive):");
 
     // Deassert CS (drive high)
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
-    k_usleep(5); // Small delay after deasserting CS
+    k_usleep(100); // Increased delay after deasserting CS
 
     return MCAL_OK;
 }
@@ -529,8 +537,13 @@ enum DBC_Error DBCDRV_writeRegIpec(uint32_t bitVal, uint32_t bitPos, uint32_t bi
     written_val = regVal | DBC_IPEC_CCE_MASK;
     LOG_DBG("DBCDRV_writeRegIpec: Enabling write access to IPEC. Writing 0x%x to DBC_IPEC_ADDR (0x%x)", written_val, DBC_IPEC_ADDR);
     DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_IPEC_ADDR, written_val));
+    k_usleep(100); // Small delay after write
     DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IPEC_ADDR, &read_val));
     LOG_DBG("DBCDRV_writeRegIpec: After enabling write access. Read back: 0x%x. Match: %d", read_val, (written_val == read_val));
+    if ((read_val & DBC_IPEC_CCE_MASK) != DBC_IPEC_CCE_MASK) {
+        printk("DBCDRV_writeRegIpec: Failed to enable CCE bit in IPEC register. Read 0x%x, Expected CCE_MASK 0x%x\n", read_val, DBC_IPEC_CCE_MASK);
+        return DBC_ERROR;
+    }
     regVal = read_val; // Update regVal with the actual read-back value
 
     // configure desired bit/bitfield value
@@ -543,6 +556,7 @@ enum DBC_Error DBCDRV_writeRegIpec(uint32_t bitVal, uint32_t bitPos, uint32_t bi
 
     // apply new IPEC reg settings
     DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_IPEC_ADDR, written_val));
+    k_usleep(100); // Small delay after write
     DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_IPEC_ADDR, &read_val));
     LOG_DBG("DBCDRV_writeRegIpec: After configuring bitfield. Read back: 0x%x. Match: %d", read_val, (written_val == read_val));
     regVal = read_val; // Update regVal with the actual read-back value
@@ -743,16 +757,21 @@ enum DBC_Error DBCDRV_setPowerMode(enum DBC_PowerMode mode)
             regVal |= DBCDRV_MOPC_STANDBY_MODE_MASK;
             DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_MOPC_ADDR, regVal));
             LOG_DBG("DBCDRV_setPowerMode: Wrote 0x%x to DBC_MOPC_ADDR (0x%x) for STANDBY transition.", regVal, DBC_MOPC_ADDR);
+            k_usleep(500); // Increased delay after write
         }
+        printk("DBCDRV_setPowerMode: Before final write to DBC_MOPC_ADDR. Current regVal: 0x%x, Target mode: %u\n", regVal, mode);
         regVal &= ~DBC_MOPC_MODE_SEL_MASK;
         regVal |= (uint32_t)mode << DBC_MOPC_MODE_SEL_POS;
+        printk("DBCDRV_setPowerMode: Attempting to write 0x%x to DBC_MOPC_ADDR (0x%x).\n", regVal, DBC_MOPC_ADDR);
         DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_MOPC_ADDR, regVal));
         LOG_DBG("DBCDRV_setPowerMode: Wrote 0x%x to DBC_MOPC_ADDR (0x%x) for target mode %u.", regVal, DBC_MOPC_ADDR, mode);
+        k_usleep(500); // Increased delay after write
         uint32_t read_back_regVal;
+        printk("DBCDRV_setPowerMode: Attempting to read from DBC_MOPC_ADDR (0x%x).\n", DBC_MOPC_ADDR);
         DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_MOPC_ADDR, &read_back_regVal));
         LOG_DBG("DBCDRV_setPowerMode: Read back 0x%x from DBC_MOPC_ADDR (0x%x).", read_back_regVal, DBC_MOPC_ADDR);
-        regVal &= DBC_MOPC_MODE_SEL_MASK;
-        return ((read_back_regVal & DBC_MOPC_MODE_SEL_MASK) != regVal) ? DBC_ERROR : DBC_OK;
+        printk("DBCDRV_setPowerMode: Comparing read_back_regVal (0x%x) with expected (0x%x).\n", (read_back_regVal & DBC_MOPC_MODE_SEL_MASK), ((uint32_t)mode << DBC_MOPC_MODE_SEL_POS));
+        return ((read_back_regVal & DBC_MOPC_MODE_SEL_MASK) != ((uint32_t)mode << DBC_MOPC_MODE_SEL_POS)) ? DBC_ERROR : DBC_OK;
     }
     LOG_DBG("DBCDRV_setPowerMode: Chip already in desired mode %u.", mode);
     return DBC_OK;
@@ -999,9 +1018,11 @@ enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc)
 {
     /* Configuration of IO pin used for IRQ sensing from DBusCAN */
     const struct MDIO_Channel *intPin = MEXTI_getPin(DBCDRV_getMextiChannel());
+    k_msleep(1); // Add a small delay before checking device readiness
 
+    printk("DBCDRV_initComChannels: Checking CS GPIO device readiness. Address: %p\n", dbus_cs_gpio_dev);
     if (!device_is_ready(dbus_cs_gpio_dev)) {
-        printk("DBCDRV_initComChannels: Error point N - CS GPIO device not ready!\n");
+        printk("DBCDRV_initComChannels: Error point N - CS GPIO device not ready! device_is_ready returned %d\n", device_is_ready(dbus_cs_gpio_dev));
         return DBC_ERROR;
     }
 
@@ -1135,6 +1156,33 @@ enum DBC_Error DBCDRV_configure(DBC_Cfg_t cfg)
     return DBC_OK;
 }
 
+// Function to perform a hardware reset of the DbusCAN chip
+static enum DBC_Error DBCDRV_hardwareReset(void) {
+    printk("DBCDRV_hardwareReset: Performing hardware reset.\n");
+
+    if (!device_is_ready(dbus_reset_gpio_dev)) {
+        printk("DBCDRV_hardwareReset: RESET GPIO device not ready!\n");
+        return DBC_ERROR;
+    }
+
+    int ret = gpio_pin_configure(dbus_reset_gpio_dev, DBUS_RESET_GPIO_PIN, DBUS_RESET_GPIO_FLAGS);
+    if (ret < 0) {
+        printk("DBCDRV_hardwareReset: Failed to configure RESET GPIO pin: %d\n", ret);
+        return DBC_ERROR;
+    }
+
+    // Drive RESET low for 10-20ms
+    gpio_pin_set(dbus_reset_gpio_dev, DBUS_RESET_GPIO_PIN, 0);
+    k_msleep(20); // Hold low for 20ms
+    
+    // Drive RESET high
+    gpio_pin_set(dbus_reset_gpio_dev, DBUS_RESET_GPIO_PIN, 1);
+    k_msleep(100); // Wait >=100ms for chip to stabilize after reset release
+
+    printk("DBCDRV_hardwareReset: Hardware reset complete.\n");
+    return DBC_OK;
+}
+
 enum DBC_Error DBCDRV_init(void)
 {
     static bool DBCDRV_isInternalEepromError = false; // Indicates if an Internal EEPROM CRC error was detected during initialization; do not initialize the chip if true
@@ -1142,6 +1190,76 @@ enum DBC_Error DBCDRV_init(void)
     uint32_t regVal;
 
     printk("DBCDRV_init: Entry point.\n");
+
+    // Perform hardware reset first
+    DBC_RETURN_ON_ERROR(DBCDRV_hardwareReset());
+    printk("DBCDRV_init: Hardware reset performed. Waiting 500ms for stabilization.\n");
+    k_msleep(500); // Longer delay after hardware reset
+    printk("DBCDRV_init: Stabilization delay complete.\n");
+
+    // Add a dummy write to a known-good register (scratchpad) after reset
+    uint32_t dummy_write_val = 0xAAAAAAAA;
+    printk("DBCDRV_init: Performing dummy write to DBC_SCRATCHPAD_ADDR (0x%x) with 0x%x.\n", DBC_SCRATCHPAD_ADDR, dummy_write_val);
+    (void)DBCDRV_writeReg32(DBC_SCRATCHPAD_ADDR, dummy_write_val);
+    k_msleep(10); // Small delay after dummy write
+    printk("DBCDRV_init: Dummy write complete.\n");
+
+    printk("DBCDRV_init: Dummy write complete.\n");
+
+    uint32_t status_reg_val = 0;
+    printk("DBCDRV_init: Reading and clearing DBC_STATUS_ADDR (0x%x).\n", DBC_STATUS_ADDR);
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_STATUS_ADDR, &status_reg_val));
+    printk("DBCDRV_init: DBC_STATUS_ADDR read 0x%x. Clearing it.\n", status_reg_val);
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_STATUS_ADDR, status_reg_val)); // Clear by writing back
+    k_msleep(10); // Small delay after clearing
+
+    uint32_t spi_err_mask_val = 0;
+    printk("DBCDRV_init: Reading and clearing DBC_SPI_ERR_MASK_ADDR (0x%x).\n", DBC_SPI_ERR_MASK_ADDR);
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_SPI_ERR_MASK_ADDR, &spi_err_mask_val));
+    printk("DBCDRV_init: DBC_SPI_ERR_MASK_ADDR read 0x%x. Clearing it.\n", spi_err_mask_val);
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_SPI_ERR_MASK_ADDR, spi_err_mask_val)); // Clear by writing back
+    k_msleep(10); // Small delay after clearing
+    printk("DBCDRV_init: Status and SPI error registers cleared.\n");
+
+    uint32_t id_reg_val = 0;
+    printk("DBCDRV_init: Probing ID-ish registers...\n");
+    (void)DBCDRV_readReg32(0x00, &id_reg_val);
+    printk("DBCDRV_init: Read 0x%x from 0x00.\n", id_reg_val);
+    (void)DBCDRV_readReg32(0x04, &id_reg_val);
+    printk("DBCDRV_init: Read 0x%x from 0x04.\n", id_reg_val);
+    (void)DBCDRV_readReg32(0x10, &id_reg_val);
+    printk("DBCDRV_init: Read 0x%x from 0x10.\n", id_reg_val);
+    (void)DBCDRV_readReg32(0x14, &id_reg_val);
+    printk("DBCDRV_init: Read 0x%x from 0x14.\n", id_reg_val);
+    printk("DBCDRV_init: ID-ish register probing complete.\n");
+
+    // Attempt to enable Configuration Change Enable (CCE) and Initialization mode in DBUS_CCCR register
+    uint32_t cccr_val = DBC_DBUS_CCCR_CCE_MASK | DBC_DBUS_CCCR_INIT_MASK;
+    printk("DBCDRV_init: Attempting to set CCE and INIT bits in DBC_DBUS_CCCR_ADDR (0x%x) with value 0x%x.\n", DBC_DBUS_CCCR_ADDR, cccr_val);
+    DBC_RETURN_ON_ERROR(DBCDRV_writeReg32(DBC_DBUS_CCCR_ADDR, cccr_val));
+    k_msleep(10); // Small delay after write
+
+    uint32_t read_cccr_val;
+    DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_DBUS_CCCR_ADDR, &read_cccr_val));
+    printk("DBCDRV_init: Read back 0x%x from DBC_DBUS_CCCR_ADDR (0x%x). Expected 0x%x.\n", read_cccr_val, DBC_DBUS_CCCR_ADDR, cccr_val);
+    if (read_cccr_val != cccr_val) {
+        printk("DBCDRV_init: Failed to set CCE and INIT bits in DBUS_CCCR. Aborting.\n");
+        return DBC_ERROR;
+    }
+    printk("DBCDRV_init: DBUS_CCCR configured successfully.\n");
+
+    // Now attempt to unlock IPEC register by writing the EEPROM Control Code
+    printk("DBCDRV_init: Unlocking IPEC register (0x%x) with EEPROM Control Code 0x%x.\n", DBC_IPEC_ADDR, DBC_IPEC_EP_CC_VAL);
+    DBC_RETURN_ON_ERROR(DBCDRV_writeRegIpec(DBC_IPEC_EP_CC_VAL, DBC_IPEC_EP_CC_POS, DBC_IPEC_EP_CC_MASK));
+    printk("DBCDRV_init: IPEC register unlocked.\n");
+    k_msleep(10); // Small delay after unlocking IPEC
+
+    // Enable DBus IP via IPEC register
+    printk("DBCDRV_init: Enabling DBus IP via IPEC register (0x%x) with mask 0x%x.\n", DBC_IPEC_ADDR, DBC_IPEC_DBUS_EN_MASK);
+    DBC_RETURN_ON_ERROR(DBCDRV_writeRegIpec(1uL, DBC_IPEC_DBUS_EN_POS, DBC_IPEC_DBUS_EN_MASK));
+    printk("DBCDRV_init: DBus IP enabled.\n");
+    k_msleep(10); // Small delay after enabling DBus IP
+
     printk("DBCDRV_init: Checking SPI_DEV_NODE readiness.\n");
     if (!device_is_ready(dbus_spi_bus)) {
         printk("DBCDRV_init: SPI_DEV_NODE (flexcomm1) is NOT ready!\n");
@@ -1150,12 +1268,12 @@ enum DBC_Error DBCDRV_init(void)
         printk("DBCDRV_init: SPI_DEV_NODE (flexcomm1) is ready.\n");
     }
 
-    printk("DBCDRV_init: Checking DBUS_CS_GPIO_NODE readiness.\n");
+    printk("DBCDRV_init: Checking DBUS_CS_GPIO_NODE readiness. Address: %p\n", dbus_cs_gpio_dev);
     if (!device_is_ready(dbus_cs_gpio_dev)) {
-        printk("DBCDRV_init: DBUS_CS_GPIO_NODE (hsgpio0) is NOT ready!\n");
+        printk("DBCDRV_init: DBUS_CS_GPIO_NODE (hsgpio0) is NOT ready! device_is_ready returned %d\n", device_is_ready(dbus_cs_gpio_dev));
         return DBC_ERROR;
     } else {
-        printk("DBCDRV_init: DBUS_CS_GPIO_NODE (hsgpio0) is ready.\n");
+        printk("DBCDRV_init: DBUS_CS_GPIO_NODE (hsgpio0) is ready! device_is_ready returned %d\n", device_is_ready(dbus_cs_gpio_dev));
     }
 
     // 1. Introduce initial stabilization delay
@@ -1174,7 +1292,7 @@ enum DBC_Error DBCDRV_init(void)
 
     // Ensure CS is de-asserted before starting SPI communication
     if (!device_is_ready(dbus_cs_gpio_dev)) {
-        printk("DBCDRV_init: Error point B - CS GPIO device not ready at start of init!\n");
+        printk("DBCDRV_init: Error point B - CS GPIO device not ready at start of init! Address: %p, device_is_ready returned %d\n", dbus_cs_gpio_dev, device_is_ready(dbus_cs_gpio_dev));
         return DBC_ERROR;
     }
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
