@@ -4,8 +4,8 @@ speed auto
 h
 rx 100
 erase
-loadfile \\wsl.localhost\Ubuntu\home\swied\zephyrproject\build\zephyr\zephyr.elf
-verifybin \\wsl.localhost\Ubuntu\home\swied\zephyrproject\build\zephyr\zephyr.bin 0
+loadfile \\wsl.localhost\Ubuntu\home\swied\projects\dbus_porting_BA\build\zephyr\zephyr.elf
+verifybin \\wsl.localhost\Ubuntu\home\swied\projects\dbus_porting_BA\build\zephyr\zephyr.bin 0
 r
 go
 exit
