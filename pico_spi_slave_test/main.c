@@ -13,6 +13,18 @@
 #define DBUS_CMD_READ  0x40
 #define DBUS_CMD_WRITE 0x60
 
+#define MOTOR_COUNT 4
+#define ACTIVE_MOTOR_COUNT 1
+#define MOTOR_REG_BASE   0x5000u
+#define MOTOR_REG_STRIDE 0x10u
+#define MOTOR_REG_ENABLE_OFFSET   0x0u
+#define MOTOR_REG_SPEED_OFFSET    0x4u
+#define MOTOR_REG_FEEDBACK_OFFSET 0x8u
+#define MOTOR_REG_STATUS_OFFSET   0xCu
+
+#define MOTOR_STATUS_ENABLED   0x00000001u
+#define MOTOR_STATUS_AVAILABLE 0x00000002u
+
 typedef struct {
     uint16_t addr;
     uint32_t value;
@@ -21,27 +33,88 @@ typedef struct {
 
 static reg_entry_t reg_table[32];
 
+typedef struct {
+    uint32_t enable;
+    int32_t speed_setpoint;
+    int32_t speed_feedback;
+    uint32_t status;
+} motor_channel_t;
+
+static motor_channel_t motors[MOTOR_COUNT];
+
 static uint8_t rx_frame_raw[FRAME_SIZE];
 static uint8_t tx_frame_desired[FRAME_SIZE];
 static uint8_t tx_frame_wire[FRAME_SIZE];
 
-static bool cs_prev_high = true;
 static size_t rx_index = 0;
 static size_t tx_index = 0;
+
+typedef enum {
+    TRANSFORM_IDENTITY = 0,
+    TRANSFORM_ROL1,
+    TRANSFORM_ROR1,
+} bit_transform_t;
+
+static bit_transform_t tx_transform = TRANSFORM_ROL1;
 
 static inline uint8_t rol1(uint8_t value)
 {
     return (uint8_t)((value << 1) | (value >> 7));
 }
 
-static inline uint8_t decode_rx_byte(uint8_t wire_value)
+static inline uint8_t ror1(uint8_t value)
 {
-    return rol1(wire_value);
+    return (uint8_t)((value >> 1) | (value << 7));
 }
 
-static inline uint8_t encode_tx_byte(uint8_t desired_value)
+static inline uint8_t apply_transform(uint8_t value, bit_transform_t transform)
 {
-    return rol1(desired_value);
+    switch (transform) {
+        case TRANSFORM_IDENTITY:
+            return value;
+        case TRANSFORM_ROL1:
+            return rol1(value);
+        case TRANSFORM_ROR1:
+            return ror1(value);
+        default:
+            return value;
+    }
+}
+
+static bool decode_frame_with_transform(const uint8_t *raw_frame, uint8_t *decoded_frame, bit_transform_t transform)
+{
+    for (size_t i = 0; i < FRAME_SIZE; i++) {
+        decoded_frame[i] = apply_transform(raw_frame[i], transform);
+    }
+
+    uint8_t cmd = decoded_frame[0] & 0x60u;
+    uint8_t len_words = decoded_frame[3];
+
+    if ((cmd == DBUS_CMD_READ || cmd == DBUS_CMD_WRITE) && len_words == 1u) {
+        return true;
+    }
+
+    return false;
+}
+
+static bool decode_rx_frame_auto(const uint8_t *raw_frame, uint8_t *decoded_frame, bit_transform_t *detected)
+{
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_IDENTITY)) {
+        *detected = TRANSFORM_IDENTITY;
+        return true;
+    }
+
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_ROL1)) {
+        *detected = TRANSFORM_ROL1;
+        return true;
+    }
+
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_ROR1)) {
+        *detected = TRANSFORM_ROR1;
+        return true;
+    }
+
+    return false;
 }
 
 static uint32_t reg_read(uint16_t addr)
@@ -74,10 +147,85 @@ static void reg_write(uint16_t addr, uint32_t value)
     }
 }
 
+static bool motor_reg_decode(uint16_t addr, size_t *motor_index, uint16_t *offset)
+{
+    if (addr < MOTOR_REG_BASE) {
+        return false;
+    }
+
+    uint16_t rel = (uint16_t)(addr - MOTOR_REG_BASE);
+    size_t index = rel / MOTOR_REG_STRIDE;
+    uint16_t off = rel % MOTOR_REG_STRIDE;
+
+    if (index >= MOTOR_COUNT) {
+        return false;
+    }
+
+    *motor_index = index;
+    *offset = off;
+    return true;
+}
+
+static void motor_write(uint16_t addr, uint32_t value)
+{
+    size_t index = 0;
+    uint16_t offset = 0;
+    if (!motor_reg_decode(addr, &index, &offset)) {
+        return;
+    }
+
+    if (index >= ACTIVE_MOTOR_COUNT) {
+        return;
+    }
+
+    switch (offset) {
+        case MOTOR_REG_ENABLE_OFFSET:
+            motors[index].enable = (value != 0u) ? 1u : 0u;
+            motors[index].status = MOTOR_STATUS_AVAILABLE |
+                                   (motors[index].enable ? MOTOR_STATUS_ENABLED : 0u);
+            if (!motors[index].enable) {
+                motors[index].speed_feedback = 0;
+            }
+            break;
+        case MOTOR_REG_SPEED_OFFSET:
+            motors[index].speed_setpoint = (int32_t)value;
+            if (motors[index].enable) {
+                motors[index].speed_feedback = motors[index].speed_setpoint;
+            } else {
+                motors[index].speed_feedback = 0;
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+static uint32_t motor_read(uint16_t addr)
+{
+    size_t index = 0;
+    uint16_t offset = 0;
+    if (!motor_reg_decode(addr, &index, &offset)) {
+        return 0u;
+    }
+
+    switch (offset) {
+        case MOTOR_REG_ENABLE_OFFSET:
+            return motors[index].enable;
+        case MOTOR_REG_SPEED_OFFSET:
+            return (uint32_t)motors[index].speed_setpoint;
+        case MOTOR_REG_FEEDBACK_OFFSET:
+            return (uint32_t)motors[index].speed_feedback;
+        case MOTOR_REG_STATUS_OFFSET:
+            return motors[index].status;
+        default:
+            return 0u;
+    }
+}
+
 static void prepare_tx_frame_wire(void)
 {
     for (size_t i = 0; i < FRAME_SIZE; i++) {
-        tx_frame_wire[i] = encode_tx_byte(tx_frame_desired[i]);
+        tx_frame_wire[i] = apply_transform(tx_frame_desired[i], tx_transform);
     }
 }
 
@@ -92,9 +240,17 @@ static void set_default_tx_pattern(void)
 static void process_rx_frame(void)
 {
     uint8_t decoded[FRAME_SIZE];
-    for (size_t i = 0; i < FRAME_SIZE; i++) {
-        decoded[i] = decode_rx_byte(rx_frame_raw[i]);
+    bit_transform_t detected = TRANSFORM_ROL1;
+
+    if (!decode_rx_frame_auto(rx_frame_raw, decoded, &detected)) {
+        set_default_tx_pattern();
+        return;
     }
+
+    /* tx_transform is always TRANSFORM_ROL1: the link applies ROR1 to MISO
+     * (CPHA mismatch), so Pico must pre-compensate with ROL1 regardless of
+     * which decode transform was detected for the incoming MOSI bytes. */
+    (void)detected;
 
     uint8_t cmd = decoded[0] & 0x60u;
     uint16_t addr = ((uint16_t)decoded[1] << 8) | decoded[2];
@@ -106,6 +262,7 @@ static void process_rx_frame(void)
             ((uint32_t)decoded[6] << 16) |
             ((uint32_t)decoded[7] << 24);
 
+        motor_write(addr, value);
         reg_write(addr, value);
         set_default_tx_pattern();
         return;
@@ -113,6 +270,9 @@ static void process_rx_frame(void)
 
     if (cmd == DBUS_CMD_READ) {
         uint32_t value = reg_read(addr);
+        if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
+            value = motor_read(addr);
+        }
         memset(tx_frame_desired, 0, sizeof(tx_frame_desired));
         tx_frame_desired[4] = (uint8_t)(value);
         tx_frame_desired[5] = (uint8_t)(value >> 8);
@@ -170,21 +330,6 @@ static inline bool cs_is_active(void)
     return !gpio_get(PIN_CS);
 }
 
-static void on_cs_assert(void)
-{
-    rx_index = 0;
-    tx_index = 0;
-}
-
-static void on_cs_deassert(void)
-{
-    if (rx_index >= FRAME_SIZE) {
-        process_rx_frame();
-    } else {
-        set_default_tx_pattern();
-    }
-}
-
 static void service_spi_frame(spi_inst_t *spi)
 {
     spi_hw_t *hw = spi_get_hw(spi);
@@ -193,6 +338,12 @@ static void service_spi_frame(spi_inst_t *spi)
         uint8_t rx_byte = (uint8_t)hw->dr;
         if (rx_index < FRAME_SIZE) {
             rx_frame_raw[rx_index++] = rx_byte;
+        }
+
+        if (rx_index >= FRAME_SIZE) {
+            process_rx_frame();
+            rx_index = 0;
+            tx_index = 0;
         }
     }
 
@@ -208,6 +359,10 @@ int main(void)
     status_led_init();
 
     memset(reg_table, 0, sizeof(reg_table));
+    memset(motors, 0, sizeof(motors));
+    for (size_t i = 0; i < MOTOR_COUNT; i++) {
+        motors[i].status = (i < ACTIVE_MOTOR_COUNT) ? MOTOR_STATUS_AVAILABLE : 0u;
+    }
     memset(rx_frame_raw, 0, sizeof(rx_frame_raw));
     set_default_tx_pattern();
 
@@ -220,33 +375,15 @@ int main(void)
     gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
 
-    for (int i = 0; i < 3; i++) {
-        status_led_set(true);
-        sleep_ms(100);
-        status_led_set(false);
-        sleep_ms(100);
-    }
+    /* Brief startup indicator only — keep delay minimal so Pico is ready
+     * before the SPI master (RW612) begins its first exchange. */
+    status_led_set(true);
+    sleep_ms(50);
+    status_led_set(false);
 
     while (true) {
-        bool cs_active = cs_is_active();
-
-        if (cs_active && cs_prev_high) {
-            on_cs_assert();
-        }
-        if (!cs_active && !cs_prev_high) {
-            on_cs_deassert();
-        }
-
-        cs_prev_high = !cs_active;
-
-        if (cs_active) {
-            service_spi_frame(spi0);
-            status_led_set(true);
-        } else {
-            spi_slave_fill_tx_fifo(spi0, tx_frame_wire[0]);
-            (void)spi_slave_drain_rx_fifo(spi0);
-            status_led_set(false);
-        }
+        service_spi_frame(spi0);
+        status_led_set(cs_is_active());
 
         tight_loop_contents();
     }
