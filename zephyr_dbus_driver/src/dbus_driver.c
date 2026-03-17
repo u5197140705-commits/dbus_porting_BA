@@ -535,10 +535,11 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         LOG_HEXDUMP_DBG(dummy_tx, sizeof(dummy_tx), "DBCDRV_readReg32 dummy TX:");
         LOG_HEXDUMP_DBG(data_rx, sizeof(data_rx), "DBCDRV_readReg32 data RX attempt:");
 
-        /* Header bytes arrive after link ROR1 is applied to the ROL1-encoded
-         * wire bytes, so they arrive as plain values. Match directly. */
-        if (data_rx[0] == DBCDRV_SPI_RSP_MARKER &&
-            data_rx[1] == expected_addr_high &&
+        /* The link applies a 1-bit serial frame shift so Pico pre-compensates
+         * with a serial frame left shift. RW612 receives bytes[1..7] verbatim.
+         * byte[0] depends on previous frame carry — skip it.
+         * byte[3] is always 0x01 (len) when addr_low < 0x80. */
+        if (data_rx[1] == expected_addr_high &&
             data_rx[2] == expected_addr_low &&
             data_rx[3] == 0x01u) {
             have_matching_response = true;
