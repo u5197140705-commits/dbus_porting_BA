@@ -1,7 +1,11 @@
 device RW612
 if swd
 speed auto
-loadbin \\wsl.localhost\Ubuntu\home\swied\zephyrproject\build\zephyr\zephyr.bin 0
+h
+rx 100
+erase
+loadfile \\wsl.localhost\Ubuntu\home\swied\zephyrproject\build\zephyr\zephyr.elf
+verifybin \\wsl.localhost\Ubuntu\home\swied\zephyrproject\build\zephyr\zephyr.bin 0
 r
 go
 exit

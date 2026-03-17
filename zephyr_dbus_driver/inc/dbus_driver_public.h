@@ -66,6 +66,8 @@ DBC_Cfg_t DBCDRV_getConfig(void);
 void DBCDRV_setSpiFrameHdr(enum DBC_RegAddr addr, uint16_t len, enum DBC_command cmd, uint8_t *writeBuf);
 enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data);
 enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data);
+void DBCDRV_setSpiMode(bool cpol, bool cpha);
+uint16_t DBCDRV_getSpiMode(void);
 enum DBC_Error DBCDRV_writeRegIpec(uint32_t bitVal, uint32_t bitPos, uint32_t bitMask);
 enum DBC_Error DBCDRV_writeEeprom(void);
 bool DBCDRV_isSupplyForEepromWrite(void);

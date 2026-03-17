@@ -24,8 +24,8 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 static const struct device *dbus_cs_gpio_dev = DEVICE_DT_GET(DBUS_CS_GPIO_NODE);
 
 static struct spi_config dbus_spi_cfg = {
-    .frequency = 125000, // Placeholder frequency
-    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8),
+    .frequency = 20000, // Slower clock for SPI slave timing bring-up
+    .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_MODE_CPOL | SPI_MODE_CPHA,
     .slave = 0, // Assuming slave select 0
     .cs = NULL, // Disable Zephyr CS control, using manual GPIO
 };
@@ -413,10 +413,67 @@ void DBCDRV_setSpiFrameHdr(enum DBC_RegAddr addr, uint16_t len, enum DBC_command
     writeBuf[DBC_SPI_HDR_BYTE_DATA_LEN]  = (uint8_t)WORD_SIZEOF(len); // data length must be given in number of words (1 word = 4 bytes)
 }
 
+static int DBCDRV_spiTransceiveBytewise(const uint8_t *tx_data, uint8_t *rx_data, size_t len)
+{
+    for (size_t i = 0; i < len; i++) {
+        uint8_t tx_byte = tx_data[i];
+        uint8_t rx_byte = 0;
+
+        struct spi_buf tx_spi_buf = {
+            .buf = &tx_byte,
+            .len = 1,
+        };
+        struct spi_buf_set tx_bufs = {
+            .buffers = &tx_spi_buf,
+            .count = 1,
+        };
+
+        struct spi_buf rx_spi_buf = {
+            .buf = &rx_byte,
+            .len = 1,
+        };
+        struct spi_buf_set rx_bufs = {
+            .buffers = &rx_spi_buf,
+            .count = 1,
+        };
+
+        int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
+        if (ret) {
+            return ret;
+        }
+
+        rx_data[i] = rx_byte;
+        k_usleep(25);
+    }
+
+    return 0;
+}
+
+void DBCDRV_setSpiMode(bool cpol, bool cpha)
+{
+    uint16_t operation = dbus_spi_cfg.operation;
+
+    operation &= ~(SPI_MODE_CPOL | SPI_MODE_CPHA);
+    if (cpol) {
+        operation |= SPI_MODE_CPOL;
+    }
+    if (cpha) {
+        operation |= SPI_MODE_CPHA;
+    }
+
+    dbus_spi_cfg.operation = operation;
+    LOG_DBG("DBCDRV_setSpiMode: CPOL=%u CPHA=%u operation=0x%04x", cpol, cpha, dbus_spi_cfg.operation);
+}
+
+uint16_t DBCDRV_getSpiMode(void)
+{
+    return (dbus_spi_cfg.operation & (SPI_MODE_CPOL | SPI_MODE_CPHA));
+}
+
 // DBCDRV_readReg32 function
 enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 {
-    LOG_DBG("Reading register 0x%x", addr);
+    LOG_DBG("[FLASHCHK_V3_2026_03_17] Reading register 0x%x", addr);
 
     if (!device_is_ready(dbus_cs_gpio_dev)) {
         LOG_ERR("DBCDRV_readReg32: CS GPIO device not ready");
@@ -429,28 +486,10 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     // Prepare the SPI header for a read command
     DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_READ, tx_buffer);
 
-    struct spi_buf tx_spi_buf = {
-        .buf = tx_buffer,
-        .len = sizeof(tx_buffer)
-    };
-    struct spi_buf_set tx_bufs = {
-        .buffers = &tx_spi_buf,
-        .count = 1
-    };
-
-    struct spi_buf rx_spi_buf = {
-        .buf = rx_buffer,
-        .len = sizeof(rx_buffer)
-    };
-    struct spi_buf_set rx_bufs = {
-        .buffers = &rx_spi_buf,
-        .count = 1
-    };
-
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
     k_usleep(2);
 
-    int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
+    int ret = DBCDRV_spiTransceiveBytewise(tx_buffer, rx_buffer, sizeof(tx_buffer));
 
     k_usleep(2);
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
@@ -476,7 +515,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 // DBCDRV_writeReg32 function
 enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
 {
-    LOG_DBG("Writing 0x%x to register 0x%x", data, addr);
+    LOG_DBG("[FLASHCHK_V3_2026_03_17] Writing 0x%x to register 0x%x", data, addr);
 
     if (!device_is_ready(dbus_cs_gpio_dev)) {
         LOG_ERR("DBCDRV_writeReg32: CS GPIO device not ready");
@@ -495,28 +534,10 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
     tx_buffer[DBC_SPI_HDR_SIZE + 2] = (uint8_t)(data >> 16);
     tx_buffer[DBC_SPI_HDR_SIZE + 3] = (uint8_t)(data >> 24);
 
-    struct spi_buf tx_spi_buf = {
-        .buf = tx_buffer,
-        .len = sizeof(tx_buffer)
-    };
-    struct spi_buf_set tx_bufs = {
-        .buffers = &tx_spi_buf,
-        .count = 1
-    };
-
-    struct spi_buf rx_spi_buf = {
-        .buf = rx_buffer,
-        .len = sizeof(rx_buffer)
-    };
-    struct spi_buf_set rx_bufs = {
-        .buffers = &rx_spi_buf,
-        .count = 1
-    };
-
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
     k_usleep(2);
 
-    int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
+    int ret = DBCDRV_spiTransceiveBytewise(tx_buffer, rx_buffer, sizeof(tx_buffer));
 
     k_usleep(2);
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);

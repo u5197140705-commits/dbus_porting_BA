@@ -23,44 +23,54 @@ void test_dbus_driver_loopback(void)
     uint32_t read_val = 0;
     enum DBC_Error err;
 
-    printk("DBCDRV Loopback Test: Writing 0x%08x to DBC_SCRATCHPAD_ADDR (0x%02x)\n",
-           write_val, DBC_SCRATCHPAD_ADDR);
+    struct {
+        bool cpol;
+        bool cpha;
+        const char *name;
+    } modes[] = {
+        { false, false, "MODE0 (CPOL=0, CPHA=0)" },
+        { false, true,  "MODE1 (CPOL=0, CPHA=1)" },
+        { true,  false, "MODE2 (CPOL=1, CPHA=0)" },
+        { true,  true,  "MODE3 (CPOL=1, CPHA=1)" },
+    };
 
-    err = DBCDRV_writeReg32(DBC_SCRATCHPAD_ADDR, write_val);
-    if (err != DBC_OK) {
-        printk("❌ DBCDRV Loopback Test: Write failed with error: %d\n", err);
-        return;
-    }
+    printk("DBCDRV Loopback Test [SWEEP_V2_2026_03_17]: Starting SPI mode sweep (4 modes).\n");
 
-    /* Allow a short delay for SPI bus settle or slave response */
-    k_msleep(5);
+    for (size_t i = 0; i < ARRAY_SIZE(modes); i++) {
+        DBCDRV_setSpiMode(modes[i].cpol, modes[i].cpha);
+        k_msleep(2);
 
-    printk("DBCDRV Loopback Test: Reading from DBC_SCRATCHPAD_ADDR (0x%02x)\n",
-           DBC_SCRATCHPAD_ADDR);
+        printk("DBCDRV Loopback Test: [%s] Writing 0x%08x to DBC_SCRATCHPAD_ADDR (0x%02x)\n",
+               modes[i].name, write_val, DBC_SCRATCHPAD_ADDR);
 
-    err = DBCDRV_readReg32(DBC_SCRATCHPAD_ADDR, &read_val);
-    if (err != DBC_OK) {
-        printk("❌ DBCDRV Loopback Test: Read failed with error: %d\n", err);
-        return;
-    }
+        err = DBCDRV_writeReg32(DBC_SCRATCHPAD_ADDR, write_val);
+        if (err != DBC_OK) {
+            printk("❌ DBCDRV Loopback Test: [%s] Write failed with error: %d\n", modes[i].name, err);
+            continue;
+        }
 
-    printk("DBCDRV Loopback Test: TX (write) = 0x%08x, RX (read) = 0x%08x\n",
-           write_val, read_val);
+        k_msleep(5);
 
-    /*
-     * In self-loopback mode (MOSI ↔ MISO shorted):
-     *   - RX data should exactly mirror what was transmitted on MOSI.
-     * In normal mode with real slave connected:
-     *   - RX should reflect the actual register contents (expected == write_val).
-     */
-    if (write_val == read_val) {
-        printk("✅ DBCDRV Loopback Test: SUCCESS! Data matches (real device or echo verified).\n");
-    } else if (read_val == 0x00000000 || read_val == 0xFFFFFFFF) {
-        printk("⚠️ DBCDRV Loopback Test: Received all 0x%08x — possible open MISO or no slave response.\n",
-               read_val);
-    } else {
-        printk("❌ DBCDRV Loopback Test: FAILED! Data mismatch (expected 0x%08x, got 0x%08x).\n",
-               write_val, read_val);
+        printk("DBCDRV Loopback Test: [%s] Reading from DBC_SCRATCHPAD_ADDR (0x%02x)\n",
+               modes[i].name, DBC_SCRATCHPAD_ADDR);
+
+        err = DBCDRV_readReg32(DBC_SCRATCHPAD_ADDR, &read_val);
+        if (err != DBC_OK) {
+            printk("❌ DBCDRV Loopback Test: [%s] Read failed with error: %d\n", modes[i].name, err);
+            continue;
+        }
+
+        printk("DBCDRV Loopback Test: [%s] TX (write) = 0x%08x, RX (read) = 0x%08x\n",
+               modes[i].name, write_val, read_val);
+
+        if (write_val == read_val) {
+            printk("✅ DBCDRV Loopback Test: [%s] SUCCESS!\n", modes[i].name);
+        } else if (read_val == 0x00000000 || read_val == 0xFFFFFFFF) {
+            printk("⚠️ DBCDRV Loopback Test: [%s] Received all 0x%08x.\n", modes[i].name, read_val);
+        } else {
+            printk("❌ DBCDRV Loopback Test: [%s] MISMATCH (expected 0x%08x, got 0x%08x).\n",
+                   modes[i].name, write_val, read_val);
+        }
     }
 
     printk("DBCDRV Loopback Test complete.\n");
@@ -70,10 +80,13 @@ void test_dbus_driver_loopback(void)
 
 int main(void)
 {
-    printk("Hello from Zephyr DBus Driver project!\n");
+    printk("Hello from Zephyr DBus Driver project! [SWEEP_V2_2026_03_17]\n");
 
     // Perform loopback test using DBCDRV functions
     test_dbus_driver_loopback();
+
+    printk("Main: Sweep-only test build complete. Halting further init.\n");
+    return 0;
     
     // Initialize the DBus Driver
     enum DBC_Error dbus_driver_init_ret = DBCDRV_init();
