@@ -19,7 +19,7 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 // Define the CS GPIO device and pin directly from the overlay
 #define DBUS_CS_GPIO_NODE DT_NODELABEL(hsgpio0)
 #define DBUS_CS_GPIO_PIN 6
-#define DBUS_CS_GPIO_FLAGS (GPIO_ACTIVE_LOW | GPIO_OUTPUT)
+#define DBUS_CS_GPIO_FLAGS GPIO_OUTPUT
 
 static const struct device *dbus_cs_gpio_dev = DEVICE_DT_GET(DBUS_CS_GPIO_NODE);
 
@@ -27,6 +27,7 @@ static struct spi_config dbus_spi_cfg = {
     .frequency = 125000, // Placeholder frequency
     .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8),
     .slave = 0, // Assuming slave select 0
+    .cs = NULL, // Disable Zephyr CS control, using manual GPIO
 };
 
 // Placeholder for MCAL functions
@@ -417,6 +418,11 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 {
     LOG_DBG("Reading register 0x%x", addr);
 
+    if (!device_is_ready(dbus_cs_gpio_dev)) {
+        LOG_ERR("DBCDRV_readReg32: CS GPIO device not ready");
+        return DBC_ERROR;
+    }
+
     uint8_t tx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
 
@@ -441,7 +447,14 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         .count = 1
     };
 
+    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
+    k_usleep(2);
+
     int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
+
+    k_usleep(2);
+    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+
     if (ret) {
         LOG_ERR("DBCDRV_readReg32: SPI transceive failed: %d for addr 0x%x", ret, addr);
         return DBC_ERROR;
@@ -465,8 +478,13 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
 {
     LOG_DBG("Writing 0x%x to register 0x%x", data, addr);
 
-    uint8_t tx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)];
-    uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)]; // Required for spi_transceive, even if data is not used
+    if (!device_is_ready(dbus_cs_gpio_dev)) {
+        LOG_ERR("DBCDRV_writeReg32: CS GPIO device not ready");
+        return DBC_ERROR;
+    }
+
+    uint8_t tx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
+    uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0}; // Required for spi_transceive, even if data is not used
 
     // Prepare the SPI header for a write command
     DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_WRITE, tx_buffer);
@@ -495,7 +513,14 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
         .count = 1
     };
 
+    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
+    k_usleep(2);
+
     int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
+
+    k_usleep(2);
+    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+
     if (ret) {
         LOG_ERR("DBCDRV_writeReg32: SPI transceive failed: %d for addr 0x%x, data 0x%x", ret, addr, data);
         return DBC_ERROR;

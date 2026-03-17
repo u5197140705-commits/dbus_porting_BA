@@ -108,3 +108,6 @@ ozone/variant_stm32l471/*
 
 # ignore vscode
 .vscode/*
+
+# ignore local Pico test build artifacts
+pico_spi_slave_test/build/
