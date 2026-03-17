@@ -20,6 +20,7 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 #define DBUS_CS_GPIO_NODE DT_NODELABEL(hsgpio0)
 #define DBUS_CS_GPIO_PIN 6
 #define DBUS_CS_GPIO_FLAGS GPIO_OUTPUT
+#define DBCDRV_SPI_RSP_MARKER 0xA0u
 
 static const struct device *dbus_cs_gpio_dev = DEVICE_DT_GET(DBUS_CS_GPIO_NODE);
 
@@ -508,7 +509,9 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 
     uint8_t dummy_tx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t data_rx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
-    bool have_non_default_payload = false;
+    bool have_matching_response = false;
+    uint8_t expected_addr_high = (uint8_t)((uint16_t)addr >> 8);
+    uint8_t expected_addr_low  = (uint8_t)addr;
 
     /* Adaptive dummy exchanges: Pico response can appear after a variable
      * number of transactions. Keep clocking until payload bytes are no longer
@@ -532,15 +535,18 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         LOG_HEXDUMP_DBG(dummy_tx, sizeof(dummy_tx), "DBCDRV_readReg32 dummy TX:");
         LOG_HEXDUMP_DBG(data_rx, sizeof(data_rx), "DBCDRV_readReg32 data RX attempt:");
 
-        if (!(data_rx[4] == 0xA5 && data_rx[5] == 0xA5 && data_rx[6] == 0xA5 && data_rx[7] == 0xA5)) {
-            have_non_default_payload = true;
+        if (data_rx[0] == DBCDRV_SPI_RSP_MARKER &&
+            data_rx[1] == expected_addr_high &&
+            data_rx[2] == expected_addr_low &&
+            data_rx[3] == 0x01u) {
+            have_matching_response = true;
             LOG_DBG("DBCDRV_readReg32: accepted payload on dummy attempt %u for addr 0x%x", attempt, addr);
             break;
         }
     }
 
-    if (!have_non_default_payload) {
-        LOG_ERR("DBCDRV_readReg32: no valid payload after dummy retries for addr 0x%x", addr);
+    if (!have_matching_response) {
+        LOG_ERR("DBCDRV_readReg32: no matching response after dummy retries for addr 0x%x", addr);
         return DBC_ERROR;
     }
 

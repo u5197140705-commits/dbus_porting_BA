@@ -12,6 +12,7 @@
 #define FRAME_SIZE 8
 #define DBUS_CMD_READ  0x40
 #define DBUS_CMD_WRITE 0x60
+#define DBUS_RSP_MARKER 0xA0
 
 #define MOTOR_COUNT 4
 #define ACTIVE_MOTOR_COUNT 1
@@ -276,6 +277,10 @@ static void process_rx_frame(void)
             value = motor_read(addr);
         }
         memset(tx_frame_desired, 0, sizeof(tx_frame_desired));
+        tx_frame_desired[0] = DBUS_RSP_MARKER;
+        tx_frame_desired[1] = (uint8_t)(addr >> 8);
+        tx_frame_desired[2] = (uint8_t)(addr & 0xFFu);
+        tx_frame_desired[3] = 0x01u;
         tx_frame_desired[4] = (uint8_t)(value);
         tx_frame_desired[5] = (uint8_t)(value >> 8);
         tx_frame_desired[6] = (uint8_t)(value >> 16);
