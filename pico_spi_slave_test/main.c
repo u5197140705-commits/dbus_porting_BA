@@ -225,7 +225,14 @@ static uint32_t motor_read(uint16_t addr)
 
 static void prepare_tx_frame_wire(void)
 {
-    for (size_t i = 0; i < FRAME_SIZE; i++) {
+    /* Header bytes [0..3]: sent without transform so RW612 can validate
+     * marker + address + len directly after the link's ROR1. Header bytes
+     * are pre-compensated individually: ROL1(plain) so link ROR1 gives plain. */
+    for (size_t i = 0; i < 4u; i++) {
+        tx_frame_wire[i] = rol1(tx_frame_desired[i]);
+    }
+    /* Data bytes [4..7]: same ROL1 pre-compensation for payload. */
+    for (size_t i = 4u; i < FRAME_SIZE; i++) {
         tx_frame_wire[i] = apply_transform(tx_frame_desired[i], tx_transform);
     }
 }
