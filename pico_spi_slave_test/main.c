@@ -243,7 +243,9 @@ static void process_rx_frame(void)
     bit_transform_t detected = TRANSFORM_ROL1;
 
     if (!decode_rx_frame_auto(rx_frame_raw, decoded, &detected)) {
-        set_default_tx_pattern();
+        /* Ignore invalid frames (e.g. RW612 dummy clocks during readback).
+         * Do NOT overwrite tx_frame_wire here, otherwise a prepared response
+         * can be clobbered by default 0xA5 before the master receives it. */
         return;
     }
 
