@@ -506,12 +506,28 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     LOG_HEXDUMP_DBG(tx_buffer, sizeof(tx_buffer), "DBCDRV_readReg32 TX:");
     LOG_HEXDUMP_DBG(rx_buffer, sizeof(rx_buffer), "DBCDRV_readReg32 RX (discarded):");
 
-    /* Exchange 2: send dummy zeros. The Pico now has the register value ready
-     * in its TX FIFO (prepared after processing exchange 1). This exchange
-     * clocks out the actual data. */
+    /* Exchange 2: send dummy zeros. On the current Pico slave implementation,
+     * this may still return stale/default bytes.
+     */
     uint8_t dummy_tx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
+    uint8_t data_rx_stage1[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t data_rx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
 
+    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
+    k_usleep(2);
+
+    ret = DBCDRV_spiTransceiveBytewise(dummy_tx, data_rx_stage1, sizeof(dummy_tx));
+
+    k_usleep(2);
+    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+
+    if (ret) {
+        LOG_ERR("DBCDRV_readReg32: dummy exchange stage1 failed: %d for addr 0x%x", ret, addr);
+        return DBC_ERROR;
+    }
+
+    /* Exchange 3: send a second dummy frame and use this result as payload.
+     * Empirically, Pico's prepared response appears one transaction later. */
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
     k_usleep(2);
 
@@ -521,12 +537,15 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
 
     if (ret) {
-        LOG_ERR("DBCDRV_readReg32: dummy exchange failed: %d for addr 0x%x", ret, addr);
+        LOG_ERR("DBCDRV_readReg32: dummy exchange stage2 failed: %d for addr 0x%x", ret, addr);
         return DBC_ERROR;
     }
+
     LOG_DBG("DBCDRV_readReg32: SPI transceive successful for addr 0x%x. Read %u bytes.", addr, sizeof(data_rx));
-    LOG_HEXDUMP_DBG(dummy_tx, sizeof(dummy_tx), "DBCDRV_readReg32 dummy TX:");
-    LOG_HEXDUMP_DBG(data_rx, sizeof(data_rx), "DBCDRV_readReg32 data RX:");
+    LOG_HEXDUMP_DBG(dummy_tx, sizeof(dummy_tx), "DBCDRV_readReg32 dummy TX stage1:");
+    LOG_HEXDUMP_DBG(data_rx_stage1, sizeof(data_rx_stage1), "DBCDRV_readReg32 data RX stage1 (discarded):");
+    LOG_HEXDUMP_DBG(dummy_tx, sizeof(dummy_tx), "DBCDRV_readReg32 dummy TX stage2:");
+    LOG_HEXDUMP_DBG(data_rx, sizeof(data_rx), "DBCDRV_readReg32 data RX stage2:");
 
     *data = (uint32_t)data_rx[DBC_SPI_HDR_SIZE + 3] << 24 |
             (uint32_t)data_rx[DBC_SPI_HDR_SIZE + 2] << 16 |
