@@ -510,6 +510,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     uint8_t dummy_tx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t data_rx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     bool have_matching_response = false;
+    uint8_t latest_match[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t expected_addr_high = (uint8_t)((uint16_t)addr >> 8);
     uint8_t expected_addr_low  = (uint8_t)addr;
 
@@ -543,8 +544,8 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
             data_rx[2] == expected_addr_low &&
             data_rx[3] == 0x01u) {
             have_matching_response = true;
-            LOG_DBG("DBCDRV_readReg32: accepted payload on dummy attempt %u for addr 0x%x", attempt, addr);
-            break;
+            memcpy(latest_match, data_rx, sizeof(latest_match));
+            LOG_DBG("DBCDRV_readReg32: matching payload on dummy attempt %u for addr 0x%x", attempt, addr);
         }
     }
 
@@ -552,6 +553,9 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         LOG_ERR("DBCDRV_readReg32: no matching response after dummy retries for addr 0x%x", addr);
         return DBC_ERROR;
     }
+
+    memcpy(data_rx, latest_match, sizeof(data_rx));
+    LOG_DBG("DBCDRV_readReg32: using latest matching payload for addr 0x%x", addr);
 
     LOG_DBG("DBCDRV_readReg32: SPI transceive successful for addr 0x%x. Read %u bytes.", addr, sizeof(data_rx));
 
