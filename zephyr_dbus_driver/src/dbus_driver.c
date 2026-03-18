@@ -416,38 +416,25 @@ void DBCDRV_setSpiFrameHdr(enum DBC_RegAddr addr, uint16_t len, enum DBC_command
 
 static int DBCDRV_spiTransceiveBytewise(const uint8_t *tx_data, uint8_t *rx_data, size_t len)
 {
-    for (size_t i = 0; i < len; i++) {
-        uint8_t tx_byte = tx_data[i];
-        uint8_t rx_byte = 0;
+    struct spi_buf tx_spi_buf = {
+        .buf = (void *)tx_data,
+        .len = len,
+    };
+    struct spi_buf_set tx_bufs = {
+        .buffers = &tx_spi_buf,
+        .count = 1,
+    };
 
-        struct spi_buf tx_spi_buf = {
-            .buf = &tx_byte,
-            .len = 1,
-        };
-        struct spi_buf_set tx_bufs = {
-            .buffers = &tx_spi_buf,
-            .count = 1,
-        };
+    struct spi_buf rx_spi_buf = {
+        .buf = (void *)rx_data,
+        .len = len,
+    };
+    struct spi_buf_set rx_bufs = {
+        .buffers = &rx_spi_buf,
+        .count = 1,
+    };
 
-        struct spi_buf rx_spi_buf = {
-            .buf = &rx_byte,
-            .len = 1,
-        };
-        struct spi_buf_set rx_bufs = {
-            .buffers = &rx_spi_buf,
-            .count = 1,
-        };
-
-        int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
-        if (ret) {
-            return ret;
-        }
-
-        rx_data[i] = rx_byte;
-        k_usleep(25);
-    }
-
-    return 0;
+    return spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
 }
 
 void DBCDRV_setSpiMode(bool cpol, bool cpha)
