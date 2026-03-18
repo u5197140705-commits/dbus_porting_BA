@@ -357,40 +357,40 @@ static inline bool cs_is_active(void)
 
 static void service_spi_frame(spi_inst_t *spi)
 {
-    spi_hw_t *hw = spi_get_hw(spi);
     bool current_cs_state = cs_is_active();
 
-    /* Detect CS high->low transition (idle->active) to resync RX framing. */
-    if (!last_cs_state && current_cs_state) {
-        /* CS went high->low: start of new transaction. */
+    if (!current_cs_state) {
+        last_cs_state = false;
+        return;
+    }
+
+    if (!last_cs_state) {
+        uint8_t tx_snapshot[FRAME_SIZE];
+        uint8_t rx_snapshot[FRAME_SIZE];
+
+        for (size_t i = 0; i < FRAME_SIZE; i++) {
+            tx_snapshot[i] = tx_frame_wire[i];
+        }
+
+        (void)spi_write_read_blocking(spi, tx_snapshot, rx_snapshot, FRAME_SIZE);
+
+        for (size_t i = 0; i < FRAME_SIZE; i++) {
+            rx_frame_raw[i] = rx_snapshot[i];
+        }
+
+        rx_index = FRAME_SIZE;
+        tx_index = FRAME_SIZE;
+        (void)process_rx_frame();
         rx_index = 0;
     }
 
-    last_cs_state = current_cs_state;
+    last_cs_state = true;
 
-    /* Drain RX FIFO and collect incoming bytes */
-    while (spi_is_readable(spi)) {
-        uint8_t rx_byte = (uint8_t)hw->dr;
-
-        if (rx_index < FRAME_SIZE) {
-            rx_frame_raw[rx_index++] = rx_byte;
-        }
-
-        /* When a full frame arrives, decode and prepare next response frame. */
-        if (rx_index == FRAME_SIZE) {
-            (void)process_rx_frame();
-            rx_index = 0;
-        }
+    while (cs_is_active()) {
+        tight_loop_contents();
     }
 
-    /* Keep TX FIFO preloaded with the prepared response frame.
-     * This must run regardless of CS so the first bytes are ready when the
-     * master starts clocking the next transaction. tx_index is reset to 0
-     * only when a NEW response frame is prepared. */
-    while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
-        hw->dr = tx_frame_wire[tx_index];
-        tx_index++;
-    }
+    last_cs_state = false;
 }
 
 int main(void)
