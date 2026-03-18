@@ -82,15 +82,6 @@ static inline uint8_t apply_transform(uint8_t value, bit_transform_t transform)
     }
 }
 
-static void decode_frame_serial_left(const uint8_t *raw_frame, uint8_t *decoded_frame)
-{
-    for (size_t i = 0; i < FRAME_SIZE - 1u; i++) {
-        decoded_frame[i] = (uint8_t)((raw_frame[i] << 1u) |
-                                     (raw_frame[i + 1u] >> 7u));
-    }
-    decoded_frame[FRAME_SIZE - 1u] = (uint8_t)(raw_frame[FRAME_SIZE - 1u] << 1u);
-}
-
 static bool decoded_frame_is_valid(const uint8_t *decoded_frame)
 {
     uint8_t cmd = decoded_frame[0] & 0x60u;
@@ -110,12 +101,6 @@ static bool decode_frame_with_transform(const uint8_t *raw_frame, uint8_t *decod
 
 static bool decode_rx_frame_auto(const uint8_t *raw_frame, uint8_t *decoded_frame, bit_transform_t *detected)
 {
-    decode_frame_serial_left(raw_frame, decoded_frame);
-    if (decoded_frame_is_valid(decoded_frame)) {
-        *detected = TRANSFORM_IDENTITY;
-        return true;
-    }
-
     if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_IDENTITY)) {
         *detected = TRANSFORM_IDENTITY;
         return true;
