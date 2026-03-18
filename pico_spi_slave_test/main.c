@@ -353,8 +353,17 @@ static void service_spi_frame(spi_inst_t *spi)
     spi_hw_t *hw = spi_get_hw(spi);
     static bool prev_cs_active = false;
     bool now_cs_active = cs_is_active();
+    bool frame_closing = (!now_cs_active && prev_cs_active);
 
-    if (!now_cs_active && prev_cs_active) {
+    while (spi_is_readable(spi)) {
+        uint8_t rx_byte = (uint8_t)hw->dr;
+
+        if ((now_cs_active || frame_closing) && rx_index < FRAME_SIZE) {
+            rx_frame_raw[rx_index++] = rx_byte;
+        }
+    }
+
+    if (frame_closing) {
         if (rx_index == FRAME_SIZE) {
             (void)process_rx_frame();
         }
@@ -366,13 +375,6 @@ static void service_spi_frame(spi_inst_t *spi)
 
     if (!now_cs_active) {
         return;
-    }
-
-    while (spi_is_readable(spi)) {
-        uint8_t rx_byte = (uint8_t)hw->dr;
-        if (rx_index < FRAME_SIZE) {
-            rx_frame_raw[rx_index++] = rx_byte;
-        }
     }
 
     while (spi_is_writable(spi)) {
