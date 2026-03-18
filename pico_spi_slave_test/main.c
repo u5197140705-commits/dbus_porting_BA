@@ -351,21 +351,27 @@ static inline bool cs_is_active(void)
 static void service_spi_frame(spi_inst_t *spi)
 {
     spi_hw_t *hw = spi_get_hw(spi);
+    static bool prev_cs_active = false;
+    bool now_cs_active = cs_is_active();
+
+    if (!now_cs_active && prev_cs_active) {
+        if (rx_index == FRAME_SIZE) {
+            (void)process_rx_frame();
+        }
+        rx_index = 0;
+        tx_index = 0;
+    }
+
+    prev_cs_active = now_cs_active;
+
+    if (!now_cs_active) {
+        return;
+    }
 
     while (spi_is_readable(spi)) {
         uint8_t rx_byte = (uint8_t)hw->dr;
         if (rx_index < FRAME_SIZE) {
             rx_frame_raw[rx_index++] = rx_byte;
-        }
-
-        if (rx_index >= FRAME_SIZE) {
-            if (process_rx_frame()) {
-                rx_index = 0;
-                tx_index = 0;
-            } else {
-                memmove(rx_frame_raw, &rx_frame_raw[1], FRAME_SIZE - 1u);
-                rx_index = FRAME_SIZE - 1u;
-            }
         }
     }
 
