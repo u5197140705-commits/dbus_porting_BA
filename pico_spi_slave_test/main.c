@@ -3,6 +3,9 @@
 #include "hardware/gpio.h"
 #include "hardware/structs/spi.h"
 #include <string.h>
+#include <stdio.h>
+
+#define PICO_FIRMWARE_VERSION "388aab3_tx_index_reset"
 
 #define PIN_MISO 19
 #define PIN_CS   17
@@ -399,6 +402,9 @@ static void service_spi_frame(spi_inst_t *spi)
 
 int main(void)
 {
+    stdio_init_all();
+    printf("[Pico SPI Slave] Firmware version: %s\n", PICO_FIRMWARE_VERSION);
+    
     status_led_init();
 
     memset(reg_table, 0, sizeof(reg_table));
