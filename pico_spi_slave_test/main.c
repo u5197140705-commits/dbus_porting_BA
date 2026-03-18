@@ -248,7 +248,7 @@ static void set_default_tx_pattern(void)
     prepare_tx_frame_wire();
 }
 
-static void process_rx_frame(void)
+static bool process_rx_frame(void)
 {
     uint8_t decoded[FRAME_SIZE];
     bit_transform_t detected = TRANSFORM_ROL1;
@@ -257,7 +257,7 @@ static void process_rx_frame(void)
         /* Ignore invalid frames (e.g. RW612 dummy clocks during readback).
          * Do NOT overwrite tx_frame_wire here, otherwise a prepared response
          * can be clobbered by default 0xA5 before the master receives it. */
-        return;
+        return false;
     }
 
     /* tx_transform is always TRANSFORM_ROL1: the link applies ROR1 to MISO
@@ -278,7 +278,7 @@ static void process_rx_frame(void)
         motor_write(addr, value);
         reg_write(addr, value);
         set_default_tx_pattern();
-        return;
+        return true;
     }
 
     if (cmd == DBUS_CMD_READ) {
@@ -296,10 +296,11 @@ static void process_rx_frame(void)
         tx_frame_desired[6] = (uint8_t)(value >> 16);
         tx_frame_desired[7] = (uint8_t)(value >> 24);
         prepare_tx_frame_wire();
-        return;
+        return true;
     }
 
     set_default_tx_pattern();
+    return false;
 }
 
 static inline void status_led_init(void)
@@ -358,9 +359,13 @@ static void service_spi_frame(spi_inst_t *spi)
         }
 
         if (rx_index >= FRAME_SIZE) {
-            process_rx_frame();
-            rx_index = 0;
-            tx_index = 0;
+            if (process_rx_frame()) {
+                rx_index = 0;
+                tx_index = 0;
+            } else {
+                memmove(rx_frame_raw, &rx_frame_raw[1], FRAME_SIZE - 1u);
+                rx_index = FRAME_SIZE - 1u;
+            }
         }
     }
 
