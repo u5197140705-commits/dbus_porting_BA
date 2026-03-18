@@ -52,7 +52,7 @@ static uint8_t tx_frame_wire[FRAME_SIZE];
 
 static size_t rx_index = 0;
 static size_t tx_index = 0;
-static bool last_cs_state = true; // CS is active-low; true means idle (high)
+static bool last_cs_state = false; // cs_is_active(): false=idle(high), true=active(low)
 
 typedef enum {
     TRANSFORM_IDENTITY = 0,
@@ -360,14 +360,10 @@ static void service_spi_frame(spi_inst_t *spi)
     spi_hw_t *hw = spi_get_hw(spi);
     bool current_cs_state = cs_is_active();
 
-    /* Detect CS transitions: from idle (not active) to active (low).
-     * cs_is_active() returns true when CS is LOW (active transaction).
-     * We want to reset indices when CS goes from high→low (idle→active). */
+    /* Detect CS high->low transition (idle->active) to resync RX framing. */
     if (!last_cs_state && current_cs_state) {
-        /* CS went high→low: new transaction starting. Reset indices for fresh frame.
-         * This ensures the first byte of TX FIFO is byte[0] of tx_frame_wire. */
+        /* CS went high->low: start of new transaction. */
         rx_index = 0;
-        tx_index = 0;
     }
 
     last_cs_state = current_cs_state;
@@ -380,23 +376,20 @@ static void service_spi_frame(spi_inst_t *spi)
             rx_frame_raw[rx_index++] = rx_byte;
         }
 
-        /* When we've collected a complete frame, process it (decode command,
-         * prepare response). We'll preload it into TX FIFO below. */
+        /* When a full frame arrives, decode and prepare next response frame. */
         if (rx_index == FRAME_SIZE) {
             (void)process_rx_frame();
-            /* Do NOT reset rx_index here; let it stay at FRAME_SIZE until
-             * CS goes low again (next transaction). This prevents premature
-             * resets that could corrupt FIFO alignment. */
+            rx_index = 0;
         }
     }
 
-    /* Preload TX FIFO with prepared frame bytes, but only during transaction
-     * (when CS is active/low). This ensures we don't pollute FIFO during idle. */
-    if (current_cs_state) {  /* CS is active (low) */
-        while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
-            hw->dr = tx_frame_wire[tx_index];
-            tx_index++;
-        }
+    /* Keep TX FIFO preloaded with the prepared response frame.
+     * This must run regardless of CS so the first bytes are ready when the
+     * master starts clocking the next transaction. tx_index is reset to 0
+     * only when a NEW response frame is prepared. */
+    while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
+        hw->dr = tx_frame_wire[tx_index];
+        tx_index++;
     }
 }
 
@@ -404,6 +397,7 @@ int main(void)
 {
     stdio_init_all();
     printf("[Pico SPI Slave] Firmware version: %s\n", PICO_FIRMWARE_VERSION);
+    uint32_t last_heartbeat_ms = 0;
     
     status_led_init();
 
@@ -433,6 +427,16 @@ int main(void)
     while (true) {
         service_spi_frame(spi0);
         status_led_set(cs_is_active());
+
+        uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+        if ((now_ms - last_heartbeat_ms) >= 1000u) {
+            printf("[Pico SPI Slave] alive version=%s cs=%u rx_index=%u tx_index=%u\n",
+                   PICO_FIRMWARE_VERSION,
+                   cs_is_active() ? 1u : 0u,
+                   (unsigned)rx_index,
+                   (unsigned)tx_index);
+            last_heartbeat_ms = now_ms;
+        }
 
         tight_loop_contents();
     }
