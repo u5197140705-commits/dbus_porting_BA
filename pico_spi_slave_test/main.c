@@ -354,9 +354,10 @@ static void service_spi_frame(spi_inst_t *spi)
     spi_hw_t *hw = spi_get_hw(spi);
     bool current_cs_state = cs_is_active();
 
-    /* Detect CS transitions: from idle (high) to active (low) = start of new transaction.
-     * This is when we should reset frame indices for proper alignment. */
-    if (last_cs_state && !current_cs_state) {
+    /* Detect CS transitions: from idle (not active) to active (low).
+     * cs_is_active() returns true when CS is LOW (active transaction).
+     * We want to reset indices when CS goes from high→low (idle→active). */
+    if (!last_cs_state && current_cs_state) {
         /* CS went high→low: new transaction starting. Reset indices for fresh frame.
          * This ensures the first byte of TX FIFO is byte[0] of tx_frame_wire. */
         rx_index = 0;
@@ -385,7 +386,7 @@ static void service_spi_frame(spi_inst_t *spi)
 
     /* Preload TX FIFO with prepared frame bytes, but only during transaction
      * (when CS is active/low). This ensures we don't pollute FIFO during idle. */
-    if (current_cs_state == false) {  /* CS is active (low) */
+    if (current_cs_state) {  /* CS is active (low) */
         while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
             hw->dr = tx_frame_wire[tx_index];
             tx_index++;
