@@ -86,12 +86,31 @@ static inline uint8_t apply_transform(uint8_t value, bit_transform_t transform)
     }
 }
 
+static bool addr_is_valid(uint16_t addr)
+{
+    if (addr == 0x001Cu) {
+        return true;
+    }
+
+    if (addr >= MOTOR_REG_BASE &&
+        addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
+        return true;
+    }
+
+    return false;
+}
+
 static bool decoded_frame_is_valid(const uint8_t *decoded_frame)
 {
-    uint8_t cmd = decoded_frame[0] & 0x60u;
+    uint8_t cmd = decoded_frame[0];
     uint8_t len_words = decoded_frame[3];
+    uint16_t addr = ((uint16_t)decoded_frame[1] << 8) | decoded_frame[2];
 
-    return ((cmd == DBUS_CMD_READ || cmd == DBUS_CMD_WRITE) && len_words == 1u);
+    if ((cmd != DBUS_CMD_READ && cmd != DBUS_CMD_WRITE) || len_words != 1u) {
+        return false;
+    }
+
+    return addr_is_valid(addr);
 }
 
 static bool decode_frame_with_transform(const uint8_t *raw_frame, uint8_t *decoded_frame, bit_transform_t transform)
