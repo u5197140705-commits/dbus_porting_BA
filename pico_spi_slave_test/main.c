@@ -365,9 +365,8 @@ static void service_spi_frame(spi_inst_t *spi)
         }
     }
 
-    while (spi_is_writable(spi)) {
-        uint8_t tx_byte = tx_frame_wire[tx_index % FRAME_SIZE];
-        hw->dr = tx_byte;
+    while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
+        hw->dr = tx_frame_wire[tx_index];
         tx_index++;
     }
 }
