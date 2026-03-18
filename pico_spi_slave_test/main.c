@@ -49,6 +49,7 @@ static uint8_t tx_frame_wire[FRAME_SIZE];
 
 static size_t rx_index = 0;
 static size_t tx_index = 0;
+static bool last_cs_state = true; // CS is active-low; true means idle (high)
 
 typedef enum {
     TRANSFORM_IDENTITY = 0,
@@ -351,6 +352,20 @@ static inline bool cs_is_active(void)
 static void service_spi_frame(spi_inst_t *spi)
 {
     spi_hw_t *hw = spi_get_hw(spi);
+    bool current_cs_state = cs_is_active();
+
+    /* Detect CS transitions: from idle (high) to active (low) = start of new transaction.
+     * This is when we should reset frame indices for proper alignment. */
+    if (last_cs_state && !current_cs_state) {
+        /* CS went high→low: new transaction starting. Reset indices for fresh frame.
+         * This ensures the first byte of TX FIFO is byte[0] of tx_frame_wire. */
+        rx_index = 0;
+        tx_index = 0;
+    }
+
+    last_cs_state = current_cs_state;
+
+    /* Drain RX FIFO and collect incoming bytes */
     while (spi_is_readable(spi)) {
         uint8_t rx_byte = (uint8_t)hw->dr;
 
@@ -358,16 +373,23 @@ static void service_spi_frame(spi_inst_t *spi)
             rx_frame_raw[rx_index++] = rx_byte;
         }
 
+        /* When we've collected a complete frame, process it (decode command,
+         * prepare response). We'll preload it into TX FIFO below. */
         if (rx_index == FRAME_SIZE) {
             (void)process_rx_frame();
-            rx_index = 0;
-            tx_index = 0;
+            /* Do NOT reset rx_index here; let it stay at FRAME_SIZE until
+             * CS goes low again (next transaction). This prevents premature
+             * resets that could corrupt FIFO alignment. */
         }
     }
 
-    while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
-        hw->dr = tx_frame_wire[tx_index];
-        tx_index++;
+    /* Preload TX FIFO with prepared frame bytes, but only during transaction
+     * (when CS is active/low). This ensures we don't pollute FIFO during idle. */
+    if (current_cs_state == false) {  /* CS is active (low) */
+        while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
+            hw->dr = tx_frame_wire[tx_index];
+            tx_index++;
+        }
     }
 }
 
