@@ -390,44 +390,29 @@ static void service_spi_frame(spi_inst_t *spi)
     spi_hw_t *hw = spi_get_hw(spi);
     bool current_cs_state = cs_is_active();
 
-    /* CS high->low: start of transaction. Snapshot/preload response frame. */
     if (!last_cs_state && current_cs_state) {
-        (void)spi_slave_drain_rx_fifo(spi);
         rx_index = 0;
-        tx_index = 0;
-
-        while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
-            hw->dr = tx_frame_wire[tx_index++];
-        }
-    }
-
-    if (current_cs_state) {
-        /* Keep topping TX FIFO while CS is active until one full frame is queued. */
-        while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
-            hw->dr = tx_frame_wire[tx_index++];
-        }
-
-        /* Collect one full 8-byte command frame from MOSI for next response. */
-        while (spi_is_readable(spi)) {
-            uint8_t rx_byte = (uint8_t)hw->dr;
-
-            if (rx_index < FRAME_SIZE) {
-                rx_frame_raw[rx_index++] = rx_byte;
-            }
-        }
-    }
-
-    /* CS low->high: transaction finished. Process exactly one collected frame
-     * to prepare response for the next transaction. */
-    if (last_cs_state && !current_cs_state) {
-        if (rx_index == FRAME_SIZE) {
-            (void)process_rx_frame();
-        }
-        rx_index = 0;
-        (void)spi_slave_drain_rx_fifo(spi);
     }
 
     last_cs_state = current_cs_state;
+
+    while (spi_is_readable(spi)) {
+        uint8_t rx_byte = (uint8_t)hw->dr;
+
+        if (rx_index < FRAME_SIZE) {
+            rx_frame_raw[rx_index++] = rx_byte;
+        }
+
+        if (rx_index == FRAME_SIZE) {
+            (void)process_rx_frame();
+            rx_index = 0;
+        }
+    }
+
+    while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
+        hw->dr = tx_frame_wire[tx_index];
+        tx_index++;
+    }
 }
 
 int main(void)
