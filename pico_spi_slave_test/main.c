@@ -249,18 +249,13 @@ static uint32_t motor_read(uint16_t addr)
 
 static void prepare_tx_frame_wire(void)
 {
-    /* The link applies a 1-bit SERIAL RIGHT SHIFT to the entire MISO frame
-     * (not independent per-byte ROR1). Pre-compensate with a 1-bit serial
-     * left shift so RW612 receives tx_frame_desired[1..7] verbatim.
-     * Byte[0] carries an unknown bit from the previous frame's last MISO bit
-     * and is therefore unreliable — do not use it for matching.
-     * Byte[7]'s MSB is lost (shifted off the end), so keep d3 < 0x80. */
-    for (size_t i = 0u; i < FRAME_SIZE - 1u; i++) {
-        tx_frame_wire[i] = (uint8_t)((tx_frame_desired[i] << 1u) |
-                                     (tx_frame_desired[i + 1u] >> 7u));
+    /* Observed on-wire behavior is per-byte ROR1 on MISO.
+     * Pre-compensate with per-byte ROL1 so RW612 receives the intended byte:
+     * ror1(rol1(x)) == x
+     */
+    for (size_t i = 0u; i < FRAME_SIZE; i++) {
+        tx_frame_wire[i] = rol1(tx_frame_desired[i]);
     }
-    tx_frame_wire[FRAME_SIZE - 1u] =
-        (uint8_t)(tx_frame_desired[FRAME_SIZE - 1u] << 1u);
 }
 
 static void set_default_tx_pattern(void)
