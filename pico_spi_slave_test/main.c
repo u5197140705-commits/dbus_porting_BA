@@ -273,11 +273,22 @@ static bool process_rx_frame(void)
     uint16_t addr = ((uint16_t)decoded[1] << 8) | decoded[2];
 
     if (cmd == DBUS_CMD_WRITE) {
-        uint32_t value =
+        uint32_t value_decoded =
             (uint32_t)decoded[4] |
             ((uint32_t)decoded[5] << 8) |
             ((uint32_t)decoded[6] << 16) |
             ((uint32_t)decoded[7] << 24);
+
+        uint32_t value_raw =
+            (uint32_t)rx_frame_raw[4] |
+            ((uint32_t)rx_frame_raw[5] << 8) |
+            ((uint32_t)rx_frame_raw[6] << 16) |
+            ((uint32_t)rx_frame_raw[7] << 24);
+
+        uint32_t value = value_decoded;
+        if (value_decoded == 0u && value_raw != 0u) {
+            value = value_raw;
+        }
 
         motor_write(addr, value);
         reg_write(addr, value);
