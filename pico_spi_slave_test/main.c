@@ -279,6 +279,7 @@ static bool process_rx_frame(void)
         motor_write(addr, value);
         reg_write(addr, value);
         set_default_tx_pattern();
+        tx_index = 0;
         return true;
     }
 
@@ -297,10 +298,12 @@ static bool process_rx_frame(void)
         tx_frame_desired[6] = (uint8_t)(value >> 16);
         tx_frame_desired[7] = (uint8_t)(value >> 24);
         prepare_tx_frame_wire();
+        tx_index = 0;
         return true;
     }
 
     set_default_tx_pattern();
+    tx_index = 0;
     return false;
 }
 
