@@ -537,6 +537,30 @@
     ],
     [
         [
+            "int k_thread_runtime_stack_unused_threshold_pct_set",
+            "struct k_thread *thread,\n\t\t\t\t\t\t\t      uint32_t pct"
+        ],
+        "kernel.h",
+        true
+    ],
+    [
+        [
+            "int k_thread_runtime_stack_unused_threshold_set",
+            "struct k_thread *thread,\n\t\t\t\t\t\t\t  size_t threshold"
+        ],
+        "kernel.h",
+        true
+    ],
+    [
+        [
+            "size_t k_thread_runtime_stack_unused_threshold_get",
+            "struct k_thread *thread"
+        ],
+        "kernel.h",
+        true
+    ],
+    [
+        [
             "int k_thread_join",
             "struct k_thread *thread, k_timeout_t timeout"
         ],
@@ -634,6 +658,14 @@
     [
         [
             "void k_thread_deadline_set",
+            "k_tid_t thread, int deadline"
+        ],
+        "kernel.h",
+        true
+    ],
+    [
+        [
+            "void k_thread_absolute_deadline_set",
             "k_tid_t thread, int deadline"
         ],
         "kernel.h",
@@ -913,6 +945,22 @@
     ],
     [
         [
+            "uint32_t k_event_wait_safe",
+            "struct k_event *event, uint32_t events,\n\t\t\t\t     bool reset, k_timeout_t timeout"
+        ],
+        "kernel.h",
+        true
+    ],
+    [
+        [
+            "uint32_t k_event_wait_all_safe",
+            "struct k_event *event, uint32_t events,\n\t\t\t\t\t bool reset, k_timeout_t timeout"
+        ],
+        "kernel.h",
+        true
+    ],
+    [
+        [
             "int32_t k_stack_alloc_init",
             "struct k_stack *stack,\n\t\t\t\t   uint32_t num_entries"
         ],
@@ -1050,7 +1098,7 @@
     [
         [
             "int k_msgq_put_front",
-            "struct k_msgq *msgq, const void *data, k_timeout_t timeout"
+            "struct k_msgq *msgq, const void *data"
         ],
         "kernel.h",
         true
@@ -1115,62 +1163,6 @@
         [
             "void k_pipe_init",
             "struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size"
-        ],
-        "kernel.h",
-        true
-    ],
-    [
-        [
-            "int k_pipe_alloc_init",
-            "struct k_pipe *pipe, size_t size"
-        ],
-        "kernel.h",
-        true
-    ],
-    [
-        [
-            "int k_pipe_put",
-            "struct k_pipe *pipe, const void *data,\n\t\t\t size_t bytes_to_write, size_t *bytes_written,\n\t\t\t size_t min_xfer, k_timeout_t timeout"
-        ],
-        "kernel.h",
-        true
-    ],
-    [
-        [
-            "int k_pipe_get",
-            "struct k_pipe *pipe, void *data,\n\t\t\t size_t bytes_to_read, size_t *bytes_read,\n\t\t\t size_t min_xfer, k_timeout_t timeout"
-        ],
-        "kernel.h",
-        true
-    ],
-    [
-        [
-            "size_t k_pipe_read_avail",
-            "struct k_pipe *pipe"
-        ],
-        "kernel.h",
-        true
-    ],
-    [
-        [
-            "size_t k_pipe_write_avail",
-            "struct k_pipe *pipe"
-        ],
-        "kernel.h",
-        true
-    ],
-    [
-        [
-            "void k_pipe_flush",
-            "struct k_pipe *pipe"
-        ],
-        "kernel.h",
-        true
-    ],
-    [
-        [
-            "void k_pipe_buffer_flush",
-            "struct k_pipe *pipe"
         ],
         "kernel.h",
         true
@@ -1371,6 +1363,14 @@
         [
             "int adc_read_async",
             "const struct device *dev,\n\t\t\t     const struct adc_sequence *sequence,\n\t\t\t     struct k_poll_signal *async"
+        ],
+        "adc.h",
+        false
+    ],
+    [
+        [
+            "int adc_get_decoder",
+            "const struct device *dev,\n\t\t\t\tconst struct adc_decoder_api **api"
         ],
         "adc.h",
         false
@@ -1929,6 +1929,14 @@
     ],
     [
         [
+            "uint64_t counter_ticks_to_ns",
+            "const struct device *dev, uint32_t ticks"
+        ],
+        "counter.h",
+        false
+    ],
+    [
+        [
             "uint32_t counter_get_max_top_value",
             "const struct device *dev"
         ],
@@ -2033,6 +2041,30 @@
     ],
     [
         [
+            "int crc_begin",
+            "const struct device *dev, struct crc_ctx *ctx"
+        ],
+        "crc.h",
+        false
+    ],
+    [
+        [
+            "int crc_update",
+            "const struct device *dev, struct crc_ctx *ctx, const void *buffer,\n\t\t\t size_t bufsize"
+        ],
+        "crc.h",
+        false
+    ],
+    [
+        [
+            "int crc_finish",
+            "const struct device *dev, struct crc_ctx *ctx"
+        ],
+        "crc.h",
+        false
+    ],
+    [
+        [
             "int dac_channel_setup",
             "const struct device *dev,\n\t\t\t\tconst struct dac_channel_cfg *channel_cfg"
         ],
@@ -2049,58 +2081,90 @@
     ],
     [
         [
-            "int dma_start",
-            "const struct device *dev, uint32_t channel"
+            "int dai_probe",
+            "const struct device *dev"
         ],
-        "dma.h",
+        "dai.h",
         false
     ],
     [
         [
-            "int dma_stop",
-            "const struct device *dev, uint32_t channel"
+            "int dai_remove",
+            "const struct device *dev"
         ],
-        "dma.h",
+        "dai.h",
         false
     ],
     [
         [
-            "int dma_suspend",
-            "const struct device *dev, uint32_t channel"
+            "int dai_config_set",
+            "const struct device *dev,\n\t\t\t     const struct dai_config *cfg,\n\t\t\t     const void *bespoke_cfg,\n\t\t\t     size_t size"
         ],
-        "dma.h",
+        "dai.h",
         false
     ],
     [
         [
-            "int dma_resume",
-            "const struct device *dev, uint32_t channel"
+            "int dai_config_get",
+            "const struct device *dev,\n\t\t\t     struct dai_config *cfg,\n\t\t\t     enum dai_dir dir"
         ],
-        "dma.h",
+        "dai.h",
         false
     ],
     [
         [
-            "int dma_request_channel",
-            "const struct device *dev,\n\t\t\t\t  void *filter_param"
+            "int dai_get_properties_copy",
+            "const struct device *dev,\n\t\t\t\t      enum dai_dir dir,\n\t\t\t\t      int stream_id,\n\t\t\t\t      struct dai_properties *dst"
         ],
-        "dma.h",
+        "dai.h",
         false
     ],
     [
         [
-            "void dma_release_channel",
-            "const struct device *dev,\n\t\t\t\t   uint32_t channel"
+            "int dai_trigger",
+            "const struct device *dev,\n\t\t\t  enum dai_dir dir,\n\t\t\t  enum dai_trigger_cmd cmd"
         ],
-        "dma.h",
+        "dai.h",
         false
     ],
     [
         [
-            "int dma_chan_filter",
-            "const struct device *dev,\n\t\t\t\t   int channel, void *filter_param"
+            "int dai_ts_config",
+            "const struct device *dev, struct dai_ts_cfg *cfg"
         ],
-        "dma.h",
+        "dai.h",
+        false
+    ],
+    [
+        [
+            "int dai_ts_start",
+            "const struct device *dev, struct dai_ts_cfg *cfg"
+        ],
+        "dai.h",
+        false
+    ],
+    [
+        [
+            "int dai_ts_stop",
+            "const struct device *dev, struct dai_ts_cfg *cfg"
+        ],
+        "dai.h",
+        false
+    ],
+    [
+        [
+            "int dai_ts_get",
+            "const struct device *dev, struct dai_ts_cfg *cfg,\n\t\t\t struct dai_ts_data *tsd"
+        ],
+        "dai.h",
+        false
+    ],
+    [
+        [
+            "int dai_config_update",
+            "const struct device *dev,\n\t\t\t\tconst void *bespoke_cfg,\n\t\t\t\tsize_t size"
+        ],
+        "dai.h",
         false
     ],
     [
@@ -2609,38 +2673,6 @@
     ],
     [
         [
-            "int hwspinlock_trylock",
-            "const struct device *dev, uint32_t id"
-        ],
-        "hwspinlock.h",
-        false
-    ],
-    [
-        [
-            "void hwspinlock_lock",
-            "const struct device *dev, uint32_t id"
-        ],
-        "hwspinlock.h",
-        false
-    ],
-    [
-        [
-            "void hwspinlock_unlock",
-            "const struct device *dev, uint32_t id"
-        ],
-        "hwspinlock.h",
-        false
-    ],
-    [
-        [
-            "uint32_t hwspinlock_get_max_id",
-            "const struct device *dev"
-        ],
-        "hwspinlock.h",
-        false
-    ],
-    [
-        [
             "int i2c_configure",
             "const struct device *dev, uint32_t dev_config"
         ],
@@ -2873,22 +2905,6 @@
     ],
     [
         [
-            "void mdio_bus_enable",
-            "const struct device *dev"
-        ],
-        "mdio.h",
-        false
-    ],
-    [
-        [
-            "void mdio_bus_disable",
-            "const struct device *dev"
-        ],
-        "mdio.h",
-        false
-    ],
-    [
-        [
             "int mdio_read",
             "const struct device *dev, uint8_t prtad, uint8_t regad,\n\t\t\tuint16_t *data"
         ],
@@ -2973,6 +2989,14 @@
             "const struct device *controller,\n\t\t\t\t const struct mspi_dev_id *dev_id,\n\t\t\t\t const uint32_t param_mask, void *cfg"
         ],
         "mspi.h",
+        false
+    ],
+    [
+        [
+            "int opamp_set_gain",
+            "const struct device *dev, enum opamp_gain gain"
+        ],
+        "opamp.h",
         false
     ],
     [
@@ -3314,7 +3338,7 @@
     [
         [
             "int sensor_reconfigure_read_iodev",
-            "struct rtio_iodev *iodev, const struct device *sensor,\n\t\t\t\t\t    const struct sensor_chan_spec *channels,\n\t\t\t\t\t    size_t num_channels"
+            "const struct rtio_iodev *iodev,\n\t\t\t\t\t    const struct device *sensor,\n\t\t\t\t\t    const struct sensor_chan_spec *channels,\n\t\t\t\t\t    size_t num_channels"
         ],
         "sensor.h",
         false
@@ -3441,38 +3465,6 @@
     ],
     [
         [
-            "int stepper_enable",
-            "const struct device *dev"
-        ],
-        "stepper.h",
-        false
-    ],
-    [
-        [
-            "int stepper_disable",
-            "const struct device *dev"
-        ],
-        "stepper.h",
-        false
-    ],
-    [
-        [
-            "int stepper_set_micro_step_res",
-            "const struct device *dev,\n\t\t\t\t\t enum stepper_micro_step_resolution resolution"
-        ],
-        "stepper.h",
-        false
-    ],
-    [
-        [
-            "int stepper_get_micro_step_res",
-            "const struct device *dev,\n\t\t\t\t\t enum stepper_micro_step_resolution *resolution"
-        ],
-        "stepper.h",
-        false
-    ],
-    [
-        [
             "int stepper_set_reference_position",
             "const struct device *dev, int32_t value"
         ],
@@ -3541,6 +3533,118 @@
             "const struct device *dev, bool *is_moving"
         ],
         "stepper.h",
+        false
+    ],
+    [
+        [
+            "int stepper_drv_enable",
+            "const struct device *dev"
+        ],
+        "stepper.h",
+        false
+    ],
+    [
+        [
+            "int stepper_drv_disable",
+            "const struct device *dev"
+        ],
+        "stepper.h",
+        false
+    ],
+    [
+        [
+            "int stepper_drv_set_micro_step_res",
+            "const struct device *dev,\n\t\t\t\t\t     enum stepper_drv_micro_step_resolution res"
+        ],
+        "stepper.h",
+        false
+    ],
+    [
+        [
+            "int stepper_drv_get_micro_step_res",
+            "const struct device *dev,\n\t\t\t\t\t     enum stepper_drv_micro_step_resolution *res"
+        ],
+        "stepper.h",
+        false
+    ],
+    [
+        [
+            "int stepper_drv_set_event_cb",
+            "const struct device *dev, stepper_drv_event_cb_t callback,\n\t\t\t\t       void *user_data"
+        ],
+        "stepper.h",
+        false
+    ],
+    [
+        [
+            "int swdp_output_sequence",
+            "const struct device *dev,\n\t\t\t\t   const uint32_t count,\n\t\t\t\t   const uint8_t *const data"
+        ],
+        "swdp.h",
+        false
+    ],
+    [
+        [
+            "int swdp_input_sequence",
+            "const struct device *dev,\n\t\t\t\t  const uint32_t count,\n\t\t\t\t  uint8_t *const buf"
+        ],
+        "swdp.h",
+        false
+    ],
+    [
+        [
+            "int swdp_transfer",
+            "const struct device *dev,\n\t\t\t    const uint8_t request,\n\t\t\t    uint32_t *const data,\n\t\t\t    const uint8_t idle_cycles,\n\t\t\t    uint8_t *const response"
+        ],
+        "swdp.h",
+        false
+    ],
+    [
+        [
+            "int swdp_set_pins",
+            "const struct device *dev,\n\t\t\t    const uint8_t pins,\n\t\t\t    const uint8_t value"
+        ],
+        "swdp.h",
+        false
+    ],
+    [
+        [
+            "int swdp_get_pins",
+            "const struct device *dev,\n\t\t\t    uint8_t *const state"
+        ],
+        "swdp.h",
+        false
+    ],
+    [
+        [
+            "int swdp_set_clock",
+            "const struct device *dev,\n\t\t\t     const uint32_t clock"
+        ],
+        "swdp.h",
+        false
+    ],
+    [
+        [
+            "int swdp_port_on",
+            "const struct device *dev"
+        ],
+        "swdp.h",
+        false
+    ],
+    [
+        [
+            "int swdp_port_off",
+            "const struct device *dev"
+        ],
+        "swdp.h",
+        false
+    ],
+    [
+        [
+            "int swdp_configure",
+            "const struct device *dev,\n\t\t\t     const uint8_t turnaround,\n\t\t\t     const bool data_phase"
+        ],
+        "swdp.h",
         false
     ],
     [
@@ -3773,6 +3877,22 @@
             "const struct device *dev, int channel_id"
         ],
         "watchdog.h",
+        false
+    ],
+    [
+        [
+            "const struct flash_simulator_params *flash_simulator_get_params",
+            "const struct device *dev"
+        ],
+        "flash_simulator.h",
+        false
+    ],
+    [
+        [
+            "void flash_simulator_set_callbacks",
+            "const struct device *dev,\n\t\t\t\t\t     const struct flash_simulator_cb *cb"
+        ],
+        "flash_simulator.h",
         false
     ],
     [
@@ -4161,6 +4281,14 @@
     ],
     [
         [
+            "int renesas_rx_ctsu_group_configure",
+            "const struct device *dev,\n\t\t\t\t\t      const struct renesas_rx_ctsu_touch_cfg *cfg"
+        ],
+        "input_renesas_rx_ctsu.h",
+        false
+    ],
+    [
+        [
             "void k_mem_paging_stats_get",
             "struct k_mem_paging_stats_t *stats"
         ],
@@ -4266,7 +4394,7 @@
     [
         [
             "int net_if_ipv6_addr_lookup_by_index",
-            "const struct in6_addr *addr"
+            "const struct net_in6_addr *addr"
         ],
         "net_if.h",
         false
@@ -4274,7 +4402,7 @@
     [
         [
             "bool net_if_ipv6_addr_add_by_index",
-            "int index,\n\t\t\t\t\t     const struct in6_addr *addr,\n\t\t\t\t\t     enum net_addr_type addr_type,\n\t\t\t\t\t     uint32_t vlifetime"
+            "int index,\n\t\t\t\t\t     const struct net_in6_addr *addr,\n\t\t\t\t\t     enum net_addr_type addr_type,\n\t\t\t\t\t     uint32_t vlifetime"
         ],
         "net_if.h",
         false
@@ -4282,7 +4410,7 @@
     [
         [
             "bool net_if_ipv6_addr_rm_by_index",
-            "int index,\n\t\t\t\t\t    const struct in6_addr *addr"
+            "int index,\n\t\t\t\t\t    const struct net_in6_addr *addr"
         ],
         "net_if.h",
         false
@@ -4290,7 +4418,7 @@
     [
         [
             "int net_if_ipv4_addr_lookup_by_index",
-            "const struct in_addr *addr"
+            "const struct net_in_addr *addr"
         ],
         "net_if.h",
         false
@@ -4298,7 +4426,7 @@
     [
         [
             "bool net_if_ipv4_addr_add_by_index",
-            "int index,\n\t\t\t\t\t     const struct in_addr *addr,\n\t\t\t\t\t     enum net_addr_type addr_type,\n\t\t\t\t\t     uint32_t vlifetime"
+            "int index,\n\t\t\t\t\t     const struct net_in_addr *addr,\n\t\t\t\t\t     enum net_addr_type addr_type,\n\t\t\t\t\t     uint32_t vlifetime"
         ],
         "net_if.h",
         false
@@ -4306,7 +4434,7 @@
     [
         [
             "bool net_if_ipv4_addr_rm_by_index",
-            "int index,\n\t\t\t\t\t    const struct in_addr *addr"
+            "int index,\n\t\t\t\t\t    const struct net_in_addr *addr"
         ],
         "net_if.h",
         false
@@ -4314,7 +4442,7 @@
     [
         [
             "bool net_if_ipv4_set_netmask_by_index",
-            "int index,\n\t\t\t\t\t\t\t     const struct in_addr *netmask"
+            "int index,\n\t\t\t\t\t\t\t     const struct net_in_addr *netmask"
         ],
         "net_if.h",
         false
@@ -4322,7 +4450,7 @@
     [
         [
             "bool net_if_ipv4_set_netmask_by_addr_by_index",
-            "int index,\n\t\t\t\t\t\t\tconst struct in_addr *addr,\n\t\t\t\t\t\t\tconst struct in_addr *netmask"
+            "int index,\n\t\t\t\t\t\t\tconst struct net_in_addr *addr,\n\t\t\t\t\t\t\tconst struct net_in_addr *netmask"
         ],
         "net_if.h",
         false
@@ -4330,7 +4458,7 @@
     [
         [
             "bool net_if_ipv4_set_gw_by_index",
-            "int index, const struct in_addr *gw"
+            "int index, const struct net_in_addr *gw"
         ],
         "net_if.h",
         false
@@ -4346,7 +4474,7 @@
     [
         [
             "int net_addr_pton",
-            "sa_family_t family, const char *src, void *dst"
+            "net_sa_family_t family, const char *src, void *dst"
         ],
         "net_ip.h",
         false
@@ -4354,7 +4482,7 @@
     [
         [
             "char *net_addr_ntop",
-            "sa_family_t family, const void *src,\n\t\t\t      char *dst, size_t size"
+            "net_sa_family_t family, const void *src,\n\t\t\t      char *dst, size_t size"
         ],
         "net_ip.h",
         false
@@ -4402,7 +4530,7 @@
     [
         [
             "int zsock_bind",
-            "int sock, const struct sockaddr *addr,\n\t\t\t socklen_t addrlen"
+            "int sock, const struct net_sockaddr *addr,\n\t\t\t net_socklen_t addrlen"
         ],
         "socket.h",
         false
@@ -4410,7 +4538,7 @@
     [
         [
             "int zsock_connect",
-            "int sock, const struct sockaddr *addr,\n\t\t\t    socklen_t addrlen"
+            "int sock, const struct net_sockaddr *addr,\n\t\t\t    net_socklen_t addrlen"
         ],
         "socket.h",
         false
@@ -4426,7 +4554,7 @@
     [
         [
             "int zsock_accept",
-            "int sock, struct sockaddr *addr, socklen_t *addrlen"
+            "int sock, struct net_sockaddr *addr, net_socklen_t *addrlen"
         ],
         "socket.h",
         false
@@ -4434,7 +4562,7 @@
     [
         [
             "ssize_t zsock_sendto",
-            "int sock, const void *buf, size_t len,\n\t\t\t       int flags, const struct sockaddr *dest_addr,\n\t\t\t       socklen_t addrlen"
+            "int sock, const void *buf, size_t len,\n\t\t\t       int flags, const struct net_sockaddr *dest_addr,\n\t\t\t       net_socklen_t addrlen"
         ],
         "socket.h",
         false
@@ -4442,7 +4570,7 @@
     [
         [
             "ssize_t zsock_sendmsg",
-            "int sock, const struct msghdr *msg,\n\t\t\t\tint flags"
+            "int sock, const struct net_msghdr *msg,\n\t\t\t\tint flags"
         ],
         "socket.h",
         false
@@ -4450,7 +4578,7 @@
     [
         [
             "ssize_t zsock_recvfrom",
-            "int sock, void *buf, size_t max_len,\n\t\t\t\t int flags, struct sockaddr *src_addr,\n\t\t\t\t socklen_t *addrlen"
+            "int sock, void *buf, size_t max_len,\n\t\t\t\t int flags, struct net_sockaddr *src_addr,\n\t\t\t\t net_socklen_t *addrlen"
         ],
         "socket.h",
         false
@@ -4458,7 +4586,7 @@
     [
         [
             "ssize_t zsock_recvmsg",
-            "int sock, struct msghdr *msg, int flags"
+            "int sock, struct net_msghdr *msg, int flags"
         ],
         "socket.h",
         false
@@ -4482,7 +4610,7 @@
     [
         [
             "int zsock_getsockopt",
-            "int sock, int level, int optname,\n\t\t\t       void *optval, socklen_t *optlen"
+            "int sock, int level, int optname,\n\t\t\t       void *optval, net_socklen_t *optlen"
         ],
         "socket.h",
         false
@@ -4490,7 +4618,7 @@
     [
         [
             "int zsock_setsockopt",
-            "int sock, int level, int optname,\n\t\t\t       const void *optval, socklen_t optlen"
+            "int sock, int level, int optname,\n\t\t\t       const void *optval, net_socklen_t optlen"
         ],
         "socket.h",
         false
@@ -4498,7 +4626,7 @@
     [
         [
             "int zsock_getpeername",
-            "int sock, struct sockaddr *addr,\n\t\t\t\tsocklen_t *addrlen"
+            "int sock, struct net_sockaddr *addr,\n\t\t\t\tnet_socklen_t *addrlen"
         ],
         "socket.h",
         false
@@ -4506,7 +4634,7 @@
     [
         [
             "int zsock_getsockname",
-            "int sock, struct sockaddr *addr,\n\t\t\t\tsocklen_t *addrlen"
+            "int sock, struct net_sockaddr *addr,\n\t\t\t\tnet_socklen_t *addrlen"
         ],
         "socket.h",
         false
@@ -4522,7 +4650,7 @@
     [
         [
             "int zsock_inet_pton",
-            "sa_family_t family, const char *src, void *dst"
+            "net_sa_family_t family, const char *src, void *dst"
         ],
         "socket.h",
         false

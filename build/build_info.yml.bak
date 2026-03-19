@@ -1,5 +1,4 @@
 west:
-  command: /home/wis3re/.local/bin/west build -s zephyr_dbus_driver -b frdm_rw612
-    --pristine
-  topdir: /home/wis3re/zephyrproject
-  version: 1.4.0
+  command: /home/swied/.local/bin/west build -b frdm_rw612 -d build -s /home/swied/projects/dbus_porting_BA/zephyr_dbus_driver
+  topdir: /home/swied/zephyrproject
+  version: 1.5.0

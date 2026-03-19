@@ -133,6 +133,7 @@ clock_control_driver_api_area : { _clock_control_driver_api_list_start = .; KEEP
 comparator_driver_api_area : { _comparator_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._comparator_driver_api.static.*))); _comparator_driver_api_list_end = .;; } > FLASH
 coredump_driver_api_area : { _coredump_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._coredump_driver_api.static.*))); _coredump_driver_api_list_end = .;; } > FLASH
 counter_driver_api_area : { _counter_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._counter_driver_api.static.*))); _counter_driver_api_list_end = .;; } > FLASH
+crc_driver_api_area : { _crc_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._crc_driver_api.static.*))); _crc_driver_api_list_end = .;; } > FLASH
 dac_driver_api_area : { _dac_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._dac_driver_api.static.*))); _dac_driver_api_list_end = .;; } > FLASH
 dai_driver_api_area : { _dai_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._dai_driver_api.static.*))); _dai_driver_api_list_end = .;; } > FLASH
 display_driver_api_area : { _display_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._display_driver_api.static.*))); _display_driver_api_list_end = .;; } > FLASH
@@ -164,6 +165,7 @@ mdio_driver_api_area : { _mdio_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._
 mipi_dbi_driver_api_area : { _mipi_dbi_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._mipi_dbi_driver_api.static.*))); _mipi_dbi_driver_api_list_end = .;; } > FLASH
 mipi_dsi_driver_api_area : { _mipi_dsi_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._mipi_dsi_driver_api.static.*))); _mipi_dsi_driver_api_list_end = .;; } > FLASH
 mspi_driver_api_area : { _mspi_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._mspi_driver_api.static.*))); _mspi_driver_api_list_end = .;; } > FLASH
+opamp_driver_api_area : { _opamp_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._opamp_driver_api.static.*))); _opamp_driver_api_list_end = .;; } > FLASH
 peci_driver_api_area : { _peci_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._peci_driver_api.static.*))); _peci_driver_api_list_end = .;; } > FLASH
 ps2_driver_api_area : { _ps2_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._ps2_driver_api.static.*))); _ps2_driver_api_list_end = .;; } > FLASH
 ptp_clock_driver_api_area : { _ptp_clock_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._ptp_clock_driver_api.static.*))); _ptp_clock_driver_api_list_end = .;; } > FLASH
@@ -176,6 +178,7 @@ sdhc_driver_api_area : { _sdhc_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._
 sensor_driver_api_area : { _sensor_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._sensor_driver_api.static.*))); _sensor_driver_api_list_end = .;; } > FLASH
 smbus_driver_api_area : { _smbus_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._smbus_driver_api.static.*))); _smbus_driver_api_list_end = .;; } > FLASH
 stepper_driver_api_area : { _stepper_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._stepper_driver_api.static.*))); _stepper_driver_api_list_end = .;; } > FLASH
+stepper_drv_driver_api_area : { _stepper_drv_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._stepper_drv_driver_api.static.*))); _stepper_drv_driver_api_list_end = .;; } > FLASH
 syscon_driver_api_area : { _syscon_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._syscon_driver_api.static.*))); _syscon_driver_api_list_end = .;; } > FLASH
 tee_driver_api_area : { _tee_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._tee_driver_api.static.*))); _tee_driver_api_list_end = .;; } > FLASH
 video_driver_api_area : { _video_driver_api_list_start = .; KEEP(*(SORT_BY_NAME(._video_driver_api.static.*))); _video_driver_api_list_end = .;; } > FLASH
@@ -270,10 +273,15 @@ ztest :
  *(.gnu.linkonce.r.*)
  . = ALIGN(4);
  } > FLASH
+ PROVIDE(__eh_frame_start = 0);
+ PROVIDE(__eh_frame_end = 0);
+ PROVIDE(__eh_frame_hdr_start = 0);
+ PROVIDE(__eh_frame_hdr_end = 0);
  /DISCARD/ : { *(.eh_frame) }
  __rodata_region_end = .;
  . = ALIGN(_region_min_align);
  __rom_region_end = __rom_region_start + . - ADDR(rom_start);
+ __rom_region_size = __rom_region_end - __rom_region_start;
    
     /DISCARD/ : {
  *(.got.plt)
@@ -285,6 +293,13 @@ ztest :
  . = 0x10040000;
  . = ALIGN(_region_min_align);
  _image_ram_start = .;
+_RTT_SECTION_NAME (NOLOAD) : ALIGN_WITH_INPUT
+{
+__rtt_buff_data_start = .;
+*(".rtt_buff_data")
+__rtt_buff_data_end = ALIGN(4);
+} > RAM AT > RAM
+__rtt_buff_data_size = __rtt_buff_data_end - __rtt_buff_data_start;
 .ramfunc : ALIGN_WITH_INPUT
 {
  __ramfunc_region_start = .;

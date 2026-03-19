@@ -36,6 +36,8 @@
 
 #define K_SYSCALL_DRIVER_COUNTER(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, counter, COUNTER)
 
+#define K_SYSCALL_DRIVER_CRC(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, crc, CRC)
+
 #define K_SYSCALL_DRIVER_DAC(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, dac, DAC)
 
 #define K_SYSCALL_DRIVER_DAI(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, dai, DAI)
@@ -98,6 +100,8 @@
 
 #define K_SYSCALL_DRIVER_MSPI(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, mspi, MSPI)
 
+#define K_SYSCALL_DRIVER_OPAMP(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, opamp, OPAMP)
+
 #define K_SYSCALL_DRIVER_PECI(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, peci, PECI)
 
 #define K_SYSCALL_DRIVER_PS2(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, ps2, PS2)
@@ -121,6 +125,8 @@
 #define K_SYSCALL_DRIVER_SMBUS(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, smbus, SMBUS)
 
 #define K_SYSCALL_DRIVER_STEPPER(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, stepper, STEPPER)
+
+#define K_SYSCALL_DRIVER_STEPPER_DRV(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, stepper_drv, STEPPER_DRV)
 
 #define K_SYSCALL_DRIVER_SYSCON(ptr, op) K_SYSCALL_DRIVER_GEN(ptr, op, syscon, SYSCON)
 

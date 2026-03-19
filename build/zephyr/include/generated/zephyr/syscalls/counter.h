@@ -139,6 +139,32 @@ static inline uint64_t counter_ticks_to_us(const struct device * dev, uint32_t t
 #endif
 
 
+extern uint64_t z_impl_counter_ticks_to_ns(const struct device * dev, uint32_t ticks);
+
+__pinned_func
+static inline uint64_t counter_ticks_to_ns(const struct device * dev, uint32_t ticks)
+{
+#ifdef CONFIG_USERSPACE
+	uint64_t ret64;
+	if (z_syscall_trap()) {
+		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
+		union { uintptr_t x; uint32_t val; } parm1 = { .val = ticks };
+		(void) arch_syscall_invoke3(parm0.x, parm1.x, (uintptr_t)&ret64, K_SYSCALL_COUNTER_TICKS_TO_NS);
+		return (uint64_t) ret64;
+	}
+#endif
+	compiler_barrier();
+	return z_impl_counter_ticks_to_ns(dev, ticks);
+}
+
+#if defined(CONFIG_TRACING_SYSCALL)
+#ifndef DISABLE_SYSCALL_TRACING
+
+#define counter_ticks_to_ns(dev, ticks) ({ 	uint64_t syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_COUNTER_TICKS_TO_NS, counter_ticks_to_ns, dev, ticks); 	syscall__retval = counter_ticks_to_ns(dev, ticks); 	sys_port_trace_syscall_exit(K_SYSCALL_COUNTER_TICKS_TO_NS, counter_ticks_to_ns, dev, ticks, syscall__retval); 	syscall__retval; })
+#endif
+#endif
+
+
 extern uint32_t z_impl_counter_get_max_top_value(const struct device * dev);
 
 __pinned_func

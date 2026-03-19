@@ -2,7 +2,6 @@
 runners:
 - jlink
 - linkserver
-- openocd
 
 # Default flash runner if --runner is not given.
 flash-runner: jlink
@@ -12,15 +11,12 @@ debug-runner: jlink
 
 # Common runner configuration values.
 config:
-  board_dir: /home/wis3re/zephyrproject/zephyr/boards/nxp/frdm_rw612
+  board_dir: /home/swied/zephyrproject/zephyr/boards/nxp/frdm_rw612
   # Build outputs:
   elf_file: zephyr.elf
   bin_file: zephyr.bin
   # Host tools:
-  gdb: /home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb-py
-  openocd: /home/wis3re/zephyr-sdk-0.17.4/sysroots/x86_64-pokysdk-linux/usr/bin/openocd
-  openocd_search:
-    - /home/wis3re/zephyr-sdk-0.17.4/sysroots/x86_64-pokysdk-linux/usr/share/openocd/scripts
+  gdb: /home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb
 
 # Runner specific arguments
 args:
@@ -31,8 +27,3 @@ args:
   linkserver:
     - --dt-flash=y
     - --device=RW612:FRDM-RW612
-  openocd:
-    - --cmd-load
-    - flash write_image erase
-    - --cmd-verify
-    - verify_image

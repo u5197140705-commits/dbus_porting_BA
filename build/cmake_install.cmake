@@ -1,4 +1,4 @@
-# Install script for directory: /home/wis3re/dbus_porting/zephyr_dbus_driver
+# Install script for directory: /home/swied/projects/dbus_porting_BA/zephyr_dbus_driver
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,12 +34,12 @@ endif()
 
 # Set default install directory permissions.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
+  set(CMAKE_OBJDUMP "/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/wis3re/dbus_porting/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/swied/projects/dbus_porting_BA/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

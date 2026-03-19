@@ -1,4 +1,4 @@
-# Install script for directory: /home/wis3re/zephyrproject/modules/hal/nxp/mcux/mcux-sdk-ng/drivers/pn76/hostif/pnev7642fama
+# Install script for directory: /home/swied/zephyrproject/modules/hal/nxp/mcux/mcux-sdk-ng/drivers/pn76/hostif/pnev7642fama
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,6 +34,6 @@ endif()
 
 # Set default install directory permissions.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
+  set(CMAKE_OBJDUMP "/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
 endif()
 

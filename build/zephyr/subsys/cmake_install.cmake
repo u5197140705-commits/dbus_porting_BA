@@ -1,4 +1,4 @@
-# Install script for directory: /home/wis3re/zephyrproject/zephyr/subsys
+# Install script for directory: /home/swied/zephyrproject/zephyr/subsys
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,116 +34,121 @@ endif()
 
 # Set default install directory permissions.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
+  set(CMAKE_OBJDUMP "/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/canbus/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/canbus/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/debug/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/debug/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/fb/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/fb/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/fs/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/fs/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/gnss/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/gnss/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/ipc/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/instrumentation/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/logging/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/ipc/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/mem_mgmt/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/logging/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/mgmt/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/mem_mgmt/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/modbus/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/mgmt/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/pm/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/modbus/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/pmci/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/pm/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/portability/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/pmci/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/random/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/portability/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/rtio/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/random/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/sd/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/rtio/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/stats/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/sd/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/storage/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/stats/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/task_wdt/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/storage/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/testsuite/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/task_wdt/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/tracing/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/testsuite/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/zephyr/subsys/usb/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/tracing/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/home/swied/projects/dbus_porting_BA/build/zephyr/subsys/usb/cmake_install.cmake")
 endif()
 

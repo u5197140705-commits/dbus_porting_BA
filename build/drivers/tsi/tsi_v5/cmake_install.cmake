@@ -1,4 +1,4 @@
-# Install script for directory: /home/wis3re/zephyrproject/modules/hal/nxp/mcux/mcux-sdk-ng/drivers/tsi/tsi_v5
+# Install script for directory: /home/swied/zephyrproject/modules/hal/nxp/mcux/mcux-sdk-ng/drivers/tsi/tsi_v5
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,6 +34,6 @@ endif()
 
 # Set default install directory permissions.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
+  set(CMAKE_OBJDUMP "/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
 endif()
 

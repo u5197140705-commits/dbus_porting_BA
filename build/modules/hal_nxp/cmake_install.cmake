@@ -1,4 +1,4 @@
-# Install script for directory: /home/wis3re/zephyrproject/zephyr/modules/hal_nxp
+# Install script for directory: /home/swied/zephyrproject/zephyr/modules/hal_nxp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,16 +34,16 @@ endif()
 
 # Set default install directory permissions.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/home/wis3re/zephyr-sdk-0.17.4/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
+  set(CMAKE_OBJDUMP "/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-objdump")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/modules/hal_nxp/mcux/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/modules/hal_nxp/mcux/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/wis3re/dbus_porting/build/modules/hal_nxp/hal_nxp/cmake_install.cmake")
+  include("/home/swied/projects/dbus_porting_BA/build/modules/hal_nxp/hal_nxp/cmake_install.cmake")
 endif()
 

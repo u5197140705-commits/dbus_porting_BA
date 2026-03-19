@@ -64,10 +64,16 @@ config ZEPHYR_OPENISA_MODULE
 config ZEPHYR_QUICKLOGIC_MODULE
    bool
    default y
+config ZEPHYR_HAL_REALTEK_MODULE
+   bool
+   default y
 config ZEPHYR_HAL_RENESAS_MODULE
    bool
    default y
 config ZEPHYR_HAL_RPI_PICO_MODULE
+   bool
+   default y
+config ZEPHYR_HAL_SIFLI_MODULE
    bool
    default y
 config ZEPHYR_HAL_SILABS_MODULE
@@ -152,6 +158,9 @@ config ZEPHYR_PICOLIBC_MODULE
    bool
    default y
 config ZEPHYR_SEGGER_MODULE
+   bool
+   default y
+config ZEPHYR_TF_M_TESTS_MODULE
    bool
    default y
 config ZEPHYR_TRUSTED_FIRMWARE_A_MODULE

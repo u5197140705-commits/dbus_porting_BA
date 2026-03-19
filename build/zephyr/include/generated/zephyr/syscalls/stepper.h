@@ -20,100 +20,6 @@
 extern "C" {
 #endif
 
-extern int z_impl_stepper_enable(const struct device * dev);
-
-__pinned_func
-static inline int stepper_enable(const struct device * dev)
-{
-#ifdef CONFIG_USERSPACE
-	if (z_syscall_trap()) {
-		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
-		return (int) arch_syscall_invoke1(parm0.x, K_SYSCALL_STEPPER_ENABLE);
-	}
-#endif
-	compiler_barrier();
-	return z_impl_stepper_enable(dev);
-}
-
-#if defined(CONFIG_TRACING_SYSCALL)
-#ifndef DISABLE_SYSCALL_TRACING
-
-#define stepper_enable(dev) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_ENABLE, stepper_enable, dev); 	syscall__retval = stepper_enable(dev); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_ENABLE, stepper_enable, dev, syscall__retval); 	syscall__retval; })
-#endif
-#endif
-
-
-extern int z_impl_stepper_disable(const struct device * dev);
-
-__pinned_func
-static inline int stepper_disable(const struct device * dev)
-{
-#ifdef CONFIG_USERSPACE
-	if (z_syscall_trap()) {
-		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
-		return (int) arch_syscall_invoke1(parm0.x, K_SYSCALL_STEPPER_DISABLE);
-	}
-#endif
-	compiler_barrier();
-	return z_impl_stepper_disable(dev);
-}
-
-#if defined(CONFIG_TRACING_SYSCALL)
-#ifndef DISABLE_SYSCALL_TRACING
-
-#define stepper_disable(dev) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_DISABLE, stepper_disable, dev); 	syscall__retval = stepper_disable(dev); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_DISABLE, stepper_disable, dev, syscall__retval); 	syscall__retval; })
-#endif
-#endif
-
-
-extern int z_impl_stepper_set_micro_step_res(const struct device * dev, enum stepper_micro_step_resolution resolution);
-
-__pinned_func
-static inline int stepper_set_micro_step_res(const struct device * dev, enum stepper_micro_step_resolution resolution)
-{
-#ifdef CONFIG_USERSPACE
-	if (z_syscall_trap()) {
-		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
-		union { uintptr_t x; enum stepper_micro_step_resolution val; } parm1 = { .val = resolution };
-		return (int) arch_syscall_invoke2(parm0.x, parm1.x, K_SYSCALL_STEPPER_SET_MICRO_STEP_RES);
-	}
-#endif
-	compiler_barrier();
-	return z_impl_stepper_set_micro_step_res(dev, resolution);
-}
-
-#if defined(CONFIG_TRACING_SYSCALL)
-#ifndef DISABLE_SYSCALL_TRACING
-
-#define stepper_set_micro_step_res(dev, resolution) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_SET_MICRO_STEP_RES, stepper_set_micro_step_res, dev, resolution); 	syscall__retval = stepper_set_micro_step_res(dev, resolution); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_SET_MICRO_STEP_RES, stepper_set_micro_step_res, dev, resolution, syscall__retval); 	syscall__retval; })
-#endif
-#endif
-
-
-extern int z_impl_stepper_get_micro_step_res(const struct device * dev, enum stepper_micro_step_resolution * resolution);
-
-__pinned_func
-static inline int stepper_get_micro_step_res(const struct device * dev, enum stepper_micro_step_resolution * resolution)
-{
-#ifdef CONFIG_USERSPACE
-	if (z_syscall_trap()) {
-		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
-		union { uintptr_t x; enum stepper_micro_step_resolution * val; } parm1 = { .val = resolution };
-		return (int) arch_syscall_invoke2(parm0.x, parm1.x, K_SYSCALL_STEPPER_GET_MICRO_STEP_RES);
-	}
-#endif
-	compiler_barrier();
-	return z_impl_stepper_get_micro_step_res(dev, resolution);
-}
-
-#if defined(CONFIG_TRACING_SYSCALL)
-#ifndef DISABLE_SYSCALL_TRACING
-
-#define stepper_get_micro_step_res(dev, resolution) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_GET_MICRO_STEP_RES, stepper_get_micro_step_res, dev, resolution); 	syscall__retval = stepper_get_micro_step_res(dev, resolution); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_GET_MICRO_STEP_RES, stepper_get_micro_step_res, dev, resolution, syscall__retval); 	syscall__retval; })
-#endif
-#endif
-
-
 extern int z_impl_stepper_set_reference_position(const struct device * dev, int32_t value);
 
 __pinned_func
@@ -326,6 +232,125 @@ static inline int stepper_is_moving(const struct device * dev, bool * is_moving)
 #ifndef DISABLE_SYSCALL_TRACING
 
 #define stepper_is_moving(dev, is_moving) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_IS_MOVING, stepper_is_moving, dev, is_moving); 	syscall__retval = stepper_is_moving(dev, is_moving); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_IS_MOVING, stepper_is_moving, dev, is_moving, syscall__retval); 	syscall__retval; })
+#endif
+#endif
+
+
+extern int z_impl_stepper_drv_enable(const struct device * dev);
+
+__pinned_func
+static inline int stepper_drv_enable(const struct device * dev)
+{
+#ifdef CONFIG_USERSPACE
+	if (z_syscall_trap()) {
+		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
+		return (int) arch_syscall_invoke1(parm0.x, K_SYSCALL_STEPPER_DRV_ENABLE);
+	}
+#endif
+	compiler_barrier();
+	return z_impl_stepper_drv_enable(dev);
+}
+
+#if defined(CONFIG_TRACING_SYSCALL)
+#ifndef DISABLE_SYSCALL_TRACING
+
+#define stepper_drv_enable(dev) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_DRV_ENABLE, stepper_drv_enable, dev); 	syscall__retval = stepper_drv_enable(dev); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_DRV_ENABLE, stepper_drv_enable, dev, syscall__retval); 	syscall__retval; })
+#endif
+#endif
+
+
+extern int z_impl_stepper_drv_disable(const struct device * dev);
+
+__pinned_func
+static inline int stepper_drv_disable(const struct device * dev)
+{
+#ifdef CONFIG_USERSPACE
+	if (z_syscall_trap()) {
+		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
+		return (int) arch_syscall_invoke1(parm0.x, K_SYSCALL_STEPPER_DRV_DISABLE);
+	}
+#endif
+	compiler_barrier();
+	return z_impl_stepper_drv_disable(dev);
+}
+
+#if defined(CONFIG_TRACING_SYSCALL)
+#ifndef DISABLE_SYSCALL_TRACING
+
+#define stepper_drv_disable(dev) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_DRV_DISABLE, stepper_drv_disable, dev); 	syscall__retval = stepper_drv_disable(dev); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_DRV_DISABLE, stepper_drv_disable, dev, syscall__retval); 	syscall__retval; })
+#endif
+#endif
+
+
+extern int z_impl_stepper_drv_set_micro_step_res(const struct device * dev, enum stepper_drv_micro_step_resolution res);
+
+__pinned_func
+static inline int stepper_drv_set_micro_step_res(const struct device * dev, enum stepper_drv_micro_step_resolution res)
+{
+#ifdef CONFIG_USERSPACE
+	if (z_syscall_trap()) {
+		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
+		union { uintptr_t x; enum stepper_drv_micro_step_resolution val; } parm1 = { .val = res };
+		return (int) arch_syscall_invoke2(parm0.x, parm1.x, K_SYSCALL_STEPPER_DRV_SET_MICRO_STEP_RES);
+	}
+#endif
+	compiler_barrier();
+	return z_impl_stepper_drv_set_micro_step_res(dev, res);
+}
+
+#if defined(CONFIG_TRACING_SYSCALL)
+#ifndef DISABLE_SYSCALL_TRACING
+
+#define stepper_drv_set_micro_step_res(dev, res) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_DRV_SET_MICRO_STEP_RES, stepper_drv_set_micro_step_res, dev, res); 	syscall__retval = stepper_drv_set_micro_step_res(dev, res); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_DRV_SET_MICRO_STEP_RES, stepper_drv_set_micro_step_res, dev, res, syscall__retval); 	syscall__retval; })
+#endif
+#endif
+
+
+extern int z_impl_stepper_drv_get_micro_step_res(const struct device * dev, enum stepper_drv_micro_step_resolution * res);
+
+__pinned_func
+static inline int stepper_drv_get_micro_step_res(const struct device * dev, enum stepper_drv_micro_step_resolution * res)
+{
+#ifdef CONFIG_USERSPACE
+	if (z_syscall_trap()) {
+		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
+		union { uintptr_t x; enum stepper_drv_micro_step_resolution * val; } parm1 = { .val = res };
+		return (int) arch_syscall_invoke2(parm0.x, parm1.x, K_SYSCALL_STEPPER_DRV_GET_MICRO_STEP_RES);
+	}
+#endif
+	compiler_barrier();
+	return z_impl_stepper_drv_get_micro_step_res(dev, res);
+}
+
+#if defined(CONFIG_TRACING_SYSCALL)
+#ifndef DISABLE_SYSCALL_TRACING
+
+#define stepper_drv_get_micro_step_res(dev, res) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_DRV_GET_MICRO_STEP_RES, stepper_drv_get_micro_step_res, dev, res); 	syscall__retval = stepper_drv_get_micro_step_res(dev, res); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_DRV_GET_MICRO_STEP_RES, stepper_drv_get_micro_step_res, dev, res, syscall__retval); 	syscall__retval; })
+#endif
+#endif
+
+
+extern int z_impl_stepper_drv_set_event_cb(const struct device * dev, stepper_drv_event_cb_t callback, void * user_data);
+
+__pinned_func
+static inline int stepper_drv_set_event_cb(const struct device * dev, stepper_drv_event_cb_t callback, void * user_data)
+{
+#ifdef CONFIG_USERSPACE
+	if (z_syscall_trap()) {
+		union { uintptr_t x; const struct device * val; } parm0 = { .val = dev };
+		union { uintptr_t x; stepper_drv_event_cb_t val; } parm1 = { .val = callback };
+		union { uintptr_t x; void * val; } parm2 = { .val = user_data };
+		return (int) arch_syscall_invoke3(parm0.x, parm1.x, parm2.x, K_SYSCALL_STEPPER_DRV_SET_EVENT_CB);
+	}
+#endif
+	compiler_barrier();
+	return z_impl_stepper_drv_set_event_cb(dev, callback, user_data);
+}
+
+#if defined(CONFIG_TRACING_SYSCALL)
+#ifndef DISABLE_SYSCALL_TRACING
+
+#define stepper_drv_set_event_cb(dev, callback, user_data) ({ 	int syscall__retval; 	sys_port_trace_syscall_enter(K_SYSCALL_STEPPER_DRV_SET_EVENT_CB, stepper_drv_set_event_cb, dev, callback, user_data); 	syscall__retval = stepper_drv_set_event_cb(dev, callback, user_data); 	sys_port_trace_syscall_exit(K_SYSCALL_STEPPER_DRV_SET_EVENT_CB, stepper_drv_set_event_cb, dev, callback, user_data, syscall__retval); 	syscall__retval; })
 #endif
 #endif
 
