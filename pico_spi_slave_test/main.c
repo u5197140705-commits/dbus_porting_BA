@@ -1,12 +1,13 @@
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/gpio.h"
+#include "hardware/pwm.h"
 #include "hardware/structs/spi.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
 
-#define PICO_FIRMWARE_VERSION "cs_aligned_tx_v2_noblk"
+#define PICO_FIRMWARE_VERSION "cs_aligned_tx_v2_noblk_motorpins"
 
 /* Non-blocking deferred log buffer: process_rx_frame must never call printf
  * directly — USB CDC printf blocks for milliseconds, which stalls the SPI
@@ -41,6 +42,11 @@ static void dlog_flush(void) {
 #define PIN_CS   17
 #define PIN_SCK  18
 #define PIN_MOSI 16
+
+#define PIN_MOTOR_PWMA 15
+#define PIN_MOTOR_STBY 14
+#define PIN_MOTOR_AIN1 13
+#define PIN_MOTOR_AIN2 12
 
 #define FRAME_SIZE 8
 #define DBUS_CMD_READ  0x40
@@ -93,6 +99,83 @@ typedef enum {
 } bit_transform_t;
 
 static bit_transform_t tx_transform = TRANSFORM_ROL1;
+
+static uint motor_pwma_slice = 0u;
+static uint motor_pwma_channel = 0u;
+static const char *const motor_names[MOTOR_COUNT] = {
+    "motor1",
+    "motor2",
+    "motor3",
+    "motor4",
+};
+
+static uint16_t speed_to_pwm_level(int32_t speed_setpoint)
+{
+    int32_t magnitude = speed_setpoint;
+    if (magnitude < 0) {
+        magnitude = -magnitude;
+    }
+    if (magnitude > 1200) {
+        magnitude = 1200;
+    }
+
+    return (uint16_t)((magnitude * 65535) / 1200);
+}
+
+static void apply_motor_outputs(size_t motor_index)
+{
+    if (motor_index >= ACTIVE_MOTOR_COUNT) {
+        return;
+    }
+
+    bool enabled = (motors[motor_index].enable != 0u);
+    int32_t speed = motors[motor_index].speed_setpoint;
+    bool forward = speed >= 0;
+
+    gpio_put(PIN_MOTOR_STBY, enabled ? 1 : 0);
+
+    if (!enabled || speed == 0) {
+        gpio_put(PIN_MOTOR_AIN1, 0);
+        gpio_put(PIN_MOTOR_AIN2, 0);
+        pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
+        return;
+    }
+
+    gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
+    gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
+    pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
+}
+
+static const char *motor_name_for_index(size_t motor_index)
+{
+    if (motor_index < MOTOR_COUNT) {
+        return motor_names[motor_index];
+    }
+
+    return "motor?";
+}
+
+static void motor_gpio_init(void)
+{
+    gpio_init(PIN_MOTOR_STBY);
+    gpio_set_dir(PIN_MOTOR_STBY, GPIO_OUT);
+    gpio_put(PIN_MOTOR_STBY, 0);
+
+    gpio_init(PIN_MOTOR_AIN1);
+    gpio_set_dir(PIN_MOTOR_AIN1, GPIO_OUT);
+    gpio_put(PIN_MOTOR_AIN1, 0);
+
+    gpio_init(PIN_MOTOR_AIN2);
+    gpio_set_dir(PIN_MOTOR_AIN2, GPIO_OUT);
+    gpio_put(PIN_MOTOR_AIN2, 0);
+
+    gpio_set_function(PIN_MOTOR_PWMA, GPIO_FUNC_PWM);
+    motor_pwma_slice = pwm_gpio_to_slice_num(PIN_MOTOR_PWMA);
+    motor_pwma_channel = pwm_gpio_to_channel(PIN_MOTOR_PWMA);
+    pwm_set_wrap(motor_pwma_slice, 65535u);
+    pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
+    pwm_set_enabled(motor_pwma_slice, true);
+}
 
 static inline uint8_t rol1(uint8_t value)
 {
@@ -265,6 +348,8 @@ static void motor_write(uint16_t addr, uint32_t value)
             if (!motors[index].enable) {
                 motors[index].speed_feedback = 0;
             }
+            apply_motor_outputs(index);
+            dlog("[PICO] %s enable=%u\n", motor_name_for_index(index), (unsigned)motors[index].enable);
             break;
         case MOTOR_REG_SPEED_OFFSET:
             motors[index].speed_setpoint = (int32_t)value;
@@ -273,6 +358,8 @@ static void motor_write(uint16_t addr, uint32_t value)
             } else {
                 motors[index].speed_feedback = 0;
             }
+            apply_motor_outputs(index);
+            dlog("[PICO] %s speed=%ld\n", motor_name_for_index(index), (long)motors[index].speed_setpoint);
             break;
         default:
             break;
@@ -513,12 +600,17 @@ int main(void)
 {
     stdio_init_all();
     printf("[Pico SPI Slave] Firmware version: %s\n", PICO_FIRMWARE_VERSION);
+        printf("[Pico SPI Slave] SPI0 pins: MOSI=GP%u CSn=GP%u SCK=GP%u MISO=GP%u\n",
+            PIN_MOSI, PIN_CS, PIN_SCK, PIN_MISO);
+        printf("[Pico SPI Slave] Motor1 pins: PWMA=GP%u STBY=GP%u AIN1=GP%u AIN2=GP%u\n",
+            PIN_MOTOR_PWMA, PIN_MOTOR_STBY, PIN_MOTOR_AIN1, PIN_MOTOR_AIN2);
     uint32_t last_heartbeat_ms = 0;
     
     status_led_init();
 
     memset(reg_table, 0, sizeof(reg_table));
     memset(motors, 0, sizeof(motors));
+    motor_gpio_init();
     for (size_t i = 0; i < MOTOR_COUNT; i++) {
         motors[i].status = (i < ACTIVE_MOTOR_COUNT) ? MOTOR_STATUS_AVAILABLE : 0u;
     }
@@ -547,11 +639,15 @@ int main(void)
 
         uint32_t now_ms = to_ms_since_boot(get_absolute_time());
         if ((now_ms - last_heartbeat_ms) >= 10000u) {
-            printf("[Pico SPI Slave] alive version=%s cs=%u rx_index=%u tx_index=%u\n",
+             printf("[Pico SPI Slave] alive version=%s cs=%u rx_index=%u tx_index=%u %s_en=%u %s_spd=%ld\n",
                    PICO_FIRMWARE_VERSION,
                    cs_is_active() ? 1u : 0u,
                    (unsigned)rx_index,
-                   (unsigned)tx_index);
+                 (unsigned)tx_index,
+                 motor_name_for_index(0u),
+                 (unsigned)motors[0].enable,
+                 motor_name_for_index(0u),
+                 (long)motors[0].speed_setpoint);
             last_heartbeat_ms = now_ms;
         }
 

@@ -434,3 +434,96 @@ Conclusion: communication path and protocol handling stabilized for current setu
 ✅ Code committed and pushed (focused + full snapshot)  
 
 Project is ready to proceed from SPI/protocol bring-up into controlled motor bring-up steps.
+
+---
+
+## Continuation: March 19, 2026 (Motor1 Pin Mapping + 3.3V Logic Baseline)
+
+### Electrical Baseline Confirmed
+- TB6612FNG **logic supply** `VCC = 3.3V` (from buck converter, adjusted from 5V)
+- TB6612FNG **motor supply** `VM = 9V` (battery)
+- **Common ground required** between Pico, TB6612, and power supplies
+
+Rationale: Pico GPIO are 3.3V logic. Driving TB6612 at `VCC=3.3V` guarantees valid logic-high margins without level shifters.
+
+### Pin Mapping Locked (Current Wiring + Firmware)
+- **SPI0 communication (kept unchanged):**
+    - GP16 = SPI0 RX
+    - GP17 = SPI0 CSn
+    - GP18 = SPI0 SCK
+    - GP19 = SPI0 TX
+- **Motor channel naming (future-proofed):** `motor1..motor4`
+- **Active motor control pins (motor1):**
+    - GP15 = `PWMA`
+    - GP14 = `STBY`
+    - GP13 = `AIN1`
+    - GP12 = `AIN2`
+
+This avoids any SPI pin conflict while reserving motor control on GP12–GP15.
+
+### Firmware Updates Applied
+- `pico_spi_slave_test/main.c`
+    - Added explicit motor GPIO/PWM config for GP12–GP15
+    - Added runtime drive logic tied to existing motor registers:
+        - `STBY` asserted only when enabled
+        - `AIN1/AIN2` set from speed sign (direction)
+        - `PWMA` duty set from speed magnitude
+    - Added startup serial prints that echo active SPI and Motor1 pin map
+    - Updated runtime logs to use `motor1` naming
+- `pico_spi_slave_test/CMakeLists.txt`
+    - Added `hardware_pwm` link dependency
+
+### Build Verification
+- Rebuild in `pico_spi_slave_test/build` completed successfully:
+    - `100% Built target pico_spi_slave_test`
+
+### Baseline Status
+Motor bring-up baseline is now documented with:
+1. 3.3V logic-safe electrical setup
+2. Non-conflicting SPI + motor pin assignment
+3. Firmware-level enforcement of mapped pins
+
+---
+
+## Continuation: March 19, 2026 (Motor1 Physical Bring-Up — COMPLETE)
+
+### Milestone Achieved
+Full end-to-end motor control test completed with **physical motor rotation confirmed**.
+
+### Test Configuration
+- Firmware: `cs_aligned_tx_v2_noblk_motorpins`
+- RW612 test sequence: `PRE_MOTOR_V1` (SPI validation) + `MOTOR0_TOGGLE_V1` (3-speed cycle)
+- TB6612FNG wired: GP15→PWMA, GP14→STBY, GP13→AIN1, GP12→AIN2
+- Power: VCC=3.3V, VM=9V, common GND
+
+### RW612 Repeatability Result
+```
+Total runs: 20
+PASS:       20
+FAIL:       0
+Overall:    PASS
+```
+
+### Motor Physical Behavior Confirmed
+- Motor **physically rotated** at all three commanded speeds: 300, 800, 1200
+- Direction and enable/disable actuation worked correctly per cycle
+- Motor stopped cleanly on each `enable=0` command
+
+### MOTOR0_TOGGLE_V1 Per-Cycle Results (representative — run 18/20)
+| Cycle | Speed | Status     | Feedback | Enable→0 |
+|-------|-------|------------|----------|----------|
+| 1     | 300   | 0x00000003 | 300      | ✅       |
+| 2     | 800   | 0x00000003 | 800      | ✅       |
+| 3     | 1200  | 0x00000003 | 1200     | ✅       |
+
+### System State After Completion
+- SPI protocol: stable, no data corruption across 20 runs
+- Motor register interface: all write/readback values match expected
+- PWM output: correctly mapped from speed magnitude
+- Direction pins: AIN1/AIN2 driven correctly
+- STBY: asserted on enable, de-asserted on disable
+
+### Next Steps
+- Git commit: firmware + CMakeLists + session log
+- Suggested commit message: `feat: motor1 GPIO/PWM bring-up on GP12-GP15, 20/20 PASS with physical rotation`
+- Proceed to multi-motor support (motor2–motor4) or DBus integration layer

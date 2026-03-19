@@ -19,6 +19,7 @@ target_link_libraries(pico_spi_slave_test
     pico_stdlib
     hardware_spi
     hardware_gpio
+    hardware_pwm
 )
 
 pico_add_extra_outputs(pico_spi_slave_test)
