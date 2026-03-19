@@ -5,6 +5,21 @@
 
 ---
 
+## Known-Good Baseline (as validated on March 19, 2026)
+
+- **Branch / Snapshot**: `pico` at commit `264c7f1` (full runnable workspace snapshot)
+- **Focused source fix commit**: `c868539` (`pico_spi_slave_test/main.c`, `zephyr_dbus_driver/src/dbus_driver.c`)
+- **RW612 image**: `build/zephyr/zephyr.elf`
+- **Pico firmware**: `cs_aligned_tx_v2_noblk` with SERIAL_ROL1 TX compensation in `prepare_tx_frame_wire()`
+- **SPI mode**: MODE0 (`CPOL=0`, `CPHA=0`)
+- **Observed link behavior**: response marker often arrives as `0x20` (bit7-cleared variant of `0xA0`)
+- **RW612 matcher requirement**: marker-tolerant fallback enabled, including shifted-header reconstruction path
+- **Validation status**:
+    - `PRE_MOTOR_V1`: repeated `PASS`
+    - `MOTOR0_TOGGLE_V1`: repeated complete cycles with correct feedback (e.g., 300 / 800 / 1200)
+
+---
+
 ## Problem Statement
 
 ### Initial Symptom
@@ -290,3 +305,132 @@ Result: RW612 receives correct byte values
 
 **Session completed**: All code fixes implemented, built, and committed.  
 **Deployment status**: Awaiting user to flash Pico and retest.
+
+---
+
+## Continuation: March 19, 2026 (Failures → Final Stabilization)
+
+### Context at Start of Day
+- Pico firmware already moved to non-blocking logging (`cs_aligned_tx_v2_noblk`)
+- RW612 matcher already had deterministic matching + marker-tolerant fallback
+- PRE_MOTOR_V1 was close but still failing on two critical reads in some runs
+
+### Observed Failing Patterns (Early March 19)
+1. `scratchpad pattern 2 readback 0xaaaaaa2a (expected 0xaaaaaaaa)`
+2. `motor0 speed feedback readback 0x00008430 (expected 0x000004b0)`
+
+Also observed in RW612 logs:
+- Valid response frames arriving with marker `0x20` (not only `0xA0`)
+- Example frame for speed path: `a0 d0 04 01 30 84 00 00`
+
+---
+
+## Root Cause Analysis (March 19)
+
+### Key Discovery
+Both remaining corruptions had the same root cause in Pico TX pre-compensation:
+
+- Pico was using **per-byte ROL1** when preparing `tx_frame_wire[]`
+- The physical link behavior on MISO is effectively **serial ROR1 across the whole byte stream** (inter-byte carry), not independent per-byte rotate
+
+### Why This Caused Exactly Those Wrong Values
+
+1. `0x000004b0` became `0x00008430`
+     - Byte carry between `0xb0` and `0x04` was handled incorrectly by per-byte ROL1
+
+2. `0xaaaaaaaa` became `0xaaaaaa2a`
+     - Carry from length byte/data boundary was lost in the first payload byte
+
+---
+
+## Fixes Implemented on March 19
+
+### Fix A: Pico TX Compensation Updated to SERIAL_ROL1
+**File**: `pico_spi_slave_test/main.c`
+
+Changed `prepare_tx_frame_wire()` from per-byte:
+- `tx_frame_wire[i] = rol1(tx_frame_desired[i])`
+
+To serial cross-byte compensation:
+- `W[i] = (desired[i] << 1) | (desired[i+1] >> 7)` for `i < FRAME_SIZE-1`
+- `W[last] = desired[last] << 1`
+
+This made Pico TX compensation match the observed link behavior.
+
+### Fix B: RW612 Shifted-Header Matcher Made Marker-Tolerant
+**File**: `zephyr_dbus_driver/src/dbus_driver.c`
+
+Shifted-header detection path was widened from strict marker `0xA0` to masked marker check (`0xA0/0x20` equivalent under bit7 corruption) for the one-byte-shift reconstruction path.
+
+Reason: some valid shifted responses arrived with marker `0x20` and were previously missed in that branch.
+
+---
+
+## Build + Flash Cycle
+
+### Pico
+- Rebuilt Pico firmware successfully (`pico_spi_slave_test` target)
+- UF2 copied to Windows drive for flashing (`/mnt/d/pico_spi_slave_test.uf2`)
+
+### RW612
+- Rebuilt Zephyr image successfully
+- `build/zephyr/zephyr.elf` flashed for retest
+
+---
+
+## Validation Progression (March 19)
+
+### Intermediate Result
+- Pico serial logs showed correct register behavior for critical addresses:
+    - `0x001c` scratchpad read/write correct
+    - `0x5004` setpoint readback correct
+    - `0x5008` feedback tracked setpoint correctly while enabled
+    - `0x500c` status returned `0x00000003`
+
+### First near-pass after Pico fix
+- PRE_MOTOR_V1 still failed once due to shifted-header + `0x20` marker case in RW612 scratchpad path
+
+### After RW612 shifted-header marker-tolerant patch
+- PRE_MOTOR_V1: **PASS**
+- MOTOR0_TOGGLE_V1: completed cycles with correct feedback/status
+
+### Repeated Confirmation Runs
+Multiple repeated runs (as shared in session output) all showed:
+- `Main: PRE_MOTOR_V1 finished: PASS`
+- `Motor Toggle [MOTOR0_TOGGLE_V1]: Complete.`
+- Correct feedback values for cycle speeds (e.g. 300, 800, 1200)
+- No recurrence of `0xaaaaaa2a` or `0x00008430`
+
+Conclusion: communication path and protocol handling stabilized for current setup.
+
+---
+
+## Git History for Final Working State
+
+### Focused fix commit
+- **`c868539`**
+- Message: `Fix SPI serial-shift compensation and marker-tolerant response matching`
+- Includes source changes in:
+    - `pico_spi_slave_test/main.c`
+    - `zephyr_dbus_driver/src/dbus_driver.c`
+
+### Full runnable snapshot commit (requested)
+- **`264c7f1`**
+- Message: `Snapshot full runnable workspace state`
+- Includes full workspace/build state so pulling branch reproduces current runtime environment
+
+### Remote status
+- Branch: `pico`
+- Pushed to: `origin/pico`
+- Working tree confirmed clean after snapshot commit
+
+---
+
+## Final Session Outcome
+
+✅ Remaining protocol corruptions resolved  
+✅ PRE_MOTOR_V1 passing repeatedly  
+✅ MOTOR0_TOGGLE_V1 passing repeatedly  
+✅ Code committed and pushed (focused + full snapshot)  
+
+Project is ready to proceed from SPI/protocol bring-up into controlled motor bring-up steps.
