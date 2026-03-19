@@ -4,8 +4,38 @@
 #include "hardware/structs/spi.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
-#define PICO_FIRMWARE_VERSION "388aab3_tx_index_reset"
+#define PICO_FIRMWARE_VERSION "cs_aligned_tx_v2_noblk"
+
+/* Non-blocking deferred log buffer: process_rx_frame must never call printf
+ * directly — USB CDC printf blocks for milliseconds, which stalls the SPI
+ * tight loop and causes TX FIFO underflow. Store messages here instead;
+ * main loop flushes them between SPI calls. */
+#define DLOG_ENTRIES 64u
+#define DLOG_MSG_LEN 96u
+typedef struct { char msg[DLOG_MSG_LEN]; } dlog_entry_t;
+static dlog_entry_t dlog_buf[DLOG_ENTRIES];
+static unsigned int dlog_head = 0u;
+static unsigned int dlog_tail = 0u;
+
+static void dlog(const char *fmt, ...) {
+    unsigned int next = (dlog_head + 1u) % DLOG_ENTRIES;
+    if (next == dlog_tail) return;  /* buffer full, drop entry */
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(dlog_buf[dlog_head].msg, DLOG_MSG_LEN - 1u, fmt, args);
+    dlog_buf[dlog_head].msg[DLOG_MSG_LEN - 1u] = '\0';
+    va_end(args);
+    dlog_head = next;
+}
+
+static void dlog_flush(void) {
+    while (dlog_tail != dlog_head) {
+        printf("%s", dlog_buf[dlog_tail].msg);
+        dlog_tail = (dlog_tail + 1u) % DLOG_ENTRIES;
+    }
+}
 
 #define PIN_MISO 19
 #define PIN_CS   17
@@ -58,6 +88,8 @@ typedef enum {
     TRANSFORM_IDENTITY = 0,
     TRANSFORM_ROL1,
     TRANSFORM_ROR1,
+    TRANSFORM_SERIAL_ROL1,
+    TRANSFORM_SERIAL_ROR1,
 } bit_transform_t;
 
 static bit_transform_t tx_transform = TRANSFORM_ROL1;
@@ -115,8 +147,20 @@ static bool decoded_frame_is_valid(const uint8_t *decoded_frame)
 
 static bool decode_frame_with_transform(const uint8_t *raw_frame, uint8_t *decoded_frame, bit_transform_t transform)
 {
-    for (size_t i = 0; i < FRAME_SIZE; i++) {
-        decoded_frame[i] = apply_transform(raw_frame[i], transform);
+    if (transform == TRANSFORM_SERIAL_ROR1) {
+        decoded_frame[0] = (uint8_t)(raw_frame[0] >> 1);
+        for (size_t i = 1; i < FRAME_SIZE; i++) {
+            decoded_frame[i] = (uint8_t)((raw_frame[i] >> 1) | ((raw_frame[i - 1] & 0x01u) << 7));
+        }
+    } else if (transform == TRANSFORM_SERIAL_ROL1) {
+        for (size_t i = 0; i < (FRAME_SIZE - 1); i++) {
+            decoded_frame[i] = (uint8_t)((raw_frame[i] << 1) | (raw_frame[i + 1] >> 7));
+        }
+        decoded_frame[FRAME_SIZE - 1] = (uint8_t)(raw_frame[FRAME_SIZE - 1] << 1);
+    } else {
+        for (size_t i = 0; i < FRAME_SIZE; i++) {
+            decoded_frame[i] = apply_transform(raw_frame[i], transform);
+        }
     }
 
     return decoded_frame_is_valid(decoded_frame);
@@ -136,6 +180,16 @@ static bool decode_rx_frame_auto(const uint8_t *raw_frame, uint8_t *decoded_fram
 
     if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_ROR1)) {
         *detected = TRANSFORM_ROR1;
+        return true;
+    }
+
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_SERIAL_ROR1)) {
+        *detected = TRANSFORM_SERIAL_ROR1;
+        return true;
+    }
+
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_SERIAL_ROL1)) {
+        *detected = TRANSFORM_SERIAL_ROL1;
         return true;
     }
 
@@ -249,13 +303,24 @@ static uint32_t motor_read(uint16_t addr)
 
 static void prepare_tx_frame_wire(void)
 {
-    /* Observed on-wire behavior is per-byte ROR1 on MISO.
-     * Pre-compensate with per-byte ROL1 so RW612 receives the intended byte:
-     * ror1(rol1(x)) == x
+    /* The link applies SERIAL_ROR1 (1-bit right-shift of the entire MISO bit
+     * stream, carry propagates from LSB of each byte to MSB of the next).
+     * Pre-compensate with SERIAL_ROL1 (1-bit left-shift, carry from MSB of
+     * each byte into LSB of the previous byte) so that after the link's
+     * SERIAL_ROR1 the RW612 receives the intended TX frame exactly.
+     *
+     * W[i] = (desired[i] << 1) | (desired[i+1] >> 7)  for i < FRAME_SIZE-1
+     * W[FRAME_SIZE-1] = desired[FRAME_SIZE-1] << 1
+     *
+     * This is subtle: per-byte ROL1 is correct for bytes where the LSB from
+     * the carry chain happens to match bit7 of the same byte, but fails when
+     * adjacent bytes have differing MSBs (e.g. 0xb0 followed by 0x04, or the
+     * len=0x01 byte preceding 0xaa data).
      */
-    for (size_t i = 0u; i < FRAME_SIZE; i++) {
-        tx_frame_wire[i] = rol1(tx_frame_desired[i]);
+    for (size_t i = 0u; i < (FRAME_SIZE - 1u); i++) {
+        tx_frame_wire[i] = (uint8_t)((tx_frame_desired[i] << 1u) | (tx_frame_desired[i + 1u] >> 7u));
     }
+    tx_frame_wire[FRAME_SIZE - 1u] = (uint8_t)(tx_frame_desired[FRAME_SIZE - 1u] << 1u);
 }
 
 static void set_default_tx_pattern(void)
@@ -275,6 +340,9 @@ static bool process_rx_frame(void)
         /* Ignore invalid frames (e.g. RW612 dummy clocks during readback).
          * Do NOT overwrite tx_frame_wire here, otherwise a prepared response
          * can be clobbered by default 0xA5 before the master receives it. */
+           dlog("[PICO] FAILED raw: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+               rx_frame_raw[0], rx_frame_raw[1], rx_frame_raw[2], rx_frame_raw[3],
+               rx_frame_raw[4], rx_frame_raw[5], rx_frame_raw[6], rx_frame_raw[7]);
         return false;
     }
 
@@ -285,6 +353,7 @@ static bool process_rx_frame(void)
 
     uint8_t cmd = decoded[0] & 0x60u;
     uint16_t addr = ((uint16_t)decoded[1] << 8) | decoded[2];
+    dlog("[PICO] RX cmd=0x%02x addr=0x%04x\n", cmd, addr);
 
     if (cmd == DBUS_CMD_WRITE) {
         uint32_t value_decoded =
@@ -306,6 +375,7 @@ static bool process_rx_frame(void)
 
         motor_write(addr, value);
         reg_write(addr, value);
+        dlog("[PICO] WRITE addr=0x%04x val=0x%08x\n", addr, value);
         set_default_tx_pattern();
         tx_index = 0;
         return true;
@@ -316,6 +386,7 @@ static bool process_rx_frame(void)
         if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
             value = motor_read(addr);
         }
+        dlog("[PICO] READ addr=0x%04x val=0x%08x\n", addr, value);
         memset(tx_frame_desired, 0, sizeof(tx_frame_desired));
         tx_frame_desired[0] = DBUS_RSP_MARKER;
         tx_frame_desired[1] = (uint8_t)(addr >> 8);
@@ -327,6 +398,16 @@ static bool process_rx_frame(void)
         tx_frame_desired[7] = (uint8_t)(value >> 24);
         prepare_tx_frame_wire();
         tx_index = 0;
+        /* Preload TX FIFO immediately — do not wait for the service_spi_frame
+         * TX loading loop which may run after CS goes high and miss the window.
+         * At this point all 8 command bytes have been received so the FIFO is
+         * empty and can accept the full 8-byte response now. */
+        {
+            spi_hw_t *hw = spi_get_hw(spi0);
+            while (spi_is_writable(spi0) && tx_index < FRAME_SIZE) {
+                hw->dr = tx_frame_wire[tx_index++];
+            }
+        }
         return true;
     }
 
@@ -386,6 +467,17 @@ static void service_spi_frame(spi_inst_t *spi)
     bool current_cs_state = cs_is_active();
 
     if (!last_cs_state && current_cs_state) {
+        /* New transaction started: align both RX and TX to frame start. */
+        rx_index = 0;
+        tx_index = 0;
+        /* Prime TX immediately at CS-assert so first clocks do not see zeros. */
+        while (cs_is_active() && spi_is_writable(spi) && tx_index < FRAME_SIZE) {
+            hw->dr = tx_frame_wire[tx_index++];
+        }
+    }
+
+    if (last_cs_state && !current_cs_state) {
+        /* Transaction ended: discard partial frame residue, if any. */
         rx_index = 0;
     }
 
@@ -398,13 +490,20 @@ static void service_spi_frame(spi_inst_t *spi)
             rx_frame_raw[rx_index++] = rx_byte;
         }
 
+        /* Keep feeding TX during active transaction, not only after RX drains. */
+        while (cs_is_active() && spi_is_writable(spi) && tx_index < FRAME_SIZE) {
+            hw->dr = tx_frame_wire[tx_index++];
+        }
+
         if (rx_index == FRAME_SIZE) {
             (void)process_rx_frame();
             rx_index = 0;
         }
     }
 
-    while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
+    /* Only feed TX FIFO while CS is active; otherwise tx_index may advance
+     * during idle and de-synchronize the next transaction response. */
+    while (cs_is_active() && spi_is_writable(spi) && tx_index < FRAME_SIZE) {
         hw->dr = tx_frame_wire[tx_index];
         tx_index++;
     }
@@ -443,10 +542,11 @@ int main(void)
 
     while (true) {
         service_spi_frame(spi0);
+        dlog_flush();
         status_led_set(cs_is_active());
 
         uint32_t now_ms = to_ms_since_boot(get_absolute_time());
-        if ((now_ms - last_heartbeat_ms) >= 1000u) {
+        if ((now_ms - last_heartbeat_ms) >= 10000u) {
             printf("[Pico SPI Slave] alive version=%s cs=%u rx_index=%u tx_index=%u\n",
                    PICO_FIRMWARE_VERSION,
                    cs_is_active() ? 1u : 0u,

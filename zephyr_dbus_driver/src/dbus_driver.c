@@ -21,11 +21,15 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 #define DBUS_CS_GPIO_PIN 6
 #define DBUS_CS_GPIO_FLAGS GPIO_OUTPUT
 #define DBCDRV_SPI_RSP_MARKER 0xA0u
+#define DBCDRV_SPI_CS_SETUP_US 8u
+#define DBCDRV_SPI_CS_HOLD_US 8u
+#define DBCDRV_SPI_DUMMY_RETRIES 16u
+#define DBCDRV_SPI_DUMMY_GAP_US 15u
 
 static const struct device *dbus_cs_gpio_dev = DEVICE_DT_GET(DBUS_CS_GPIO_NODE);
 
 static struct spi_config dbus_spi_cfg = {
-    .frequency = 20000, // Slower clock for SPI slave timing bring-up
+    .frequency = 10000, // 10 kHz clock to give Pico more response processing time
     .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_TRANSFER_MSB,
     .slave = 0, // Assuming slave select 0
     .cs = NULL, // Disable Zephyr CS control, using manual GPIO
@@ -479,11 +483,11 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
      * AFTER receiving all 8 bytes. The response bytes here are stale/default
      * and must be discarded. */
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
-    k_usleep(2);
+    k_usleep(DBCDRV_SPI_CS_SETUP_US);
 
     int ret = DBCDRV_spiTransceiveBytewise(tx_buffer, rx_buffer, sizeof(tx_buffer));
 
-    k_usleep(2);
+    k_usleep(DBCDRV_SPI_CS_HOLD_US);
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
 
     if (ret) {
@@ -497,22 +501,26 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     uint8_t dummy_tx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t data_rx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     bool have_matching_response = false;
-    uint8_t latest_match[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
+    uint8_t matched_data[4] = {0};
     uint8_t expected_addr_high = (uint8_t)((uint16_t)addr >> 8);
     uint8_t expected_addr_low  = (uint8_t)addr;
+    bool pending_shifted_tail = false;
+    uint8_t pending_data[3] = {0};
 
     /* Adaptive dummy exchanges: Pico response can appear after a variable
      * number of transactions. Keep clocking until payload bytes are no longer
      * the default 0xA5 pattern (or max attempts reached). */
-    for (uint8_t attempt = 1; attempt <= 4; attempt++) {
+    k_usleep(DBCDRV_SPI_DUMMY_GAP_US);
+
+    for (uint8_t attempt = 1; attempt <= DBCDRV_SPI_DUMMY_RETRIES; attempt++) {
         memset(data_rx, 0, sizeof(data_rx));
 
         gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
-        k_usleep(2);
+        k_usleep(DBCDRV_SPI_CS_SETUP_US);
 
         ret = DBCDRV_spiTransceiveBytewise(dummy_tx, data_rx, sizeof(dummy_tx));
 
-        k_usleep(2);
+        k_usleep(DBCDRV_SPI_CS_HOLD_US);
         gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
 
         if (ret) {
@@ -523,17 +531,68 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         LOG_HEXDUMP_DBG(dummy_tx, sizeof(dummy_tx), "DBCDRV_readReg32 dummy TX:");
         LOG_HEXDUMP_DBG(data_rx, sizeof(data_rx), "DBCDRV_readReg32 data RX attempt:");
 
-        /* The link applies a 1-bit serial frame shift so Pico pre-compensates
-         * with a serial frame left shift. RW612 receives bytes[1..7] verbatim.
-         * byte[0] depends on previous frame carry — skip it.
-         * byte[3] is always 0x01 (len) when addr_low < 0x80. */
-        if (data_rx[1] == expected_addr_high &&
+        if (pending_shifted_tail) {
+            matched_data[0] = pending_data[0];
+            matched_data[1] = pending_data[1];
+            matched_data[2] = pending_data[2];
+            matched_data[3] = data_rx[0];
+            pending_shifted_tail = false;
+            have_matching_response = true;
+            LOG_DBG("DBCDRV_readReg32: reconstructed shifted payload on dummy attempt %u for addr 0x%x", attempt, addr);
+        }
+
+        if (have_matching_response) {
+            break;
+        }
+
+        bool addr_high_match = ((data_rx[1] & 0x7Fu) == (expected_addr_high & 0x7Fu));
+
+        /* Strict match: marker + addr + len + payload in this attempt */
+        if (data_rx[0] == DBCDRV_SPI_RSP_MARKER &&
+            addr_high_match &&
             data_rx[2] == expected_addr_low &&
             data_rx[3] == 0x01u) {
             have_matching_response = true;
-            memcpy(latest_match, data_rx, sizeof(latest_match));
+            matched_data[0] = data_rx[4];
+            matched_data[1] = data_rx[5];
+            matched_data[2] = data_rx[6];
+            matched_data[3] = data_rx[7];
             LOG_DBG("DBCDRV_readReg32: matching payload on dummy attempt %u for addr 0x%x", attempt, addr);
+            break;
         }
+
+        /* Marker-tolerant fallback: marker may be corrupted by serial carry
+         * (e.g. 0x20 instead of 0xA0), but addr+len must match exactly. */
+        if (addr_high_match &&
+            data_rx[2] == expected_addr_low &&
+            data_rx[3] == 0x01u) {
+            have_matching_response = true;
+            matched_data[0] = data_rx[4];
+            matched_data[1] = data_rx[5];
+            matched_data[2] = data_rx[6];
+            matched_data[3] = data_rx[7];
+            LOG_DBG("DBCDRV_readReg32: fallback marker-tolerant payload on dummy attempt %u (marker 0x%02x) for addr 0x%x",
+                    attempt, data_rx[0], addr);
+            break;
+        }
+
+        /* One-byte shifted header: [x, marker, addr_hi, addr_lo, len, d0, d1, d2]
+         * and d3 appears as data_rx[0] of the next dummy attempt.
+         * Marker can also arrive as 0x20 (bit7 cleared by serial carry), so
+         * use masked comparison here as well. */
+        if (((data_rx[1] & 0x7Fu) == (DBCDRV_SPI_RSP_MARKER & 0x7Fu)) &&
+            ((data_rx[2] & 0x7Fu) == (expected_addr_high & 0x7Fu)) &&
+            data_rx[3] == expected_addr_low &&
+            data_rx[4] == 0x01u) {
+            pending_data[0] = data_rx[5];
+            pending_data[1] = data_rx[6];
+            pending_data[2] = data_rx[7];
+            pending_shifted_tail = true;
+            LOG_DBG("DBCDRV_readReg32: detected shifted payload header on dummy attempt %u for addr 0x%x (marker 0x%02x)",
+                    attempt, addr, data_rx[1]);
+        }
+
+        k_usleep(DBCDRV_SPI_DUMMY_GAP_US);
     }
 
     if (!have_matching_response) {
@@ -541,15 +600,12 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         return DBC_ERROR;
     }
 
-    memcpy(data_rx, latest_match, sizeof(data_rx));
-    LOG_DBG("DBCDRV_readReg32: using latest matching payload for addr 0x%x", addr);
-
     LOG_DBG("DBCDRV_readReg32: SPI transceive successful for addr 0x%x. Read %u bytes.", addr, sizeof(data_rx));
 
-    *data = (uint32_t)data_rx[DBC_SPI_HDR_SIZE + 3] << 24 |
-            (uint32_t)data_rx[DBC_SPI_HDR_SIZE + 2] << 16 |
-            (uint32_t)data_rx[DBC_SPI_HDR_SIZE + 1] << 8 |
-            (uint32_t)data_rx[DBC_SPI_HDR_SIZE];
+        *data = (uint32_t)matched_data[3] << 24 |
+            (uint32_t)matched_data[2] << 16 |
+            (uint32_t)matched_data[1] << 8 |
+            (uint32_t)matched_data[0];
 
     return DBC_OK;
 }
@@ -577,11 +633,11 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
     tx_buffer[DBC_SPI_HDR_SIZE + 3] = (uint8_t)(data >> 24);
 
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
-    k_usleep(2);
+    k_usleep(DBCDRV_SPI_CS_SETUP_US);
 
     int ret = DBCDRV_spiTransceiveBytewise(tx_buffer, rx_buffer, sizeof(tx_buffer));
 
-    k_usleep(2);
+    k_usleep(DBCDRV_SPI_CS_HOLD_US);
     gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
 
     if (ret) {
