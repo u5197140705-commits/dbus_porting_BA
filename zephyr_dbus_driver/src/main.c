@@ -5,15 +5,14 @@
 #include "dbus_app_layer.h" // Include the ported DBus Application Layer
 #include "spi_abstraction.h" // Include the SPI abstraction layer
 #include "dbus_driver_public.h" // Include the DBus driver public API
+#include "motor_service.h"
 #include <zephyr/sys_clock.h> // For K_SECONDS macro
-
-#define MOTOR0_ENABLE_ADDR   0x5000u
-#define MOTOR0_SPEED_ADDR    0x5004u
-#define MOTOR0_FEEDBACK_ADDR 0x5008u
-#define MOTOR0_STATUS_ADDR   0x500Cu
 
 #define MOTOR_STATUS_ENABLED   0x00000001u
 #define MOTOR_STATUS_AVAILABLE 0x00000002u
+
+#define DBAL_TEST_SERVICE_ID   0x7001u
+#define DBAL_TEST_COMMAND_ID   0x0001u
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 20u
@@ -26,6 +25,34 @@ void my_test_service_handler(const uint8_t* const data, uint8_t data_len) {
         printk("0x%02x ", data[i]);
     }
     printk("\n");
+}
+
+static void dbal_bootstrap_phase1(void)
+{
+    bool handler_ok;
+
+    printk("DBAL Bootstrap [PHASE1]: init start\n");
+    dbal_init();
+
+    handler_ok = dbal_register_service_handler(DBAL_TEST_SERVICE_ID,
+                                               DBAL_TYPE_EVENT,
+                                               my_test_service_handler);
+
+    printk("DBAL Bootstrap [PHASE1]: handler registration=%s (service=0x%04x type=%u)\n",
+           handler_ok ? "OK" : "FAIL",
+           DBAL_TEST_SERVICE_ID,
+           DBAL_TYPE_EVENT);
+
+    printk("DBAL Bootstrap [PHASE1]: connection_state=%d\n", dbal_get_connection_state());
+
+    {
+        uint8_t boot_payload[2] = { 0x50u, 0x31u };
+        bool event_ok = dbal_send_event(DBAL_TEST_SERVICE_ID,
+                                        DBAL_TEST_COMMAND_ID,
+                                        boot_payload,
+                                        sizeof(boot_payload));
+        printk("DBAL Bootstrap [PHASE1]: startup event send=%s\n", event_ok ? "OK" : "FAIL");
+    }
 }
 
 static bool dbus_write_read_check(uint16_t addr, uint32_t write_val, uint32_t expected_read, const char *label)
@@ -65,6 +92,7 @@ static bool test_spi_validation_before_motor(void)
 {
     bool all_ok = true;
     uint32_t status_val = 0;
+    int32_t feedback_val = 0;
     enum DBC_Error err;
 
     DBCDRV_setSpiMode(false, false);
@@ -74,11 +102,39 @@ static bool test_spi_validation_before_motor(void)
     all_ok &= dbus_write_read_check(DBC_SCRATCHPAD_ADDR, 0xAAAAAAAAu, 0xAAAAAAAAu, "scratchpad pattern 2");
     all_ok &= dbus_write_read_check(DBC_SCRATCHPAD_ADDR, 0x00000000u, 0x00000000u, "scratchpad pattern 3");
 
-    all_ok &= dbus_write_read_check(MOTOR0_ENABLE_ADDR, 1u, 1u, "motor0 enable=1");
-    all_ok &= dbus_write_read_check(MOTOR0_SPEED_ADDR, 1200u, 1200u, "motor0 speed setpoint");
-    all_ok &= dbus_write_read_check(MOTOR0_FEEDBACK_ADDR, 0u, 1200u, "motor0 speed feedback");
+    err = motor_service_set_enable(0u, true);
+    if (err != DBC_OK) {
+        printk("❌ Motor Service: set_enable failed (err=%d)\n", err);
+        all_ok = false;
+    } else {
+        all_ok &= dbus_write_read_check((uint16_t)0x5000u, 1u, 1u, "motor0 enable=1");
+    }
 
-    err = DBCDRV_readReg32((enum DBC_RegAddr)MOTOR0_STATUS_ADDR, &status_val);
+    err = motor_service_set_speed(0u, 1200);
+    if (err != DBC_OK) {
+        printk("❌ Motor Service: set_speed failed (err=%d)\n", err);
+        all_ok = false;
+    } else {
+        all_ok &= dbus_write_read_check((uint16_t)0x5004u, 1200u, 1200u, "motor0 speed setpoint");
+    }
+
+    err = motor_service_get_feedback(0u, &feedback_val);
+    if (err != DBC_OK) {
+        printk("❌ Motor Service: get_feedback failed (err=%d)\n", err);
+        all_ok = false;
+    } else {
+        printk("SPI Validation: motor0 speed feedback readback 0x%08x (expected 0x%08x)\n",
+               (uint32_t)feedback_val,
+               1200u);
+        if (feedback_val != 1200) {
+            printk("❌ SPI Validation: motor0 speed feedback mismatch\n");
+            all_ok = false;
+        } else {
+            printk("✅ SPI Validation: motor0 speed feedback ok\n");
+        }
+    }
+
+    err = motor_service_get_status(0u, &status_val);
     if (err != DBC_OK) {
         printk("❌ SPI Validation: motor0 status read failed (err=%d)\n", err);
         all_ok = false;
@@ -93,8 +149,29 @@ static bool test_spi_validation_before_motor(void)
         }
     }
 
-    all_ok &= dbus_write_read_check(MOTOR0_ENABLE_ADDR, 0u, 0u, "motor0 enable=0");
-    all_ok &= dbus_write_read_check(MOTOR0_FEEDBACK_ADDR, 0u, 0u, "motor0 feedback after disable");
+    err = motor_service_set_enable(0u, false);
+    if (err != DBC_OK) {
+        printk("❌ Motor Service: disable failed (err=%d)\n", err);
+        all_ok = false;
+    } else {
+        all_ok &= dbus_write_read_check((uint16_t)0x5000u, 0u, 0u, "motor0 enable=0");
+    }
+
+    err = motor_service_get_feedback(0u, &feedback_val);
+    if (err != DBC_OK) {
+        printk("❌ Motor Service: get_feedback after disable failed (err=%d)\n", err);
+        all_ok = false;
+    } else {
+        printk("SPI Validation: motor0 feedback after disable readback 0x%08x (expected 0x%08x)\n",
+               (uint32_t)feedback_val,
+               0u);
+        if (feedback_val != 0) {
+            printk("❌ SPI Validation: motor0 feedback after disable mismatch\n");
+            all_ok = false;
+        } else {
+            printk("✅ SPI Validation: motor0 feedback after disable ok\n");
+        }
+    }
 
     printk("SPI Validation summary: %s\n", all_ok ? "PASS" : "FAIL");
     return all_ok;
@@ -109,15 +186,26 @@ static bool run_motor0_toggle_cycle(void)
 
     for (size_t i = 0; i < ARRAY_SIZE(test_speeds); i++) {
         uint32_t status_val = 0;
-        uint32_t feedback_val = 0;
+        int32_t feedback_val = 0;
         enum DBC_Error err;
 
         printk("Motor Toggle: cycle %u enable=1 speed=%u\n", (uint32_t)(i + 1u), test_speeds[i]);
-        (void)DBCDRV_writeReg32((enum DBC_RegAddr)MOTOR0_ENABLE_ADDR, 1u);
-        (void)DBCDRV_writeReg32((enum DBC_RegAddr)MOTOR0_SPEED_ADDR, test_speeds[i]);
+        err = motor_service_set_enable(0u, true);
+        if (err != DBC_OK) {
+            printk("Motor Toggle: cycle %u enable write err=%d\n", (uint32_t)(i + 1u), err);
+            all_ok = false;
+            continue;
+        }
+
+        err = motor_service_set_speed(0u, (int32_t)test_speeds[i]);
+        if (err != DBC_OK) {
+            printk("Motor Toggle: cycle %u speed write err=%d\n", (uint32_t)(i + 1u), err);
+            all_ok = false;
+            continue;
+        }
         k_msleep(20);
 
-        err = DBCDRV_readReg32((enum DBC_RegAddr)MOTOR0_STATUS_ADDR, &status_val);
+        err = motor_service_get_status(0u, &status_val);
         if (err == DBC_OK) {
             printk("Motor Toggle: cycle %u status=0x%08x\n", (uint32_t)(i + 1u), status_val);
             {
@@ -133,10 +221,10 @@ static bool run_motor0_toggle_cycle(void)
             all_ok = false;
         }
 
-        err = DBCDRV_readReg32((enum DBC_RegAddr)MOTOR0_FEEDBACK_ADDR, &feedback_val);
+        err = motor_service_get_feedback(0u, &feedback_val);
         if (err == DBC_OK) {
-            printk("Motor Toggle: cycle %u feedback=%u\n", (uint32_t)(i + 1u), feedback_val);
-            if (feedback_val != test_speeds[i]) {
+            printk("Motor Toggle: cycle %u feedback=%d\n", (uint32_t)(i + 1u), feedback_val);
+            if ((uint32_t)feedback_val != test_speeds[i]) {
                 printk("❌ Motor Toggle: cycle %u feedback mismatch (expected %u)\n",
                        (uint32_t)(i + 1u), test_speeds[i]);
                 all_ok = false;
@@ -147,7 +235,11 @@ static bool run_motor0_toggle_cycle(void)
         }
 
         printk("Motor Toggle: cycle %u enable=0\n", (uint32_t)(i + 1u));
-        (void)DBCDRV_writeReg32((enum DBC_RegAddr)MOTOR0_ENABLE_ADDR, 0u);
+        err = motor_service_set_enable(0u, false);
+        if (err != DBC_OK) {
+            printk("Motor Toggle: cycle %u disable write err=%d\n", (uint32_t)(i + 1u), err);
+            all_ok = false;
+        }
         k_msleep(20);
     }
 
@@ -164,6 +256,9 @@ int main(void)
 
     printk("Hello from Zephyr DBus Driver project! [PRE_MOTOR_V1]\n");
     printk("Repeatability mode: %u run(s).\n", DBUS_REPEATABILITY_RUNS);
+
+    dbal_bootstrap_phase1();
+
     /* Wait for Pico SPI slave to complete its startup and enter the polling
      * loop before beginning any SPI exchanges. */
     k_msleep(1000);

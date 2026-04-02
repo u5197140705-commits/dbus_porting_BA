@@ -172,8 +172,8 @@ void dbal_init(void)
     dbal_clear_msgs_to_repeat(&g_dbal_main_instance);
     dbal_clear_both_io_tx_buffers(&g_dbal_main_instance);
 
-    // Initialize SPI abstraction layer
-    if (spi_abstraction_init() == true) {
+    // Initialize SPI abstraction layer (0 means success)
+    if (spi_abstraction_init() == 0) {
         // Register the DBAL's receive function as the SPI RX callback
         spi_abstraction_register_rx_callback(dbal_spi_rx_callback);
         // Provide the message queue to the SPI abstraction layer
@@ -616,15 +616,10 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
                         inst->TransmitBuffer[SPI_CRC_OFFSET] = crc;
                         
                         dbal_prepare_tx_entry(inst, tx_index, inst->TransmitDataLen);
-                        if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen, NULL, 0) == true) {
-                            printk("DBAL: Message transmitted via SPI (TxIndex: %u, DataLen: %u, CRC: 0x%02x)\n", tx_index, inst->TransmitDataLen, crc);
-                        } else {
-                            printk("DBAL_ERROR: Failed to send message via SPI (TxIndex: %u, DataLen: %u)\n", tx_index, inst->TransmitDataLen);
-                            ret_val = false; // Indicate failure if SPI send fails
-                        }
+                        /* Queue for dbal_tx_thread: avoid direct + threaded double send. */
+                        ret_val = true;
                     // }
                 // } else { /* Queue for cross-connection */ }
-                ret_val = true;
             }
         } else {
             printk("DBAL_ERROR: Invalid TxIndex %u, Addr 0x%x\n", tx_index, inst->DBUS_ComPartner);
