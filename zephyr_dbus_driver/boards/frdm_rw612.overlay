@@ -1,0 +1,40 @@
+/* frdm_rw612.overlay
+ * SPI-Master setup for FRDM-RW612 using Flexcomm1
+ */
+
+#include <nxp/rw/RW612-pinctrl.h>
+
+/ {
+    aliases {
+        dbus-spi = &flexcomm1;  /* alias for convenience */
+    };
+
+    chosen {
+        zephyr,spi = &flexcomm1;
+    };
+};
+
+&hsgpio0 {
+    status = "okay";
+};
+
+/* Define pin configuration for SPI (manual CS via GPIO6). */
+&pinctrl {
+    flexcomm1_spi_default: flexcomm1_spi_default {
+        group0 {
+            pinmux = <0x18807>,  /* SCK  -> GPIO7 */
+                     <0x18809>,  /* MOSI -> GPIO9 */
+                     <0x18808>;  /* MISO -> GPIO8 */
+            slew-rate = "normal";
+        };
+    };
+};
+
+/* Override SPI controller node. */
+&flexcomm1 {
+    status = "okay";
+    compatible = "nxp,lpc-spi";
+    pinctrl-0 = <&flexcomm1_spi_default>;
+    pinctrl-names = "default";
+    clock-frequency = <125000>;
+};

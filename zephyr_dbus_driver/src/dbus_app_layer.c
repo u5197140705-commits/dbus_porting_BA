@@ -249,18 +249,11 @@ void dbal_tx_thread_entry(void *p1, void *p2, void *p3)
 
     printk("DBAL: Transmit thread started.\n");
     k_thread_name_set(k_current_get(), "dbal_tx_thread");
-    struct dbal_instance* const inst = &g_dbal_main_instance;
     while (1) {
-        // Check if there are messages to send
-        if (inst->TransmitDataLen > 0) {
-            if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen, NULL, 0) == 0) {
-                printk("DBAL: SPI message sent from TX thread (Len: %u).\n", inst->TransmitDataLen);
-                dbal_clear_io_transmit_buffer(inst); // Clear buffer after successful send
-            } else {
-                printk("DBAL_ERROR: Failed to send SPI message from TX thread.\n");
-            }
-        }
-        k_sleep(K_MSEC(10)); // Shorter sleep for more responsive sending
+        /* TX is performed inline in dbal_io_dbus_handler_send() to avoid
+         * races/overwrites with register-level SPI traffic. Keep this thread
+         * alive but passive for now. */
+        k_sleep(K_MSEC(50));
     }
 }
 
@@ -555,20 +548,20 @@ static bool __attribute__((unused)) dbal_append_dbal_frame_to_req_resp_frame(str
     }
 
     // Set message type (payload length byte)
-    inst->TransmitBuffer[from + SPI_HEADER_LEN + DBAL_FRAME_PAYLOADLEN] = data_len;
+        inst->TransmitBuffer[from + DBAL_FRAME_PAYLOADLEN] = data_len;
 
     // Set service ID
-    inst->TransmitBuffer[from + SPI_HEADER_LEN + DBAL_FRAME_SERVICE_ID_HI] = (uint8_t)(service_id >> BYTE_SIZE);
-    inst->TransmitBuffer[from + SPI_HEADER_LEN + DBAL_FRAME_SERVICE_ID_LO] = (uint8_t)(service_id & 0xFF);
+        inst->TransmitBuffer[from + DBAL_FRAME_SERVICE_ID_HI] = (uint8_t)(service_id >> BYTE_SIZE);
+        inst->TransmitBuffer[from + DBAL_FRAME_SERVICE_ID_LO] = (uint8_t)(service_id & 0xFF);
 
     // Set command ID
-    inst->TransmitBuffer[from + SPI_HEADER_LEN + DBAL_FRAME_COMMAND_ID_HI] = (uint8_t)(command_id >> BYTE_SIZE);
-    inst->TransmitBuffer[from + SPI_HEADER_LEN + DBAL_FRAME_COMMAND_ID_LO] = (uint8_t)(command_id & 0xFF);
+        inst->TransmitBuffer[from + DBAL_FRAME_COMMAND_ID_HI] = (uint8_t)(command_id >> BYTE_SIZE);
+        inst->TransmitBuffer[from + DBAL_FRAME_COMMAND_ID_LO] = (uint8_t)(command_id & 0xFF);
 
     // Store payload
-    dbal_store_payload_to_transmit_buffer(inst->TransmitBuffer, from + SPI_HEADER_LEN + DBAL_FRAME_DATA_OFFSET, bytes, data_len);
+        dbal_store_payload_to_transmit_buffer(inst->TransmitBuffer, from + DBAL_FRAME_DATA_OFFSET, bytes, data_len);
 
-    inst->TransmitDataLen = from + SPI_HEADER_LEN + DBAL_FRAME_DATA_OFFSET + data_len;
+        inst->TransmitDataLen = from + DBAL_FRAME_DATA_OFFSET + data_len;
     return true;
 }
 static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instance* const inst, enum DBAL_MessageType dbal_type, uint16_t service_id, uint16_t command_id, const uint8_t* const bytes, uint8_t data_len, uint8_t repetition)
@@ -616,8 +609,17 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
                         inst->TransmitBuffer[SPI_CRC_OFFSET] = crc;
                         
                         dbal_prepare_tx_entry(inst, tx_index, inst->TransmitDataLen);
-                        /* Queue for dbal_tx_thread: avoid direct + threaded double send. */
-                        ret_val = true;
+                        /* Send immediately to avoid TX-thread race where back-to-back
+                         * events overwrite/coalesce into malformed mixed frames. */
+                        if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen, NULL, 0) == 0) {
+                            printk("DBAL: SPI message sent inline (Len: %u).\n", inst->TransmitDataLen);
+                            dbal_clear_io_transmit_buffer(inst);
+                            ret_val = true;
+                        } else {
+                            printk("DBAL_ERROR: Failed inline SPI send (Len: %u).\n", inst->TransmitDataLen);
+                            dbal_clear_io_transmit_buffer(inst);
+                            ret_val = false;
+                        }
                     // }
                 // } else { /* Queue for cross-connection */ }
             }

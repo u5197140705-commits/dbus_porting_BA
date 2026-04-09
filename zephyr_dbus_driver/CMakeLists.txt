@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.20.0)
 
+if(NOT DEFINED DTC_OVERLAY_FILE OR DTC_OVERLAY_FILE STREQUAL "")
+	set(_dbus_overlay "${CMAKE_CURRENT_SOURCE_DIR}/boards/frdm_rw612/frdm_rw612.overlay")
+	if(EXISTS "${_dbus_overlay}")
+		set(DTC_OVERLAY_FILE "${_dbus_overlay}" CACHE STRING "Default devicetree overlay" FORCE)
+	endif()
+endif()
+
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(zephyr_dbus_driver)
 

@@ -531,20 +531,6 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         LOG_HEXDUMP_DBG(dummy_tx, sizeof(dummy_tx), "DBCDRV_readReg32 dummy TX:");
         LOG_HEXDUMP_DBG(data_rx, sizeof(data_rx), "DBCDRV_readReg32 data RX attempt:");
 
-        if (pending_shifted_tail) {
-            matched_data[0] = pending_data[0];
-            matched_data[1] = pending_data[1];
-            matched_data[2] = pending_data[2];
-            matched_data[3] = data_rx[0];
-            pending_shifted_tail = false;
-            have_matching_response = true;
-            LOG_DBG("DBCDRV_readReg32: reconstructed shifted payload on dummy attempt %u for addr 0x%x", attempt, addr);
-        }
-
-        if (have_matching_response) {
-            break;
-        }
-
         bool addr_high_match = ((data_rx[1] & 0x7Fu) == (expected_addr_high & 0x7Fu));
 
         /* Strict match: marker + addr + len + payload in this attempt */
@@ -573,6 +559,19 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
             matched_data[3] = data_rx[7];
             LOG_DBG("DBCDRV_readReg32: fallback marker-tolerant payload on dummy attempt %u (marker 0x%02x) for addr 0x%x",
                     attempt, data_rx[0], addr);
+            break;
+        }
+
+        /* If previous attempt saw a one-byte-shifted header, only consume
+         * the pending tail when this attempt is not already a full match. */
+        if (pending_shifted_tail) {
+            matched_data[0] = pending_data[0];
+            matched_data[1] = pending_data[1];
+            matched_data[2] = pending_data[2];
+            matched_data[3] = data_rx[0];
+            pending_shifted_tail = false;
+            have_matching_response = true;
+            LOG_DBG("DBCDRV_readReg32: reconstructed shifted payload on dummy attempt %u for addr 0x%x", attempt, addr);
             break;
         }
 

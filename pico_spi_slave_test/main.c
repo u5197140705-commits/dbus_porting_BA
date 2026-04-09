@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define PICO_FIRMWARE_VERSION "cs_aligned_tx_v2_noblk_motorpins"
+#define PICO_FIRMWARE_VERSION "dbal_motor_v1"
 
 /* Non-blocking deferred log buffer: process_rx_frame must never call printf
  * directly — USB CDC printf blocks for milliseconds, which stalls the SPI
@@ -49,9 +49,12 @@ static void dlog_flush(void) {
 #define PIN_MOTOR_AIN2 12
 
 #define FRAME_SIZE 8
+#define DBAL_MAX_FRAME_SIZE  32u  /* max DBAL frame: SOF+len+CRC+headers+payload */
 #define DBUS_CMD_READ  0x40
 #define DBUS_CMD_WRITE 0x60
 #define DBUS_RSP_MARKER 0xA0
+#define DBAL_CRC_POLY 0x07u
+#define DBAL_CRC_INIT 0xFFu
 
 #define MOTOR_COUNT 4
 #define ACTIVE_MOTOR_COUNT 1
@@ -82,7 +85,7 @@ typedef struct {
 
 static motor_channel_t motors[MOTOR_COUNT];
 
-static uint8_t rx_frame_raw[FRAME_SIZE];
+static uint8_t rx_frame_raw[DBAL_MAX_FRAME_SIZE];
 static uint8_t tx_frame_desired[FRAME_SIZE];
 static uint8_t tx_frame_wire[FRAME_SIZE];
 
@@ -199,6 +202,22 @@ static inline uint8_t apply_transform(uint8_t value, bit_transform_t transform)
         default:
             return value;
     }
+}
+
+static uint8_t dbal_crc8(const uint8_t *data, size_t len)
+{
+    uint8_t crc = DBAL_CRC_INIT;
+    for (size_t i = 0; i < len; i++) {
+        crc ^= data[i];
+        for (uint8_t b = 0; b < 8u; b++) {
+            if ((crc & 0x80u) != 0u) {
+                crc = (uint8_t)((crc << 1u) ^ DBAL_CRC_POLY);
+            } else {
+                crc <<= 1u;
+            }
+        }
+    }
+    return crc;
 }
 
 static bool addr_is_valid(uint16_t addr)
@@ -418,6 +437,167 @@ static void set_default_tx_pattern(void)
     prepare_tx_frame_wire();
 }
 
+/* DBAL wire frame layout (all bytes after per-byte ROL1 decode):
+ *  [0]       SOF = 0xAA
+ *  [1]       payload_len  (= total_frame - 3)
+ *  [2]       CRC8(bytes[3..total-1])
+ *  [3]       sender       (0x01)
+ *  [4]       protocol type (0x01)
+ *  [5]       sequence ID
+ *  [6..9]    reserved/zero (header gap)
+ *  [10]      inner data_len
+ *  [11]      service_id_hi
+ *  [12]      service_id_lo
+ *  [13]      command_id_hi
+ *  [14]      command_id_lo
+ *  [15..]    payload
+ */
+#define DBAL_WIRE_SOF          0xAAu
+#define DBAL_WIRE_SVC_HI_OFF   11u
+#define DBAL_WIRE_SVC_LO_OFF   12u
+#define DBAL_WIRE_CMD_HI_OFF   13u
+#define DBAL_WIRE_CMD_LO_OFF   14u
+#define DBAL_WIRE_DATA_LEN_OFF 10u
+#define DBAL_WIRE_DATA_START   15u
+#define DBAL_WIRE_MIN_FRAME    16u
+#define DBAL_MOTOR_SERVICE_ID  0x7100u
+#define DBAL_MOTOR_CMD_ENABLE  0x0001u
+#define DBAL_MOTOR_CMD_SPEED   0x0002u
+
+static bool process_dbal_frame(size_t count)
+{
+    uint8_t decoded[DBAL_MAX_FRAME_SIZE];
+    const bit_transform_t transforms[] = {
+        TRANSFORM_IDENTITY,
+        TRANSFORM_ROL1,
+        TRANSFORM_ROR1,
+        TRANSFORM_SERIAL_ROR1,
+        TRANSFORM_SERIAL_ROL1,
+    };
+
+    if (count < DBAL_WIRE_MIN_FRAME || count > DBAL_MAX_FRAME_SIZE) {
+        dlog("[DBAL] bad count=%u\n", (unsigned)count);
+        return false;
+    }
+
+    for (size_t t = 0u; t < (sizeof(transforms) / sizeof(transforms[0])); t++) {
+        bit_transform_t transform = transforms[t];
+
+        if (transform == TRANSFORM_SERIAL_ROR1) {
+            decoded[0] = (uint8_t)(rx_frame_raw[0] >> 1);
+            for (size_t i = 1; i < count; i++) {
+                decoded[i] = (uint8_t)((rx_frame_raw[i] >> 1) | ((rx_frame_raw[i - 1] & 0x01u) << 7));
+            }
+        } else if (transform == TRANSFORM_SERIAL_ROL1) {
+            for (size_t i = 0; i < (count - 1u); i++) {
+                decoded[i] = (uint8_t)((rx_frame_raw[i] << 1) | (rx_frame_raw[i + 1] >> 7));
+            }
+            decoded[count - 1u] = (uint8_t)(rx_frame_raw[count - 1u] << 1);
+        } else {
+            for (size_t i = 0; i < count; i++) {
+                decoded[i] = apply_transform(rx_frame_raw[i], transform);
+            }
+        }
+
+        /* Frames can be skewed/corrupted at the first byte (observed raw0=0x54).
+         * Search small offsets and identify DBAL by service/cmd/data signature,
+         * not SOF alone. */
+        for (size_t base = 0u; base <= 2u; base++) {
+            if (base >= count) {
+                break;
+            }
+
+            if ((base + DBAL_WIRE_DATA_START) >= count) {
+                continue;
+            }
+
+            size_t svc_hi_off = base + DBAL_WIRE_SVC_HI_OFF;
+            size_t svc_lo_off = base + DBAL_WIRE_SVC_LO_OFF;
+            size_t cmd_hi_off = base + DBAL_WIRE_CMD_HI_OFF;
+            size_t cmd_lo_off = base + DBAL_WIRE_CMD_LO_OFF;
+            size_t dlen_off   = base + DBAL_WIRE_DATA_LEN_OFF;
+            size_t data_start = base + DBAL_WIRE_DATA_START;
+
+            if (svc_lo_off >= count || cmd_lo_off >= count || dlen_off >= count) {
+                continue;
+            }
+
+            if ((base + 3u) >= count) {
+                continue;
+            }
+
+            uint8_t payload_len = decoded[base + 1u];
+            size_t expected_total = (size_t)payload_len + 3u;
+            if (expected_total < DBAL_WIRE_MIN_FRAME || (base + expected_total) > count) {
+                continue;
+            }
+
+            uint8_t rx_crc = decoded[base + 2u];
+            uint8_t calc_crc = dbal_crc8(&decoded[base + 3u], expected_total - 3u);
+            if (rx_crc != calc_crc) {
+                continue;
+            }
+
+            uint16_t svc_id  = ((uint16_t)decoded[svc_hi_off] << 8u)
+                              | decoded[svc_lo_off];
+            uint16_t cmd_id  = ((uint16_t)decoded[cmd_hi_off] << 8u)
+                              | decoded[cmd_lo_off];
+            uint8_t data_len = decoded[dlen_off];
+            uint8_t sender = decoded[base + 3u];
+            uint8_t proto  = decoded[base + 4u];
+
+            dlog("[DBAL] svc=0x%04x cmd=0x%04x dlen=%u t=%u b=%u\n",
+                 svc_id, cmd_id, data_len, (unsigned)transform, (unsigned)base);
+
+            if (sender != 0x01u || proto != 0x01u) {
+                continue;
+            }
+
+            if (svc_id != DBAL_MOTOR_SERVICE_ID) {
+                continue;
+            }
+
+            if ((data_start + data_len) != (base + expected_total)) {
+                continue;
+            }
+
+            if ((cmd_id == DBAL_MOTOR_CMD_ENABLE && data_len != 2u) ||
+                (cmd_id == DBAL_MOTOR_CMD_SPEED && data_len != 5u)) {
+                continue;
+            }
+
+            uint8_t motor_index = (data_len >= 1u) ? decoded[data_start] : 0u;
+
+            if (cmd_id == DBAL_MOTOR_CMD_ENABLE) {
+                uint8_t enable = (data_len >= 2u) ? decoded[data_start + 1u] : 0u;
+                dlog("[DBAL] motor[%u] enable=%u\n", motor_index, enable);
+                motor_write((uint16_t)(MOTOR_REG_BASE
+                                       + (uint16_t)motor_index * MOTOR_REG_STRIDE
+                                       + MOTOR_REG_ENABLE_OFFSET),
+                            (uint32_t)enable);
+                return true;
+            }
+
+            if (cmd_id == DBAL_MOTOR_CMD_SPEED && data_len >= 5u) {
+                int32_t speed = (int32_t)(
+                      (uint32_t)decoded[data_start + 1u]
+                    | ((uint32_t)decoded[data_start + 2u] << 8u)
+                    | ((uint32_t)decoded[data_start + 3u] << 16u)
+                    | ((uint32_t)decoded[data_start + 4u] << 24u));
+                dlog("[DBAL] motor[%u] speed=%ld\n", motor_index, (long)speed);
+                motor_write((uint16_t)(MOTOR_REG_BASE
+                                       + (uint16_t)motor_index * MOTOR_REG_STRIDE
+                                       + MOTOR_REG_SPEED_OFFSET),
+                            (uint32_t)speed);
+                return true;
+            }
+        }
+    }
+
+    dlog("[DBAL] unparsed count=%u raw0=0x%02x\n", (unsigned)count, rx_frame_raw[0]);
+    return false;
+}
+
 static bool process_rx_frame(void)
 {
     uint8_t decoded[FRAME_SIZE];
@@ -564,7 +744,17 @@ static void service_spi_frame(spi_inst_t *spi)
     }
 
     if (last_cs_state && !current_cs_state) {
-        /* Transaction ended: discard partial frame residue, if any. */
+        /* Transaction ended: first drain any late RX FIFO bytes that arrived
+         * around CS deassert, then classify by final CS transaction length. */
+        while (spi_is_readable(spi) && rx_index < DBAL_MAX_FRAME_SIZE) {
+            rx_frame_raw[rx_index++] = (uint8_t)hw->dr;
+        }
+
+        if (rx_index == FRAME_SIZE) {
+            (void)process_rx_frame();
+        } else if (rx_index > FRAME_SIZE) {
+            (void)process_dbal_frame(rx_index);
+        }
         rx_index = 0;
     }
 
@@ -573,18 +763,13 @@ static void service_spi_frame(spi_inst_t *spi)
     while (spi_is_readable(spi)) {
         uint8_t rx_byte = (uint8_t)hw->dr;
 
-        if (rx_index < FRAME_SIZE) {
+        if (rx_index < DBAL_MAX_FRAME_SIZE) {
             rx_frame_raw[rx_index++] = rx_byte;
         }
 
         /* Keep feeding TX during active transaction, not only after RX drains. */
         while (cs_is_active() && spi_is_writable(spi) && tx_index < FRAME_SIZE) {
             hw->dr = tx_frame_wire[tx_index++];
-        }
-
-        if (rx_index == FRAME_SIZE) {
-            (void)process_rx_frame();
-            rx_index = 0;
         }
     }
 

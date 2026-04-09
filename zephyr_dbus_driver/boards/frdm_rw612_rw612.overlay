@@ -1,0 +1,3 @@
+/* Qualifier-specific overlay for frdm_rw612/rw612 */
+
+#include "frdm_rw612.overlay"

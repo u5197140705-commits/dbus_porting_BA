@@ -4,12 +4,22 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ELF_FILE="${SCRIPT_DIR}/build/zephyr/zephyr.elf"
+ELF_FILE="${ELF_FILE:-${SCRIPT_DIR}/build/zephyr/zephyr.elf}"
 FULL_ERASE="${FULL_ERASE:-0}"
 
 if [ ! -f "$ELF_FILE" ]; then
     echo "Error: ELF file not found at $ELF_FILE"
     exit 1
+fi
+
+echo "ELF preflight: $ELF_FILE"
+if command -v strings >/dev/null 2>&1; then
+    MARKER_LINE="$(strings "$ELF_FILE" | grep -m1 "RW612 build marker:" || true)"
+    if [ -n "$MARKER_LINE" ]; then
+        echo "ELF marker: $MARKER_LINE"
+    else
+        echo "Warning: no RW612 build marker string found in ELF."
+    fi
 fi
 
 TMP_SCRIPT=$(mktemp /tmp/jlink_script.XXXX.jlink)
