@@ -13,12 +13,19 @@
  * directly — USB CDC printf blocks for milliseconds, which stalls the SPI
  * tight loop and causes TX FIFO underflow. Store messages here instead;
  * main loop flushes them between SPI calls. */
-#define DLOG_ENTRIES 64u
+#define DLOG_ENTRIES 128u
 #define DLOG_MSG_LEN 96u
+#define LOG_IDLE_FLUSH_US 5000u
+#define DLOG_FLUSH_BUDGET 4u
+#define PICO_RUNTIME_LOG_FLUSH 0
+#define PICO_HEARTBEAT_ENABLE 0
+#define CS_END_DRAIN_TIMEOUT_US 20u
+#define CS_END_DRAIN_IDLE_US 2u
 typedef struct { char msg[DLOG_MSG_LEN]; } dlog_entry_t;
 static dlog_entry_t dlog_buf[DLOG_ENTRIES];
 static unsigned int dlog_head = 0u;
 static unsigned int dlog_tail = 0u;
+static uint32_t last_spi_activity_us = 0u;
 
 static void dlog(const char *fmt, ...) {
     unsigned int next = (dlog_head + 1u) % DLOG_ENTRIES;
@@ -31,11 +38,16 @@ static void dlog(const char *fmt, ...) {
     dlog_head = next;
 }
 
-static void dlog_flush(void) {
-    while (dlog_tail != dlog_head) {
+static void dlog_flush_limited(unsigned int budget) {
+#if PICO_RUNTIME_LOG_FLUSH
+    while (dlog_tail != dlog_head && budget > 0u) {
         printf("%s", dlog_buf[dlog_tail].msg);
         dlog_tail = (dlog_tail + 1u) % DLOG_ENTRIES;
+        budget--;
     }
+#else
+    (void)budget;
+#endif
 }
 
 #define PIN_MISO 19
@@ -91,7 +103,9 @@ static uint8_t tx_frame_wire[FRAME_SIZE];
 
 static size_t rx_index = 0;
 static size_t tx_index = 0;
-static bool last_cs_state = false; // cs_is_active(): false=idle(high), true=active(low)
+static volatile bool cs_active_flag = false;
+static volatile bool cs_start_pending = false;
+static volatile bool cs_end_pending = false;
 
 typedef enum {
     TRANSFORM_IDENTITY = 0,
@@ -467,6 +481,7 @@ static void set_default_tx_pattern(void)
 static bool process_dbal_frame(size_t count)
 {
     uint8_t decoded[DBAL_MAX_FRAME_SIZE];
+    uint8_t reconstructed[DBAL_MAX_FRAME_SIZE];
     const bit_transform_t transforms[] = {
         TRANSFORM_IDENTITY,
         TRANSFORM_ROL1,
@@ -528,14 +543,18 @@ static bool process_dbal_frame(size_t count)
 
             uint8_t payload_len = decoded[base + 1u];
             size_t expected_total = (size_t)payload_len + 3u;
-            if (expected_total < DBAL_WIRE_MIN_FRAME || (base + expected_total) > count) {
+            size_t frame_end = base + expected_total;
+            bool missing_tail_byte = false;
+
+            if (expected_total < DBAL_WIRE_MIN_FRAME) {
                 continue;
             }
 
-            uint8_t rx_crc = decoded[base + 2u];
-            uint8_t calc_crc = dbal_crc8(&decoded[base + 3u], expected_total - 3u);
-            if (rx_crc != calc_crc) {
-                continue;
+            if (frame_end > count) {
+                if (frame_end != (count + 1u)) {
+                    continue;
+                }
+                missing_tail_byte = true;
             }
 
             uint16_t svc_id  = ((uint16_t)decoded[svc_hi_off] << 8u)
@@ -545,6 +564,35 @@ static bool process_dbal_frame(size_t count)
             uint8_t data_len = decoded[dlen_off];
             uint8_t sender = decoded[base + 3u];
             uint8_t proto  = decoded[base + 4u];
+
+            if (missing_tail_byte) {
+                bool recoverable_speed_tail = (sender == 0x01u) &&
+                                              (proto == 0x01u) &&
+                                              (svc_id == DBAL_MOTOR_SERVICE_ID) &&
+                                              (cmd_id == DBAL_MOTOR_CMD_SPEED) &&
+                                              (data_len == 5u) &&
+                                              ((data_start + data_len) == frame_end);
+                if (!recoverable_speed_tail) {
+                    continue;
+                }
+            }
+
+            if (frame_end > count && !missing_tail_byte) {
+                continue;
+            }
+
+            uint8_t rx_crc = decoded[base + 2u];
+            uint8_t calc_crc;
+            if (missing_tail_byte) {
+                memcpy(reconstructed, decoded, count);
+                reconstructed[count] = 0u;
+                calc_crc = dbal_crc8(&reconstructed[base + 3u], expected_total - 3u);
+            } else {
+                calc_crc = dbal_crc8(&decoded[base + 3u], expected_total - 3u);
+            }
+            if (rx_crc != calc_crc) {
+                continue;
+            }
 
             dlog("[DBAL] svc=0x%04x cmd=0x%04x dlen=%u t=%u b=%u\n",
                  svc_id, cmd_id, data_len, (unsigned)transform, (unsigned)base);
@@ -557,7 +605,7 @@ static bool process_dbal_frame(size_t count)
                 continue;
             }
 
-            if ((data_start + data_len) != (base + expected_total)) {
+            if ((data_start + data_len) != frame_end) {
                 continue;
             }
 
@@ -579,11 +627,16 @@ static bool process_dbal_frame(size_t count)
             }
 
             if (cmd_id == DBAL_MOTOR_CMD_SPEED && data_len >= 5u) {
+                uint32_t speed_high = missing_tail_byte ? 0u : ((uint32_t)decoded[data_start + 4u] << 24u);
                 int32_t speed = (int32_t)(
                       (uint32_t)decoded[data_start + 1u]
                     | ((uint32_t)decoded[data_start + 2u] << 8u)
                     | ((uint32_t)decoded[data_start + 3u] << 16u)
-                    | ((uint32_t)decoded[data_start + 4u] << 24u));
+                    | speed_high);
+                if (missing_tail_byte) {
+                    dlog("[DBAL] recovered truncated speed frame t=%u b=%u\n",
+                         (unsigned)transform, (unsigned)base);
+                }
                 dlog("[DBAL] motor[%u] speed=%ld\n", motor_index, (long)speed);
                 motor_write((uint16_t)(MOTOR_REG_BASE
                                        + (uint16_t)motor_index * MOTOR_REG_STRIDE
@@ -725,16 +778,39 @@ static inline bool spi_slave_drain_rx_fifo(spi_inst_t *spi)
 
 static inline bool cs_is_active(void)
 {
-    return !gpio_get(PIN_CS);
+    return cs_active_flag;
+}
+
+static inline void mark_spi_activity(void)
+{
+    last_spi_activity_us = time_us_32();
+}
+
+static void cs_gpio_irq_handler(uint gpio, uint32_t events)
+{
+    if (gpio != PIN_CS) {
+        return;
+    }
+
+    if ((events & GPIO_IRQ_EDGE_FALL) != 0u) {
+        cs_active_flag = true;
+        cs_start_pending = true;
+    }
+
+    if ((events & GPIO_IRQ_EDGE_RISE) != 0u) {
+        cs_active_flag = false;
+        cs_end_pending = true;
+    }
 }
 
 static void service_spi_frame(spi_inst_t *spi)
 {
     spi_hw_t *hw = spi_get_hw(spi);
-    bool current_cs_state = cs_is_active();
 
-    if (!last_cs_state && current_cs_state) {
+    if (cs_start_pending) {
+        cs_start_pending = false;
         /* New transaction started: align both RX and TX to frame start. */
+        mark_spi_activity();
         rx_index = 0;
         tx_index = 0;
         /* Prime TX immediately at CS-assert so first clocks do not see zeros. */
@@ -743,11 +819,36 @@ static void service_spi_frame(spi_inst_t *spi)
         }
     }
 
-    if (last_cs_state && !current_cs_state) {
-        /* Transaction ended: first drain any late RX FIFO bytes that arrived
-         * around CS deassert, then classify by final CS transaction length. */
-        while (spi_is_readable(spi) && rx_index < DBAL_MAX_FRAME_SIZE) {
-            rx_frame_raw[rx_index++] = (uint8_t)hw->dr;
+    if (cs_end_pending) {
+        uint32_t drain_start_us;
+        uint32_t last_rx_us;
+
+        cs_end_pending = false;
+        /* Transaction ended: keep draining until the RX FIFO has stayed idle
+         * briefly, or a short overall timeout expires. This is more robust
+         * than a fixed one-shot delay when the final byte lands slightly late
+         * relative to CS rise detection. */
+        drain_start_us = time_us_32();
+        last_rx_us = drain_start_us;
+        mark_spi_activity();
+        for (;;) {
+            bool saw_rx = false;
+
+            while (spi_is_readable(spi) && rx_index < DBAL_MAX_FRAME_SIZE) {
+                rx_frame_raw[rx_index++] = (uint8_t)hw->dr;
+                last_rx_us = time_us_32();
+                saw_rx = true;
+            }
+
+            if (!saw_rx) {
+                uint32_t now_us = time_us_32();
+                if ((uint32_t)(now_us - last_rx_us) >= CS_END_DRAIN_IDLE_US) {
+                    break;
+                }
+                if ((uint32_t)(now_us - drain_start_us) >= CS_END_DRAIN_TIMEOUT_US) {
+                    break;
+                }
+            }
         }
 
         if (rx_index == FRAME_SIZE) {
@@ -758,10 +859,9 @@ static void service_spi_frame(spi_inst_t *spi)
         rx_index = 0;
     }
 
-    last_cs_state = current_cs_state;
-
     while (spi_is_readable(spi)) {
         uint8_t rx_byte = (uint8_t)hw->dr;
+        mark_spi_activity();
 
         if (rx_index < DBAL_MAX_FRAME_SIZE) {
             rx_frame_raw[rx_index++] = rx_byte;
@@ -790,6 +890,7 @@ int main(void)
         printf("[Pico SPI Slave] Motor1 pins: PWMA=GP%u STBY=GP%u AIN1=GP%u AIN2=GP%u\n",
             PIN_MOTOR_PWMA, PIN_MOTOR_STBY, PIN_MOTOR_AIN1, PIN_MOTOR_AIN2);
     uint32_t last_heartbeat_ms = 0;
+    bool led_on = false;
     
     status_led_init();
 
@@ -801,6 +902,7 @@ int main(void)
     }
     memset(rx_frame_raw, 0, sizeof(rx_frame_raw));
     set_default_tx_pattern();
+    mark_spi_activity();
 
     spi_init(spi0, 1000 * 1000);
     spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
@@ -811,6 +913,12 @@ int main(void)
     gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
 
+    cs_active_flag = !gpio_get(PIN_CS);
+    gpio_set_irq_enabled_with_callback(PIN_CS,
+                                       GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
+                                       true,
+                                       &cs_gpio_irq_handler);
+
     /* Brief startup indicator only — keep delay minimal so Pico is ready
      * before the SPI master (RW612) begins its first exchange. */
     status_led_set(true);
@@ -818,15 +926,33 @@ int main(void)
     status_led_set(false);
 
     while (true) {
-        service_spi_frame(spi0);
-        dlog_flush();
-        status_led_set(cs_is_active());
+        bool cs_active;
+        uint32_t now_us;
+        uint32_t now_ms;
 
-        uint32_t now_ms = to_ms_since_boot(get_absolute_time());
-        if ((now_ms - last_heartbeat_ms) >= 10000u) {
+        service_spi_frame(spi0);
+        cs_active = cs_is_active();
+
+        if (led_on != cs_active) {
+            status_led_set(cs_active);
+            led_on = cs_active;
+        }
+
+        now_us = time_us_32();
+        now_ms = to_ms_since_boot(get_absolute_time());
+
+        if (PICO_RUNTIME_LOG_FLUSH &&
+            !cs_active && rx_index == 0 && (uint32_t)(now_us - last_spi_activity_us) >= LOG_IDLE_FLUSH_US) {
+            dlog_flush_limited(DLOG_FLUSH_BUDGET);
+        }
+
+        if (PICO_HEARTBEAT_ENABLE &&
+            !cs_active && rx_index == 0 &&
+            (uint32_t)(now_us - last_spi_activity_us) >= LOG_IDLE_FLUSH_US &&
+            (now_ms - last_heartbeat_ms) >= 10000u) {
              printf("[Pico SPI Slave] alive version=%s cs=%u rx_index=%u tx_index=%u %s_en=%u %s_spd=%ld\n",
                    PICO_FIRMWARE_VERSION,
-                   cs_is_active() ? 1u : 0u,
+                   cs_active ? 1u : 0u,
                    (unsigned)rx_index,
                  (unsigned)tx_index,
                  motor_name_for_index(0u),

@@ -15,6 +15,8 @@ K_MSGQ_DEFINE(dbal_spi_rx_msg_queue, sizeof(struct dbal_spi_rx_msg), DBAL_SPI_RX
 static struct k_mutex dbal_bus_mutex;
 static atomic_t dbal_is_locked = ATOMIC_INIT(0); // Atomic flag to track lock status
 
+#define DBAL_INLINE_TX_IDLE_US 50u
+
 // Helper function to calculate CRC-8
 static uint8_t calculate_crc8(const uint8_t *data, uint8_t len) {
     uint8_t crc = CRC8_INITIAL_VALUE;
@@ -612,6 +614,10 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
                         /* Send immediately to avoid TX-thread race where back-to-back
                          * events overwrite/coalesce into malformed mixed frames. */
                         if (spi_abstraction_send(inst->TransmitBuffer, inst->TransmitDataLen, NULL, 0) == 0) {
+                            /* The Pico slave detects transaction boundaries by polling
+                             * CS in software, so leave a visible idle gap before the
+                             * next mirror write or readback transaction starts. */
+                            k_usleep(DBAL_INLINE_TX_IDLE_US);
                             printk("DBAL: SPI message sent inline (Len: %u).\n", inst->TransmitDataLen);
                             dbal_clear_io_transmit_buffer(inst);
                             ret_val = true;

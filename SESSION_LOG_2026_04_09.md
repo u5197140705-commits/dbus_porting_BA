@@ -106,3 +106,77 @@ Observed effect:
 ## Session Conclusion
 - Session recovered from a highly unstable transport state to a reproducible known-good baseline via commit-level rollback.
 - The project is now in a better position for controlled, minimal-delta validation and forward progress.
+
+## Final Outcome After Follow-Up Work
+- The session did not stop at the rollback baseline. After restoring the known-good transport, the work continued forward on the newer DBAL-capable branch and reached a passing hybrid state.
+- Final validated RW612 summary:
+  - `RUN 2 RESULT: PASS`
+  - `PASS: 2`
+  - `FAIL: 0`
+  - `Overall: PASS`
+- A dedicated preservation branch was created for this checkpoint:
+  - branch: `hybrid-dbal`
+  - commit: `1e121d9` (`Stabilize hybrid DBAL motor path`)
+
+## Fixes That Produced the Passing Hybrid State
+
+### RW612-side fixes
+- `zephyr_dbus_driver/src/dbus_app_layer.c`
+  - fixed DBAL frame field placement by removing the extra `SPI_HEADER_LEN` offset when writing DBAL header fields into the transmit buffer.
+  - changed DBAL event transmission to immediate inline SPI send.
+  - left the DBAL TX thread alive but passive to avoid races and mixed/coalesced frames.
+- `zephyr_dbus_driver/src/dbus_driver.c`
+  - fixed `DBCDRV_readReg32()` response-selection order so full-frame matches are preferred before shifted-tail reconstruction.
+  - this removed the false MSB corruption pattern such as `0x20000003`.
+- `zephyr_dbus_driver/src/main.c`
+  - reduced default repeatability from `20` to `2` runs for faster hardware iteration.
+- `zephyr_dbus_driver/src/motor_service.c`
+  - switched motor enable/speed control to DBAL event sends.
+  - added temporary mirrored legacy register writes for enable/speed so motor behavior stays deterministic while DBAL parsing matures.
+
+### Pico-side fixes
+- `pico_spi_slave_test/main.c`
+  - added DBAL wire-frame parsing for motor service `0x7100`.
+  - accepted DBAL motor commands:
+    - `0x0001` enable
+    - `0x0002` speed
+  - hardened parsing with:
+    - multiple bit-transform decode attempts,
+    - small base-offset scanning,
+    - sender/protocol validation,
+    - CRC validation,
+    - exact frame boundary checks,
+    - CS-end FIFO drain before final classification.
+  - retained the legacy 8-byte register protocol in parallel.
+
+## Failed Or Insufficient Paths Worth Remembering
+- pure TX-thread-based DBAL send path on RW612:
+  - caused races against ongoing register traffic and produced malformed mixed frames.
+- loose/early shifted-tail reconstruction in `DBCDRV_readReg32()`:
+  - produced false readbacks and blocked PRE_MOTOR validation.
+- Pico classification based only on first byte / SOF assumption:
+  - failed when the first byte was skewed or shifted.
+- permissive DBAL decode without CRC/header checks:
+  - produced false-positive motor decodes and noisy toggles.
+- treating transport recovery and DBAL migration as one problem at the same time:
+  - slowed diagnosis; known-good transport rollback was the correct reset point.
+- pure DBAL-only motor control at the current checkpoint:
+  - not yet trusted enough for the preserved branch because mirrored legacy writes were still needed to guarantee deterministic pass results.
+
+## Meaning Of The Current Hybrid State
+- DBAL is now real and active in the end-to-end path:
+  - RW612 sends DBAL motor events.
+  - Pico decodes DBAL motor events.
+- The branch is still hybrid rather than pure DBAL:
+  - final motor actuation is also mirrored into the legacy register path on RW612.
+- Therefore the current checkpoint proves:
+  - stable transport,
+  - functioning DBAL motor message path,
+  - successful PRE_MOTOR and MOTOR_TOGGLE validation,
+  - but not yet a fully legacy-free DBAL implementation.
+
+## Practical Next Steps From This Checkpoint
+1. Re-run repeatability with `20` cycles on the hybrid baseline and confirm it behaves like the March stability level.
+2. Reduce debug noise and thread-analyzer output so future failures are easier to classify.
+3. Remove the mirrored legacy writes in `motor_service.c` and test pure DBAL motor control on top of the now-stable transport.
+4. Once pure DBAL motor control is stable, add new DBAL services for sensors and other peripherals instead of extending the legacy register interface.

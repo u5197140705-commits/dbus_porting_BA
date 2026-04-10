@@ -10,6 +10,7 @@ LOG_MODULE_REGISTER(spi_abstraction, LOG_LEVEL_DBG);
 // Get the SPI device from device tree
 // Assuming flexcomm1 is the first instance of "nxp,lpc-spi" compatible device
 #define SPI_DEV_NODE DT_NODELABEL(flexcomm1)
+#define DBAL_SPI_FREQUENCY_HZ 10000u
 
 #if !DT_NODE_HAS_STATUS(SPI_DEV_NODE, okay)
 #error "SPI device not enabled in device tree"
@@ -50,7 +51,10 @@ int spi_abstraction_send(const uint8_t *tx_data, size_t tx_len, uint8_t *rx_data
 
     struct spi_config spi_cfg = {
         .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_OP_MODE_MASTER,
-        .frequency = 8000000, // Matches device tree
+        /* Keep DBAL event traffic at the same conservative rate as the
+         * proven-stable legacy register path. The Pico slave is polled in
+         * software and sporadically truncated 20-byte DBAL frames at 8 MHz. */
+        .frequency = DBAL_SPI_FREQUENCY_HZ,
         .slave = 0, // Assuming single slave on CS0
         .cs = SPI_CS_CONTROL_INIT(SPI_DEV_NODE),
     };

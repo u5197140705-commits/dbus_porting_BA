@@ -15,7 +15,7 @@
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
 #ifndef DBUS_REPEATABILITY_RUNS
-#define DBUS_REPEATABILITY_RUNS 2u
+#define DBUS_REPEATABILITY_RUNS 20u
 #endif
 
 // Example DBus service callback for testing
