@@ -60,7 +60,6 @@ bool motor_service_encode_index_payload(uint8_t motor_index, struct motor_index_
 enum DBC_Error motor_service_set_enable(uint8_t motor_index, bool enable)
 {
     struct motor_enable_payload payload;
-    enum DBC_Error reg_err;
 
     if (!motor_service_encode_enable_payload(motor_index, enable, &payload)) {
         return DBC_ERROR;
@@ -73,14 +72,6 @@ enum DBC_Error motor_service_set_enable(uint8_t motor_index, bool enable)
         return DBC_ERROR;
     }
 
-    /* Keep DBAL path active, but mirror to legacy register interface to
-     * guarantee deterministic motor state while DBAL wire parsing matures. */
-    reg_err = DBCDRV_writeReg32(motor_service_reg_addr(payload.motor_index, MOTOR0_ENABLE_ADDR),
-                                payload.enable ? 1u : 0u);
-    if (reg_err != DBC_OK) {
-        return reg_err;
-    }
-
     return DBC_OK;
 }
 
@@ -88,7 +79,6 @@ enum DBC_Error motor_service_set_speed(uint8_t motor_index, int32_t speed_setpoi
 {
     struct motor_speed_payload payload;
     uint8_t wire_payload[5];
-    enum DBC_Error reg_err;
 
     if (!motor_service_encode_speed_payload(motor_index, speed_setpoint, &payload)) {
         return DBC_ERROR;
@@ -105,12 +95,6 @@ enum DBC_Error motor_service_set_speed(uint8_t motor_index, int32_t speed_setpoi
                          wire_payload,
                          sizeof(wire_payload))) {
         return DBC_ERROR;
-    }
-
-    reg_err = DBCDRV_writeReg32(motor_service_reg_addr(payload.motor_index, MOTOR0_SPEED_ADDR),
-                                (uint32_t)payload.speed_setpoint);
-    if (reg_err != DBC_OK) {
-        return reg_err;
     }
 
     return DBC_OK;
