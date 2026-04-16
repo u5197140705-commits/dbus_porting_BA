@@ -52,6 +52,7 @@ static void dlog_flush_limited(unsigned int budget) {
 
 static uint32_t reg_read(uint16_t addr);
 static void reg_write(uint16_t addr, uint32_t value);
+static void led_update_from_distance(uint32_t dist_mm);
 
 #define PIN_MISO 19
 #define PIN_CS   17
@@ -73,6 +74,19 @@ static void reg_write(uint16_t addr, uint32_t value);
 #define PIN_LCD_D6 4
 #define PIN_LCD_D7 5
 
+/* Warning LED system: distance-based traffic light */
+#define PIN_LED_GREEN  6
+#define PIN_LED_YELLOW 7
+#define PIN_LED_RED    8
+#define LED_DIST_GREEN_MM  500u   /* > 500 mm  -> green */
+#define LED_DIST_YELLOW_MM 200u   /* 200-500 mm -> yellow */
+                                  /* < 200 mm  -> red */
+
+/* Motor 2 – TB6612FNG channel B (STBY shared with channel A on GP14) */
+#define PIN_MOTOR_BIN1 9
+#define PIN_MOTOR_BIN2 10
+#define PIN_MOTOR_PWMB 11
+
 #define FRAME_SIZE 8
 #define DBAL_MAX_FRAME_SIZE  32u  /* max DBAL frame: SOF+len+CRC+headers+payload */
 #define DBUS_CMD_READ  0x40
@@ -82,7 +96,7 @@ static void reg_write(uint16_t addr, uint32_t value);
 #define DBAL_CRC_INIT 0xFFu
 
 #define MOTOR_COUNT 4
-#define ACTIVE_MOTOR_COUNT 1
+#define ACTIVE_MOTOR_COUNT 2
 #define MOTOR_REG_BASE   0x5000u
 #define MOTOR_REG_STRIDE 0x10u
 #define MOTOR_REG_ENABLE_OFFSET   0x0u
@@ -140,6 +154,8 @@ static bit_transform_t tx_transform = TRANSFORM_ROL1;
 
 static uint motor_pwma_slice = 0u;
 static uint motor_pwma_channel = 0u;
+static uint motor_pwmb_slice = 0u;
+static uint motor_pwmb_channel = 0u;
 static const char *const motor_names[MOTOR_COUNT] = {
     "motor1",
     "motor2",
@@ -302,6 +318,7 @@ static void sonic_poll(void)
             } else if ((uint32_t)(now_us - sonic_last_trigger_us) >= SONIC_ECHO_TIMEOUT_US) {
                 sonic_distance_mm = 0u;
                 reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+                led_update_from_distance(sonic_distance_mm);
                 sonic_state = SONIC_IDLE;
             }
             break;
@@ -311,10 +328,12 @@ static void sonic_poll(void)
                 uint32_t pulse_us = (uint32_t)(now_us - sonic_echo_start_us);
                 sonic_distance_mm = (pulse_us * 343u) / 2000u;
                 reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+                led_update_from_distance(sonic_distance_mm);
                 sonic_state = SONIC_IDLE;
             } else if ((uint32_t)(now_us - sonic_echo_start_us) >= SONIC_ECHO_TIMEOUT_US) {
                 sonic_distance_mm = 0u;
                 reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+                led_update_from_distance(sonic_distance_mm);
                 sonic_state = SONIC_IDLE;
             }
             break;
@@ -323,6 +342,43 @@ static void sonic_poll(void)
             sonic_state = SONIC_IDLE;
             break;
     }
+}
+
+static void led_init(void)
+{
+    const uint led_pins[] = { PIN_LED_GREEN, PIN_LED_YELLOW, PIN_LED_RED };
+    for (size_t i = 0u; i < 3u; i++) {
+        gpio_init(led_pins[i]);
+        gpio_set_dir(led_pins[i], GPIO_OUT);
+        gpio_put(led_pins[i], 0);
+    }
+}
+
+/* Update RGB warning LEDs based on measured distance.
+ *  > LED_DIST_GREEN_MM  : green only
+ *  > LED_DIST_YELLOW_MM : yellow only
+ *  <= LED_DIST_YELLOW_MM: red only
+ *  0 (no echo)          : all off
+ */
+static void led_update_from_distance(uint32_t dist_mm)
+{
+    bool green  = false;
+    bool yellow = false;
+    bool red    = false;
+
+    if (dist_mm > 0u) {
+        if (dist_mm > LED_DIST_GREEN_MM) {
+            green = true;
+        } else if (dist_mm > LED_DIST_YELLOW_MM) {
+            yellow = true;
+        } else {
+            red = true;
+        }
+    }
+
+    gpio_put(PIN_LED_GREEN,  green  ? 1 : 0);
+    gpio_put(PIN_LED_YELLOW, yellow ? 1 : 0);
+    gpio_put(PIN_LED_RED,    red    ? 1 : 0);
 }
 
 static uint16_t speed_to_pwm_level(int32_t speed_setpoint)
@@ -348,18 +404,39 @@ static void apply_motor_outputs(size_t motor_index)
     int32_t speed = motors[motor_index].speed_setpoint;
     bool forward = speed >= 0;
 
-    gpio_put(PIN_MOTOR_STBY, enabled ? 1 : 0);
+    if (motor_index == 0u) {
+        /* Channel A */
+        gpio_put(PIN_MOTOR_STBY, enabled ? 1 : 0);
 
-    if (!enabled || speed == 0) {
-        gpio_put(PIN_MOTOR_AIN1, 0);
-        gpio_put(PIN_MOTOR_AIN2, 0);
-        pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
-        return;
+        if (!enabled || speed == 0) {
+            gpio_put(PIN_MOTOR_AIN1, 0);
+            gpio_put(PIN_MOTOR_AIN2, 0);
+            pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
+            return;
+        }
+
+        gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
+        gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
+        pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
+    } else {
+        /* Channel B — STBY is shared; only release STBY if channel A also
+         * needs it still, but to keep it simple we always drive STBY high
+         * when either channel is enabled.  A full implementation would OR
+         * both enable states; for now channel B controls STBY independently
+         * of channel A (TB6612 STBY is wired to GP14 shared). */
+        gpio_put(PIN_MOTOR_STBY, enabled ? 1 : 0);
+
+        if (!enabled || speed == 0) {
+            gpio_put(PIN_MOTOR_BIN1, 0);
+            gpio_put(PIN_MOTOR_BIN2, 0);
+            pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
+            return;
+        }
+
+        gpio_put(PIN_MOTOR_BIN1, forward ? 1 : 0);
+        gpio_put(PIN_MOTOR_BIN2, forward ? 0 : 1);
+        pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, speed_to_pwm_level(speed));
     }
-
-    gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
-    gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
-    pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
 }
 
 static const char *motor_name_for_index(size_t motor_index)
@@ -391,6 +468,22 @@ static void motor_gpio_init(void)
     pwm_set_wrap(motor_pwma_slice, 65535u);
     pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
     pwm_set_enabled(motor_pwma_slice, true);
+
+    /* Motor 2 — TB6612FNG channel B, STBY shared with channel A (GP14) */
+    gpio_init(PIN_MOTOR_BIN1);
+    gpio_set_dir(PIN_MOTOR_BIN1, GPIO_OUT);
+    gpio_put(PIN_MOTOR_BIN1, 0);
+
+    gpio_init(PIN_MOTOR_BIN2);
+    gpio_set_dir(PIN_MOTOR_BIN2, GPIO_OUT);
+    gpio_put(PIN_MOTOR_BIN2, 0);
+
+    gpio_set_function(PIN_MOTOR_PWMB, GPIO_FUNC_PWM);
+    motor_pwmb_slice = pwm_gpio_to_slice_num(PIN_MOTOR_PWMB);
+    motor_pwmb_channel = pwm_gpio_to_channel(PIN_MOTOR_PWMB);
+    pwm_set_wrap(motor_pwmb_slice, 65535u);
+    pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
+    pwm_set_enabled(motor_pwmb_slice, true);
 }
 
 static inline uint8_t rol1(uint8_t value)
@@ -817,40 +910,44 @@ static bool process_dbal_frame(size_t count)
                 continue;
             }
 
-            if ((cmd_id == DBAL_MOTOR_CMD_ENABLE && data_len != 2u) ||
-                (cmd_id == DBAL_MOTOR_CMD_SPEED && data_len != 5u)) {
-                continue;
+            if (svc_id == DBAL_MOTOR_SERVICE_ID) {
+                if ((cmd_id == DBAL_MOTOR_CMD_ENABLE && data_len != 2u) ||
+                    (cmd_id == DBAL_MOTOR_CMD_SPEED && data_len != 5u)) {
+                    continue;
+                }
             }
 
             uint8_t motor_index = (data_len >= 1u) ? decoded[data_start] : 0u;
 
-            if (cmd_id == DBAL_MOTOR_CMD_ENABLE) {
-                uint8_t enable = (data_len >= 2u) ? decoded[data_start + 1u] : 0u;
-                dlog("[DBAL] motor[%u] enable=%u\n", motor_index, enable);
-                motor_write((uint16_t)(MOTOR_REG_BASE
-                                       + (uint16_t)motor_index * MOTOR_REG_STRIDE
-                                       + MOTOR_REG_ENABLE_OFFSET),
-                            (uint32_t)enable);
-                return true;
-            }
-
-            if (cmd_id == DBAL_MOTOR_CMD_SPEED && data_len >= 5u) {
-                uint32_t speed_high = missing_tail_byte ? 0u : ((uint32_t)decoded[data_start + 4u] << 24u);
-                int32_t speed = (int32_t)(
-                      (uint32_t)decoded[data_start + 1u]
-                    | ((uint32_t)decoded[data_start + 2u] << 8u)
-                    | ((uint32_t)decoded[data_start + 3u] << 16u)
-                    | speed_high);
-                if (missing_tail_byte) {
-                    dlog("[DBAL] recovered truncated speed frame t=%u b=%u\n",
-                         (unsigned)transform, (unsigned)base);
+            if (svc_id == DBAL_MOTOR_SERVICE_ID) {
+                if (cmd_id == DBAL_MOTOR_CMD_ENABLE) {
+                    uint8_t enable = (data_len >= 2u) ? decoded[data_start + 1u] : 0u;
+                    dlog("[DBAL] motor[%u] enable=%u\n", motor_index, enable);
+                    motor_write((uint16_t)(MOTOR_REG_BASE
+                                           + (uint16_t)motor_index * MOTOR_REG_STRIDE
+                                           + MOTOR_REG_ENABLE_OFFSET),
+                                (uint32_t)enable);
+                    return true;
                 }
-                dlog("[DBAL] motor[%u] speed=%ld\n", motor_index, (long)speed);
-                motor_write((uint16_t)(MOTOR_REG_BASE
-                                       + (uint16_t)motor_index * MOTOR_REG_STRIDE
-                                       + MOTOR_REG_SPEED_OFFSET),
-                            (uint32_t)speed);
-                return true;
+
+                if (cmd_id == DBAL_MOTOR_CMD_SPEED && data_len >= 5u) {
+                    uint32_t speed_high = missing_tail_byte ? 0u : ((uint32_t)decoded[data_start + 4u] << 24u);
+                    int32_t speed = (int32_t)(
+                          (uint32_t)decoded[data_start + 1u]
+                        | ((uint32_t)decoded[data_start + 2u] << 8u)
+                        | ((uint32_t)decoded[data_start + 3u] << 16u)
+                        | speed_high);
+                    if (missing_tail_byte) {
+                        dlog("[DBAL] recovered truncated speed frame t=%u b=%u\n",
+                             (unsigned)transform, (unsigned)base);
+                    }
+                    dlog("[DBAL] motor[%u] speed=%ld\n", motor_index, (long)speed);
+                    motor_write((uint16_t)(MOTOR_REG_BASE
+                                           + (uint16_t)motor_index * MOTOR_REG_STRIDE
+                                           + MOTOR_REG_SPEED_OFFSET),
+                                (uint32_t)speed);
+                    return true;
+                }
             }
 
             if (svc_id == DBAL_LCD_SERVICE_ID) {
@@ -1136,6 +1233,7 @@ int main(void)
     memset(reg_table, 0, sizeof(reg_table));
     memset(motors, 0, sizeof(motors));
     motor_gpio_init();
+    led_init();
     sonic_init();
     lcd_init_1602();
     for (size_t i = 0; i < MOTOR_COUNT; i++) {

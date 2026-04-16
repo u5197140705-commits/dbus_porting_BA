@@ -127,10 +127,12 @@ static bool run_motor0_toggle_cycle(void)
             all_ok = false;
         }
 
-        (void)snprintf(line0, sizeof(line0), "SPD %4u RPM    ", (unsigned)test_speeds[i]);
-        (void)snprintf(line1, sizeof(line1), "DIST %4u MM    ", (unsigned)distance_mm);
+        (void)snprintf(line0, sizeof(line0), "SPD %4u RPM ", (unsigned)test_speeds[i]);
+        (void)snprintf(line1, sizeof(line1), "DIST %4u MM ", (unsigned)distance_mm);
         (void)lcd_service_print(0u, 0u, 0u, line0);
         (void)lcd_service_print(0u, 1u, 0u, line1);
+        (void)lcd_service_print(0u, 0u, 13u, "   ");
+        (void)lcd_service_print(0u, 1u, 13u, "   ");
 
         printk("Motor Toggle: cycle %u enable=0\n", (uint32_t)(i + 1u));
         err = motor_service_set_enable(0u, false);
@@ -187,6 +189,25 @@ int main(void)
     printk("PASS: %u\n", run_pass);
     printk("FAIL: %u\n", run_fail);
     printk("Overall: %s\n", (run_fail == 0u) ? "PASS" : "FAIL");
+
+    /* Continuous monitoring loop: keep distance on LCD after test completes. */
+    printk("Main: entering continuous distance display loop.\n");
+    for (;;) {
+        uint16_t distance_mm = 0u;
+        char line1[17];
+        enum DBC_Error err;
+
+        err = ultrasonic_service_get_distance_mm(0u, &distance_mm);
+        if (err == DBC_OK) {
+            (void)snprintf(line1, sizeof(line1), "DIST %4u MM ", (unsigned)distance_mm);
+            (void)lcd_service_print(0u, 0u, 0u, "MONITORING   ");
+            (void)lcd_service_print(0u, 1u, 0u, line1);
+            (void)lcd_service_print(0u, 0u, 13u, "   ");
+            (void)lcd_service_print(0u, 1u, 13u, "   ");
+        }
+
+        k_msleep(250);
+    }
 
     return (run_fail == 0u) ? 0 : 1;
 }
