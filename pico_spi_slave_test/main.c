@@ -50,6 +50,9 @@ static void dlog_flush_limited(unsigned int budget) {
 #endif
 }
 
+static uint32_t reg_read(uint16_t addr);
+static void reg_write(uint16_t addr, uint32_t value);
+
 #define PIN_MISO 19
 #define PIN_CS   17
 #define PIN_SCK  18
@@ -59,6 +62,16 @@ static void dlog_flush_limited(unsigned int budget) {
 #define PIN_MOTOR_STBY 14
 #define PIN_MOTOR_AIN1 13
 #define PIN_MOTOR_AIN2 12
+
+#define PIN_SONIC_TRIG 20
+#define PIN_SONIC_ECHO 21
+
+#define PIN_LCD_RS 0
+#define PIN_LCD_E  1
+#define PIN_LCD_D4 2
+#define PIN_LCD_D5 3
+#define PIN_LCD_D6 4
+#define PIN_LCD_D7 5
 
 #define FRAME_SIZE 8
 #define DBAL_MAX_FRAME_SIZE  32u  /* max DBAL frame: SOF+len+CRC+headers+payload */
@@ -76,6 +89,14 @@ static void dlog_flush_limited(unsigned int budget) {
 #define MOTOR_REG_SPEED_OFFSET    0x4u
 #define MOTOR_REG_FEEDBACK_OFFSET 0x8u
 #define MOTOR_REG_STATUS_OFFSET   0xCu
+
+#define SONIC_REG_BASE            0x5100u
+#define SONIC_REG_STRIDE          0x04u
+#define SONIC_REG_DISTANCE_OFFSET 0x00u
+
+#define SONIC_SENSOR_COUNT 1u
+#define SONIC_TRIGGER_PERIOD_US 100000u
+#define SONIC_ECHO_TIMEOUT_US   30000u
 
 #define MOTOR_STATUS_ENABLED   0x00000001u
 #define MOTOR_STATUS_AVAILABLE 0x00000002u
@@ -125,6 +146,184 @@ static const char *const motor_names[MOTOR_COUNT] = {
     "motor3",
     "motor4",
 };
+
+typedef enum {
+    SONIC_IDLE = 0,
+    SONIC_WAIT_RISE,
+    SONIC_WAIT_FALL,
+} sonic_state_t;
+
+static sonic_state_t sonic_state = SONIC_IDLE;
+static uint32_t sonic_last_trigger_us = 0u;
+static uint32_t sonic_echo_start_us = 0u;
+static uint32_t sonic_distance_mm = 0u;
+
+static void lcd_pulse_enable(void)
+{
+    gpio_put(PIN_LCD_E, 1);
+    sleep_us(1);
+    gpio_put(PIN_LCD_E, 0);
+    sleep_us(40);
+}
+
+static void lcd_write_nibble(uint8_t nibble)
+{
+    gpio_put(PIN_LCD_D4, (nibble >> 0) & 0x01u);
+    gpio_put(PIN_LCD_D5, (nibble >> 1) & 0x01u);
+    gpio_put(PIN_LCD_D6, (nibble >> 2) & 0x01u);
+    gpio_put(PIN_LCD_D7, (nibble >> 3) & 0x01u);
+    lcd_pulse_enable();
+}
+
+static void lcd_send_byte(bool is_data, uint8_t value)
+{
+    gpio_put(PIN_LCD_RS, is_data ? 1 : 0);
+    lcd_write_nibble((uint8_t)(value >> 4));
+    lcd_write_nibble((uint8_t)(value & 0x0Fu));
+}
+
+static void lcd_cmd(uint8_t cmd)
+{
+    lcd_send_byte(false, cmd);
+    if (cmd == 0x01u || cmd == 0x02u) {
+        sleep_ms(2);
+    }
+}
+
+static void lcd_data(uint8_t data)
+{
+    lcd_send_byte(true, data);
+}
+
+static void lcd_set_cursor(uint8_t row, uint8_t col)
+{
+    uint8_t base = (row == 0u) ? 0x00u : 0x40u;
+    if (col > 15u) {
+        col = 15u;
+    }
+    lcd_cmd((uint8_t)(0x80u | (base + col)));
+}
+
+static void lcd_clear(void)
+{
+    lcd_cmd(0x01u);
+}
+
+static void lcd_print(uint8_t row, uint8_t col, const char *text, uint8_t text_len)
+{
+    if (row > 1u) {
+        row = 1u;
+    }
+    if (col > 15u) {
+        col = 15u;
+    }
+
+    lcd_set_cursor(row, col);
+    for (uint8_t i = 0u; i < text_len && (col + i) < 16u; i++) {
+        lcd_data((uint8_t)text[i]);
+    }
+}
+
+static void lcd_init_1602(void)
+{
+    gpio_init(PIN_LCD_RS);
+    gpio_set_dir(PIN_LCD_RS, GPIO_OUT);
+    gpio_put(PIN_LCD_RS, 0);
+
+    gpio_init(PIN_LCD_E);
+    gpio_set_dir(PIN_LCD_E, GPIO_OUT);
+    gpio_put(PIN_LCD_E, 0);
+
+    gpio_init(PIN_LCD_D4);
+    gpio_set_dir(PIN_LCD_D4, GPIO_OUT);
+    gpio_put(PIN_LCD_D4, 0);
+    gpio_init(PIN_LCD_D5);
+    gpio_set_dir(PIN_LCD_D5, GPIO_OUT);
+    gpio_put(PIN_LCD_D5, 0);
+    gpio_init(PIN_LCD_D6);
+    gpio_set_dir(PIN_LCD_D6, GPIO_OUT);
+    gpio_put(PIN_LCD_D6, 0);
+    gpio_init(PIN_LCD_D7);
+    gpio_set_dir(PIN_LCD_D7, GPIO_OUT);
+    gpio_put(PIN_LCD_D7, 0);
+
+    sleep_ms(20);
+    gpio_put(PIN_LCD_RS, 0);
+    lcd_write_nibble(0x03u);
+    sleep_ms(5);
+    lcd_write_nibble(0x03u);
+    sleep_us(150);
+    lcd_write_nibble(0x03u);
+    lcd_write_nibble(0x02u);
+
+    lcd_cmd(0x28u);
+    lcd_cmd(0x0Cu);
+    lcd_cmd(0x06u);
+    lcd_clear();
+    lcd_print(0u, 0u, "DBAL SPI READY", 14u);
+}
+
+static void sonic_init(void)
+{
+    gpio_init(PIN_SONIC_TRIG);
+    gpio_set_dir(PIN_SONIC_TRIG, GPIO_OUT);
+    gpio_put(PIN_SONIC_TRIG, 0);
+
+    gpio_init(PIN_SONIC_ECHO);
+    gpio_set_dir(PIN_SONIC_ECHO, GPIO_IN);
+    gpio_pull_down(PIN_SONIC_ECHO);
+
+    sonic_state = SONIC_IDLE;
+    sonic_last_trigger_us = time_us_32();
+    sonic_distance_mm = 0u;
+    reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+}
+
+static void sonic_poll(void)
+{
+    uint32_t now_us = time_us_32();
+    bool echo_high = gpio_get(PIN_SONIC_ECHO);
+
+    switch (sonic_state) {
+        case SONIC_IDLE:
+            if ((uint32_t)(now_us - sonic_last_trigger_us) >= SONIC_TRIGGER_PERIOD_US) {
+                gpio_put(PIN_SONIC_TRIG, 1);
+                busy_wait_us_32(10u);
+                gpio_put(PIN_SONIC_TRIG, 0);
+                sonic_last_trigger_us = time_us_32();
+                sonic_state = SONIC_WAIT_RISE;
+            }
+            break;
+
+        case SONIC_WAIT_RISE:
+            if (echo_high) {
+                sonic_echo_start_us = now_us;
+                sonic_state = SONIC_WAIT_FALL;
+            } else if ((uint32_t)(now_us - sonic_last_trigger_us) >= SONIC_ECHO_TIMEOUT_US) {
+                sonic_distance_mm = 0u;
+                reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+                sonic_state = SONIC_IDLE;
+            }
+            break;
+
+        case SONIC_WAIT_FALL:
+            if (!echo_high) {
+                uint32_t pulse_us = (uint32_t)(now_us - sonic_echo_start_us);
+                sonic_distance_mm = (pulse_us * 343u) / 2000u;
+                reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+                sonic_state = SONIC_IDLE;
+            } else if ((uint32_t)(now_us - sonic_echo_start_us) >= SONIC_ECHO_TIMEOUT_US) {
+                sonic_distance_mm = 0u;
+                reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+                sonic_state = SONIC_IDLE;
+            }
+            break;
+
+        default:
+            sonic_state = SONIC_IDLE;
+            break;
+    }
+}
 
 static uint16_t speed_to_pwm_level(int32_t speed_setpoint)
 {
@@ -242,6 +441,11 @@ static bool addr_is_valid(uint16_t addr)
 
     if (addr >= MOTOR_REG_BASE &&
         addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
+        return true;
+    }
+
+    if (addr >= SONIC_REG_BASE &&
+        addr < (SONIC_REG_BASE + (SONIC_SENSOR_COUNT * SONIC_REG_STRIDE))) {
         return true;
     }
 
@@ -477,6 +681,10 @@ static void set_default_tx_pattern(void)
 #define DBAL_MOTOR_SERVICE_ID  0x7100u
 #define DBAL_MOTOR_CMD_ENABLE  0x0001u
 #define DBAL_MOTOR_CMD_SPEED   0x0002u
+#define DBAL_LCD_SERVICE_ID    0x7102u
+#define DBAL_LCD_CMD_CLEAR     0x0001u
+#define DBAL_LCD_CMD_PRINT     0x0002u
+#define DBAL_LCD_CMD_SET_CURSOR 0x0003u
 
 static bool process_dbal_frame(size_t count)
 {
@@ -601,7 +809,7 @@ static bool process_dbal_frame(size_t count)
                 continue;
             }
 
-            if (svc_id != DBAL_MOTOR_SERVICE_ID) {
+            if (svc_id != DBAL_MOTOR_SERVICE_ID && svc_id != DBAL_LCD_SERVICE_ID) {
                 continue;
             }
 
@@ -643,6 +851,37 @@ static bool process_dbal_frame(size_t count)
                                        + MOTOR_REG_SPEED_OFFSET),
                             (uint32_t)speed);
                 return true;
+            }
+
+            if (svc_id == DBAL_LCD_SERVICE_ID) {
+                if (cmd_id == DBAL_LCD_CMD_CLEAR) {
+                    if (data_len < 1u) {
+                        continue;
+                    }
+                    lcd_clear();
+                    return true;
+                }
+
+                if (cmd_id == DBAL_LCD_CMD_SET_CURSOR) {
+                    if (data_len < 3u) {
+                        continue;
+                    }
+                    lcd_set_cursor(decoded[data_start + 1u], decoded[data_start + 2u]);
+                    return true;
+                }
+
+                if (cmd_id == DBAL_LCD_CMD_PRINT) {
+                    if (data_len < 4u) {
+                        continue;
+                    }
+                    {
+                        uint8_t row = decoded[data_start + 1u];
+                        uint8_t col = decoded[data_start + 2u];
+                        uint8_t text_len = (uint8_t)(data_len - 3u);
+                        lcd_print(row, col, (const char *)&decoded[data_start + 3u], text_len);
+                    }
+                    return true;
+                }
             }
         }
     }
@@ -897,6 +1136,8 @@ int main(void)
     memset(reg_table, 0, sizeof(reg_table));
     memset(motors, 0, sizeof(motors));
     motor_gpio_init();
+    sonic_init();
+    lcd_init_1602();
     for (size_t i = 0; i < MOTOR_COUNT; i++) {
         motors[i].status = (i < ACTIVE_MOTOR_COUNT) ? MOTOR_STATUS_AVAILABLE : 0u;
     }
@@ -931,6 +1172,7 @@ int main(void)
         uint32_t now_ms;
 
         service_spi_frame(spi0);
+        sonic_poll();
         cs_active = cs_is_active();
 
         if (led_on != cs_active) {

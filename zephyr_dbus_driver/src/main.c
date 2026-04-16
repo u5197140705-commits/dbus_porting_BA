@@ -6,7 +6,10 @@
 #include "spi_abstraction.h" // Include the SPI abstraction layer
 #include "dbus_driver_public.h" // Include the DBus driver public API
 #include "motor_service.h"
+#include "lcd_service.h"
+#include "ultrasonic_service.h"
 #include <zephyr/sys_clock.h> // For K_SECONDS macro
+#include <stdio.h>
 
 #define MOTOR_STATUS_ENABLED   0x00000001u
 #define MOTOR_STATUS_AVAILABLE 0x00000002u
@@ -66,6 +69,9 @@ static bool run_motor0_toggle_cycle(void)
     for (size_t i = 0; i < ARRAY_SIZE(test_speeds); i++) {
         uint32_t status_val = 0;
         int32_t feedback_val = 0;
+        uint16_t distance_mm = 0u;
+        char line0[17];
+        char line1[17];
         enum DBC_Error err;
 
         printk("Motor Toggle: cycle %u enable=1 speed=%u\n", (uint32_t)(i + 1u), test_speeds[i]);
@@ -113,6 +119,19 @@ static bool run_motor0_toggle_cycle(void)
             all_ok = false;
         }
 
+        err = ultrasonic_service_get_distance_mm(0u, &distance_mm);
+        if (err == DBC_OK) {
+            printk("Motor Toggle: cycle %u distance=%u mm\n", (uint32_t)(i + 1u), (unsigned)distance_mm);
+        } else {
+            printk("Motor Toggle: cycle %u distance read err=%d\n", (uint32_t)(i + 1u), err);
+            all_ok = false;
+        }
+
+        (void)snprintf(line0, sizeof(line0), "SPD %4u RPM    ", (unsigned)test_speeds[i]);
+        (void)snprintf(line1, sizeof(line1), "DIST %4u MM    ", (unsigned)distance_mm);
+        (void)lcd_service_print(0u, 0u, 0u, line0);
+        (void)lcd_service_print(0u, 1u, 0u, line1);
+
         printk("Motor Toggle: cycle %u enable=0\n", (uint32_t)(i + 1u));
         err = motor_service_set_enable(0u, false);
         if (err != DBC_OK) {
@@ -137,6 +156,9 @@ int main(void)
     printk("Repeatability mode: %u run(s).\n", DBUS_REPEATABILITY_RUNS);
 
     dbal_bootstrap_phase1();
+
+    (void)lcd_service_clear(0u);
+    (void)lcd_service_print(0u, 0u, 0u, "DBAL READY");
 
     /* Wait for Pico SPI slave to complete its startup and enter the polling
      * loop before beginning any SPI exchanges. */
