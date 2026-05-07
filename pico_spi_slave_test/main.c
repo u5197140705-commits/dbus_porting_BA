@@ -18,7 +18,7 @@
 #define LOG_IDLE_FLUSH_US 5000u
 #define DLOG_FLUSH_BUDGET 4u
 #define PICO_RUNTIME_LOG_FLUSH 0
-#define PICO_HEARTBEAT_ENABLE 0
+#define PICO_HEARTBEAT_ENABLE 1
 #define CS_END_DRAIN_TIMEOUT_US 20u
 #define CS_END_DRAIN_IDLE_US 2u
 typedef struct { char msg[DLOG_MSG_LEN]; } dlog_entry_t;
@@ -141,6 +141,20 @@ static size_t tx_index = 0;
 static volatile bool cs_active_flag = false;
 static volatile bool cs_start_pending = false;
 static volatile bool cs_end_pending = false;
+static bool cs_polled_prev = false;
+static volatile uint32_t cs_fall_count = 0u;
+static volatile uint32_t cs_rise_count = 0u;
+static volatile uint32_t rx_byte_total = 0u;
+static volatile uint32_t frame8_total = 0u;
+static volatile uint32_t frame_dbal_total = 0u;
+static volatile uint32_t frame_other_total = 0u;
+static volatile uint32_t last_frame_len = 0u;
+static volatile uint32_t motor_enable_cmd_count = 0u;
+static volatile uint32_t motor_speed_cmd_count = 0u;
+static volatile uint16_t last_service_id = 0u;
+static volatile uint16_t last_command_id = 0u;
+static volatile uint8_t last_motor_index = 0u;
+static volatile int32_t last_motor_value = 0;
 
 typedef enum {
     TRANSFORM_IDENTITY = 0,
@@ -919,9 +933,15 @@ static bool process_dbal_frame(size_t count)
 
             uint8_t motor_index = (data_len >= 1u) ? decoded[data_start] : 0u;
 
+            last_service_id = svc_id;
+            last_command_id = cmd_id;
+            last_motor_index = motor_index;
+
             if (svc_id == DBAL_MOTOR_SERVICE_ID) {
                 if (cmd_id == DBAL_MOTOR_CMD_ENABLE) {
                     uint8_t enable = (data_len >= 2u) ? decoded[data_start + 1u] : 0u;
+                    motor_enable_cmd_count++;
+                    last_motor_value = (int32_t)enable;
                     dlog("[DBAL] motor[%u] enable=%u\n", motor_index, enable);
                     motor_write((uint16_t)(MOTOR_REG_BASE
                                            + (uint16_t)motor_index * MOTOR_REG_STRIDE
@@ -937,6 +957,8 @@ static bool process_dbal_frame(size_t count)
                         | ((uint32_t)decoded[data_start + 2u] << 8u)
                         | ((uint32_t)decoded[data_start + 3u] << 16u)
                         | speed_high);
+                    motor_speed_cmd_count++;
+                    last_motor_value = speed;
                     if (missing_tail_byte) {
                         dlog("[DBAL] recovered truncated speed frame t=%u b=%u\n",
                              (unsigned)transform, (unsigned)base);
@@ -1122,6 +1144,17 @@ static inline void mark_spi_activity(void)
     last_spi_activity_us = time_us_32();
 }
 
+static void spi_slave_set_miso_active(bool active)
+{
+    if (active) {
+        gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
+    } else {
+        gpio_set_function(PIN_MISO, GPIO_FUNC_SIO);
+        gpio_set_dir(PIN_MISO, GPIO_IN);
+        gpio_disable_pulls(PIN_MISO);
+    }
+}
+
 static void cs_gpio_irq_handler(uint gpio, uint32_t events)
 {
     if (gpio != PIN_CS) {
@@ -1130,11 +1163,38 @@ static void cs_gpio_irq_handler(uint gpio, uint32_t events)
 
     if ((events & GPIO_IRQ_EDGE_FALL) != 0u) {
         cs_active_flag = true;
+        cs_fall_count++;
+        spi_slave_set_miso_active(true);
         cs_start_pending = true;
     }
 
     if ((events & GPIO_IRQ_EDGE_RISE) != 0u) {
         cs_active_flag = false;
+        cs_rise_count++;
+        spi_slave_set_miso_active(false);
+        cs_end_pending = true;
+    }
+}
+
+static void cs_poll_update(void)
+{
+    bool cs_active_now = !gpio_get(PIN_CS);
+
+    if (cs_active_now == cs_polled_prev) {
+        return;
+    }
+
+    cs_polled_prev = cs_active_now;
+
+    if (cs_active_now) {
+        cs_active_flag = true;
+        cs_fall_count++;
+        spi_slave_set_miso_active(true);
+        cs_start_pending = true;
+    } else {
+        cs_active_flag = false;
+        cs_rise_count++;
+        spi_slave_set_miso_active(false);
         cs_end_pending = true;
     }
 }
@@ -1172,6 +1232,7 @@ static void service_spi_frame(spi_inst_t *spi)
 
             while (spi_is_readable(spi) && rx_index < DBAL_MAX_FRAME_SIZE) {
                 rx_frame_raw[rx_index++] = (uint8_t)hw->dr;
+                rx_byte_total++;
                 last_rx_us = time_us_32();
                 saw_rx = true;
             }
@@ -1187,10 +1248,15 @@ static void service_spi_frame(spi_inst_t *spi)
             }
         }
 
+        last_frame_len = (uint32_t)rx_index;
         if (rx_index == FRAME_SIZE) {
+            frame8_total++;
             (void)process_rx_frame();
         } else if (rx_index > FRAME_SIZE) {
+            frame_dbal_total++;
             (void)process_dbal_frame(rx_index);
+        } else if (rx_index > 0u) {
+            frame_other_total++;
         }
         rx_index = 0;
     }
@@ -1201,6 +1267,7 @@ static void service_spi_frame(spi_inst_t *spi)
 
         if (rx_index < DBAL_MAX_FRAME_SIZE) {
             rx_frame_raw[rx_index++] = rx_byte;
+            rx_byte_total++;
         }
 
         /* Keep feeding TX during active transaction, not only after RX drains. */
@@ -1220,6 +1287,7 @@ static void service_spi_frame(spi_inst_t *spi)
 int main(void)
 {
     stdio_init_all();
+    sleep_ms(50); // Keep startup short so SPI slave is ready before RW612 traffic starts
     printf("[Pico SPI Slave] Firmware version: %s\n", PICO_FIRMWARE_VERSION);
         printf("[Pico SPI Slave] SPI0 pins: MOSI=GP%u CSn=GP%u SCK=GP%u MISO=GP%u\n",
             PIN_MOSI, PIN_CS, PIN_SCK, PIN_MISO);
@@ -1247,12 +1315,13 @@ int main(void)
     spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
     spi_set_slave(spi0, true);
 
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
     gpio_set_function(PIN_CS, GPIO_FUNC_SPI);
     gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
 
     cs_active_flag = !gpio_get(PIN_CS);
+    cs_polled_prev = cs_active_flag;
+    spi_slave_set_miso_active(cs_active_flag);
     gpio_set_irq_enabled_with_callback(PIN_CS,
                                        GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
                                        true,
@@ -1269,6 +1338,7 @@ int main(void)
         uint32_t now_us;
         uint32_t now_ms;
 
+        cs_poll_update();
         service_spi_frame(spi0);
         sonic_poll();
         cs_active = cs_is_active();
@@ -1287,18 +1357,27 @@ int main(void)
         }
 
         if (PICO_HEARTBEAT_ENABLE &&
-            !cs_active && rx_index == 0 &&
-            (uint32_t)(now_us - last_spi_activity_us) >= LOG_IDLE_FLUSH_US &&
-            (now_ms - last_heartbeat_ms) >= 10000u) {
-             printf("[Pico SPI Slave] alive version=%s cs=%u rx_index=%u tx_index=%u %s_en=%u %s_spd=%ld\n",
+            (now_ms - last_heartbeat_ms) >= 2000u) {
+             printf("[Pico SPI Slave] alive version=%s cs=%u rx=%u tx=%u rxt=%lu f8=%lu fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld m0_en=%u m0_spd=%ld\n",
                    PICO_FIRMWARE_VERSION,
                    cs_active ? 1u : 0u,
                    (unsigned)rx_index,
-                 (unsigned)tx_index,
-                 motor_name_for_index(0u),
-                 (unsigned)motors[0].enable,
-                 motor_name_for_index(0u),
-                 (long)motors[0].speed_setpoint);
+                   (unsigned)tx_index,
+                 (unsigned long)rx_byte_total,
+                 (unsigned long)frame8_total,
+                 (unsigned long)frame_dbal_total,
+                 (unsigned long)frame_other_total,
+                 (unsigned long)last_frame_len,
+                   (unsigned long)cs_fall_count,
+                   (unsigned long)cs_rise_count,
+                   (unsigned long)motor_enable_cmd_count,
+                   (unsigned long)motor_speed_cmd_count,
+                   (unsigned)last_service_id,
+                   (unsigned)last_command_id,
+                   (unsigned)last_motor_index,
+                   (long)last_motor_value,
+                   (unsigned)motors[0].enable,
+                   (long)motors[0].speed_setpoint);
             last_heartbeat_ms = now_ms;
         }
 

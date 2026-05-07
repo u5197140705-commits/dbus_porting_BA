@@ -16,10 +16,19 @@
 
 &hsgpio0 {
     status = "okay";
+    pinctrl-0 = <&pinmux_hsgpio0 &pinmux_dbus_cs_gpio11>;
+    pinctrl-names = "default";
 };
 
 /* --- Define pin configuration for SPI --- */
 &pinctrl {
+    pinmux_dbus_cs_gpio11: pinmux_dbus_cs_gpio11 {
+        group0 {
+            pinmux = <0x30b>; /* GPIO11 as HSGPIO0_11 for secondary Pico CS */
+            slew-rate = "normal";
+        };
+    };
+
     flexcomm1_spi_default: flexcomm1_spi_default {
         group0 {
             pinmux = <0x18807>,  /* SCK  -> GPIO7   */

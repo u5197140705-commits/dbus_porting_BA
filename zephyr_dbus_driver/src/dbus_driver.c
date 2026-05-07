@@ -16,9 +16,10 @@ LOG_MODULE_REGISTER(dbus_driver, LOG_LEVEL_DBG);
 #define SPI_DEV_NODE DT_NODELABEL(flexcomm1)
 static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Pointer to the SPI bus
 
-// Define the CS GPIO device and pin directly from the overlay
+// Define the CS GPIO device and pins directly from the overlay.
 #define DBUS_CS_GPIO_NODE DT_NODELABEL(hsgpio0)
-#define DBUS_CS_GPIO_PIN 6
+#define DBUS_CS_GPIO_PRIMARY_PIN 6
+#define DBUS_CS_GPIO_SECONDARY_PIN 11
 #define DBUS_CS_GPIO_FLAGS GPIO_OUTPUT
 #define DBCDRV_SPI_RSP_MARKER 0xA0u
 #define DBCDRV_SPI_CS_SETUP_US 8u
@@ -27,6 +28,7 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 #define DBCDRV_SPI_DUMMY_GAP_US 15u
 
 static const struct device *dbus_cs_gpio_dev = DEVICE_DT_GET(DBUS_CS_GPIO_NODE);
+static enum DBCDRV_SpiTarget dbus_spi_target = DBCDRV_SPI_TARGET_PRIMARY_PICO;
 
 static struct spi_config dbus_spi_cfg = {
     .frequency = 10000, // 10 kHz clock to give Pico more response processing time
@@ -69,6 +71,60 @@ const struct spi_config DBCDRV_mspiCfg = { // Placeholder for MSPI_Config, using
     .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_MODE_CPOL | SPI_MODE_CPHA,
     .slave = 0,
 };
+
+static uint32_t dbus_drv_get_cs_pin(enum DBCDRV_SpiTarget target)
+{
+    switch (target) {
+    case DBCDRV_SPI_TARGET_PRIMARY_PICO:
+        return DBUS_CS_GPIO_PRIMARY_PIN;
+    case DBCDRV_SPI_TARGET_SECONDARY_PICO:
+        return DBUS_CS_GPIO_SECONDARY_PIN;
+    default:
+        return DBUS_CS_GPIO_PRIMARY_PIN;
+    }
+}
+
+static const char *dbus_drv_get_target_name(enum DBCDRV_SpiTarget target)
+{
+    switch (target) {
+    case DBCDRV_SPI_TARGET_PRIMARY_PICO:
+        return "primary";
+    case DBCDRV_SPI_TARGET_SECONDARY_PICO:
+        return "secondary";
+    default:
+        return "unknown";
+    }
+}
+
+static int dbus_drv_configure_cs_pin(uint32_t pin)
+{
+    int ret = gpio_pin_configure(dbus_cs_gpio_dev, pin, DBUS_CS_GPIO_FLAGS);
+
+    if (ret < 0) {
+        return ret;
+    }
+
+    return gpio_pin_set(dbus_cs_gpio_dev, pin, 1);
+}
+
+static int dbus_drv_set_cs_state(enum DBCDRV_SpiTarget target, bool asserted)
+{
+    int ret;
+    const uint32_t selected_pin = dbus_drv_get_cs_pin(target);
+    const uint32_t inactive_level = 1u;
+    const uint32_t active_level = asserted ? 0u : 1u;
+
+    ret = gpio_pin_set(dbus_cs_gpio_dev,
+                       DBUS_CS_GPIO_PRIMARY_PIN,
+                       (selected_pin == DBUS_CS_GPIO_PRIMARY_PIN) ? active_level : inactive_level);
+    if (ret < 0) {
+        return ret;
+    }
+
+    return gpio_pin_set(dbus_cs_gpio_dev,
+                        DBUS_CS_GPIO_SECONDARY_PIN,
+                        (selected_pin == DBUS_CS_GPIO_SECONDARY_PIN) ? active_level : inactive_level);
+}
 
 // MEXTI related definitions
 struct MEXTI_Handle DBCDRV_mextiHandle;
@@ -293,7 +349,11 @@ enum MCAL_Error MSPI_transferBlocking(struct MSPI_Handle *handle, const uint8_t 
     }
 
     // Assert CS (drive low)
-    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
+    if (dbus_drv_set_cs_state(dbus_spi_target, true) < 0) {
+        LOG_ERR("MSPI_transferBlocking: failed to assert CS for %s Pico",
+                dbus_drv_get_target_name(dbus_spi_target));
+        return MCAL_ERROR;
+    }
     k_usleep(10); // Small delay after asserting CS
 
     struct spi_buf tx_buf = {
@@ -323,7 +383,11 @@ enum MCAL_Error MSPI_transferBlocking(struct MSPI_Handle *handle, const uint8_t 
     LOG_HEXDUMP_DBG(readBuf, readLen, "MSPI_transferBlocking RX:");
 
     // Deassert CS (drive high)
-    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+    if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
+        LOG_ERR("MSPI_transferBlocking: failed to deassert CS for %s Pico",
+                dbus_drv_get_target_name(dbus_spi_target));
+        return MCAL_ERROR;
+    }
     k_usleep(5); // Small delay after deasserting CS
 
     return MCAL_OK;
@@ -462,6 +526,105 @@ uint16_t DBCDRV_getSpiMode(void)
     return (dbus_spi_cfg.operation & (SPI_MODE_CPOL | SPI_MODE_CPHA));
 }
 
+enum DBC_Error DBCDRV_setSpiTarget(enum DBCDRV_SpiTarget target)
+{
+    if (target >= DBCDRV_SPI_TARGET_COUNT) {
+        LOG_ERR("DBCDRV_setSpiTarget: invalid target %d", (int)target);
+        return DBC_ERROR;
+    }
+
+    dbus_spi_target = target;
+
+    if (device_is_ready(dbus_cs_gpio_dev)) {
+        int ret = dbus_drv_set_cs_state(dbus_spi_target, false);
+
+        if (ret < 0) {
+            LOG_ERR("DBCDRV_setSpiTarget: failed to deassert CS pins: %d", ret);
+            return DBC_ERROR;
+        }
+    }
+
+    LOG_INF("DBCDRV SPI target set to %s Pico on GPIO%u",
+            dbus_drv_get_target_name(dbus_spi_target),
+            dbus_drv_get_cs_pin(dbus_spi_target));
+
+    return DBC_OK;
+}
+
+enum DBCDRV_SpiTarget DBCDRV_getSpiTarget(void)
+{
+    return dbus_spi_target;
+}
+
+void DBCDRV_logSpiRouting(const char *tag)
+{
+    int cs_primary = -1;
+    int cs_secondary = -1;
+
+    if (!device_is_ready(dbus_cs_gpio_dev)) {
+        printk("RW612 SPI ROUTE[%s]: CS GPIO not ready\n", (tag != NULL) ? tag : "-");
+        return;
+    }
+
+    cs_primary = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_PRIMARY_PIN);
+    cs_secondary = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
+
+    printk("RW612 SPI ROUTE[%s]: target=%s gpio6=%d gpio10=%d\n",
+           (tag != NULL) ? tag : "-",
+           dbus_drv_get_target_name(dbus_spi_target),
+           cs_primary,
+           cs_secondary);
+}
+
+enum DBC_Error DBCDRV_pulseCs(enum DBCDRV_SpiTarget target,
+                              uint32_t pulse_count,
+                              uint32_t low_time_us,
+                              uint32_t high_time_us)
+{
+    if (target >= DBCDRV_SPI_TARGET_COUNT) {
+        LOG_ERR("DBCDRV_pulseCs: invalid target %d", (int)target);
+        return DBC_ERROR;
+    }
+
+    if (!device_is_ready(dbus_cs_gpio_dev)) {
+        LOG_ERR("DBCDRV_pulseCs: CS GPIO device not ready");
+        return DBC_ERROR;
+    }
+
+    for (uint32_t i = 0; i < pulse_count; i++) {
+        if (dbus_drv_set_cs_state(target, true) < 0) {
+            LOG_ERR("DBCDRV_pulseCs: failed assert on pulse %u for %s Pico",
+                    (unsigned)(i + 1u),
+                    dbus_drv_get_target_name(target));
+            return DBC_ERROR;
+        }
+
+        if (low_time_us > 0u) {
+            k_usleep(low_time_us);
+        }
+
+        if (dbus_drv_set_cs_state(target, false) < 0) {
+            LOG_ERR("DBCDRV_pulseCs: failed deassert on pulse %u for %s Pico",
+                    (unsigned)(i + 1u),
+                    dbus_drv_get_target_name(target));
+            return DBC_ERROR;
+        }
+
+        if (high_time_us > 0u) {
+            k_usleep(high_time_us);
+        }
+    }
+
+    LOG_INF("DBCDRV_pulseCs: pulsed %s Pico CS (GPIO%u) count=%u low=%uus high=%uus",
+            dbus_drv_get_target_name(target),
+            (unsigned)dbus_drv_get_cs_pin(target),
+            (unsigned)pulse_count,
+            (unsigned)low_time_us,
+            (unsigned)high_time_us);
+
+    return DBC_OK;
+}
+
 // DBCDRV_readReg32 function
 enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 {
@@ -482,13 +645,21 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
      * register value in time for this exchange — it only updates its TX FIFO
      * AFTER receiving all 8 bytes. The response bytes here are stale/default
      * and must be discarded. */
-    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
+    if (dbus_drv_set_cs_state(dbus_spi_target, true) < 0) {
+        LOG_ERR("DBCDRV_readReg32: failed to assert CS for %s Pico",
+                dbus_drv_get_target_name(dbus_spi_target));
+        return DBC_ERROR;
+    }
     k_usleep(DBCDRV_SPI_CS_SETUP_US);
 
     int ret = DBCDRV_spiTransceiveBytewise(tx_buffer, rx_buffer, sizeof(tx_buffer));
 
     k_usleep(DBCDRV_SPI_CS_HOLD_US);
-    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+    if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
+        LOG_ERR("DBCDRV_readReg32: failed to deassert CS for %s Pico",
+                dbus_drv_get_target_name(dbus_spi_target));
+        return DBC_ERROR;
+    }
 
     if (ret) {
         LOG_ERR("DBCDRV_readReg32: SPI transceive failed: %d for addr 0x%x", ret, addr);
@@ -515,13 +686,21 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     for (uint8_t attempt = 1; attempt <= DBCDRV_SPI_DUMMY_RETRIES; attempt++) {
         memset(data_rx, 0, sizeof(data_rx));
 
-        gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
+        if (dbus_drv_set_cs_state(dbus_spi_target, true) < 0) {
+            LOG_ERR("DBCDRV_readReg32: failed to assert dummy CS for %s Pico",
+                dbus_drv_get_target_name(dbus_spi_target));
+            return DBC_ERROR;
+        }
         k_usleep(DBCDRV_SPI_CS_SETUP_US);
 
         ret = DBCDRV_spiTransceiveBytewise(dummy_tx, data_rx, sizeof(dummy_tx));
 
         k_usleep(DBCDRV_SPI_CS_HOLD_US);
-        gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+        if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
+            LOG_ERR("DBCDRV_readReg32: failed to deassert dummy CS for %s Pico",
+                dbus_drv_get_target_name(dbus_spi_target));
+            return DBC_ERROR;
+        }
 
         if (ret) {
             LOG_ERR("DBCDRV_readReg32: dummy exchange attempt %u failed: %d for addr 0x%x", attempt, ret, addr);
@@ -631,13 +810,21 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
     tx_buffer[DBC_SPI_HDR_SIZE + 2] = (uint8_t)(data >> 16);
     tx_buffer[DBC_SPI_HDR_SIZE + 3] = (uint8_t)(data >> 24);
 
-    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 0);
+    if (dbus_drv_set_cs_state(dbus_spi_target, true) < 0) {
+        LOG_ERR("DBCDRV_writeReg32: failed to assert CS for %s Pico",
+                dbus_drv_get_target_name(dbus_spi_target));
+        return DBC_ERROR;
+    }
     k_usleep(DBCDRV_SPI_CS_SETUP_US);
 
     int ret = DBCDRV_spiTransceiveBytewise(tx_buffer, rx_buffer, sizeof(tx_buffer));
 
     k_usleep(DBCDRV_SPI_CS_HOLD_US);
-    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+    if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
+        LOG_ERR("DBCDRV_writeReg32: failed to deassert CS for %s Pico",
+                dbus_drv_get_target_name(dbus_spi_target));
+        return DBC_ERROR;
+    }
 
     if (ret) {
         LOG_ERR("DBCDRV_writeReg32: SPI transceive failed: %d for addr 0x%x, data 0x%x", ret, addr, data);
@@ -764,6 +951,7 @@ enum DBC_Error DBCDRV_writeEeprom(void)
             break;
         }
     }
+
     return DBC_ERROR;
 }
 
@@ -985,7 +1173,7 @@ enum DBC_Error DBCDRV_doReset(bool *internalEepromError)
 }
 
 // DBCDRV_isAllFeatureRevision function
-extern bool DBCDRV_isAllFeatureRevision(void)
+bool DBCDRV_isAllFeatureRevision(void)
 {
     uint32_t revision_val;
     DBC_RETURN_ON_ERROR(DBCDRV_readReg32(DBC_REVISION_ADDR, &revision_val));
@@ -1148,12 +1336,23 @@ enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc)
         return DBC_ERROR;
     }
 
-    int ret = gpio_pin_configure(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, DBUS_CS_GPIO_FLAGS);
+    int ret = dbus_drv_configure_cs_pin(DBUS_CS_GPIO_PRIMARY_PIN);
     if (ret < 0) {
-        printk("DBCDRV_initComChannels: Error point O - Failed to configure CS GPIO pin: %d\n", ret);
+        printk("DBCDRV_initComChannels: Error point O - Failed to configure primary CS GPIO pin: %d\n", ret);
         return DBC_ERROR;
     }
-    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1); // Ensure CS is de-asserted initially
+
+    ret = dbus_drv_configure_cs_pin(DBUS_CS_GPIO_SECONDARY_PIN);
+    if (ret < 0) {
+        printk("DBCDRV_initComChannels: Error point O2 - Failed to configure secondary CS GPIO pin: %d\n", ret);
+        return DBC_ERROR;
+    }
+
+    ret = dbus_drv_set_cs_state(dbus_spi_target, false);
+    if (ret < 0) {
+        printk("DBCDRV_initComChannels: Error point O3 - Failed to deassert CS pins: %d\n", ret);
+        return DBC_ERROR;
+    }
     k_msleep(1); // Small delay after configuring CS
 
     if(MCAL_OK != MDIO_init(intPin, &MDIO_INPUT_PULL_UP))
@@ -1320,7 +1519,10 @@ enum DBC_Error DBCDRV_init(void)
         printk("DBCDRV_init: Error point B - CS GPIO device not ready at start of init!\n");
         return DBC_ERROR;
     }
-    gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_PIN, 1);
+    if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
+        printk("DBCDRV_init: Error point B2 - Failed to deassert CS pins at start of init!\n");
+        return DBC_ERROR;
+    }
     k_msleep(1); // Small delay
     printk("DBCDRV_init: After CS de-assertion and delay.\n");
 

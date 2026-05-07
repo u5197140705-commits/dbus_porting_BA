@@ -61,6 +61,7 @@ int spi_abstraction_send(const uint8_t *tx_data, size_t tx_len, uint8_t *rx_data
 
     LOG_DBG("Calling spi_transceive for %s...", spi_dev->name);
     int ret = spi_transceive(spi_dev, &spi_cfg, &tx_bufs, &rx_bufs);
+
     if (ret) {
         LOG_ERR("SPI transceive failed for %s: %d", spi_dev->name, ret);
     } else {

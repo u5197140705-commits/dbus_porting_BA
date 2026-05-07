@@ -3,8 +3,8 @@ setlocal EnableDelayedExpansion
 
 set "JLINK_EXE=C:\Program Files\SEGGER\JLink_V924a\JLink.exe"
 set "SCRIPT_FILE=%~dp0flash_rw612.jlink"
-set "ELF_UNC=\\wsl.localhost\Ubuntu\home\swied\projects\dbus_porting_BA\build\zephyr\zephyr.elf"
-set "ELF_WSL=/home/swied/projects/dbus_porting_BA/build/zephyr/zephyr.elf"
+set "ELF_UNC=\\wsl.localhost\Ubuntu\home\swied\projects\dbus_porting_BA\zephyr_dbus_driver\build_local\zephyr\zephyr.elf"
+set "ELF_WSL=/home/swied/projects/dbus_porting_BA/zephyr_dbus_driver/build_local/zephyr/zephyr.elf"
 
 if not exist "%JLINK_EXE%" (
     echo [ERROR] J-Link nicht gefunden: %JLINK_EXE%

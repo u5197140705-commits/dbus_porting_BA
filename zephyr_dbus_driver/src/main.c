@@ -59,6 +59,27 @@ static void dbal_bootstrap_phase1(void)
 }
 
 
+/* Send enable + speed to motor_index on whichever Pico is currently selected.
+ * Returns true on success. */
+static bool send_motor_cmd(uint8_t motor_index, bool enable, int32_t speed)
+{
+    enum DBC_Error err;
+
+    err = motor_service_set_enable(motor_index, enable);
+    if (err != DBC_OK) {
+        printk("send_motor_cmd: enable=%u motor=%u err=%d\n", (unsigned)enable, motor_index, err);
+        return false;
+    }
+    if (enable) {
+        err = motor_service_set_speed(motor_index, speed);
+        if (err != DBC_OK) {
+            printk("send_motor_cmd: speed=%ld motor=%u err=%d\n", (long)speed, motor_index, err);
+            return false;
+        }
+    }
+    return true;
+}
+
 static bool run_motor0_toggle_cycle(void)
 {
     const uint32_t test_speeds[] = { 300u, 800u, 1200u };
@@ -74,12 +95,17 @@ static bool run_motor0_toggle_cycle(void)
         char line1[17];
         enum DBC_Error err;
 
-        printk("Motor Toggle: cycle %u enable=1 speed=%u\n", (uint32_t)(i + 1u), test_speeds[i]);
+        printk("Motor Toggle: cycle %u enable=1 speed=%u (idx0+idx1)\n", (uint32_t)(i + 1u), test_speeds[i]);
         err = motor_service_set_enable(0u, true);
         if (err != DBC_OK) {
             printk("Motor Toggle: cycle %u enable write err=%d\n", (uint32_t)(i + 1u), err);
             all_ok = false;
             continue;
+        }
+        err = motor_service_set_enable(1u, true);
+        if (err != DBC_OK) {
+            printk("Motor Toggle: cycle %u enable write idx1 err=%d\n", (uint32_t)(i + 1u), err);
+            all_ok = false;
         }
 
         err = motor_service_set_speed(0u, (int32_t)test_speeds[i]);
@@ -88,7 +114,12 @@ static bool run_motor0_toggle_cycle(void)
             all_ok = false;
             continue;
         }
-        k_msleep(20);
+        err = motor_service_set_speed(1u, (int32_t)test_speeds[i]);
+        if (err != DBC_OK) {
+            printk("Motor Toggle: cycle %u speed write idx1 err=%d\n", (uint32_t)(i + 1u), err);
+            all_ok = false;
+        }
+        k_msleep(1000);
 
         err = motor_service_get_status(0u, &status_val);
         if (err == DBC_OK) {
@@ -134,13 +165,18 @@ static bool run_motor0_toggle_cycle(void)
         (void)lcd_service_print(0u, 0u, 13u, "   ");
         (void)lcd_service_print(0u, 1u, 13u, "   ");
 
-        printk("Motor Toggle: cycle %u enable=0\n", (uint32_t)(i + 1u));
+        printk("Motor Toggle: cycle %u enable=0 (idx0+idx1)\n", (uint32_t)(i + 1u));
         err = motor_service_set_enable(0u, false);
         if (err != DBC_OK) {
             printk("Motor Toggle: cycle %u disable write err=%d\n", (uint32_t)(i + 1u), err);
             all_ok = false;
         }
-        k_msleep(20);
+        err = motor_service_set_enable(1u, false);
+        if (err != DBC_OK) {
+            printk("Motor Toggle: cycle %u disable write idx1 err=%d\n", (uint32_t)(i + 1u), err);
+            all_ok = false;
+        }
+        k_msleep(200);
     }
 
     printk("Motor Toggle [MOTOR0_TOGGLE_V1]: Complete.\n");
@@ -189,25 +225,6 @@ int main(void)
     printk("PASS: %u\n", run_pass);
     printk("FAIL: %u\n", run_fail);
     printk("Overall: %s\n", (run_fail == 0u) ? "PASS" : "FAIL");
-
-    /* Continuous monitoring loop: keep distance on LCD after test completes. */
-    printk("Main: entering continuous distance display loop.\n");
-    for (;;) {
-        uint16_t distance_mm = 0u;
-        char line1[17];
-        enum DBC_Error err;
-
-        err = ultrasonic_service_get_distance_mm(0u, &distance_mm);
-        if (err == DBC_OK) {
-            (void)snprintf(line1, sizeof(line1), "DIST %4u MM ", (unsigned)distance_mm);
-            (void)lcd_service_print(0u, 0u, 0u, "MONITORING   ");
-            (void)lcd_service_print(0u, 1u, 0u, line1);
-            (void)lcd_service_print(0u, 0u, 13u, "   ");
-            (void)lcd_service_print(0u, 1u, 13u, "   ");
-        }
-
-        k_msleep(250);
-    }
 
     return (run_fail == 0u) ? 0 : 1;
 }

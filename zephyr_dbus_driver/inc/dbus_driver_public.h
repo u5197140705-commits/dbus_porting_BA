@@ -33,6 +33,12 @@ struct MSPI_Channel {
     const struct MDIO_Channel *cs;
 };
 
+enum DBCDRV_SpiTarget {
+    DBCDRV_SPI_TARGET_PRIMARY_PICO = 0,
+    DBCDRV_SPI_TARGET_SECONDARY_PICO,
+    DBCDRV_SPI_TARGET_COUNT,
+};
+
 // MCAL function prototypes
 enum MCAL_Error MDIO_init(const struct MDIO_Channel *channel, const void *config);
 const struct MDIO_Channel *MEXTI_getPin(uint32_t channel);
@@ -68,6 +74,13 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data);
 enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data);
 void DBCDRV_setSpiMode(bool cpol, bool cpha);
 uint16_t DBCDRV_getSpiMode(void);
+enum DBC_Error DBCDRV_setSpiTarget(enum DBCDRV_SpiTarget target);
+enum DBCDRV_SpiTarget DBCDRV_getSpiTarget(void);
+void DBCDRV_logSpiRouting(const char *tag);
+enum DBC_Error DBCDRV_pulseCs(enum DBCDRV_SpiTarget target,
+                              uint32_t pulse_count,
+                              uint32_t low_time_us,
+                              uint32_t high_time_us);
 enum DBC_Error DBCDRV_writeRegIpec(uint32_t bitVal, uint32_t bitPos, uint32_t bitMask);
 enum DBC_Error DBCDRV_writeEeprom(void);
 bool DBCDRV_isSupplyForEepromWrite(void);
