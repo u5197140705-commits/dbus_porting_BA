@@ -16,15 +16,15 @@
 
 &hsgpio0 {
     status = "okay";
-    pinctrl-0 = <&pinmux_hsgpio0 &pinmux_dbus_cs_gpio11>;
+    pinctrl-0 = <&pinmux_dbus_cs_gpio10>;
     pinctrl-names = "default";
 };
 
 /* --- Define pin configuration for SPI --- */
 &pinctrl {
-    pinmux_dbus_cs_gpio11: pinmux_dbus_cs_gpio11 {
+    pinmux_dbus_cs_gpio10: pinmux_dbus_cs_gpio10 {
         group0 {
-            pinmux = <0x30b>; /* GPIO11 as HSGPIO0_11 for secondary Pico CS */
+            pinmux = <0x30a>; /* GPIO10 as HSGPIO0_10 for secondary Pico CS */
             slew-rate = "normal";
         };
     };
@@ -34,7 +34,7 @@
             pinmux = <0x18807>,  /* SCK  -> GPIO7   */
                      <0x18809>,  /* MOSI -> GPIO9   */
                      <0x18808>,  /* MISO -> GPIO8   */
-                     <0x18806>;  /* SSEL0 -> GPIO6   */
+                     <0x18806>;  /* SSEL0 -> GPIO6  */
             slew-rate = "normal";
         };
     };
@@ -47,7 +47,6 @@
     pinctrl-0 = <&flexcomm1_spi_default>;
     pinctrl-names = "default";
     label = "DBUS_SPI";
-    /* Removed cs-gpios to use internal SSEL */
+    /* CS is handled manually via HSGPIO GPIO6/GPIO10 in dbus_driver.c. */
     clock-frequency = <125000>; /* Set to 125kHz as per working BSHG example */
 };
-

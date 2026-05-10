@@ -19,8 +19,10 @@
 #define DLOG_FLUSH_BUDGET 4u
 #define PICO_RUNTIME_LOG_FLUSH 0
 #define PICO_HEARTBEAT_ENABLE 1
-#define CS_END_DRAIN_TIMEOUT_US 20u
-#define CS_END_DRAIN_IDLE_US 2u
+#define PICO_STARTUP_SELF_TEST 1
+#define CS_END_DRAIN_TIMEOUT_US 200u
+#define CS_END_DRAIN_IDLE_US 20u
+#define RX_ACCUM_GAP_RESET_US 3000u
 typedef struct { char msg[DLOG_MSG_LEN]; } dlog_entry_t;
 static dlog_entry_t dlog_buf[DLOG_ENTRIES];
 static unsigned int dlog_head = 0u;
@@ -89,6 +91,8 @@ static void led_update_from_distance(uint32_t dist_mm);
 
 #define FRAME_SIZE 8
 #define DBAL_MAX_FRAME_SIZE  32u  /* max DBAL frame: SOF+len+CRC+headers+payload */
+#define PICO_MINIMAL_BLOCKING_RX 0
+#define FW_ID_MAIN "MAIN_HWSSEL_V16_2026-05-11"
 #define DBUS_CMD_READ  0x40
 #define DBUS_CMD_WRITE 0x60
 #define DBUS_RSP_MARKER 0xA0
@@ -151,10 +155,41 @@ static volatile uint32_t frame_other_total = 0u;
 static volatile uint32_t last_frame_len = 0u;
 static volatile uint32_t motor_enable_cmd_count = 0u;
 static volatile uint32_t motor_speed_cmd_count = 0u;
+static volatile uint32_t frame8_decode_ok_count = 0u;
+static volatile uint32_t frame8_write_count = 0u;
+static volatile uint32_t frame8_read_count = 0u;
+static volatile uint32_t frame8_motor_write_count = 0u;
+static volatile uint32_t frame8_stream_try_count = 0u;
+static volatile uint32_t frame8_stream_ok_count = 0u;
+static uint8_t rx_stream_window[FRAME_SIZE] = {0};
+static uint32_t rx_stream_fill = 0u;
+static volatile uint32_t rx_stream_byte_count = 0u;
+static volatile uint32_t frame8_fail_dump_count = 0u;
+static uint8_t last_failed_raw_frame[FRAME_SIZE] = {0};
+static uint32_t rx_last_byte_us = 0u;
+static uint8_t sniff_frame[FRAME_SIZE] = {0};
+static uint8_t sniff_len = 0u;
+static uint8_t sniff_byte = 0u;
+static uint8_t sniff_bit_count = 0u;
+static bool sniff_prev_cs_active = false;
+static bool sniff_prev_sck_level = false;
 static volatile uint16_t last_service_id = 0u;
 static volatile uint16_t last_command_id = 0u;
 static volatile uint8_t last_motor_index = 0u;
 static volatile int32_t last_motor_value = 0;
+static volatile uint32_t sck_edge_count = 0u;
+static volatile uint32_t mosi_toggle_count = 0u;
+static volatile uint8_t last_frame8_cmd = 0u;
+static volatile uint16_t last_frame8_addr = 0u;
+static volatile uint32_t last_frame8_value = 0u;
+static bool sck_prev_level = false;
+static bool mosi_prev_level = false;
+
+/* Full GPIO sweep: GP0-GP26 edge bitmask (bit N = GP N has seen a transition). */
+#define DIAG_FULL_PINS 27u
+static bool diag_full_prev[DIAG_FULL_PINS];
+static volatile uint32_t diag_full_edges[DIAG_FULL_PINS];
+static volatile uint32_t diag_full_bitmask; /* set bit = any edge seen */
 
 typedef enum {
     TRANSFORM_IDENTITY = 0,
@@ -165,6 +200,135 @@ typedef enum {
 } bit_transform_t;
 
 static bit_transform_t tx_transform = TRANSFORM_ROL1;
+
+static bool process_rx_frame(void);
+static bool addr_is_valid(uint16_t addr);
+static void motor_write(uint16_t addr, uint32_t value);
+static uint32_t motor_read(uint16_t addr);
+
+static void sniff_process_frame(void)
+{
+    last_frame_len = sniff_len;
+
+    if (sniff_len < FRAME_SIZE) {
+        if (sniff_len > 0u) {
+            frame_other_total++;
+        }
+        return;
+    }
+
+    uint8_t cmd = sniff_frame[0];
+    uint16_t addr = ((uint16_t)sniff_frame[1] << 8) | sniff_frame[2];
+    uint8_t len_words = sniff_frame[3];
+
+    if ((cmd != DBUS_CMD_WRITE && cmd != DBUS_CMD_READ) || len_words != 1u || !addr_is_valid(addr)) {
+        frame_other_total++;
+        memcpy(last_failed_raw_frame, sniff_frame, FRAME_SIZE);
+        return;
+    }
+
+    frame8_total++;
+    frame8_decode_ok_count++;
+    last_frame8_cmd = cmd;
+    last_frame8_addr = addr;
+
+    if (cmd == DBUS_CMD_WRITE) {
+        uint32_t value =
+            (uint32_t)sniff_frame[4] |
+            ((uint32_t)sniff_frame[5] << 8) |
+            ((uint32_t)sniff_frame[6] << 16) |
+            ((uint32_t)sniff_frame[7] << 24);
+        last_frame8_value = value;
+        frame8_write_count++;
+        if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
+            frame8_motor_write_count++;
+        }
+        motor_write(addr, value);
+        reg_write(addr, value);
+        return;
+    }
+
+    if (cmd == DBUS_CMD_READ) {
+        uint32_t value = reg_read(addr);
+        if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
+            value = motor_read(addr);
+        }
+        last_frame8_value = value;
+        frame8_read_count++;
+    }
+}
+
+static inline void sniff_update(void)
+{
+    bool cs_active = !gpio_get(PIN_CS);
+    bool sck_level = gpio_get(PIN_SCK);
+
+    if (cs_active && !sniff_prev_cs_active) {
+        sniff_len = 0u;
+        sniff_byte = 0u;
+        sniff_bit_count = 0u;
+    }
+
+    if (!cs_active && sniff_prev_cs_active) {
+        sniff_process_frame();
+        sniff_len = 0u;
+        sniff_byte = 0u;
+        sniff_bit_count = 0u;
+    }
+
+    if (cs_active && !sniff_prev_sck_level && sck_level) {
+        sniff_byte = (uint8_t)((sniff_byte << 1u) | (gpio_get(PIN_MOSI) ? 1u : 0u));
+        sniff_bit_count++;
+        if (sniff_bit_count == 8u) {
+            if (sniff_len < FRAME_SIZE) {
+                sniff_frame[sniff_len++] = sniff_byte;
+            }
+            sniff_byte = 0u;
+            sniff_bit_count = 0u;
+        }
+    }
+
+    sniff_prev_sck_level = sck_level;
+    sniff_prev_cs_active = cs_active;
+}
+
+static void handle_rx_byte(uint8_t rx_byte)
+{
+    if (rx_index < DBAL_MAX_FRAME_SIZE) {
+        rx_frame_raw[rx_index++] = rx_byte;
+        rx_byte_total++;
+        rx_last_byte_us = time_us_32();
+
+        if (rx_index == FRAME_SIZE) {
+            frame8_total++;
+            (void)process_rx_frame();
+            rx_index = 0u;
+        }
+    }
+
+    if (rx_stream_fill < FRAME_SIZE) {
+        rx_stream_window[rx_stream_fill++] = rx_byte;
+    } else {
+        for (size_t i = 0u; i < (FRAME_SIZE - 1u); i++) {
+            rx_stream_window[i] = rx_stream_window[i + 1u];
+        }
+        rx_stream_window[FRAME_SIZE - 1u] = rx_byte;
+    }
+
+    rx_stream_byte_count++;
+    frame8_stream_try_count++;
+
+    if (rx_stream_fill == FRAME_SIZE || rx_stream_byte_count >= FRAME_SIZE) {
+        uint8_t saved_raw[FRAME_SIZE];
+        memcpy(saved_raw, rx_frame_raw, FRAME_SIZE);
+        memcpy(rx_frame_raw, rx_stream_window, FRAME_SIZE);
+        frame8_total++;
+        if (process_rx_frame()) {
+            frame8_stream_ok_count++;
+        }
+        memcpy(rx_frame_raw, saved_raw, FRAME_SIZE);
+    }
+}
 
 static uint motor_pwma_slice = 0u;
 static uint motor_pwma_channel = 0u;
@@ -414,43 +578,39 @@ static void apply_motor_outputs(size_t motor_index)
         return;
     }
 
+    /* TB6612 STBY is shared between channels A/B, keep it high if either
+     * active channel is enabled. */
+    bool stby_needed = (motors[0].enable != 0u) || (motors[1].enable != 0u);
+
     bool enabled = (motors[motor_index].enable != 0u);
     int32_t speed = motors[motor_index].speed_setpoint;
     bool forward = speed >= 0;
 
     if (motor_index == 0u) {
         /* Channel A */
-        gpio_put(PIN_MOTOR_STBY, enabled ? 1 : 0);
-
         if (!enabled || speed == 0) {
             gpio_put(PIN_MOTOR_AIN1, 0);
             gpio_put(PIN_MOTOR_AIN2, 0);
             pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
-            return;
+        } else {
+            gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
+            gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
+            pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
         }
-
-        gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
-        gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
-        pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
     } else {
-        /* Channel B — STBY is shared; only release STBY if channel A also
-         * needs it still, but to keep it simple we always drive STBY high
-         * when either channel is enabled.  A full implementation would OR
-         * both enable states; for now channel B controls STBY independently
-         * of channel A (TB6612 STBY is wired to GP14 shared). */
-        gpio_put(PIN_MOTOR_STBY, enabled ? 1 : 0);
-
+        /* Channel B */
         if (!enabled || speed == 0) {
             gpio_put(PIN_MOTOR_BIN1, 0);
             gpio_put(PIN_MOTOR_BIN2, 0);
             pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
-            return;
+        } else {
+            gpio_put(PIN_MOTOR_BIN1, forward ? 1 : 0);
+            gpio_put(PIN_MOTOR_BIN2, forward ? 0 : 1);
+            pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, speed_to_pwm_level(speed));
         }
-
-        gpio_put(PIN_MOTOR_BIN1, forward ? 1 : 0);
-        gpio_put(PIN_MOTOR_BIN2, forward ? 0 : 1);
-        pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, speed_to_pwm_level(speed));
     }
+
+    gpio_put(PIN_MOTOR_STBY, stby_needed ? 1 : 0);
 }
 
 static const char *motor_name_for_index(size_t motor_index)
@@ -498,6 +658,36 @@ static void motor_gpio_init(void)
     pwm_set_wrap(motor_pwmb_slice, 65535u);
     pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
     pwm_set_enabled(motor_pwmb_slice, true);
+}
+
+static void run_startup_motor_self_test(void)
+{
+#if PICO_STARTUP_SELF_TEST
+    const uint16_t duty = speed_to_pwm_level(700);
+
+    /* Short direct pulses to verify motor driver/power/wiring independent of DBus/SPI. */
+    gpio_put(PIN_MOTOR_STBY, 1);
+
+    gpio_put(PIN_MOTOR_AIN1, 1);
+    gpio_put(PIN_MOTOR_AIN2, 0);
+    pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, duty);
+    sleep_ms(300);
+    pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
+    gpio_put(PIN_MOTOR_AIN1, 0);
+    gpio_put(PIN_MOTOR_AIN2, 0);
+    sleep_ms(150);
+
+    gpio_put(PIN_MOTOR_BIN1, 1);
+    gpio_put(PIN_MOTOR_BIN2, 0);
+    pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, duty);
+    sleep_ms(300);
+    pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
+    gpio_put(PIN_MOTOR_BIN1, 0);
+    gpio_put(PIN_MOTOR_BIN2, 0);
+
+    gpio_put(PIN_MOTOR_STBY, 0);
+    printf("[Pico SPI Slave] startup self-test complete (A+B pulse)\n");
+#endif
 }
 
 static inline uint8_t rol1(uint8_t value)
@@ -565,11 +755,19 @@ static bool decoded_frame_is_valid(const uint8_t *decoded_frame)
     uint8_t len_words = decoded_frame[3];
     uint16_t addr = ((uint16_t)decoded_frame[1] << 8) | decoded_frame[2];
 
-    if ((cmd != DBUS_CMD_READ && cmd != DBUS_CMD_WRITE) || len_words != 1u) {
+    if (cmd != DBUS_CMD_READ && cmd != DBUS_CMD_WRITE) {
         return false;
     }
 
-    return addr_is_valid(addr);
+    if (!addr_is_valid(addr)) {
+        return false;
+    }
+
+    if (len_words != 1u) {
+        dlog("[DBAL] len_anom cmd=0x%02x addr=0x%04x len=%u\n", cmd, addr, (unsigned)len_words);
+    }
+
+    return true;
 }
 
 static bool decode_frame_with_transform(const uint8_t *raw_frame, uint8_t *decoded_frame, bit_transform_t transform)
@@ -1012,25 +1210,51 @@ static bool process_dbal_frame(size_t count)
 static bool process_rx_frame(void)
 {
     uint8_t decoded[FRAME_SIZE];
+    uint8_t rotated[FRAME_SIZE];
     bit_transform_t detected = TRANSFORM_ROL1;
+    uint8_t detected_rotation = 0u;
 
-    if (!decode_rx_frame_auto(rx_frame_raw, decoded, &detected)) {
-        /* Ignore invalid frames (e.g. RW612 dummy clocks during readback).
-         * Do NOT overwrite tx_frame_wire here, otherwise a prepared response
-         * can be clobbered by default 0xA5 before the master receives it. */
-           dlog("[PICO] FAILED raw: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+    for (uint8_t rotation = 0u; rotation < FRAME_SIZE; rotation++) {
+        for (size_t i = 0u; i < FRAME_SIZE; i++) {
+            rotated[i] = rx_frame_raw[(i + rotation) % FRAME_SIZE];
+        }
+
+        if (decode_rx_frame_auto(rotated, decoded, &detected)) {
+            detected_rotation = rotation;
+            goto frame_decoded;
+        }
+    }
+
+    /* Ignore invalid frames (e.g. RW612 dummy clocks during readback).
+     * Do NOT overwrite tx_frame_wire here, otherwise a prepared response
+     * can be clobbered by default 0xA5 before the master receives it. */
+    if (frame8_fail_dump_count < 5u) {
+        frame8_fail_dump_count++;
+        printf("[Pico SPI Slave] decode fail raw=%02x %02x %02x %02x %02x %02x %02x %02x\n",
                rx_frame_raw[0], rx_frame_raw[1], rx_frame_raw[2], rx_frame_raw[3],
                rx_frame_raw[4], rx_frame_raw[5], rx_frame_raw[6], rx_frame_raw[7]);
-        return false;
+    }
+    memcpy(last_failed_raw_frame, rx_frame_raw, FRAME_SIZE);
+       dlog("[PICO] FAILED raw: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+           rx_frame_raw[0], rx_frame_raw[1], rx_frame_raw[2], rx_frame_raw[3],
+           rx_frame_raw[4], rx_frame_raw[5], rx_frame_raw[6], rx_frame_raw[7]);
+    return false;
+
+frame_decoded:
+    if (detected_rotation != 0u) {
+        dlog("[PICO] RX rotation=%u\n", (unsigned)detected_rotation);
     }
 
     /* tx_transform is always TRANSFORM_ROL1: the link applies ROR1 to MISO
      * (CPHA mismatch), so Pico must pre-compensate with ROL1 regardless of
      * which decode transform was detected for the incoming MOSI bytes. */
     (void)detected;
+    frame8_decode_ok_count++;
 
     uint8_t cmd = decoded[0] & 0x60u;
     uint16_t addr = ((uint16_t)decoded[1] << 8) | decoded[2];
+    last_frame8_cmd = cmd;
+    last_frame8_addr = addr;
     dlog("[PICO] RX cmd=0x%02x addr=0x%04x\n", cmd, addr);
 
     if (cmd == DBUS_CMD_WRITE) {
@@ -1050,6 +1274,12 @@ static bool process_rx_frame(void)
         if (value_decoded == 0u && value_raw != 0u) {
             value = value_raw;
         }
+        last_frame8_value = value;
+        frame8_write_count++;
+        if (addr >= MOTOR_REG_BASE &&
+            addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
+            frame8_motor_write_count++;
+        }
 
         motor_write(addr, value);
         reg_write(addr, value);
@@ -1061,9 +1291,11 @@ static bool process_rx_frame(void)
 
     if (cmd == DBUS_CMD_READ) {
         uint32_t value = reg_read(addr);
+        frame8_read_count++;
         if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
             value = motor_read(addr);
         }
+        last_frame8_value = value;
         dlog("[PICO] READ addr=0x%04x val=0x%08x\n", addr, value);
         memset(tx_frame_desired, 0, sizeof(tx_frame_desired));
         tx_frame_desired[0] = DBUS_RSP_MARKER;
@@ -1146,13 +1378,10 @@ static inline void mark_spi_activity(void)
 
 static void spi_slave_set_miso_active(bool active)
 {
-    if (active) {
-        gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-    } else {
-        gpio_set_function(PIN_MISO, GPIO_FUNC_SIO);
-        gpio_set_dir(PIN_MISO, GPIO_IN);
-        gpio_disable_pulls(PIN_MISO);
-    }
+    /* SPI slave MISO must stay in SPI function at all times, not toggled.
+     * Toggling it off breaks the slave receiver. Keep it enabled. */
+    (void)active;  /* Suppress unused parameter warning */
+    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
 }
 
 static void cs_gpio_irq_handler(uint gpio, uint32_t events)
@@ -1199,6 +1428,31 @@ static void cs_poll_update(void)
     }
 }
 
+static inline void sample_spi_pin_activity(void)
+{
+    bool sck_level = gpio_get(PIN_SCK);
+    bool mosi_level = gpio_get(PIN_MOSI);
+
+    if (sck_level != sck_prev_level) {
+        sck_edge_count++;
+        sck_prev_level = sck_level;
+    }
+
+    if (mosi_level != mosi_prev_level) {
+        mosi_toggle_count++;
+        mosi_prev_level = mosi_level;
+    }
+
+    for (size_t i = 0u; i < DIAG_FULL_PINS; i++) {
+        bool level = gpio_get((uint)i);
+        if (level != diag_full_prev[i]) {
+            diag_full_edges[i]++;
+            diag_full_bitmask |= (1u << i);
+            diag_full_prev[i] = level;
+        }
+    }
+}
+
 static void service_spi_frame(spi_inst_t *spi)
 {
     spi_hw_t *hw = spi_get_hw(spi);
@@ -1207,7 +1461,6 @@ static void service_spi_frame(spi_inst_t *spi)
         cs_start_pending = false;
         /* New transaction started: align both RX and TX to frame start. */
         mark_spi_activity();
-        rx_index = 0;
         tx_index = 0;
         /* Prime TX immediately at CS-assert so first clocks do not see zeros. */
         while (cs_is_active() && spi_is_writable(spi) && tx_index < FRAME_SIZE) {
@@ -1231,8 +1484,7 @@ static void service_spi_frame(spi_inst_t *spi)
             bool saw_rx = false;
 
             while (spi_is_readable(spi) && rx_index < DBAL_MAX_FRAME_SIZE) {
-                rx_frame_raw[rx_index++] = (uint8_t)hw->dr;
-                rx_byte_total++;
+                handle_rx_byte((uint8_t)hw->dr);
                 last_rx_us = time_us_32();
                 saw_rx = true;
             }
@@ -1252,23 +1504,21 @@ static void service_spi_frame(spi_inst_t *spi)
         if (rx_index == FRAME_SIZE) {
             frame8_total++;
             (void)process_rx_frame();
+            rx_index = 0u;
         } else if (rx_index > FRAME_SIZE) {
             frame_dbal_total++;
             (void)process_dbal_frame(rx_index);
+            rx_index = 0u;
         } else if (rx_index > 0u) {
+            /* Keep partial data across CS edges; RW612 can fragment transfers. */
             frame_other_total++;
         }
-        rx_index = 0;
     }
 
     while (spi_is_readable(spi)) {
         uint8_t rx_byte = (uint8_t)hw->dr;
         mark_spi_activity();
-
-        if (rx_index < DBAL_MAX_FRAME_SIZE) {
-            rx_frame_raw[rx_index++] = rx_byte;
-            rx_byte_total++;
-        }
+        handle_rx_byte(rx_byte);
 
         /* Keep feeding TX during active transaction, not only after RX drains. */
         while (cs_is_active() && spi_is_writable(spi) && tx_index < FRAME_SIZE) {
@@ -1288,6 +1538,7 @@ int main(void)
 {
     stdio_init_all();
     sleep_ms(50); // Keep startup short so SPI slave is ready before RW612 traffic starts
+    printf("[Pico SPI Slave] FW_ID=%s\n", FW_ID_MAIN);
     printf("[Pico SPI Slave] Firmware version: %s\n", PICO_FIRMWARE_VERSION);
         printf("[Pico SPI Slave] SPI0 pins: MOSI=GP%u CSn=GP%u SCK=GP%u MISO=GP%u\n",
             PIN_MOSI, PIN_CS, PIN_SCK, PIN_MISO);
@@ -1301,6 +1552,7 @@ int main(void)
     memset(reg_table, 0, sizeof(reg_table));
     memset(motors, 0, sizeof(motors));
     motor_gpio_init();
+    run_startup_motor_self_test();
     led_init();
     sonic_init();
     lcd_init_1602();
@@ -1311,21 +1563,64 @@ int main(void)
     set_default_tx_pattern();
     mark_spi_activity();
 
-    spi_init(spi0, 1000 * 1000);
-    spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
-    spi_set_slave(spi0, true);
+    /* Boot-time pin probe: read GP16 (MOSI) and GP18 (SCK) before SPI init.
+     * pull-up reads 1 = pin is floating/disconnected.
+     * pull-up reads 0 = pin is externally driven low.
+     * pull-down reads 1 = pin is externally driven high. */
+    {
+        bool pu16, pd16, pu18, pd18;
+        gpio_init(PIN_MOSI); gpio_set_dir(PIN_MOSI, GPIO_IN);
+        gpio_pull_up(PIN_MOSI); sleep_us(50); pu16 = gpio_get(PIN_MOSI);
+        gpio_pull_down(PIN_MOSI); sleep_us(50); pd16 = gpio_get(PIN_MOSI);
+        gpio_disable_pulls(PIN_MOSI);
 
-    gpio_set_function(PIN_CS, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
+        gpio_init(PIN_SCK); gpio_set_dir(PIN_SCK, GPIO_IN);
+        gpio_pull_up(PIN_SCK); sleep_us(50); pu18 = gpio_get(PIN_SCK);
+        gpio_pull_down(PIN_SCK); sleep_us(50); pd18 = gpio_get(PIN_SCK);
+        gpio_disable_pulls(PIN_SCK);
+
+        printf("[PinProbe] GP%u(MOSI): pu=%u pd=%u  GP%u(SCK): pu=%u pd=%u\n",
+               PIN_MOSI, pu16, pd16, PIN_SCK, pu18, pd18);
+        printf("[PinProbe] MOSI %s  SCK %s\n",
+               (pu16 && !pd16) ? "FLOATING(disconnected?)" :
+               (!pu16)         ? "driven-LOW-externally" : "driven-HIGH-externally",
+               (pu18 && !pd18) ? "FLOATING(disconnected?)" :
+               (!pu18)         ? "driven-LOW-externally" : "driven-HIGH-externally");
+    }
+
+    spi_init(spi0, 1000 * 1000);
+    /* Match the active RW612 register-write path (Mode 0). */
+    spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    spi_set_slave(spi0, true);
+    
+    /* Ensure RX is ready: drain any stale data from FIFO before we start. */
+    {
+        spi_hw_t *hw = spi_get_hw(spi0);
+        while (spi_is_readable(spi0)) {
+            (void)hw->dr;  /* Drain stale RX bytes */
+        }
+    }
+
+    /* Use hardware SSEL for CS: the SSP slave only fills its RX FIFO when
+     * it sees a proper chip-select assertion via GPIO_FUNC_SPI.  A GPIO-IRQ
+     * approach keeps CS as a plain GPIO, so the SSP hardware never detects
+     * frame boundaries and the RX FIFO stays empty. */
+    gpio_set_function(PIN_CS,   GPIO_FUNC_SPI);  /* Hardware SSEL */
+    gpio_set_function(PIN_SCK,  GPIO_FUNC_SPI);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
+    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
 
     cs_active_flag = !gpio_get(PIN_CS);
     cs_polled_prev = cs_active_flag;
     spi_slave_set_miso_active(cs_active_flag);
-    gpio_set_irq_enabled_with_callback(PIN_CS,
-                                       GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
-                                       true,
-                                       &cs_gpio_irq_handler);
+    sck_prev_level = gpio_get(PIN_SCK);
+    mosi_prev_level = gpio_get(PIN_MOSI);
+    for (size_t i = 0u; i < DIAG_FULL_PINS; i++) {
+        diag_full_prev[i] = gpio_get((uint)i);
+        diag_full_edges[i] = 0u;
+    }
+    diag_full_bitmask = 0u;
+    /* No GPIO IRQ for CS — hardware SSEL handles framing; poll via cs_poll_update() */
 
     /* Brief startup indicator only — keep delay minimal so Pico is ready
      * before the SPI master (RW612) begins its first exchange. */
@@ -1338,10 +1633,49 @@ int main(void)
         uint32_t now_us;
         uint32_t now_ms;
 
+#if PICO_MINIMAL_BLOCKING_RX
+        sample_spi_pin_activity();
         cs_poll_update();
+    sniff_update();
+
+        if (!gpio_get(PIN_CS)) {
+            int got;
+            mark_spi_activity();
+            memset(rx_frame_raw, 0, FRAME_SIZE);
+            got = (int)spi_read_blocking(spi0, 0x00, rx_frame_raw, FRAME_SIZE);
+            if (got > 0) {
+                for (int i = 0; i < got; i++) {
+                    handle_rx_byte(rx_frame_raw[i]);
+                }
+                last_frame_len = (uint32_t)got;
+                if (got == FRAME_SIZE) {
+                    frame8_total++;
+                    (void)process_rx_frame();
+                } else {
+                    frame_other_total++;
+                }
+            }
+            /* Avoid re-entering the same CS window repeatedly. */
+            {
+                uint32_t start_us = time_us_32();
+                while (!gpio_get(PIN_CS) && (uint32_t)(time_us_32() - start_us) < 5000u) {
+                }
+            }
+        }
+
+        sonic_poll();
+        cs_active = !gpio_get(PIN_CS);
+#else
+        sample_spi_pin_activity();
+        cs_poll_update();  /* Detect CS edges via polling (hardware SSEL replaces GPIO IRQ) */
+    sniff_update();
+        
+        /* CS edges are handled by GPIO IRQ callback. Do not also poll CS here,
+         * otherwise each edge can be processed twice and reset frame state. */
         service_spi_frame(spi0);
         sonic_poll();
         cs_active = cs_is_active();
+    #endif
 
         if (led_on != cs_active) {
             status_led_set(cs_active);
@@ -1358,13 +1692,53 @@ int main(void)
 
         if (PICO_HEARTBEAT_ENABLE &&
             (now_ms - last_heartbeat_ms) >= 2000u) {
-             printf("[Pico SPI Slave] alive version=%s cs=%u rx=%u tx=%u rxt=%lu f8=%lu fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld m0_en=%u m0_spd=%ld\n",
+                         {
+                             spi_hw_t *ssp = spi_get_hw(spi0);
+                             printf("[Pico SPI Slave] ssp cr0=0x%08lx cr1=0x%08lx sr=0x%08lx cpsr=0x%08lx\n",
+                                    (unsigned long)ssp->cr0,
+                                    (unsigned long)ssp->cr1,
+                                    (unsigned long)ssp->sr,
+                                    (unsigned long)ssp->cpsr);
+                         }
+                         /* Build per-pin edge count string for active pins only. */
+                         char gpe_str[128] = "";
+                         int gpe_pos = 0;
+                         for (size_t gp = 0u; gp < DIAG_FULL_PINS; gp++) {
+                             if (diag_full_edges[gp] > 0u) {
+                                 gpe_pos += snprintf(gpe_str + gpe_pos, sizeof(gpe_str) - (size_t)gpe_pos,
+                                                     "GP%u:%lu ", (unsigned)gp, (unsigned long)diag_full_edges[gp]);
+                             }
+                         }
+                         if (gpe_pos == 0) { snprintf(gpe_str, sizeof(gpe_str), "(none)"); }
+                         printf("[Pico SPI Slave] alive fw=%s version=%s cs=%u rx=%u tx=%u rxt=%lu scke=%lu most=%lu gpe_mask=0x%08lx gpe=[%s] f8=%lu f8ok=%lu f8w=%lu f8r=%lu f8mw=%lu f8s=%lu f8sok=%lu lfr=%02x%02x%02x%02x%02x%02x%02x%02x lf8_cmd=0x%02x lf8_addr=0x%04x lf8_val=0x%08lx fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld m0_en=%u m0_spd=%ld m1_en=%u m1_spd=%ld\n",
+                     FW_ID_MAIN,
                    PICO_FIRMWARE_VERSION,
                    cs_active ? 1u : 0u,
                    (unsigned)rx_index,
                    (unsigned)tx_index,
                  (unsigned long)rx_byte_total,
+                                 (unsigned long)sck_edge_count,
+                                 (unsigned long)mosi_toggle_count,
+                                 (unsigned long)diag_full_bitmask,
+                                 gpe_str,
                  (unsigned long)frame8_total,
+                                 (unsigned long)frame8_decode_ok_count,
+                                 (unsigned long)frame8_write_count,
+                                 (unsigned long)frame8_read_count,
+                                 (unsigned long)frame8_motor_write_count,
+                                 (unsigned long)frame8_stream_try_count,
+                                 (unsigned long)frame8_stream_ok_count,
+                                 (unsigned)last_failed_raw_frame[0],
+                                 (unsigned)last_failed_raw_frame[1],
+                                 (unsigned)last_failed_raw_frame[2],
+                                 (unsigned)last_failed_raw_frame[3],
+                                 (unsigned)last_failed_raw_frame[4],
+                                 (unsigned)last_failed_raw_frame[5],
+                                 (unsigned)last_failed_raw_frame[6],
+                                 (unsigned)last_failed_raw_frame[7],
+                                 (unsigned)last_frame8_cmd,
+                                 (unsigned)last_frame8_addr,
+                                 (unsigned long)last_frame8_value,
                  (unsigned long)frame_dbal_total,
                  (unsigned long)frame_other_total,
                  (unsigned long)last_frame_len,
@@ -1377,7 +1751,9 @@ int main(void)
                    (unsigned)last_motor_index,
                    (long)last_motor_value,
                    (unsigned)motors[0].enable,
-                   (long)motors[0].speed_setpoint);
+                   (long)motors[0].speed_setpoint,
+                   (unsigned)motors[1].enable,
+                   (long)motors[1].speed_setpoint);
             last_heartbeat_ms = now_ms;
         }
 

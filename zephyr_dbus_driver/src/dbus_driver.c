@@ -16,14 +16,13 @@ LOG_MODULE_REGISTER(dbus_driver, LOG_LEVEL_DBG);
 #define SPI_DEV_NODE DT_NODELABEL(flexcomm1)
 static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Pointer to the SPI bus
 
-// Define the CS GPIO device and pins directly from the overlay.
 #define DBUS_CS_GPIO_NODE DT_NODELABEL(hsgpio0)
 #define DBUS_CS_GPIO_PRIMARY_PIN 6
-#define DBUS_CS_GPIO_SECONDARY_PIN 11
+#define DBUS_CS_GPIO_SECONDARY_PIN 10
 #define DBUS_CS_GPIO_FLAGS GPIO_OUTPUT
 #define DBCDRV_SPI_RSP_MARKER 0xA0u
 #define DBCDRV_SPI_CS_SETUP_US 8u
-#define DBCDRV_SPI_CS_HOLD_US 8u
+#define DBCDRV_SPI_CS_HOLD_US 2000u
 #define DBCDRV_SPI_DUMMY_RETRIES 16u
 #define DBCDRV_SPI_DUMMY_GAP_US 15u
 
@@ -33,8 +32,9 @@ static enum DBCDRV_SpiTarget dbus_spi_target = DBCDRV_SPI_TARGET_PRIMARY_PICO;
 static struct spi_config dbus_spi_cfg = {
     .frequency = 10000, // 10 kHz clock to give Pico more response processing time
     .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_TRANSFER_MSB,
-    .slave = 0, // Assuming slave select 0
-    .cs = NULL, // Disable Zephyr CS control, using manual GPIO
+    .slave = 0,
+    /* Flexcomm HW SSEL0 on GPIO6, manual CS only on GPIO10. */
+    .cs = { 0 },
 };
 
 // Placeholder for MCAL functions
@@ -109,21 +109,83 @@ static int dbus_drv_configure_cs_pin(uint32_t pin)
 
 static int dbus_drv_set_cs_state(enum DBCDRV_SpiTarget target, bool asserted)
 {
-    int ret;
-    const uint32_t selected_pin = dbus_drv_get_cs_pin(target);
-    const uint32_t inactive_level = 1u;
-    const uint32_t active_level = asserted ? 0u : 1u;
+    /* Flexcomm SSEL0 (GPIO6) is handled natively by the SPI controller.
+     * We manually drive only GPIO10 for selecting the secondary Pico. */
+    if (target == DBCDRV_SPI_TARGET_SECONDARY_PICO) {
+        int observed;
+        int ret;
 
-    ret = gpio_pin_set(dbus_cs_gpio_dev,
-                       DBUS_CS_GPIO_PRIMARY_PIN,
-                       (selected_pin == DBUS_CS_GPIO_PRIMARY_PIN) ? active_level : inactive_level);
-    if (ret < 0) {
-        return ret;
+        /* Re-assert GPIO ownership/direction defensively in case another
+         * component changed pin mode at runtime. */
+        ret = gpio_pin_configure(dbus_cs_gpio_dev,
+                                 DBUS_CS_GPIO_SECONDARY_PIN,
+                                 GPIO_OUTPUT_HIGH);
+        if (ret < 0) {
+            return ret;
+        }
+
+        if (asserted) {
+            /* Force a clean high->low edge even if line was left low. */
+            ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 1u);
+            if (ret < 0) {
+                return ret;
+            }
+            k_usleep(1u);
+            ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 0u);
+            if (ret < 0) {
+                return ret;
+            }
+            observed = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
+            if (observed < 0) {
+                return observed;
+            }
+            if (observed != 0) {
+                k_usleep(2u);
+                ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 0u);
+                if (ret < 0) {
+                    return ret;
+                }
+                observed = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
+                if (observed < 0) {
+                    return observed;
+                }
+                if (observed != 0) {
+                    LOG_ERR("secondary CS assert failed: gpio10=%d", observed);
+                    return -EIO;
+                }
+            }
+            return 0;
+        }
+
+        {
+            ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 1u);
+            if (ret < 0) {
+                return ret;
+            }
+            observed = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
+            if (observed < 0) {
+                return observed;
+            }
+            if (observed != 1) {
+                k_usleep(2u);
+                ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 1u);
+                if (ret < 0) {
+                    return ret;
+                }
+                observed = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
+                if (observed < 0) {
+                    return observed;
+                }
+                if (observed != 1) {
+                    LOG_ERR("secondary CS deassert failed: gpio10=%d", observed);
+                    return -EIO;
+                }
+            }
+            return 0;
+        }
     }
 
-    return gpio_pin_set(dbus_cs_gpio_dev,
-                        DBUS_CS_GPIO_SECONDARY_PIN,
-                        (selected_pin == DBUS_CS_GPIO_SECONDARY_PIN) ? active_level : inactive_level);
+    return 0;
 }
 
 // MEXTI related definitions
@@ -218,33 +280,13 @@ void MDIO_write(const struct MDIO_Channel *channel, bool value) {
 }
 
 enum MCAL_Error MEXTI_init(struct MEXTI_Handle *handle, uint32_t channel, const struct MEXTI_Config *config) {
+    int ret;
+    gpio_flags_t flags = GPIO_INT_EDGE_BOTH;
+
     LOG_DBG("MEXTI_init called for channel %u.", channel);
 
     if (!device_is_ready(mextid3_gpio_dev)) {
-        printk("MEXTI_init: GPIO device not ready!\n");
-        return MCAL_ERROR;
-    }
-
-    handle->channel = channel; // Store channel in handle
-
-    // Initialize the gpio_callback structure
-    gpio_init_callback(&handle->gpio_cb, zephyr_gpio_callback, BIT(MEXTID3_GPIO_PIN));
-
-    // Add the callback to the GPIO pin
-    int ret = gpio_add_callback(mextid3_gpio_dev, &handle->gpio_cb);
-    if (ret < 0) {
-        printk("MEXTI_init: Failed to add GPIO callback: %d\n", ret);
-        return MCAL_ERROR;
-    }
-
-    // Configure the interrupt trigger type
-    gpio_flags_t flags = GPIO_INPUT | GPIO_PULL_UP; // Default to input with pull-up
-    if (config->trigger == MEXTI_TRIGGER_FALLING) {
-        flags |= GPIO_INT_EDGE_FALLING;
-    } else if (config->trigger == MEXTI_TRIGGER_RISING) {
-        flags |= GPIO_INT_EDGE_RISING;
-    } else {
-        printk("MEXTI_init: Unsupported MEXTI trigger type.\n");
+        printk("MEXTI_init: GPIO device not ready\n");
         return MCAL_ERROR;
     }
 
@@ -493,6 +535,10 @@ static int DBCDRV_spiTransceiveBytewise(const uint8_t *tx_data, uint8_t *rx_data
         .count = 1,
     };
 
+    if (rx_data == NULL) {
+        return spi_write(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs);
+    }
+
     struct spi_buf rx_spi_buf = {
         .buf = (void *)rx_data,
         .len = len,
@@ -536,7 +582,8 @@ enum DBC_Error DBCDRV_setSpiTarget(enum DBCDRV_SpiTarget target)
     dbus_spi_target = target;
 
     if (device_is_ready(dbus_cs_gpio_dev)) {
-        int ret = dbus_drv_set_cs_state(dbus_spi_target, false);
+        /* Ensure secondary CS is released regardless of selected target. */
+        int ret = dbus_drv_set_cs_state(DBCDRV_SPI_TARGET_SECONDARY_PICO, false);
 
         if (ret < 0) {
             LOG_ERR("DBCDRV_setSpiTarget: failed to deassert CS pins: %d", ret);
@@ -558,7 +605,6 @@ enum DBCDRV_SpiTarget DBCDRV_getSpiTarget(void)
 
 void DBCDRV_logSpiRouting(const char *tag)
 {
-    int cs_primary = -1;
     int cs_secondary = -1;
 
     if (!device_is_ready(dbus_cs_gpio_dev)) {
@@ -566,13 +612,13 @@ void DBCDRV_logSpiRouting(const char *tag)
         return;
     }
 
-    cs_primary = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_PRIMARY_PIN);
     cs_secondary = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
 
-    printk("RW612 SPI ROUTE[%s]: target=%s gpio6=%d gpio10=%d\n",
+        printk("RW612 SPI ROUTE[%s]: target=%s gpio%u=hw_ssel0 gpio%u=%d\n",
            (tag != NULL) ? tag : "-",
            dbus_drv_get_target_name(dbus_spi_target),
-           cs_primary,
+            (unsigned)DBUS_CS_GPIO_PRIMARY_PIN,
+            (unsigned)DBUS_CS_GPIO_SECONDARY_PIN,
            cs_secondary);
 }
 
@@ -799,7 +845,7 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
     }
 
     uint8_t tx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
-    uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0}; // Required for spi_transceive, even if data is not used
+    uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
 
     // Prepare the SPI header for a write command
     DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_WRITE, tx_buffer);
@@ -1336,15 +1382,10 @@ enum DBC_Error DBCDRV_initComChannels(MCAL_CallbackFunction_t irqHandleCbFunc)
         return DBC_ERROR;
     }
 
-    int ret = dbus_drv_configure_cs_pin(DBUS_CS_GPIO_PRIMARY_PIN);
+    /* Keep GPIO6 in Flexcomm function for HW SSEL0; only GPIO10 is manual CS. */
+    int ret = dbus_drv_configure_cs_pin(DBUS_CS_GPIO_SECONDARY_PIN);
     if (ret < 0) {
-        printk("DBCDRV_initComChannels: Error point O - Failed to configure primary CS GPIO pin: %d\n", ret);
-        return DBC_ERROR;
-    }
-
-    ret = dbus_drv_configure_cs_pin(DBUS_CS_GPIO_SECONDARY_PIN);
-    if (ret < 0) {
-        printk("DBCDRV_initComChannels: Error point O2 - Failed to configure secondary CS GPIO pin: %d\n", ret);
+        printk("DBCDRV_initComChannels: Error point O - Failed to configure secondary CS GPIO pin: %d\n", ret);
         return DBC_ERROR;
     }
 
