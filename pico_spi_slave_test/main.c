@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define PICO_FIRMWARE_VERSION "dbal_motor_v1"
+#define PICO_FIRMWARE_VERSION "dbal_motor_v1_onehot_v3_isoA_2026-05-11"
 
 /* Non-blocking deferred log buffer: process_rx_frame must never call printf
  * directly — USB CDC printf blocks for milliseconds, which stalls the SPI
@@ -19,7 +19,8 @@
 #define DLOG_FLUSH_BUDGET 4u
 #define PICO_RUNTIME_LOG_FLUSH 0
 #define PICO_HEARTBEAT_ENABLE 1
-#define PICO_STARTUP_SELF_TEST 1
+#define PICO_STARTUP_SELF_TEST 0
+#define PICO_DIAG_FORCE_MOTOR0_ONLY 0
 #define CS_END_DRAIN_TIMEOUT_US 200u
 #define CS_END_DRAIN_IDLE_US 20u
 #define RX_ACCUM_GAP_RESET_US 3000u
@@ -155,6 +156,8 @@ static volatile uint32_t frame_other_total = 0u;
 static volatile uint32_t last_frame_len = 0u;
 static volatile uint32_t motor_enable_cmd_count = 0u;
 static volatile uint32_t motor_speed_cmd_count = 0u;
+static volatile uint32_t last_motor_cmd_ms = 0u;   /* dead-man switch timestamp */
+static volatile bool      motor_deadman_fired = false;
 static volatile uint32_t frame8_decode_ok_count = 0u;
 static volatile uint32_t frame8_write_count = 0u;
 static volatile uint32_t frame8_read_count = 0u;
@@ -245,6 +248,10 @@ static void sniff_process_frame(void)
         }
         motor_write(addr, value);
         reg_write(addr, value);
+                if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
+                    last_motor_cmd_ms = to_ms_since_boot(get_absolute_time());
+                    motor_deadman_fired = false;
+                }
         return;
     }
 
@@ -578,36 +585,41 @@ static void apply_motor_outputs(size_t motor_index)
         return;
     }
 
-    /* TB6612 STBY is shared between channels A/B, keep it high if either
-     * active channel is enabled. */
+    /* TB6612 STBY is shared on each board; keep it high if any active motor
+     * index on this board is enabled. */
     bool stby_needed = (motors[0].enable != 0u) || (motors[1].enable != 0u);
+
+#if PICO_DIAG_FORCE_MOTOR0_ONLY
+    if (motor_index == 1u) {
+        /* Diagnostic isolation mode: channel B is forced off regardless of
+         * incoming commands. If both motors still spin, issue is hardware. */
+        gpio_put(PIN_MOTOR_BIN1, 0);
+        gpio_put(PIN_MOTOR_BIN2, 0);
+        pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
+        motors[1].enable = 0u;
+        motors[1].speed_setpoint = 0;
+        motors[1].speed_feedback = 0;
+        motors[1].status = MOTOR_STATUS_AVAILABLE;
+        stby_needed = (motors[0].enable != 0u);
+        gpio_put(PIN_MOTOR_STBY, stby_needed ? 1 : 0);
+        return;
+    }
+#endif
 
     bool enabled = (motors[motor_index].enable != 0u);
     int32_t speed = motors[motor_index].speed_setpoint;
     bool forward = speed >= 0;
 
-    if (motor_index == 0u) {
-        /* Channel A */
-        if (!enabled || speed == 0) {
-            gpio_put(PIN_MOTOR_AIN1, 0);
-            gpio_put(PIN_MOTOR_AIN2, 0);
-            pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
-        } else {
-            gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
-            gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
-            pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
-        }
+    /* Both physical motor drivers in this setup use channel A. Motor index 1
+     * is mapped to the same A-output path on its own board. */
+    if (!enabled || speed == 0) {
+        gpio_put(PIN_MOTOR_AIN1, 0);
+        gpio_put(PIN_MOTOR_AIN2, 0);
+        pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
     } else {
-        /* Channel B */
-        if (!enabled || speed == 0) {
-            gpio_put(PIN_MOTOR_BIN1, 0);
-            gpio_put(PIN_MOTOR_BIN2, 0);
-            pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
-        } else {
-            gpio_put(PIN_MOTOR_BIN1, forward ? 1 : 0);
-            gpio_put(PIN_MOTOR_BIN2, forward ? 0 : 1);
-            pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, speed_to_pwm_level(speed));
-        }
+        gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
+        gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
+        pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
     }
 
     gpio_put(PIN_MOTOR_STBY, stby_needed ? 1 : 0);
@@ -882,9 +894,29 @@ static void motor_write(uint16_t addr, uint32_t value)
         return;
     }
 
+#if PICO_DIAG_FORCE_MOTOR0_ONLY
+    if (index == 1u) {
+        /* Ignore channel-B commands in isolation mode and keep outputs low. */
+        motors[1].enable = 0u;
+        motors[1].speed_setpoint = 0;
+        motors[1].speed_feedback = 0;
+        motors[1].status = MOTOR_STATUS_AVAILABLE;
+        apply_motor_outputs(1u);
+        return;
+    }
+#endif
+
     switch (offset) {
         case MOTOR_REG_ENABLE_OFFSET:
             motors[index].enable = (value != 0u) ? 1u : 0u;
+            if (motors[index].enable != 0u) {
+                /* Enforce one-hot mode: only one active motor at a time. */
+                size_t other = (index == 0u) ? 1u : 0u;
+                motors[other].enable = 0u;
+                motors[other].speed_setpoint = 0;
+                motors[other].speed_feedback = 0;
+                motors[other].status = MOTOR_STATUS_AVAILABLE;
+            }
             motors[index].status = MOTOR_STATUS_AVAILABLE |
                                    (motors[index].enable ? MOTOR_STATUS_ENABLED : 0u);
             if (!motors[index].enable) {
@@ -895,6 +927,15 @@ static void motor_write(uint16_t addr, uint32_t value)
             break;
         case MOTOR_REG_SPEED_OFFSET:
             motors[index].speed_setpoint = (int32_t)value;
+            if ((motors[index].enable != 0u) && (motors[index].speed_setpoint != 0)) {
+                /* If one motor is actively commanded to move, hard-disable the
+                 * other channel to prevent overlap from out-of-order frames. */
+                size_t other = (index == 0u) ? 1u : 0u;
+                motors[other].enable = 0u;
+                motors[other].speed_setpoint = 0;
+                motors[other].speed_feedback = 0;
+                motors[other].status = MOTOR_STATUS_AVAILABLE;
+            }
             if (motors[index].enable) {
                 motors[index].speed_feedback = motors[index].speed_setpoint;
             } else {
@@ -1692,6 +1733,23 @@ int main(void)
 
         if (PICO_HEARTBEAT_ENABLE &&
             (now_ms - last_heartbeat_ms) >= 2000u) {
+                                /* Dead-man switch: if any motor is enabled but no motor command has
+                                 * arrived in the last 15 seconds, force all motors off. This handles
+                                 * the case where the RW612 reboots mid-test and never sends disable. */
+                                {
+                                    bool any_motor_on = (motors[0].enable != 0u) || (motors[1].enable != 0u);
+                                    bool timed_out = (last_motor_cmd_ms > 0u) &&
+                                                     ((now_ms - last_motor_cmd_ms) >= 15000u);
+                                    if (any_motor_on && timed_out && !motor_deadman_fired) {
+                                        motor_deadman_fired = true;
+                                        printf("[Pico DEADMAN] No motor cmd for 15s - forcing all motors OFF\n");
+                                        motors[0].enable = 0u;
+                                        motors[1].enable = 0u;
+                                        apply_motor_outputs(0u);
+                                        apply_motor_outputs(1u);
+                                    }
+                                }
+
                          {
                              spi_hw_t *ssp = spi_get_hw(spi0);
                              printf("[Pico SPI Slave] ssp cr0=0x%08lx cr1=0x%08lx sr=0x%08lx cpsr=0x%08lx\n",

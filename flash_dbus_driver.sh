@@ -4,7 +4,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ELF_FILE="${ELF_FILE:-${SCRIPT_DIR}/build/zephyr/zephyr.elf}"
+ELF_FILE="${ELF_FILE:-${SCRIPT_DIR}/zephyr_dbus_driver/build_swied/zephyr/zephyr.elf}"
 FULL_ERASE="${FULL_ERASE:-0}"
 
 if [ ! -f "$ELF_FILE" ]; then

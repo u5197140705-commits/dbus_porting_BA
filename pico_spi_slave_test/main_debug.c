@@ -1,13 +1,15 @@
 #include <stdio.h>
+#include <string.h>
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/gpio.h"
-#include "hardware/dma.h"
 
 #define PIN_MISO 19
 #define PIN_CS   17
 #define PIN_SCK  18
 #define PIN_MOSI 16
+
+#define FW_ID_DEBUG "DEBUG_SPI_PROBE_V2_2026-05-10"
 
 #define REG_COUNT 16
 
@@ -103,16 +105,17 @@ static void cs_callback(uint gpio, uint32_t events) {
 int main() {
     stdio_init_all();
     sleep_ms(500);
+    printf("\nFW_ID=%s\n", FW_ID_DEBUG);
     printf("\n=== PICO SPI SLAVE DEBUG MODE ===\n");
     
     // Initialize registers
-    registers[0] = {0x0000, 0x00000000};
-    registers[1] = {0x0004, 0x00000000};
-    registers[2] = {0x000C, 0x00000000};
-    registers[3] = {0x0010, 0x00000000};
-    registers[4] = {0x0014, 0x00000000};
-    registers[5] = {0x001C, 0x00000000};
-    registers[6] = {0x4018, 0x00000000};
+    registers[0] = (reg_entry_t){0x0000, 0x00000000};
+    registers[1] = (reg_entry_t){0x0004, 0x00000000};
+    registers[2] = (reg_entry_t){0x000C, 0x00000000};
+    registers[3] = (reg_entry_t){0x0010, 0x00000000};
+    registers[4] = (reg_entry_t){0x0014, 0x00000000};
+    registers[5] = (reg_entry_t){0x001C, 0x00000000};
+    registers[6] = (reg_entry_t){0x4018, 0x00000000};
     
     // Initialize SPI slave
     spi_init(spi0, 1000000); // 1 MHz for now

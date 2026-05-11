@@ -581,6 +581,11 @@ enum DBC_Error DBCDRV_setSpiTarget(enum DBCDRV_SpiTarget target)
 
     dbus_spi_target = target;
 
+    /* Flexcomm SPI driver only supports slave=0; secondary target selection
+     * is controlled exclusively via GPIO10 manual CS. Keep HW SSEL always at 0.
+     */
+    dbus_spi_cfg.slave = 0u;
+
     if (device_is_ready(dbus_cs_gpio_dev)) {
         /* Ensure secondary CS is released regardless of selected target. */
         int ret = dbus_drv_set_cs_state(DBCDRV_SPI_TARGET_SECONDARY_PICO, false);
@@ -594,6 +599,7 @@ enum DBC_Error DBCDRV_setSpiTarget(enum DBCDRV_SpiTarget target)
     LOG_INF("DBCDRV SPI target set to %s Pico on GPIO%u",
             dbus_drv_get_target_name(dbus_spi_target),
             dbus_drv_get_cs_pin(dbus_spi_target));
+    LOG_INF("DBCDRV SPI HW SSEL index set to %u", (unsigned)dbus_spi_cfg.slave);
 
     return DBC_OK;
 }
