@@ -13,6 +13,7 @@ cmake:
      - '/home/swied/zephyrproject/zephyr/dts/bindings'
     files:
      - '/home/swied/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612.dts'
+     - '/home/swied/projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay'
     include-dirs:
      - '/home/swied/zephyrproject/modules/hal/ambiq/dts'
      - '/home/swied/zephyrproject/modules/hal/atmel/include'
@@ -39,6 +40,8 @@ cmake:
      - '/home/swied/zephyrproject/zephyr/dts/arm'
      - '/home/swied/zephyrproject/zephyr/dts/arc'
      - '/home/swied/zephyrproject/zephyr/dts'
+    user-files:
+     - '/home/swied/projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay'
   kconfig:
     files:
      - '/home/swied/zephyrproject/zephyr/boards/nxp/frdm_rw612/frdm_rw612_defconfig'

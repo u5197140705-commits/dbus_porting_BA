@@ -76,7 +76,7 @@ CMAKE_ASM_COMPILER_AR:FILEPATH=/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin
 // for the GCC compiler
 CMAKE_ASM_COMPILER_RANLIB:FILEPATH=/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ranlib
 
-CMAKE_ASM_FLAGS:STRING= -DUSE_RTOS=1
+CMAKE_ASM_FLAGS:STRING= -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1
 
 //Flags used by the ASM compiler during DEBUG builds.
 CMAKE_ASM_FLAGS_DEBUG:STRING=-g
@@ -105,7 +105,7 @@ CMAKE_CXX_COMPILER_AR:FILEPATH=/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin
 // for the GCC compiler
 CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ranlib
 
-CMAKE_CXX_FLAGS:STRING= -DUSE_RTOS=1
+CMAKE_CXX_FLAGS:STRING= -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1
 
 //Flags used by the CXX compiler during DEBUG builds.
 CMAKE_CXX_FLAGS_DEBUG:STRING=-g
@@ -119,8 +119,8 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
-//C compiler
-CMAKE_C_COMPILER:STRING=/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc
+//Path to a program.
+CMAKE_C_COMPILER:FILEPATH=/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
@@ -130,7 +130,7 @@ CMAKE_C_COMPILER_AR:FILEPATH=/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/a
 // for the GCC compiler
 CMAKE_C_COMPILER_RANLIB:FILEPATH=/home/swied/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc-ranlib
 
-CMAKE_C_FLAGS:STRING= -DUSE_RTOS=1
+CMAKE_C_FLAGS:STRING= -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1 -DUSE_RTOS=1
 
 //Flags used by the C compiler during DEBUG builds.
 CMAKE_C_FLAGS_DEBUG:STRING=-g
@@ -319,7 +319,7 @@ DTC:FILEPATH=/usr/bin/dtc
 // parameter. These settings will override the settings in the
 // board's .dts file. Multiple files may be listed, e.g. DTC_OVERLAY_FILE="dts1.overlay
 // dts2.overlay"
-DTC_OVERLAY_FILE:STRING=
+DTC_OVERLAY_FILE:STRING=/home/swied/projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay
 
 //Path to a program.
 GEN_KOBJECT_LIST:FILEPATH=/home/swied/zephyrproject/zephyr/scripts/build/gen_kobject_list.py
@@ -492,8 +492,6 @@ CMAKE_CXX_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
 CMAKE_CXX_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_CXX_FLAGS_RELWITHDEBINFO
 CMAKE_CXX_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: CMAKE_C_COMPILER
-CMAKE_C_COMPILER-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_C_COMPILER_AR
 CMAKE_C_COMPILER_AR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_C_COMPILER_RANLIB
@@ -619,6 +617,8 @@ _Python3_EXECUTABLE:INTERNAL=/usr/bin/python3
 //Python3 Properties
 _Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;12;3;64;;cpython-312-x86_64-linux-gnu.so;abi3;/usr/lib/python3.12;/usr/lib/python3.12;/usr/local/lib/python3.12/dist-packages;/usr/local/lib/python3.12/dist-packages
 _Python3_INTERPRETER_SIGNATURE:INTERNAL=4c8bfa8951e99fa32e4000a94f8c04a2
+//Interpreter reason failure
+_Python3_Interpreter_REASON_FAILURE:INTERNAL=
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 

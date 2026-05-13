@@ -19,6 +19,7 @@
 		zephyr,flash-controller = &w25q512jvfiq;  /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:29 */
 		zephyr,code-partition = &slot0_partition; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:30 */
 		zephyr,uart-mcumgr = &flexcomm3;          /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:31 */
+		zephyr,spi = &flexcomm1;                  /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:13 */
 	};
 
 	/* node '/aliases' defined in zephyr/dts/common/skeleton.dtsi:15 */
@@ -30,6 +31,7 @@
 		pwm-0 = &sctimer;         /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:19 */
 		sw0 = &user_button_0;     /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:20 */
 		ambient-temp0 = &p3t1755; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:21 */
+		dbus-spi = &flexcomm1;    /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:9 */
 	};
 
 	/* node '/soc' defined in zephyr/dts/arm/armv8-m.dtsi:6 */
@@ -233,7 +235,6 @@
 
 				/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:51 */
 				pinmux_flexcomm1_spi: pinmux_flexcomm1_spi {
-					phandle = < 0xb >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:316 */
 
 					/* node '/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0' defined in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:52 */
 					group0 {
@@ -313,6 +314,20 @@
 					group0 {
 						pinmux = < 0x32c 0x337 >; /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:113 */
 						slew-rate = "normal";     /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612-pinctrl.dtsi:115 */
+					};
+				};
+
+				/* node '/soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default' defined in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:23 */
+				flexcomm1_spi_default: flexcomm1_spi_default {
+					phandle = < 0xb >; /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:38 */
+
+					/* node '/soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default/group0' defined in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:24 */
+					group0 {
+						pinmux = < 0x18807 >,
+						         < 0x18809 >,
+						         < 0x18808 >,
+						         < 0x18806 >; /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:25 */
+						slew-rate = "normal"; /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:29 */
 					};
 				};
 			};
@@ -398,9 +413,9 @@
 					reg = < 0x0 >;                          /* in zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi:230 */
 					int-source = "pint";                    /* in zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi:231 */
 					power-domains = < &peripheral_domain >; /* in zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi:232 */
-					status = "okay";                        /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:128 */
 					pinctrl-0 = < &pinmux_hsgpio0 >;        /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:129 */
 					pinctrl-names = "default";              /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:130 */
+					status = "okay";                        /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:18 */
 					phandle = < 0x18 >;                     /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:236 */
 				};
 
@@ -477,12 +492,14 @@
 				zephyr,disabling-power-states = < &suspend &standby >; /* in zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi:288 */
 				low-power-states = < &suspend >;                       /* in zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi:289 */
 				power-domains = < &peripheral_domain >;                /* in zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi:290 */
-				compatible = "nxp,lpc-spi";                            /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:315 */
-				pinctrl-0 = < &pinmux_flexcomm1_spi >;                 /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:316 */
-				pinctrl-names = "default";                             /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:317 */
-				status = "okay";                                       /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:318 */
 				#address-cells = < 0x1 >;                              /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:319 */
 				#size-cells = < 0x0 >;                                 /* in zephyr/boards/nxp/frdm_rw612/frdm_rw612_common.dtsi:320 */
+				status = "okay";                                       /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:36 */
+				compatible = "nxp,lpc-spi";                            /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:37 */
+				pinctrl-0 = < &flexcomm1_spi_default >;                /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:38 */
+				pinctrl-names = "default";                             /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:39 */
+				label = "DBUS_SPI";                                    /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:40 */
+				clock-frequency = < 0x1e848 >;                         /* in ../projects/dbus_porting_BA/zephyr_dbus_driver/boards/frdm_rw612/frdm_rw612.overlay:42 */
 			};
 
 			/* node '/soc/peripheral@50000000/flexcomm@108000' defined in zephyr/dts/arm/nxp/nxp_rw6xx_common.dtsi:294 */

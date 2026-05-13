@@ -25,6 +25,8 @@ Stabilize dual-Pico SPI control from RW612 so both motors can be commanded relia
 ## Current Issue
 - Pico2 motor still does not physically move on CS2 path in latest test, even though command traffic appears valid.
 - Pico2 motor does move when connected to CS1/GPIO6 path.
+- Pico1 motor is currently not moving in the latest RW612 debug image.
+- Current interpretation: this is expected in the present test configuration because RW612 is forced onto the secondary target for Pico2 isolation, but it must be revalidated once normal targeting is restored.
 
 ## Immediate Next Debug Actions
 1. Re-validate RW612 header pin mapping for GPIO11 physical output.

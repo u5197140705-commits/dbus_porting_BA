@@ -5,7 +5,7 @@
  *   /home/swied/projects/dbus_porting_BA/build/zephyr/zephyr.dts.pre
  *
  * Directories with bindings:
- *   $ZEPHYR_BASE/dts/bindings
+ *   /home/swied/zephyrproject/zephyr/dts/bindings
  *
  * Node dependency ordering (ordinal and path):
  *   0   /
@@ -46,7 +46,7 @@
  *   35  /soc/peripheral@50000000/reset@20000
  *   36  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm0_usart
  *   37  /soc/peripheral@50000000/flexcomm@106000
- *   38  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi
+ *   38  /soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default
  *   39  /soc/peripheral@50000000/flexcomm@107000
  *   40  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm3_usart
  *   41  /soc/peripheral@50000000/flexcomm@109000
@@ -90,50 +90,52 @@
  *   79  /soc/peripheral@50000000/gau/dac@38200
  *   80  /soc/peripheral@50000000/gau/gau_adc0@38000
  *   81  /soc/peripheral@50000000/gau/gau_adc1@38100
- *   82  /soc/peripheral@50000000/mci_iomux@4000/pinmux_enet/group0
- *   83  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm0_usart/group0
- *   84  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s
- *   85  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s/group0
- *   86  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0
- *   87  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group1
- *   88  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm2_i2c/group0
- *   89  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm3_usart/group0
- *   90  /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group0
- *   91  /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group1
- *   92  /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1/group0
- *   93  /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group0
- *   94  /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group1
- *   95  /soc/peripheral@50000000/mci_iomux@4000/pinmux_mdio/group0
- *   96  /soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0/group0
- *   97  /soc/peripheral@50000000/mrt@2d000
- *   98  /soc/peripheral@50000000/mrt@2d000/mrt0_channel@0
- *   99  /soc/peripheral@50000000/mrt@2d000/mrt0_channel@1
- *   100 /soc/peripheral@50000000/mrt@2d000/mrt0_channel@2
- *   101 /soc/peripheral@50000000/mrt@2d000/mrt0_channel@3
- *   102 /soc/peripheral@50000000/reset@0
- *   103 /soc/peripheral@50000000/mrt@3f000
- *   104 /soc/peripheral@50000000/mrt@3f000/mrt1_channel@0
- *   105 /soc/peripheral@50000000/mrt@3f000/mrt1_channel@1
- *   106 /soc/peripheral@50000000/mrt@3f000/mrt1_channel@2
- *   107 /soc/peripheral@50000000/mrt@3f000/mrt1_channel@3
- *   108 /soc/peripheral@50000000/pmu@31000
- *   109 /soc/peripheral@50000000/pmu@31000/pin0
- *   110 /soc/peripheral@50000000/pmu@31000/pin1
- *   111 /soc/peripheral@50000000/spi@134000
- *   112 /soc/peripheral@50000000/spi@134000/aps6404l@2
- *   113 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0
- *   114 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions
- *   115 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@0
- *   116 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@20000
- *   117 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@320000
- *   118 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@620000
- *   119 /soc/sram@30000000
- *   120 /soc/sram@30000000/memory@0
- *   121 /soc/sram@30000000/memory@40000
- *   122 /sram@41380000
- *   123 /sram@41380000/memory@0
- *   124 /sram@443C0000
- *   125 /sram@443C0000/memory@0
+ *   82  /soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default/group0
+ *   83  /soc/peripheral@50000000/mci_iomux@4000/pinmux_enet/group0
+ *   84  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm0_usart/group0
+ *   85  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s
+ *   86  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s/group0
+ *   87  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi
+ *   88  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0
+ *   89  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group1
+ *   90  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm2_i2c/group0
+ *   91  /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm3_usart/group0
+ *   92  /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group0
+ *   93  /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group1
+ *   94  /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1/group0
+ *   95  /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group0
+ *   96  /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group1
+ *   97  /soc/peripheral@50000000/mci_iomux@4000/pinmux_mdio/group0
+ *   98  /soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0/group0
+ *   99  /soc/peripheral@50000000/mrt@2d000
+ *   100 /soc/peripheral@50000000/mrt@2d000/mrt0_channel@0
+ *   101 /soc/peripheral@50000000/mrt@2d000/mrt0_channel@1
+ *   102 /soc/peripheral@50000000/mrt@2d000/mrt0_channel@2
+ *   103 /soc/peripheral@50000000/mrt@2d000/mrt0_channel@3
+ *   104 /soc/peripheral@50000000/reset@0
+ *   105 /soc/peripheral@50000000/mrt@3f000
+ *   106 /soc/peripheral@50000000/mrt@3f000/mrt1_channel@0
+ *   107 /soc/peripheral@50000000/mrt@3f000/mrt1_channel@1
+ *   108 /soc/peripheral@50000000/mrt@3f000/mrt1_channel@2
+ *   109 /soc/peripheral@50000000/mrt@3f000/mrt1_channel@3
+ *   110 /soc/peripheral@50000000/pmu@31000
+ *   111 /soc/peripheral@50000000/pmu@31000/pin0
+ *   112 /soc/peripheral@50000000/pmu@31000/pin1
+ *   113 /soc/peripheral@50000000/spi@134000
+ *   114 /soc/peripheral@50000000/spi@134000/aps6404l@2
+ *   115 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0
+ *   116 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions
+ *   117 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@0
+ *   118 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@20000
+ *   119 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@320000
+ *   120 /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@620000
+ *   121 /soc/sram@30000000
+ *   122 /soc/sram@30000000/memory@0
+ *   123 /soc/sram@30000000/memory@40000
+ *   124 /sram@41380000
+ *   125 /sram@41380000/memory@0
+ *   126 /sram@443C0000
+ *   127 /sram@443C0000/memory@0
  *
  * Definitions derived from these nodes in dependency order are next,
  * followed by /chosen nodes.
@@ -200,8 +202,8 @@
 	15, /* /soc */ \
 	21, /* /gpio_keys */ \
 	23, /* /leds */ \
-	122, /* /sram@41380000 */ \
-	124, /* /sram@443C0000 */
+	124, /* /sram@41380000 */ \
+	126, /* /sram@443C0000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_EXISTS 1
@@ -294,7 +296,7 @@
  * Node identifier: DT_N_S_arduino_connector
  *
  * Binding (compatible = arduino-header-r3):
- *   $ZEPHYR_BASE/dts/bindings/gpio/arduino-header-r3.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/gpio/arduino-header-r3.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -489,7 +491,7 @@
  * Node identifier: DT_N_S_lcd_pmod_connector
  *
  * Binding (compatible = nxp,lcd-pmod):
- *   $ZEPHYR_BASE/dts/bindings/gpio/nxp,lcd-pmod.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/gpio/nxp,lcd-pmod.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -619,7 +621,7 @@
  * Node identifier: DT_N_S_mikrobus_connector
  *
  * Binding (compatible = mikro-bus):
- *   $ZEPHYR_BASE/dts/bindings/gpio/mikro-bus.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/gpio/mikro-bus.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -745,7 +747,7 @@
  * Node identifier: DT_N_S_xtal32
  *
  * Binding (compatible = fixed-clock):
- *   $ZEPHYR_BASE/dts/bindings/clock/fixed-clock.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/clock/fixed-clock.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -1005,7 +1007,7 @@
  * Node identifier: DT_N_S_cpus_S_power_states_S_idle
  *
  * Binding (compatible = zephyr,power-state):
- *   $ZEPHYR_BASE/dts/bindings/power/zephyr,power-state.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/power/zephyr,power-state.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -1109,7 +1111,7 @@
  * Node identifier: DT_N_S_cpus_S_power_states_S_standby
  *
  * Binding (compatible = nxp,pdcfg-power):
- *   $ZEPHYR_BASE/dts/bindings/power/nxp,pdcfg-power.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/power/nxp,pdcfg-power.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -1259,7 +1261,7 @@
  * Node identifier: DT_N_S_cpus_S_power_states_S_suspend
  *
  * Binding (compatible = nxp,pdcfg-power):
- *   $ZEPHYR_BASE/dts/bindings/power/nxp,pdcfg-power.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/power/nxp,pdcfg-power.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -1409,7 +1411,7 @@
  * Node identifier: DT_N_S_cpus_S_cpu_0
  *
  * Binding (compatible = arm,cortex-m33f):
- *   $ZEPHYR_BASE/dts/bindings/cpu/arm,cortex-m33f.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/cpu/arm,cortex-m33f.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -1543,7 +1545,7 @@
  * Node identifier: DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90
  *
  * Binding (compatible = arm,armv8m-mpu):
- *   $ZEPHYR_BASE/dts/bindings/mmu_mpu/arm,armv8m-mpu.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/mmu_mpu/arm,armv8m-mpu.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -1652,7 +1654,7 @@
  * Node identifier: DT_N_S_peripheral_domain
  *
  * Binding (compatible = power-domain-soc-state-change):
- *   $ZEPHYR_BASE/dts/bindings/power-domain/power-domain-soc-state-change.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/power-domain/power-domain-soc-state-change.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -1735,8 +1737,8 @@
 	79, /* /soc/peripheral@50000000/gau/dac@38200 */ \
 	80, /* /soc/peripheral@50000000/gau/gau_adc0@38000 */ \
 	81, /* /soc/peripheral@50000000/gau/gau_adc1@38100 */ \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */ \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */ \
+	105, /* /soc/peripheral@50000000/mrt@3f000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_peripheral_domain_EXISTS 1
@@ -1859,7 +1861,7 @@
 	16, /* /soc/peripheral@50000000 */ \
 	25, /* /soc/timer@e000e010 */ \
 	28, /* /soc/interrupt-controller@e000e100 */ \
-	119, /* /soc/sram@30000000 */
+	121, /* /soc/sram@30000000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_EXISTS 1
@@ -2008,11 +2010,11 @@
 	65, /* /soc/peripheral@50000000/enet@138000 */ \
 	75, /* /soc/peripheral@50000000/flexcomm@108000 */ \
 	77, /* /soc/peripheral@50000000/gau */ \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */ \
-	102, /* /soc/peripheral@50000000/reset@0 */ \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */ \
-	108, /* /soc/peripheral@50000000/pmu@31000 */ \
-	111, /* /soc/peripheral@50000000/spi@134000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */ \
+	104, /* /soc/peripheral@50000000/reset@0 */ \
+	105, /* /soc/peripheral@50000000/mrt@3f000 */ \
+	110, /* /soc/peripheral@50000000/pmu@31000 */ \
+	113, /* /soc/peripheral@50000000/spi@134000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_EXISTS 1
@@ -2042,7 +2044,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000
  *
  * Binding (compatible = nxp,lpc-gpio):
- *   $ZEPHYR_BASE/dts/bindings/gpio/nxp,lpc-gpio.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/gpio/nxp,lpc-gpio.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -2155,7 +2157,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000
  *
  * Binding (compatible = nxp,mci-io-mux):
- *   $ZEPHYR_BASE/dts/bindings/pinctrl/nxp,mci-io-mux.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/pinctrl/nxp,mci-io-mux.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -2183,16 +2185,16 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_ANCESTOR(fn) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc) fn(DT_N)
 
 /* Helper macros for child nodes of this node. */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_CHILD_NUM 11
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_CHILD_NUM_STATUS_OKAY 11
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_STATUS_OKAY(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_STATUS_OKAY_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_CHILD_NUM 12
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_CHILD_NUM_STATUS_OKAY 12
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_STATUS_OKAY(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_STATUS_OKAY_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default, __VA_ARGS__)
 
 /* Node's hash: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_HASH k_4zGcFCzQo7NsY7ZlifGtsWksLME681_4J62LaLUwg
@@ -2209,7 +2211,7 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_SUPPORTS_ORDS \
 	19, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0 */ \
 	36, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm0_usart */ \
-	38, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi */ \
+	38, /* /soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default */ \
 	40, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm3_usart */ \
 	45, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic */ \
 	50, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0 */ \
@@ -2217,7 +2219,8 @@
 	69, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1 */ \
 	72, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_enet */ \
 	74, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm2_i2c */ \
-	84, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s */
+	85, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s */ \
+	87, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_EXISTS 1
@@ -2340,8 +2343,8 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_SUPPORTS_ORDS \
 	20, /* /soc/peripheral@50000000/hsgpio@100000/gpio@0 */ \
-	90, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group0 */ \
-	91, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group1 */
+	92, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group0 */ \
+	93, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio0/group1 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_EXISTS 1
@@ -2366,7 +2369,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0
  *
  * Binding (compatible = nxp,lpc-gpio-port):
- *   $ZEPHYR_BASE/dts/bindings/gpio/nxp,lpc-gpio-port.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/gpio/nxp,lpc-gpio-port.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -2551,7 +2554,7 @@
  * Node identifier: DT_N_S_gpio_keys
  *
  * Binding (compatible = gpio-keys):
- *   $ZEPHYR_BASE/dts/bindings/input/gpio-keys.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/input/gpio-keys.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -2760,7 +2763,7 @@
  * Node identifier: DT_N_S_leds
  *
  * Binding (compatible = gpio-leds):
- *   $ZEPHYR_BASE/dts/bindings/led/gpio-leds.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/led/gpio-leds.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -2943,7 +2946,7 @@
  * Node identifier: DT_N_S_soc_S_timer_e000e010
  *
  * Binding (compatible = arm,armv8m-systick):
- *   $ZEPHYR_BASE/dts/bindings/timer/arm,armv8m-systick.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/timer/arm,armv8m-systick.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -3069,7 +3072,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800
  *
  * Binding (compatible = nxp,rw-soc-ctrl):
- *   $ZEPHYR_BASE/dts/bindings/arm/nxp,rw-soc-ctrl.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/arm/nxp,rw-soc-ctrl.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -3193,7 +3196,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000
  *
  * Binding (compatible = nxp,lpc-syscon):
- *   $ZEPHYR_BASE/dts/bindings/clock/nxp,lpc-syscon.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/clock/nxp,lpc-syscon.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -3302,7 +3305,7 @@
  * Node identifier: DT_N_S_soc_S_interrupt_controller_e000e100
  *
  * Binding (compatible = arm,v8m-nvic):
- *   $ZEPHYR_BASE/dts/bindings/interrupt-controller/arm,v8m-nvic.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/interrupt-controller/arm,v8m-nvic.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -3383,11 +3386,11 @@
 	79, /* /soc/peripheral@50000000/gau/dac@38200 */ \
 	80, /* /soc/peripheral@50000000/gau/gau_adc0@38000 */ \
 	81, /* /soc/peripheral@50000000/gau/gau_adc1@38100 */ \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */ \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */ \
-	109, /* /soc/peripheral@50000000/pmu@31000/pin0 */ \
-	110, /* /soc/peripheral@50000000/pmu@31000/pin1 */ \
-	111, /* /soc/peripheral@50000000/spi@134000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */ \
+	105, /* /soc/peripheral@50000000/mrt@3f000 */ \
+	111, /* /soc/peripheral@50000000/pmu@31000/pin0 */ \
+	112, /* /soc/peripheral@50000000/pmu@31000/pin1 */ \
+	113, /* /soc/peripheral@50000000/spi@134000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_interrupt_controller_e000e100_EXISTS 1
@@ -3449,7 +3452,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000
  *
  * Binding (compatible = nxp,lpc-syscon):
- *   $ZEPHYR_BASE/dts/bindings/clock/nxp,lpc-syscon.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/clock/nxp,lpc-syscon.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -3515,9 +3518,9 @@
 	65, /* /soc/peripheral@50000000/enet@138000 */ \
 	68, /* /soc/peripheral@50000000/enet@138000/ptp-clock */ \
 	75, /* /soc/peripheral@50000000/flexcomm@108000 */ \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */ \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */ \
-	111, /* /soc/peripheral@50000000/spi@134000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */ \
+	105, /* /soc/peripheral@50000000/mrt@3f000 */ \
+	113, /* /soc/peripheral@50000000/spi@134000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000_EXISTS 1
@@ -3575,7 +3578,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000
  *
  * Binding (compatible = nxp,lpc-ctimer):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,lpc-ctimer.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,lpc-ctimer.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -3747,7 +3750,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_ctimer_29000
  *
  * Binding (compatible = nxp,lpc-ctimer):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,lpc-ctimer.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,lpc-ctimer.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -3919,7 +3922,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_ctimer_2a000
  *
  * Binding (compatible = nxp,lpc-ctimer):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,lpc-ctimer.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,lpc-ctimer.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -4091,7 +4094,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_ctimer_2b000
  *
  * Binding (compatible = nxp,lpc-ctimer):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,lpc-ctimer.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,lpc-ctimer.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -4263,7 +4266,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000
  *
  * Binding (compatible = nxp,lpc-dma):
- *   $ZEPHYR_BASE/dts/bindings/dma/nxp,lpc-dma.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/dma/nxp,lpc-dma.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -4426,7 +4429,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_reset_20000
  *
  * Binding (compatible = nxp,rstctl):
- *   $ZEPHYR_BASE/dts/bindings/reset/nxp,rstctl.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/reset/nxp,rstctl.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -4484,7 +4487,7 @@
 	42, /* /soc/peripheral@50000000/flexcomm@126000 */ \
 	56, /* /soc/peripheral@50000000/timers@13b000 */ \
 	75, /* /soc/peripheral@50000000/flexcomm@108000 */ \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_reset_20000_EXISTS 1
@@ -4592,7 +4595,7 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_SUPPORTS_ORDS \
 	37, /* /soc/peripheral@50000000/flexcomm@106000 */ \
-	83, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm0_usart/group0 */
+	84, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm0_usart/group0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_EXISTS 1
@@ -4617,7 +4620,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_flexcomm_106000
  *
  * Binding (compatible = nxp,lpc-usart):
- *   $ZEPHYR_BASE/dts/bindings/serial/nxp,lpc-usart.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/serial/nxp,lpc-usart.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -4979,78 +4982,77 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_106000_P_resets_EXISTS 1
 
 /*
- * Devicetree node: /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi
+ * Devicetree node: /soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default
  *
- * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi
+ * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
  */
 
 /* Node's full path: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_PATH "/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi"
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_PATH "/soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default"
 
 /* Node's name with unit-address: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FULL_NAME "pinmux_flexcomm1_spi"
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FULL_NAME_UNQUOTED pinmux_flexcomm1_spi
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FULL_NAME_TOKEN pinmux_flexcomm1_spi
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FULL_NAME_UPPER_TOKEN PINMUX_FLEXCOMM1_SPI
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FULL_NAME "flexcomm1_spi_default"
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FULL_NAME_UNQUOTED flexcomm1_spi_default
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FULL_NAME_TOKEN flexcomm1_spi_default
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FULL_NAME_UPPER_TOKEN FLEXCOMM1_SPI_DEFAULT
 
 /* Node parent (/soc/peripheral@50000000/mci_iomux@4000) identifier: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_PARENT DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_PARENT DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000
 
 /* Node's index in its parent's list of children: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_CHILD_IDX 5
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_CHILD_IDX 11
 
 /* Helpers for dealing with node labels: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_NODELABEL_NUM 1
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_NODELABEL(fn) fn(pinmux_flexcomm1_spi)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_NODELABEL_VARGS(fn, ...) fn(pinmux_flexcomm1_spi, __VA_ARGS__)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_ANCESTOR(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc) fn(DT_N)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_NODELABEL_NUM 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_NODELABEL(fn) fn(flexcomm1_spi_default)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_NODELABEL_VARGS(fn, ...) fn(flexcomm1_spi_default, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_ANCESTOR(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc) fn(DT_N)
 
 /* Helper macros for child nodes of this node. */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_CHILD_NUM 2
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_CHILD_NUM_STATUS_OKAY 2
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_STATUS_OKAY(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_STATUS_OKAY_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__)
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_CHILD_NUM 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_CHILD_NUM_STATUS_OKAY 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_CHILD(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_CHILD_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_CHILD_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_CHILD_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_CHILD_STATUS_OKAY(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_CHILD_STATUS_OKAY_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, __VA_ARGS__)
 
 /* Node's hash: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_HASH p2vcjUfPf0DEqHpy4zo_pCvtHncdYh39TklIzbr2mK4
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_HASH VoOxif9E_LLdkPlxT0IRxxLa88wcvvHkLsMhaiErMnw
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_ORD 38
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_ORD_STR_SORTABLE 00038
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_ORD 38
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_ORD_STR_SORTABLE 00038
 
 /* Ordinals for what this node depends on directly: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_REQUIRES_ORDS \
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_REQUIRES_ORDS \
 	18, /* /soc/peripheral@50000000/mci_iomux@4000 */
 
 /* Ordinals for what depends directly on this node: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_SUPPORTS_ORDS \
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_SUPPORTS_ORDS \
 	39, /* /soc/peripheral@50000000/flexcomm@107000 */ \
-	86, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0 */ \
-	87, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group1 */
+	82, /* /soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default/group0 */
 
 /* Existence and alternate IDs: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_EXISTS 1
-#define DT_N_NODELABEL_pinmux_flexcomm1_spi DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_EXISTS 1
+#define DT_N_NODELABEL_flexcomm1_spi_default DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default
 
 /* Macros for properties that are special in the specification: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_REG_NUM 0
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_RANGES_NUM 0
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_RANGE(fn) 
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_IRQ_NUM 0
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_IRQ_LEVEL 0
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_STATUS_okay 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_REG_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_RANGES_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_FOREACH_RANGE(fn) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_IRQ_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_IRQ_LEVEL 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_STATUS_okay 1
 
 /* Pin control (pinctrl-<i>, pinctrl-names) properties: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_PINCTRL_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_PINCTRL_NUM 0
 
 /* (No generic property macros) */
 
@@ -5060,7 +5062,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000
  *
  * Binding (compatible = nxp,lpc-spi):
- *   $ZEPHYR_BASE/dts/bindings/spi/nxp,lpc-spi.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/spi/nxp,lpc-spi.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -5116,13 +5118,14 @@
 	29, /* /soc/peripheral@50000000/clkctl@21000 */ \
 	34, /* /soc/peripheral@50000000/dma-controller@104000 */ \
 	35, /* /soc/peripheral@50000000/reset@20000 */ \
-	38, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi */
+	38, /* /soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_SUPPORTS_ORDS /* nothing */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_EXISTS 1
+#define DT_N_ALIAS_dbus_spi         DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000
 #define DT_N_INST_0_nxp_lpc_spi     DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000
 #define DT_N_NODELABEL_flexcomm1    DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000
 #define DT_N_NODELABEL_arduino_spi  DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000
@@ -5158,9 +5161,11 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_PINCTRL_IDX_0_UPPER_TOKEN DEFAULT
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_PINCTRL_NAME_default_EXISTS 1
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_PINCTRL_NAME_default_IDX 0
-#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_PINCTRL_NAME_default_IDX_0_PH DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_PINCTRL_NAME_default_IDX_0_PH DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default
 
 /* Generic property macros: */
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_clock_frequency 125000
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_clock_frequency_EXISTS 1
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_status "okay"
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_status_STRING_UNQUOTED okay
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_status_STRING_TOKEN okay
@@ -5200,6 +5205,18 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_interrupts_IDX_1_EXISTS 1
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_interrupts_IDX_1 0
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_interrupts_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label "DBUS_SPI"
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_STRING_UNQUOTED DBUS_SPI
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_STRING_TOKEN DBUS_SPI
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_STRING_UPPER_TOKEN DBUS_SPI
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_IDX_0 "DBUS_SPI"
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, label, 0)
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_FOREACH_PROP_ELEM_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, label, 0)
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, label, 0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_FOREACH_PROP_ELEM_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, label, 0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_LEN 1
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_label_EXISTS 1
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_clocks_IDX_0_EXISTS 1
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_clocks_IDX_0_PH DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_clocks_IDX_0_VAL_name 257
@@ -5368,8 +5385,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_low_power_states_FOREACH_PROP_ELEM_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, low_power_states, 0, __VA_ARGS__)
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_low_power_states_LEN 1
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_low_power_states_EXISTS 1
-#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_pinctrl_0_IDX_0 DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi
-#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_pinctrl_0_IDX_0_PH DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_pinctrl_0_IDX_0 DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default
+#define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_pinctrl_0_IDX_0_PH DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_pinctrl_0_IDX_0_EXISTS 1
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_pinctrl_0_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, pinctrl_0, 0)
 #define DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000_P_pinctrl_0_FOREACH_PROP_ELEM_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, pinctrl_0, 0)
@@ -5459,7 +5476,7 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_SUPPORTS_ORDS \
 	41, /* /soc/peripheral@50000000/flexcomm@109000 */ \
-	89, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm3_usart/group0 */
+	91, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm3_usart/group0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_EXISTS 1
@@ -5484,7 +5501,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000
  *
  * Binding (compatible = nxp,lpc-usart):
- *   $ZEPHYR_BASE/dts/bindings/serial/nxp,lpc-usart.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/serial/nxp,lpc-usart.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -5851,7 +5868,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_flexcomm_126000
  *
  * Binding (compatible = nxp,lpc-flexcomm):
- *   $ZEPHYR_BASE/dts/bindings/arm/nxp,lpc-flexcomm.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/arm/nxp,lpc-flexcomm.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -6111,7 +6128,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_hci_ble
  *
  * Binding (compatible = nxp,hci-ble):
- *   $ZEPHYR_BASE/dts/bindings/bluetooth/nxp,hci-ble.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/bluetooth/nxp,hci-ble.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -6267,7 +6284,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if
  *
  * Binding (compatible = nxp,hdlc-rcp-if):
- *   $ZEPHYR_BASE/dts/bindings/hdlc_rcp_if/nxp,hdlc-rcp-if.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/hdlc_rcp_if/nxp,hdlc-rcp-if.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -6485,8 +6502,8 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_SUPPORTS_ORDS \
 	46, /* /soc/peripheral@50000000/lcdic@128000 */ \
-	93, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group0 */ \
-	94, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group1 */
+	95, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group0 */ \
+	96, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_lcdic/group1 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_EXISTS 1
@@ -6511,7 +6528,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000
  *
  * Binding (compatible = nxp,lcdic):
- *   $ZEPHYR_BASE/dts/bindings/mipi-dbi/nxp,lcdic.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/mipi-dbi/nxp,lcdic.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -6746,7 +6763,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_nbu
  *
  * Binding (compatible = nxp,nbu):
- *   $ZEPHYR_BASE/dts/bindings/arm/nxp,nbu.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/arm/nxp,nbu.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -6929,7 +6946,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi
  *
  * Binding (compatible = nxp,wifi):
- *   $ZEPHYR_BASE/dts/bindings/wifi/nxp,wifi.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/wifi/nxp,wifi.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -7081,7 +7098,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_pint_25000
  *
  * Binding (compatible = nxp,pint):
- *   $ZEPHYR_BASE/dts/bindings/interrupt-controller/nxp,pint.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/interrupt-controller/nxp,pint.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -7349,7 +7366,7 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_SUPPORTS_ORDS \
 	51, /* /soc/peripheral@50000000/pwm@146000 */ \
-	96, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0/group0 */
+	98, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_pwm0/group0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_EXISTS 1
@@ -7374,7 +7391,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_pwm_146000
  *
  * Binding (compatible = nxp,sctimer-pwm):
- *   $ZEPHYR_BASE/dts/bindings/pwm/nxp,sctimer-pwm.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/pwm/nxp,sctimer-pwm.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -7573,7 +7590,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_random_14000
  *
  * Binding (compatible = nxp,kinetis-trng):
- *   $ZEPHYR_BASE/dts/bindings/rng/nxp,kinetis-trng.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/rng/nxp,kinetis-trng.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -7723,7 +7740,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000
  *
  * Binding (compatible = nxp,rw-soc-ctrl):
- *   $ZEPHYR_BASE/dts/bindings/arm/nxp,rw-soc-ctrl.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/arm/nxp,rw-soc-ctrl.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -7847,7 +7864,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_rtc_30000
  *
  * Binding (compatible = nxp,lpc-rtc):
- *   $ZEPHYR_BASE/dts/bindings/rtc/nxp,lpc-rtc.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/rtc/nxp,lpc-rtc.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -7986,7 +8003,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres
  *
  * Binding (compatible = nxp,lpc-rtc-highres):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,lpc-rtc-highres.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,lpc-rtc-highres.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -8102,7 +8119,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_timers_13b000
  *
  * Binding (compatible = nxp,os-timer):
- *   $ZEPHYR_BASE/dts/bindings/timer/nxp,os-timer.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/timer/nxp,os-timer.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -8265,7 +8282,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_usbh_145000
  *
  * Binding (compatible = nxp,uhc-ehci):
- *   $ZEPHYR_BASE/dts/bindings/usb/nxp,uhc-ehci.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/usb/nxp,uhc-ehci.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -8432,7 +8449,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000
  *
  * Binding (compatible = nxp,ehci):
- *   $ZEPHYR_BASE/dts/bindings/usb/nxp,ehci.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/usb/nxp,ehci.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -8602,7 +8619,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000
  *
  * Binding (compatible = nxp,lpc-wwdt):
- *   $ZEPHYR_BASE/dts/bindings/watchdog/nxp,lpc-wwdt.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/watchdog/nxp,lpc-wwdt.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -8755,7 +8772,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_dmic_121000
  *
  * Binding (compatible = nxp,dmic):
- *   $ZEPHYR_BASE/dts/bindings/audio/nxp,dmic.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/audio/nxp,dmic.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -9498,7 +9515,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_enet_138000
  *
  * Binding (compatible = nxp,enet):
- *   $ZEPHYR_BASE/dts/bindings/ethernet/nxp,enet.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/ethernet/nxp,enet.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -9674,7 +9691,7 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_SUPPORTS_ORDS \
 	67, /* /soc/peripheral@50000000/enet@138000/mdio */ \
-	95, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_mdio/group0 */
+	97, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_mdio/group0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_EXISTS 1
@@ -9699,7 +9716,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio
  *
  * Binding (compatible = nxp,enet-mdio):
- *   $ZEPHYR_BASE/dts/bindings/mdio/nxp,enet-mdio.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/mdio/nxp,enet-mdio.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -9861,7 +9878,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ptp_clock
  *
  * Binding (compatible = nxp,enet-ptp-clock):
- *   $ZEPHYR_BASE/dts/bindings/ethernet/nxp,enet-ptp-clock.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/ethernet/nxp,enet-ptp-clock.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -10067,7 +10084,7 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_SUPPORTS_ORDS \
 	70, /* /soc/peripheral@50000000/hsgpio@100000/gpio@1 */ \
-	92, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1/group0 */
+	94, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_hsgpio1/group0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_EXISTS 1
@@ -10092,7 +10109,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1
  *
  * Binding (compatible = nxp,lpc-gpio-port):
- *   $ZEPHYR_BASE/dts/bindings/gpio/nxp,lpc-gpio-port.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/gpio/nxp,lpc-gpio-port.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -10273,7 +10290,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2
  *
  * Binding (compatible = microchip,ksz8081):
- *   $ZEPHYR_BASE/dts/bindings/ethernet/phy/microchip,ksz8081.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/ethernet/phy/microchip,ksz8081.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -10551,7 +10568,7 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_SUPPORTS_ORDS \
 	73, /* /soc/peripheral@50000000/enet@138000/ethernet */ \
-	82, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_enet/group0 */
+	83, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_enet/group0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_EXISTS 1
@@ -10576,7 +10593,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet
  *
  * Binding (compatible = nxp,enet-mac):
- *   $ZEPHYR_BASE/dts/bindings/ethernet/nxp,enet-mac.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/ethernet/nxp,enet-mac.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -10866,7 +10883,7 @@
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_SUPPORTS_ORDS \
 	75, /* /soc/peripheral@50000000/flexcomm@108000 */ \
-	88, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm2_i2c/group0 */
+	90, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm2_i2c/group0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_EXISTS 1
@@ -10891,7 +10908,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000
  *
  * Binding (compatible = nxp,lpc-i2c):
- *   $ZEPHYR_BASE/dts/bindings/i2c/nxp,lpc-i2c.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/i2c/nxp,lpc-i2c.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -11250,7 +11267,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48
  *
  * Binding (compatible = nxp,p3t1755):
- *   $ZEPHYR_BASE/dts/bindings/sensor/nxp,p3t1755-i2c.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/sensor/nxp,p3t1755-i2c.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -11456,7 +11473,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_gau_S_acomp_38400
  *
  * Binding (compatible = nxp,acomp):
- *   $ZEPHYR_BASE/dts/bindings/comparator/nxp,acomp.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/comparator/nxp,acomp.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -11602,7 +11619,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200
  *
  * Binding (compatible = nxp,gau-dac):
- *   $ZEPHYR_BASE/dts/bindings/dac/nxp,gau-dac.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/dac/nxp,gau-dac.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -11797,7 +11814,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000
  *
  * Binding (compatible = nxp,gau-adc):
- *   $ZEPHYR_BASE/dts/bindings/adc/nxp,gau-adc.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/adc/nxp,gau-adc.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -11981,7 +11998,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc1_38100
  *
  * Binding (compatible = nxp,gau-adc):
- *   $ZEPHYR_BASE/dts/bindings/adc/nxp,gau-adc.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/adc/nxp,gau-adc.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -12160,6 +12177,139 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc1_38100_P_zephyr_pm_device_runtime_auto_EXISTS 1
 
 /*
+ * Devicetree node: /soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default/group0
+ *
+ * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0
+ *
+ * (Descriptions have moved to the Devicetree Bindings Index
+ * in the documentation.)
+ */
+
+/* Node's full path: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_PATH "/soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default/group0"
+
+/* Node's name with unit-address: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FULL_NAME "group0"
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FULL_NAME_UNQUOTED group0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FULL_NAME_TOKEN group0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FULL_NAME_UPPER_TOKEN GROUP0
+
+/* Node parent (/soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default) identifier: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_PARENT DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default
+
+/* Node's index in its parent's list of children: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_CHILD_IDX 0
+
+/* Helpers for dealing with node labels: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_NODELABEL_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_NODELABEL(fn) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_NODELABEL_VARGS(fn, ...) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_ANCESTOR(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc) fn(DT_N)
+
+/* Helper macros for child nodes of this node. */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_CHILD_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_CHILD_NUM_STATUS_OKAY 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_CHILD(fn) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_CHILD_SEP(fn, sep) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_CHILD_VARGS(fn, ...) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_CHILD_SEP_VARGS(fn, sep, ...) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_CHILD_STATUS_OKAY(fn) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_CHILD_STATUS_OKAY_SEP(fn, sep) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS(fn, sep, ...) 
+
+/* Node's hash: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_HASH 6jLp0gYOdQRWR8JczveFL3GSwTigCHNoDg136GpDDr4
+
+/* Node's dependency ordinal: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_ORD 82
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_ORD_STR_SORTABLE 00082
+
+/* Ordinals for what this node depends on directly: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_REQUIRES_ORDS \
+	38, /* /soc/peripheral@50000000/mci_iomux@4000/flexcomm1_spi_default */
+
+/* Ordinals for what depends directly on this node: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_SUPPORTS_ORDS /* nothing */
+
+/* Existence and alternate IDs: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_EXISTS 1
+
+/* Macros for properties that are special in the specification: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_REG_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_RANGES_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_FOREACH_RANGE(fn) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_IRQ_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_IRQ_LEVEL 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_STATUS_okay 1
+
+/* Pin control (pinctrl-<i>, pinctrl-names) properties: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_PINCTRL_NUM 0
+
+/* Generic property macros: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux {100359 /* 0x18807 */, 100361 /* 0x18809 */, 100360 /* 0x18808 */, 100358 /* 0x18806 */}
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_IDX_0 100359
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_IDX_1_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_IDX_1 100361
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_IDX_2_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_IDX_2 100360
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_IDX_3_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_IDX_3 100358
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 0) \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 1) \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 2) \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 3)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_FOREACH_PROP_ELEM_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 0) DT_DEBRACKET_INTERNAL sep \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 1) DT_DEBRACKET_INTERNAL sep \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 2) DT_DEBRACKET_INTERNAL sep \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 3)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 0, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 1, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 2, __VA_ARGS__) \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 3, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_FOREACH_PROP_ELEM_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 1, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 2, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep \
+	fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, pinmux, 3, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_LEN 4
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_pinmux_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate "normal"
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_STRING_UNQUOTED normal
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_STRING_TOKEN normal
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_STRING_UPPER_TOKEN NORMAL
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_IDX_0 "normal"
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_IDX_0_ENUM_IDX 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_IDX_0_ENUM_VAL_normal_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_ENUM_VAL_normal_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, slew_rate, 0)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_FOREACH_PROP_ELEM_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, slew_rate, 0)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, slew_rate, 0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_FOREACH_PROP_ELEM_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, slew_rate, 0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_LEN 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_slew_rate_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output "low"
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_STRING_UNQUOTED low
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_STRING_TOKEN low
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_STRING_UPPER_TOKEN LOW
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_IDX_0 "low"
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_IDX_0_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_IDX_0_ENUM_IDX 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_IDX_0_ENUM_VAL_low_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_ENUM_VAL_low_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_FOREACH_PROP_ELEM(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, sleep_output, 0)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_FOREACH_PROP_ELEM_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, sleep_output, 0)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_FOREACH_PROP_ELEM_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, sleep_output, 0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_FOREACH_PROP_ELEM_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, sleep_output, 0, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_LEN 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_sleep_output_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_bias_pull_up 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_bias_pull_up_EXISTS 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_bias_pull_down 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0_P_bias_pull_down_EXISTS 1
+
+/*
  * Devicetree node: /soc/peripheral@50000000/mci_iomux@4000/pinmux_enet/group0
  *
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0
@@ -12205,8 +12355,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0_HASH RiIhyD_OCIuCNz5exdlfUQ_onDXsrOxHKJGfVzDC21o
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0_ORD 82
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0_ORD_STR_SORTABLE 00082
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0_ORD 83
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0_ORD_STR_SORTABLE 00083
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0_REQUIRES_ORDS \
@@ -12374,8 +12524,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0_HASH dAdU99UcMvYSVFYyuEaxsDEg0ibck54QpEqg8Ns2e90
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0_ORD 83
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0_ORD_STR_SORTABLE 00083
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0_ORD 84
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0_ORD_STR_SORTABLE 00084
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0_REQUIRES_ORDS \
@@ -12495,8 +12645,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_HASH nrvcQnPEWD5pLAJlDm9tk1w_bzld7aMxJEpR3Bz9OGg
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_ORD 84
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_ORD_STR_SORTABLE 00084
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_ORD 85
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_ORD_STR_SORTABLE 00085
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_REQUIRES_ORDS \
@@ -12504,7 +12654,7 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_SUPPORTS_ORDS \
-	85, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s/group0 */
+	86, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s/group0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_EXISTS 1
@@ -12569,12 +12719,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0_HASH s4rVCOljIcA9wULplBJ_1DYVa_h2JIHfuTiVQN3erUk
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0_ORD 85
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0_ORD_STR_SORTABLE 00085
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0_ORD 86
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0_ORD_STR_SORTABLE 00086
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0_REQUIRES_ORDS \
-	84, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s */
+	85, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_i2s */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0_SUPPORTS_ORDS /* nothing */
@@ -12651,6 +12801,81 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0_P_bias_pull_down_EXISTS 1
 
 /*
+ * Devicetree node: /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi
+ *
+ * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi
+ *
+ * (Descriptions have moved to the Devicetree Bindings Index
+ * in the documentation.)
+ */
+
+/* Node's full path: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_PATH "/soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi"
+
+/* Node's name with unit-address: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FULL_NAME "pinmux_flexcomm1_spi"
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FULL_NAME_UNQUOTED pinmux_flexcomm1_spi
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FULL_NAME_TOKEN pinmux_flexcomm1_spi
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FULL_NAME_UPPER_TOKEN PINMUX_FLEXCOMM1_SPI
+
+/* Node parent (/soc/peripheral@50000000/mci_iomux@4000) identifier: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_PARENT DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000
+
+/* Node's index in its parent's list of children: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_CHILD_IDX 5
+
+/* Helpers for dealing with node labels: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_NODELABEL_NUM 1
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_NODELABEL(fn) fn(pinmux_flexcomm1_spi)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_NODELABEL_VARGS(fn, ...) fn(pinmux_flexcomm1_spi, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_ANCESTOR(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc) fn(DT_N)
+
+/* Helper macros for child nodes of this node. */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_CHILD_NUM 2
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_CHILD_NUM_STATUS_OKAY 2
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_STATUS_OKAY(fn) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_STATUS_OKAY_SEP(fn, sep) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__)
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS(fn, sep, ...) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) DT_DEBRACKET_INTERNAL sep fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__)
+
+/* Node's hash: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_HASH p2vcjUfPf0DEqHpy4zo_pCvtHncdYh39TklIzbr2mK4
+
+/* Node's dependency ordinal: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_ORD 87
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_ORD_STR_SORTABLE 00087
+
+/* Ordinals for what this node depends on directly: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_REQUIRES_ORDS \
+	18, /* /soc/peripheral@50000000/mci_iomux@4000 */
+
+/* Ordinals for what depends directly on this node: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_SUPPORTS_ORDS \
+	88, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0 */ \
+	89, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group1 */
+
+/* Existence and alternate IDs: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_EXISTS 1
+#define DT_N_NODELABEL_pinmux_flexcomm1_spi DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi
+
+/* Macros for properties that are special in the specification: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_REG_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_RANGES_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_FOREACH_RANGE(fn) 
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_IRQ_NUM 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_IRQ_LEVEL 0
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_STATUS_okay 1
+
+/* Pin control (pinctrl-<i>, pinctrl-names) properties: */
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_PINCTRL_NUM 0
+
+/* (No generic property macros) */
+
+/*
  * Devicetree node: /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi/group0
  *
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0
@@ -12696,12 +12921,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0_HASH viaMAU1E76EMkpN4tFK3rz_Z_hWfe_cLbq6NiorErfA
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0_ORD 86
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0_ORD_STR_SORTABLE 00086
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0_ORD 88
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0_ORD_STR_SORTABLE 00088
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0_REQUIRES_ORDS \
-	38, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi */
+	87, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0_SUPPORTS_ORDS /* nothing */
@@ -12829,12 +13054,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1_HASH E04SreYo7mMH6xgNqEHn04ebg7Rb8kWudL3QEeBiyc4
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1_ORD 87
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1_ORD_STR_SORTABLE 00087
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1_ORD 89
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1_ORD_STR_SORTABLE 00089
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1_REQUIRES_ORDS \
-	38, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi */
+	87, /* /soc/peripheral@50000000/mci_iomux@4000/pinmux_flexcomm1_spi */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1_SUPPORTS_ORDS /* nothing */
@@ -12962,8 +13187,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0_HASH o5Ur71_HQUkIsWTlRF5lCwxhiYal8HekXTfvSFxr8UU
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0_ORD 88
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0_ORD_STR_SORTABLE 00088
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0_ORD 90
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0_ORD_STR_SORTABLE 00090
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0_REQUIRES_ORDS \
@@ -13083,8 +13308,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0_HASH bcnen5KPC2HSKynRqUh0Jwkf_x2HzY_anNEAMTBSopQ
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0_ORD 89
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0_ORD_STR_SORTABLE 00089
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0_ORD 91
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0_ORD_STR_SORTABLE 00091
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0_REQUIRES_ORDS \
@@ -13204,8 +13429,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0_HASH 9caBnDUkAplJZck_btCDORz9n99gHz4NwBXXF2aTZu4
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0_ORD 90
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0_ORD_STR_SORTABLE 00090
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0_ORD 92
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0_ORD_STR_SORTABLE 00092
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0_REQUIRES_ORDS \
@@ -13331,8 +13556,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1_HASH yKozA3lKH1771jsPdQ0dDOAtZEBwdCAatEPvQJPMfdI
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1_ORD 91
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1_ORD_STR_SORTABLE 00091
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1_ORD 93
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1_ORD_STR_SORTABLE 00093
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1_REQUIRES_ORDS \
@@ -13458,8 +13683,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0_HASH pcbBx_EVmQ_0Kd2kYR20HI6sOncmNu3dStibOR1QHXo
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0_ORD 92
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0_ORD_STR_SORTABLE 00092
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0_ORD 94
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0_ORD_STR_SORTABLE 00094
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0_REQUIRES_ORDS \
@@ -13579,8 +13804,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0_HASH YxUyKY7hWvuS0IVNAhiAGkp6f5Pwzqn6zDLs7UnH6pg
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0_ORD 93
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0_ORD_STR_SORTABLE 00093
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0_ORD 95
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0_ORD_STR_SORTABLE 00095
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0_REQUIRES_ORDS \
@@ -13718,8 +13943,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1_HASH jQEHosCSs1Niu_Vn7d6diViD_19Cxhe6JYgXUkHyKos
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1_ORD 94
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1_ORD_STR_SORTABLE 00094
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1_ORD 96
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1_ORD_STR_SORTABLE 00096
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1_REQUIRES_ORDS \
@@ -13833,8 +14058,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0_HASH _ElYulhwb4e_p710puaKq04aP5ygswh5HvPEdytto08
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0_ORD 95
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0_ORD_STR_SORTABLE 00095
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0_ORD 97
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0_ORD_STR_SORTABLE 00097
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0_REQUIRES_ORDS \
@@ -13954,8 +14179,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0_HASH 3vut65lBD846vJbM8qevgyHG0JhBRqnCM1zszSEQJso
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0_ORD 96
-#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0_ORD_STR_SORTABLE 00096
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0_ORD 98
+#define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0_ORD_STR_SORTABLE 00098
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0_REQUIRES_ORDS \
@@ -14029,7 +14254,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000
  *
  * Binding (compatible = nxp,mrt):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -14076,8 +14301,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_HASH vGoMvAcqdBCN9kuWIkq2nBYq7X0bgcjpbDhdmnXVg38
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_ORD 97
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_ORD_STR_SORTABLE 00097
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_ORD 99
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_ORD_STR_SORTABLE 00099
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_REQUIRES_ORDS \
@@ -14089,10 +14314,10 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_SUPPORTS_ORDS \
-	98, /* /soc/peripheral@50000000/mrt@2d000/mrt0_channel@0 */ \
-	99, /* /soc/peripheral@50000000/mrt@2d000/mrt0_channel@1 */ \
-	100, /* /soc/peripheral@50000000/mrt@2d000/mrt0_channel@2 */ \
-	101, /* /soc/peripheral@50000000/mrt@2d000/mrt0_channel@3 */
+	100, /* /soc/peripheral@50000000/mrt@2d000/mrt0_channel@0 */ \
+	101, /* /soc/peripheral@50000000/mrt@2d000/mrt0_channel@1 */ \
+	102, /* /soc/peripheral@50000000/mrt@2d000/mrt0_channel@2 */ \
+	103, /* /soc/peripheral@50000000/mrt@2d000/mrt0_channel@3 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_EXISTS 1
@@ -14204,7 +14429,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0
  *
  * Binding (compatible = nxp,mrt-channel):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt-channel.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt-channel.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -14247,12 +14472,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0_HASH 1lSlfifJtEvCB3P8wfmm23J4HgMZsFCVh3oW4Wu1UsE
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0_ORD 98
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0_ORD_STR_SORTABLE 00098
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0_ORD 100
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0_ORD_STR_SORTABLE 00100
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0_REQUIRES_ORDS \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0_SUPPORTS_ORDS /* nothing */
@@ -14325,7 +14550,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1
  *
  * Binding (compatible = nxp,mrt-channel):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt-channel.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt-channel.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -14368,12 +14593,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1_HASH VDI1_JGYiKpeJbOh7I293ngIpV6NY2txxK6jGnlZrcY
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1_ORD 99
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1_ORD_STR_SORTABLE 00099
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1_ORD 101
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1_ORD_STR_SORTABLE 00101
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1_REQUIRES_ORDS \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1_SUPPORTS_ORDS /* nothing */
@@ -14446,7 +14671,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2
  *
  * Binding (compatible = nxp,mrt-channel):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt-channel.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt-channel.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -14489,12 +14714,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2_HASH mLI5Ptt5tEh1wUBvJmqBWLtCUlJ1c_l57gVBlyB3oXY
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2_ORD 100
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2_ORD_STR_SORTABLE 00100
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2_ORD 102
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2_ORD_STR_SORTABLE 00102
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2_REQUIRES_ORDS \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2_SUPPORTS_ORDS /* nothing */
@@ -14567,7 +14792,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3
  *
  * Binding (compatible = nxp,mrt-channel):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt-channel.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt-channel.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -14610,12 +14835,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3_HASH Vxefpv3AEVXpA302P8ROoVW9u01Ag9W_g2yonkKPErI
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3_ORD 101
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3_ORD_STR_SORTABLE 00101
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3_ORD 103
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3_ORD_STR_SORTABLE 00103
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3_REQUIRES_ORDS \
-	97, /* /soc/peripheral@50000000/mrt@2d000 */
+	99, /* /soc/peripheral@50000000/mrt@2d000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3_SUPPORTS_ORDS /* nothing */
@@ -14688,7 +14913,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_reset_0
  *
  * Binding (compatible = nxp,rstctl):
- *   $ZEPHYR_BASE/dts/bindings/reset/nxp,rstctl.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/reset/nxp,rstctl.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -14731,8 +14956,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_reset_0_HASH iYfRgE0OPxcrM3x7h6pog5wEZa1oCwVPnmnT3arrrgI
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_reset_0_ORD 102
-#define DT_N_S_soc_S_peripheral_50000000_S_reset_0_ORD_STR_SORTABLE 00102
+#define DT_N_S_soc_S_peripheral_50000000_S_reset_0_ORD 104
+#define DT_N_S_soc_S_peripheral_50000000_S_reset_0_ORD_STR_SORTABLE 00104
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_reset_0_REQUIRES_ORDS \
@@ -14740,7 +14965,7 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_reset_0_SUPPORTS_ORDS \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */
+	105, /* /soc/peripheral@50000000/mrt@3f000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_reset_0_EXISTS 1
@@ -14798,7 +15023,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000
  *
  * Binding (compatible = nxp,mrt):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -14845,8 +15070,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_HASH 3xse5dZnKXUd4KnVX9eXtFhyyShJIfEe_mIRue58CxY
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_ORD 103
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_ORD_STR_SORTABLE 00103
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_ORD 105
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_ORD_STR_SORTABLE 00105
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_REQUIRES_ORDS \
@@ -14854,14 +15079,14 @@
 	16, /* /soc/peripheral@50000000 */ \
 	28, /* /soc/interrupt-controller@e000e100 */ \
 	29, /* /soc/peripheral@50000000/clkctl@21000 */ \
-	102, /* /soc/peripheral@50000000/reset@0 */
+	104, /* /soc/peripheral@50000000/reset@0 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_SUPPORTS_ORDS \
-	104, /* /soc/peripheral@50000000/mrt@3f000/mrt1_channel@0 */ \
-	105, /* /soc/peripheral@50000000/mrt@3f000/mrt1_channel@1 */ \
-	106, /* /soc/peripheral@50000000/mrt@3f000/mrt1_channel@2 */ \
-	107, /* /soc/peripheral@50000000/mrt@3f000/mrt1_channel@3 */
+	106, /* /soc/peripheral@50000000/mrt@3f000/mrt1_channel@0 */ \
+	107, /* /soc/peripheral@50000000/mrt@3f000/mrt1_channel@1 */ \
+	108, /* /soc/peripheral@50000000/mrt@3f000/mrt1_channel@2 */ \
+	109, /* /soc/peripheral@50000000/mrt@3f000/mrt1_channel@3 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_EXISTS 1
@@ -14973,7 +15198,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0
  *
  * Binding (compatible = nxp,mrt-channel):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt-channel.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt-channel.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -15016,12 +15241,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0_HASH aTrp21rU86LD7QWXKRf2aE_1EN_F9fbgJoW9Ptpk28k
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0_ORD 104
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0_ORD_STR_SORTABLE 00104
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0_ORD 106
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0_ORD_STR_SORTABLE 00106
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0_REQUIRES_ORDS \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */
+	105, /* /soc/peripheral@50000000/mrt@3f000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0_SUPPORTS_ORDS /* nothing */
@@ -15094,7 +15319,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1
  *
  * Binding (compatible = nxp,mrt-channel):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt-channel.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt-channel.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -15137,12 +15362,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1_HASH ftND8ulVgMkUAPAGBnk3iSGuvNvpEg8r0OEd4sUZVeI
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1_ORD 105
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1_ORD_STR_SORTABLE 00105
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1_ORD 107
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1_ORD_STR_SORTABLE 00107
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1_REQUIRES_ORDS \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */
+	105, /* /soc/peripheral@50000000/mrt@3f000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1_SUPPORTS_ORDS /* nothing */
@@ -15215,7 +15440,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2
  *
  * Binding (compatible = nxp,mrt-channel):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt-channel.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt-channel.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -15258,12 +15483,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2_HASH iXXP0sBWJA9R_F4t7B7J8ChOv9YgRCrsEIQh9CW3TdQ
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2_ORD 106
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2_ORD_STR_SORTABLE 00106
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2_ORD 108
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2_ORD_STR_SORTABLE 00108
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2_REQUIRES_ORDS \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */
+	105, /* /soc/peripheral@50000000/mrt@3f000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2_SUPPORTS_ORDS /* nothing */
@@ -15336,7 +15561,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3
  *
  * Binding (compatible = nxp,mrt-channel):
- *   $ZEPHYR_BASE/dts/bindings/counter/nxp,mrt-channel.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/counter/nxp,mrt-channel.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -15379,12 +15604,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3_HASH 4AU6ryjJWpYo2CRVPr5PpoeQhBoZ6dfSF7JMV0YaRc4
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3_ORD 107
-#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3_ORD_STR_SORTABLE 00107
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3_ORD 109
+#define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3_ORD_STR_SORTABLE 00109
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3_REQUIRES_ORDS \
-	103, /* /soc/peripheral@50000000/mrt@3f000 */
+	105, /* /soc/peripheral@50000000/mrt@3f000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3_SUPPORTS_ORDS /* nothing */
@@ -15457,7 +15682,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_pmu_31000
  *
  * Binding (compatible = nxp,rw-pmu):
- *   $ZEPHYR_BASE/dts/bindings/power/nxp,rw-pmu.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/power/nxp,rw-pmu.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -15500,8 +15725,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_HASH I_3Jlvb_0lAfk8DoCk_4Fq1Sypp9MDLRPl37PHXJELc
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_ORD 108
-#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_ORD_STR_SORTABLE 00108
+#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_ORD 110
+#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_ORD_STR_SORTABLE 00110
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_REQUIRES_ORDS \
@@ -15509,8 +15734,8 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_SUPPORTS_ORDS \
-	109, /* /soc/peripheral@50000000/pmu@31000/pin0 */ \
-	110, /* /soc/peripheral@50000000/pmu@31000/pin1 */
+	111, /* /soc/peripheral@50000000/pmu@31000/pin0 */ \
+	112, /* /soc/peripheral@50000000/pmu@31000/pin1 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_EXISTS 1
@@ -15589,7 +15814,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0
  *
  * Binding (compatible = nxp,aon-wakeup-pin):
- *   $ZEPHYR_BASE/dts/bindings/power/nxp,aon-wakeup-pin.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/power/nxp,aon-wakeup-pin.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -15632,13 +15857,13 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0_HASH ZeLx3S4TPDY_Vq8kSD8eqrjk41saD_L5LZeO7K9ZeXg
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0_ORD 109
-#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0_ORD_STR_SORTABLE 00109
+#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0_ORD 111
+#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0_ORD_STR_SORTABLE 00111
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0_REQUIRES_ORDS \
 	28, /* /soc/interrupt-controller@e000e100 */ \
-	108, /* /soc/peripheral@50000000/pmu@31000 */
+	110, /* /soc/peripheral@50000000/pmu@31000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0_SUPPORTS_ORDS /* nothing */
@@ -15733,7 +15958,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1
  *
  * Binding (compatible = nxp,aon-wakeup-pin):
- *   $ZEPHYR_BASE/dts/bindings/power/nxp,aon-wakeup-pin.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/power/nxp,aon-wakeup-pin.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -15776,13 +16001,13 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1_HASH _jFX9043iAL1nFstJm5gqJTj5qIaYunybzLJJBcv0Gw
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1_ORD 110
-#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1_ORD_STR_SORTABLE 00110
+#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1_ORD 112
+#define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1_ORD_STR_SORTABLE 00112
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1_REQUIRES_ORDS \
 	28, /* /soc/interrupt-controller@e000e100 */ \
-	108, /* /soc/peripheral@50000000/pmu@31000 */
+	110, /* /soc/peripheral@50000000/pmu@31000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1_SUPPORTS_ORDS /* nothing */
@@ -15877,7 +16102,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_spi_134000
  *
  * Binding (compatible = nxp,imx-flexspi):
- *   $ZEPHYR_BASE/dts/bindings/spi/nxp,imx-flexspi.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/spi/nxp,imx-flexspi.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -15922,8 +16147,8 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_HASH sudRFG6Vtb5OFzpkX1fZIpLYavCB8pX7ybQ0bpjJM28
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_ORD 111
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_ORD_STR_SORTABLE 00111
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_ORD 113
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_ORD_STR_SORTABLE 00113
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_REQUIRES_ORDS \
@@ -15933,8 +16158,8 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_SUPPORTS_ORDS \
-	112, /* /soc/peripheral@50000000/spi@134000/aps6404l@2 */ \
-	113, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0 */
+	114, /* /soc/peripheral@50000000/spi@134000/aps6404l@2 */ \
+	115, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_EXISTS 1
@@ -16079,7 +16304,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2
  *
  * Binding (compatible = nxp,imx-flexspi-aps6404l):
- *   $ZEPHYR_BASE/dts/bindings/mtd/nxp,imx-flexspi-aps6404l.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/mtd/nxp,imx-flexspi-aps6404l.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -16122,12 +16347,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2_HASH _5THdH5GyRl4mp3Z93fMmLGwODYXYbVsjUJZouMG7dg
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2_ORD 112
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2_ORD_STR_SORTABLE 00112
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2_ORD 114
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2_ORD_STR_SORTABLE 00114
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2_REQUIRES_ORDS \
-	111, /* /soc/peripheral@50000000/spi@134000 */
+	113, /* /soc/peripheral@50000000/spi@134000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2_SUPPORTS_ORDS /* nothing */
@@ -16258,7 +16483,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0
  *
  * Binding (compatible = nxp,imx-flexspi-nor):
- *   $ZEPHYR_BASE/dts/bindings/mtd/nxp,imx-flexspi-nor.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/mtd/nxp,imx-flexspi-nor.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -16301,16 +16526,16 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_HASH OYsEuZ5KOPYDk0wxMisI2BAXd0UVjQoeASdq7R39CxA
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_ORD 113
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_ORD_STR_SORTABLE 00113
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_ORD 115
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_ORD_STR_SORTABLE 00115
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_REQUIRES_ORDS \
-	111, /* /soc/peripheral@50000000/spi@134000 */
+	113, /* /soc/peripheral@50000000/spi@134000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_SUPPORTS_ORDS \
-	114, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
+	116, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_EXISTS 1
@@ -16463,7 +16688,7 @@
  * Node identifier: DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions
  *
  * Binding (compatible = fixed-partitions):
- *   $ZEPHYR_BASE/dts/bindings/mtd/fixed-partitions.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/mtd/fixed-partitions.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -16510,19 +16735,19 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_HASH h5WcH5EGvJp5ATT3anzBdazJcZqYxiHValF1Ns_bX98
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_ORD 114
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_ORD_STR_SORTABLE 00114
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_ORD 116
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_ORD_STR_SORTABLE 00116
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_REQUIRES_ORDS \
-	113, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0 */
+	115, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_SUPPORTS_ORDS \
-	115, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@0 */ \
-	116, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@20000 */ \
-	117, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@320000 */ \
-	118, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@620000 */
+	117, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@0 */ \
+	118, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@20000 */ \
+	119, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@320000 */ \
+	120, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions/partition@620000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_EXISTS 1
@@ -16588,12 +16813,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0_HASH DLvUqat49FJ0knlyFSayhwqlRn3Motpm29Wvr1rbALQ
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0_ORD 115
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0_ORD_STR_SORTABLE 00115
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0_ORD 117
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0_ORD_STR_SORTABLE 00117
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0_REQUIRES_ORDS \
-	114, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
+	116, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0_SUPPORTS_ORDS /* nothing */
@@ -16687,12 +16912,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000_HASH UiP3QvKgfhqHP3_hra8cJgMAQOImL3vQhUYaEQJNYrY
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000_ORD 116
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000_ORD_STR_SORTABLE 00116
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000_ORD 118
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000_ORD_STR_SORTABLE 00118
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000_REQUIRES_ORDS \
-	114, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
+	116, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000_SUPPORTS_ORDS /* nothing */
@@ -16786,12 +17011,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000_HASH nVC2Bb1N889WMiaqmIfUIoy71wkdIlE8WjNARutfMLo
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000_ORD 117
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000_ORD_STR_SORTABLE 00117
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000_ORD 119
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000_ORD_STR_SORTABLE 00119
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000_REQUIRES_ORDS \
-	114, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
+	116, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000_SUPPORTS_ORDS /* nothing */
@@ -16885,12 +17110,12 @@
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000_HASH KagmzgSDs3Lwz4XzyugjNIVqqk8FAzgZoOt0Cc2u6tQ
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000_ORD 118
-#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000_ORD_STR_SORTABLE 00118
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000_ORD 120
+#define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000_ORD_STR_SORTABLE 00120
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000_REQUIRES_ORDS \
-	114, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
+	116, /* /soc/peripheral@50000000/spi@134000/w25q512jvfiq@0/partitions */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000_SUPPORTS_ORDS /* nothing */
@@ -16983,8 +17208,8 @@
 #define DT_N_S_soc_S_sram_30000000_HASH nZIEQYdE8CrAT6pJvEvRLrLmaxzL86DUuunWWH78RZ8
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_sram_30000000_ORD 119
-#define DT_N_S_soc_S_sram_30000000_ORD_STR_SORTABLE 00119
+#define DT_N_S_soc_S_sram_30000000_ORD 121
+#define DT_N_S_soc_S_sram_30000000_ORD_STR_SORTABLE 00121
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_sram_30000000_REQUIRES_ORDS \
@@ -16992,8 +17217,8 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_sram_30000000_SUPPORTS_ORDS \
-	120, /* /soc/sram@30000000/memory@0 */ \
-	121, /* /soc/sram@30000000/memory@40000 */
+	122, /* /soc/sram@30000000/memory@0 */ \
+	123, /* /soc/sram@30000000/memory@40000 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_soc_S_sram_30000000_EXISTS 1
@@ -17027,7 +17252,7 @@
  * Node identifier: DT_N_S_soc_S_sram_30000000_S_memory_0
  *
  * Binding (compatible = mmio-sram):
- *   $ZEPHYR_BASE/dts/bindings/sram/mmio-sram.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/sram/mmio-sram.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -17070,12 +17295,12 @@
 #define DT_N_S_soc_S_sram_30000000_S_memory_0_HASH OtErZcKZEddn8eM_rMjGpOq1znpwr7E_uPC7ojrDS4M
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_sram_30000000_S_memory_0_ORD 120
-#define DT_N_S_soc_S_sram_30000000_S_memory_0_ORD_STR_SORTABLE 00120
+#define DT_N_S_soc_S_sram_30000000_S_memory_0_ORD 122
+#define DT_N_S_soc_S_sram_30000000_S_memory_0_ORD_STR_SORTABLE 00122
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_sram_30000000_S_memory_0_REQUIRES_ORDS \
-	119, /* /soc/sram@30000000 */
+	121, /* /soc/sram@30000000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_sram_30000000_S_memory_0_SUPPORTS_ORDS /* nothing */
@@ -17132,7 +17357,7 @@
  * Node identifier: DT_N_S_soc_S_sram_30000000_S_memory_40000
  *
  * Binding (compatible = mmio-sram):
- *   $ZEPHYR_BASE/dts/bindings/sram/mmio-sram.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/sram/mmio-sram.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -17175,12 +17400,12 @@
 #define DT_N_S_soc_S_sram_30000000_S_memory_40000_HASH 7RgtmUM_wV0VuWJRj_yQybw5hgebsn3g_yJ_zVOFP04
 
 /* Node's dependency ordinal: */
-#define DT_N_S_soc_S_sram_30000000_S_memory_40000_ORD 121
-#define DT_N_S_soc_S_sram_30000000_S_memory_40000_ORD_STR_SORTABLE 00121
+#define DT_N_S_soc_S_sram_30000000_S_memory_40000_ORD 123
+#define DT_N_S_soc_S_sram_30000000_S_memory_40000_ORD_STR_SORTABLE 00123
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_soc_S_sram_30000000_S_memory_40000_REQUIRES_ORDS \
-	119, /* /soc/sram@30000000 */
+	121, /* /soc/sram@30000000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_soc_S_sram_30000000_S_memory_40000_SUPPORTS_ORDS /* nothing */
@@ -17275,8 +17500,8 @@
 #define DT_N_S_sram_41380000_HASH r9fZqiZXg_eDXgo1y1qWRV9G07Jw4UPyXPIUMJXY0ms
 
 /* Node's dependency ordinal: */
-#define DT_N_S_sram_41380000_ORD 122
-#define DT_N_S_sram_41380000_ORD_STR_SORTABLE 00122
+#define DT_N_S_sram_41380000_ORD 124
+#define DT_N_S_sram_41380000_ORD_STR_SORTABLE 00124
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_sram_41380000_REQUIRES_ORDS \
@@ -17284,7 +17509,7 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_sram_41380000_SUPPORTS_ORDS \
-	123, /* /sram@41380000/memory@0 */
+	125, /* /sram@41380000/memory@0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_sram_41380000_EXISTS 1
@@ -17314,7 +17539,7 @@
  * Node identifier: DT_N_S_sram_41380000_S_memory_0
  *
  * Binding (compatible = zephyr,memory-region):
- *   $ZEPHYR_BASE/dts/bindings/base/zephyr,memory-region.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/base/zephyr,memory-region.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -17357,12 +17582,12 @@
 #define DT_N_S_sram_41380000_S_memory_0_HASH H6iXu5T_6p_PTrJurhkp2pWTErCkgT2kNzM2vc_sDP8
 
 /* Node's dependency ordinal: */
-#define DT_N_S_sram_41380000_S_memory_0_ORD 123
-#define DT_N_S_sram_41380000_S_memory_0_ORD_STR_SORTABLE 00123
+#define DT_N_S_sram_41380000_S_memory_0_ORD 125
+#define DT_N_S_sram_41380000_S_memory_0_ORD_STR_SORTABLE 00125
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_sram_41380000_S_memory_0_REQUIRES_ORDS \
-	122, /* /sram@41380000 */
+	124, /* /sram@41380000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_sram_41380000_S_memory_0_SUPPORTS_ORDS /* nothing */
@@ -17486,8 +17711,8 @@
 #define DT_N_S_sram_443c0000_HASH mFT2FQtn37TnSMn1vyr_lkmDWl_0o5UgB_rKJchdi4o
 
 /* Node's dependency ordinal: */
-#define DT_N_S_sram_443c0000_ORD 124
-#define DT_N_S_sram_443c0000_ORD_STR_SORTABLE 00124
+#define DT_N_S_sram_443c0000_ORD 126
+#define DT_N_S_sram_443c0000_ORD_STR_SORTABLE 00126
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_sram_443c0000_REQUIRES_ORDS \
@@ -17495,7 +17720,7 @@
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_sram_443c0000_SUPPORTS_ORDS \
-	125, /* /sram@443C0000/memory@0 */
+	127, /* /sram@443C0000/memory@0 */
 
 /* Existence and alternate IDs: */
 #define DT_N_S_sram_443c0000_EXISTS 1
@@ -17525,7 +17750,7 @@
  * Node identifier: DT_N_S_sram_443c0000_S_memory_0
  *
  * Binding (compatible = zephyr,memory-region):
- *   $ZEPHYR_BASE/dts/bindings/base/zephyr,memory-region.yaml
+ *   /home/swied/zephyrproject/zephyr/dts/bindings/base/zephyr,memory-region.yaml
  *
  * (Descriptions have moved to the Devicetree Bindings Index
  * in the documentation.)
@@ -17568,12 +17793,12 @@
 #define DT_N_S_sram_443c0000_S_memory_0_HASH HuP5zt3h5LeCFlcLbm5Skcn3cD95D07faS4sbCRDpwI
 
 /* Node's dependency ordinal: */
-#define DT_N_S_sram_443c0000_S_memory_0_ORD 125
-#define DT_N_S_sram_443c0000_S_memory_0_ORD_STR_SORTABLE 00125
+#define DT_N_S_sram_443c0000_S_memory_0_ORD 127
+#define DT_N_S_sram_443c0000_S_memory_0_ORD_STR_SORTABLE 00127
 
 /* Ordinals for what this node depends on directly: */
 #define DT_N_S_sram_443c0000_S_memory_0_REQUIRES_ORDS \
-	124, /* /sram@443C0000 */
+	126, /* /sram@443C0000 */
 
 /* Ordinals for what depends directly on this node: */
 #define DT_N_S_sram_443c0000_S_memory_0_SUPPORTS_ORDS /* nothing */
@@ -17678,12 +17903,14 @@
 #define DT_CHOSEN_zephyr_code_partition_EXISTS   1
 #define DT_CHOSEN_zephyr_uart_mcumgr             DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000
 #define DT_CHOSEN_zephyr_uart_mcumgr_EXISTS      1
+#define DT_CHOSEN_zephyr_spi                     DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000
+#define DT_CHOSEN_zephyr_spi_EXISTS              1
 
 /* Macros for iterating over all nodes and enabled nodes */
-#define DT_FOREACH_HELPER(fn) fn(DT_N) fn(DT_N_S_chosen) fn(DT_N_S_aliases) fn(DT_N_S_soc) fn(DT_N_S_soc_S_interrupt_controller_e000e100) fn(DT_N_S_soc_S_timer_e000e010) fn(DT_N_S_soc_S_sram_30000000) fn(DT_N_S_soc_S_sram_30000000_S_memory_40000) fn(DT_N_S_soc_S_sram_30000000_S_memory_0) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_0) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_20000) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1) fn(DT_N_S_soc_S_peripheral_50000000_S_random_14000) fn(DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1) fn(DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000) fn(DT_N_S_soc_S_peripheral_50000000_S_usbh_145000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_106000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_126000) fn(DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800) fn(DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000) fn(DT_N_S_soc_S_peripheral_50000000_S_pint_25000) fn(DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi) fn(DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000) fn(DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_29000) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_2a000) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_2b000) fn(DT_N_S_soc_S_peripheral_50000000_S_pwm_146000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_0) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_1) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_2) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_3) fn(DT_N_S_soc_S_peripheral_50000000_S_gau) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc1_38100) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_acomp_38400) fn(DT_N_S_soc_S_peripheral_50000000_S_timers_13b000) fn(DT_N_S_soc_S_peripheral_50000000_S_nbu) fn(DT_N_S_soc_S_peripheral_50000000_S_hci_ble) fn(DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ptp_clock) fn(DT_N_S_cpus) fn(DT_N_S_cpus_S_cpu_0) fn(DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90) fn(DT_N_S_cpus_S_power_states) fn(DT_N_S_cpus_S_power_states_S_idle) fn(DT_N_S_cpus_S_power_states_S_suspend) fn(DT_N_S_cpus_S_power_states_S_standby) fn(DT_N_S_sram_41380000) fn(DT_N_S_sram_41380000_S_memory_0) fn(DT_N_S_sram_443c0000) fn(DT_N_S_sram_443c0000_S_memory_0) fn(DT_N_S_peripheral_domain) fn(DT_N_S_xtal32) fn(DT_N_S_leds) fn(DT_N_S_leds_S_led_1) fn(DT_N_S_gpio_keys) fn(DT_N_S_gpio_keys_S_button_0) fn(DT_N_S_lcd_pmod_connector) fn(DT_N_S_mikrobus_connector) fn(DT_N_S_arduino_connector)
-#define DT_FOREACH_OKAY_HELPER(fn) fn(DT_N) fn(DT_N_S_chosen) fn(DT_N_S_aliases) fn(DT_N_S_soc) fn(DT_N_S_soc_S_interrupt_controller_e000e100) fn(DT_N_S_soc_S_sram_30000000) fn(DT_N_S_soc_S_sram_30000000_S_memory_40000) fn(DT_N_S_soc_S_sram_30000000_S_memory_0) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_0) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_20000) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000) fn(DT_N_S_soc_S_peripheral_50000000_S_random_14000) fn(DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1) fn(DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000) fn(DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800) fn(DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000) fn(DT_N_S_soc_S_peripheral_50000000_S_pint_25000) fn(DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi) fn(DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000) fn(DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000) fn(DT_N_S_soc_S_peripheral_50000000_S_pwm_146000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000) fn(DT_N_S_soc_S_peripheral_50000000_S_gau) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200) fn(DT_N_S_soc_S_peripheral_50000000_S_timers_13b000) fn(DT_N_S_soc_S_peripheral_50000000_S_nbu) fn(DT_N_S_soc_S_peripheral_50000000_S_hci_ble) fn(DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2) fn(DT_N_S_cpus) fn(DT_N_S_cpus_S_cpu_0) fn(DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90) fn(DT_N_S_cpus_S_power_states) fn(DT_N_S_cpus_S_power_states_S_idle) fn(DT_N_S_cpus_S_power_states_S_suspend) fn(DT_N_S_sram_41380000) fn(DT_N_S_sram_41380000_S_memory_0) fn(DT_N_S_sram_443c0000) fn(DT_N_S_sram_443c0000_S_memory_0) fn(DT_N_S_peripheral_domain) fn(DT_N_S_leds) fn(DT_N_S_leds_S_led_1) fn(DT_N_S_gpio_keys) fn(DT_N_S_gpio_keys_S_button_0) fn(DT_N_S_lcd_pmod_connector) fn(DT_N_S_mikrobus_connector) fn(DT_N_S_arduino_connector)
-#define DT_FOREACH_VARGS_HELPER(fn, ...) fn(DT_N, __VA_ARGS__) fn(DT_N_S_chosen, __VA_ARGS__) fn(DT_N_S_aliases, __VA_ARGS__) fn(DT_N_S_soc, __VA_ARGS__) fn(DT_N_S_soc_S_interrupt_controller_e000e100, __VA_ARGS__) fn(DT_N_S_soc_S_timer_e000e010, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000_S_memory_40000, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000_S_memory_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_20000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_random_14000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_usbh_145000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_106000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_126000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pint_25000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_29000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_2a000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_2b000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pwm_146000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_3, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc1_38100, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_acomp_38400, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_timers_13b000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_nbu, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hci_ble, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ptp_clock, __VA_ARGS__) fn(DT_N_S_cpus, __VA_ARGS__) fn(DT_N_S_cpus_S_cpu_0, __VA_ARGS__) fn(DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_idle, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_suspend, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_standby, __VA_ARGS__) fn(DT_N_S_sram_41380000, __VA_ARGS__) fn(DT_N_S_sram_41380000_S_memory_0, __VA_ARGS__) fn(DT_N_S_sram_443c0000, __VA_ARGS__) fn(DT_N_S_sram_443c0000_S_memory_0, __VA_ARGS__) fn(DT_N_S_peripheral_domain, __VA_ARGS__) fn(DT_N_S_xtal32, __VA_ARGS__) fn(DT_N_S_leds, __VA_ARGS__) fn(DT_N_S_leds_S_led_1, __VA_ARGS__) fn(DT_N_S_gpio_keys, __VA_ARGS__) fn(DT_N_S_gpio_keys_S_button_0, __VA_ARGS__) fn(DT_N_S_lcd_pmod_connector, __VA_ARGS__) fn(DT_N_S_mikrobus_connector, __VA_ARGS__) fn(DT_N_S_arduino_connector, __VA_ARGS__)
-#define DT_FOREACH_OKAY_VARGS_HELPER(fn, ...) fn(DT_N, __VA_ARGS__) fn(DT_N_S_chosen, __VA_ARGS__) fn(DT_N_S_aliases, __VA_ARGS__) fn(DT_N_S_soc, __VA_ARGS__) fn(DT_N_S_soc_S_interrupt_controller_e000e100, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000_S_memory_40000, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000_S_memory_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_20000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_random_14000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pint_25000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pwm_146000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_timers_13b000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_nbu, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hci_ble, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2, __VA_ARGS__) fn(DT_N_S_cpus, __VA_ARGS__) fn(DT_N_S_cpus_S_cpu_0, __VA_ARGS__) fn(DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_idle, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_suspend, __VA_ARGS__) fn(DT_N_S_sram_41380000, __VA_ARGS__) fn(DT_N_S_sram_41380000_S_memory_0, __VA_ARGS__) fn(DT_N_S_sram_443c0000, __VA_ARGS__) fn(DT_N_S_sram_443c0000_S_memory_0, __VA_ARGS__) fn(DT_N_S_peripheral_domain, __VA_ARGS__) fn(DT_N_S_leds, __VA_ARGS__) fn(DT_N_S_leds_S_led_1, __VA_ARGS__) fn(DT_N_S_gpio_keys, __VA_ARGS__) fn(DT_N_S_gpio_keys_S_button_0, __VA_ARGS__) fn(DT_N_S_lcd_pmod_connector, __VA_ARGS__) fn(DT_N_S_mikrobus_connector, __VA_ARGS__) fn(DT_N_S_arduino_connector, __VA_ARGS__)
+#define DT_FOREACH_HELPER(fn) fn(DT_N) fn(DT_N_S_chosen) fn(DT_N_S_aliases) fn(DT_N_S_soc) fn(DT_N_S_soc_S_interrupt_controller_e000e100) fn(DT_N_S_soc_S_timer_e000e010) fn(DT_N_S_soc_S_sram_30000000) fn(DT_N_S_soc_S_sram_30000000_S_memory_40000) fn(DT_N_S_soc_S_sram_30000000_S_memory_0) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_0) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_20000) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1) fn(DT_N_S_soc_S_peripheral_50000000_S_random_14000) fn(DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1) fn(DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000) fn(DT_N_S_soc_S_peripheral_50000000_S_usbh_145000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_106000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_126000) fn(DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800) fn(DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000) fn(DT_N_S_soc_S_peripheral_50000000_S_pint_25000) fn(DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi) fn(DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000) fn(DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_29000) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_2a000) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_2b000) fn(DT_N_S_soc_S_peripheral_50000000_S_pwm_146000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_0) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_1) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_2) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_3) fn(DT_N_S_soc_S_peripheral_50000000_S_gau) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc1_38100) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_acomp_38400) fn(DT_N_S_soc_S_peripheral_50000000_S_timers_13b000) fn(DT_N_S_soc_S_peripheral_50000000_S_nbu) fn(DT_N_S_soc_S_peripheral_50000000_S_hci_ble) fn(DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ptp_clock) fn(DT_N_S_cpus) fn(DT_N_S_cpus_S_cpu_0) fn(DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90) fn(DT_N_S_cpus_S_power_states) fn(DT_N_S_cpus_S_power_states_S_idle) fn(DT_N_S_cpus_S_power_states_S_suspend) fn(DT_N_S_cpus_S_power_states_S_standby) fn(DT_N_S_sram_41380000) fn(DT_N_S_sram_41380000_S_memory_0) fn(DT_N_S_sram_443c0000) fn(DT_N_S_sram_443c0000_S_memory_0) fn(DT_N_S_peripheral_domain) fn(DT_N_S_xtal32) fn(DT_N_S_leds) fn(DT_N_S_leds_S_led_1) fn(DT_N_S_gpio_keys) fn(DT_N_S_gpio_keys_S_button_0) fn(DT_N_S_lcd_pmod_connector) fn(DT_N_S_mikrobus_connector) fn(DT_N_S_arduino_connector)
+#define DT_FOREACH_OKAY_HELPER(fn) fn(DT_N) fn(DT_N_S_chosen) fn(DT_N_S_aliases) fn(DT_N_S_soc) fn(DT_N_S_soc_S_interrupt_controller_e000e100) fn(DT_N_S_soc_S_sram_30000000) fn(DT_N_S_soc_S_sram_30000000_S_memory_40000) fn(DT_N_S_soc_S_sram_30000000_S_memory_0) fn(DT_N_S_soc_S_peripheral_50000000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_0) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_20000) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000) fn(DT_N_S_soc_S_peripheral_50000000_S_random_14000) fn(DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1) fn(DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000) fn(DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800) fn(DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000) fn(DT_N_S_soc_S_peripheral_50000000_S_pint_25000) fn(DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi) fn(DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000) fn(DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000) fn(DT_N_S_soc_S_peripheral_50000000_S_pwm_146000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000) fn(DT_N_S_soc_S_peripheral_50000000_S_gau) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200) fn(DT_N_S_soc_S_peripheral_50000000_S_timers_13b000) fn(DT_N_S_soc_S_peripheral_50000000_S_nbu) fn(DT_N_S_soc_S_peripheral_50000000_S_hci_ble) fn(DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2) fn(DT_N_S_cpus) fn(DT_N_S_cpus_S_cpu_0) fn(DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90) fn(DT_N_S_cpus_S_power_states) fn(DT_N_S_cpus_S_power_states_S_idle) fn(DT_N_S_cpus_S_power_states_S_suspend) fn(DT_N_S_sram_41380000) fn(DT_N_S_sram_41380000_S_memory_0) fn(DT_N_S_sram_443c0000) fn(DT_N_S_sram_443c0000_S_memory_0) fn(DT_N_S_peripheral_domain) fn(DT_N_S_leds) fn(DT_N_S_leds_S_led_1) fn(DT_N_S_gpio_keys) fn(DT_N_S_gpio_keys_S_button_0) fn(DT_N_S_lcd_pmod_connector) fn(DT_N_S_mikrobus_connector) fn(DT_N_S_arduino_connector)
+#define DT_FOREACH_VARGS_HELPER(fn, ...) fn(DT_N, __VA_ARGS__) fn(DT_N_S_chosen, __VA_ARGS__) fn(DT_N_S_aliases, __VA_ARGS__) fn(DT_N_S_soc, __VA_ARGS__) fn(DT_N_S_soc_S_interrupt_controller_e000e100, __VA_ARGS__) fn(DT_N_S_soc_S_timer_e000e010, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000_S_memory_40000, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000_S_memory_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_aps6404l_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_20000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000_S_pin1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_random_14000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_usbh_145000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_106000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_126000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pint_25000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_29000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_2a000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_2b000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pwm_146000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_3, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000_S_mrt1_channel_3, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dmic_121000_S_dmic_channel_3, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc1_38100, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_acomp_38400, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_timers_13b000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_nbu, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hci_ble, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ptp_clock, __VA_ARGS__) fn(DT_N_S_cpus, __VA_ARGS__) fn(DT_N_S_cpus_S_cpu_0, __VA_ARGS__) fn(DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_idle, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_suspend, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_standby, __VA_ARGS__) fn(DT_N_S_sram_41380000, __VA_ARGS__) fn(DT_N_S_sram_41380000_S_memory_0, __VA_ARGS__) fn(DT_N_S_sram_443c0000, __VA_ARGS__) fn(DT_N_S_sram_443c0000_S_memory_0, __VA_ARGS__) fn(DT_N_S_peripheral_domain, __VA_ARGS__) fn(DT_N_S_xtal32, __VA_ARGS__) fn(DT_N_S_leds, __VA_ARGS__) fn(DT_N_S_leds_S_led_1, __VA_ARGS__) fn(DT_N_S_gpio_keys, __VA_ARGS__) fn(DT_N_S_gpio_keys_S_button_0, __VA_ARGS__) fn(DT_N_S_lcd_pmod_connector, __VA_ARGS__) fn(DT_N_S_mikrobus_connector, __VA_ARGS__) fn(DT_N_S_arduino_connector, __VA_ARGS__)
+#define DT_FOREACH_OKAY_VARGS_HELPER(fn, ...) fn(DT_N, __VA_ARGS__) fn(DT_N_S_chosen, __VA_ARGS__) fn(DT_N_S_aliases, __VA_ARGS__) fn(DT_N_S_soc, __VA_ARGS__) fn(DT_N_S_soc_S_interrupt_controller_e000e100, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000_S_memory_40000, __VA_ARGS__) fn(DT_N_S_soc_S_sram_30000000_S_memory_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_320000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_620000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_1000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm3_usart_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm0_usart_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_enet_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_mdio_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm2_i2c_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_spi_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_pwm0_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_lcdic_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_flexcomm1_i2s_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio0_S_group1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_pinmux_hsgpio1_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mci_iomux_4000_S_flexcomm1_spi_default_S_group0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_clkctl_21000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_reset_20000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pmu_31000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_random_14000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_watchdog_e000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hsgpio_100000_S_gpio_1, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_usbotg_145000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_107000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_108000_S_p3t1755_48, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_flexcomm_109000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_aon_soc_ctrl_5000800, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_soc_ctrl_5001000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pint_25000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_nxp_wifi, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_dma_controller_104000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_lcdic_128000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_rtc_30000_S_rtc_highres, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_ctimer_28000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_pwm_146000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_2d000_S_mrt0_channel_0, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_mrt_3f000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_gau_adc0_38000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_gau_S_dac_38200, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_timers_13b000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_nbu, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hci_ble, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_hdlc_rcp_if, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_ethernet, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio, __VA_ARGS__) fn(DT_N_S_soc_S_peripheral_50000000_S_enet_138000_S_mdio_S_phy_2, __VA_ARGS__) fn(DT_N_S_cpus, __VA_ARGS__) fn(DT_N_S_cpus_S_cpu_0, __VA_ARGS__) fn(DT_N_S_cpus_S_cpu_0_S_mpu_e000ed90, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_idle, __VA_ARGS__) fn(DT_N_S_cpus_S_power_states_S_suspend, __VA_ARGS__) fn(DT_N_S_sram_41380000, __VA_ARGS__) fn(DT_N_S_sram_41380000_S_memory_0, __VA_ARGS__) fn(DT_N_S_sram_443c0000, __VA_ARGS__) fn(DT_N_S_sram_443c0000_S_memory_0, __VA_ARGS__) fn(DT_N_S_peripheral_domain, __VA_ARGS__) fn(DT_N_S_leds, __VA_ARGS__) fn(DT_N_S_leds_S_led_1, __VA_ARGS__) fn(DT_N_S_gpio_keys, __VA_ARGS__) fn(DT_N_S_gpio_keys_S_button_0, __VA_ARGS__) fn(DT_N_S_lcd_pmod_connector, __VA_ARGS__) fn(DT_N_S_mikrobus_connector, __VA_ARGS__) fn(DT_N_S_arduino_connector, __VA_ARGS__)
 #define DT_COMPAT_fixed_partitions_LABEL_mcuboot DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_0
 #define DT_COMPAT_fixed_partitions_LABEL_mcuboot_EXISTS 1
 #define DT_COMPAT_fixed_partitions_LABEL_image_0 DT_N_S_soc_S_peripheral_50000000_S_spi_134000_S_w25q512jvfiq_0_S_partitions_S_partition_20000

@@ -269,12 +269,12 @@ static bool run_dual_motor_simul_cycle(void)
  * independent speeds, run concurrently, then stopped together. */
 static bool run_quad_simultaneous_cycle(void)
 {
-    static const uint32_t m0_speeds[] = { 200u, 320u };
-    static const uint32_t m1_speeds[] = { 340u, 220u };
-    static const uint32_t m2_speeds[] = { 260u, 360u };
-    static const uint32_t m3_speeds[] = { 300u, 180u };
-    static const uint32_t RUN_MS      = 1500u;
-    static const uint32_t GAP_MS      = 300u;
+    static const uint32_t m0_speeds[] = { 200u, 650u, 1100u };
+    static const uint32_t m1_speeds[] = { 500u, 1000u, 250u };
+    static const uint32_t m2_speeds[] = { 800u, 300u, 900u };
+    static const uint32_t m3_speeds[] = { 1100u, 750u, 450u };
+    static const uint32_t RUN_MS      = 3000u;
+    static const uint32_t GAP_MS      = 500u;
     const size_t NUM_ROUNDS = ARRAY_SIZE(m0_speeds);
     bool all_ok = true;
     enum DBC_Error target_err;
@@ -309,7 +309,16 @@ static bool run_quad_simultaneous_cycle(void)
                        (uint32_t)(i + 1u), motor, err);
                 all_ok = false;
             }
+        }
 
+        /* Issue enable commands in a second pass so all motors start closer in time. */
+        for (uint8_t motor = 0u; motor < 4u; motor++) {
+            target_err = DBCDRV_setSpiTarget(target_for_motor(motor));
+            if (target_err != DBC_OK) {
+                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u target-enable err=%d\n",
+                       (uint32_t)(i + 1u), motor, target_err);
+                all_ok = false;
+            }
             err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 1u);
             if (err != DBC_OK) {
                 printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u enable err=%d\n",
