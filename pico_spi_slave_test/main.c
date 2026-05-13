@@ -21,6 +21,13 @@
 #define PICO_HEARTBEAT_ENABLE 1
 #define PICO_STARTUP_SELF_TEST 0
 #define PICO_DIAG_FORCE_MOTOR0_ONLY 0
+/* Build this firmware separately for each Pico side:
+ * - PICO_NODE_SLOT=1 => owns logical motors 0 (A) and 2 (B)
+ * - PICO_NODE_SLOT=2 => owns logical motors 1 (A) and 3 (B)
+ */
+#ifndef PICO_NODE_SLOT
+#define PICO_NODE_SLOT 1
+#endif
 #define CS_END_DRAIN_TIMEOUT_US 200u
 #define CS_END_DRAIN_IDLE_US 20u
 #define RX_ACCUM_GAP_RESET_US 3000u
@@ -101,7 +108,7 @@ static void led_update_from_distance(uint32_t dist_mm);
 #define DBAL_CRC_INIT 0xFFu
 
 #define MOTOR_COUNT 4
-#define ACTIVE_MOTOR_COUNT 2
+#define LOCAL_MOTOR_COUNT 2
 #define MOTOR_REG_BASE   0x5000u
 #define MOTOR_REG_STRIDE 0x10u
 #define MOTOR_REG_ENABLE_OFFSET   0x0u
@@ -348,6 +355,40 @@ static const char *const motor_names[MOTOR_COUNT] = {
     "motor4",
 };
 
+#if PICO_NODE_SLOT == 1
+#define LOCAL_LOGICAL_MOTOR_A 0u
+#define LOCAL_LOGICAL_MOTOR_B 2u
+#elif PICO_NODE_SLOT == 2
+#define LOCAL_LOGICAL_MOTOR_A 1u
+#define LOCAL_LOGICAL_MOTOR_B 3u
+#else
+#error "PICO_NODE_SLOT must be 1 or 2"
+#endif
+
+static bool logical_motor_to_local_slot(size_t logical_index, size_t *local_slot)
+{
+    if (logical_index == LOCAL_LOGICAL_MOTOR_A) {
+        *local_slot = 0u;
+        return true;
+    }
+    if (logical_index == LOCAL_LOGICAL_MOTOR_B) {
+        *local_slot = 1u;
+        return true;
+    }
+    return false;
+}
+
+static size_t local_peer_logical_motor(size_t logical_index)
+{
+    return (logical_index == LOCAL_LOGICAL_MOTOR_A) ? LOCAL_LOGICAL_MOTOR_B : LOCAL_LOGICAL_MOTOR_A;
+}
+
+static bool any_local_motor_enabled(void)
+{
+    return (motors[LOCAL_LOGICAL_MOTOR_A].enable != 0u) ||
+           (motors[LOCAL_LOGICAL_MOTOR_B].enable != 0u);
+}
+
 typedef enum {
     SONIC_IDLE = 0,
     SONIC_WAIT_RISE,
@@ -581,26 +622,32 @@ static uint16_t speed_to_pwm_level(int32_t speed_setpoint)
 
 static void apply_motor_outputs(size_t motor_index)
 {
-    if (motor_index >= ACTIVE_MOTOR_COUNT) {
+    size_t local_slot = 0u;
+
+    if (motor_index >= MOTOR_COUNT) {
         return;
     }
 
-    /* TB6612 STBY is shared on each board; keep it high if any active motor
-     * index on this board is enabled. */
-    bool stby_needed = (motors[0].enable != 0u) || (motors[1].enable != 0u);
+    if (!logical_motor_to_local_slot(motor_index, &local_slot)) {
+        return;
+    }
+
+    /* TB6612 STBY is shared on each board; keep it high if any locally owned
+     * logical motor is enabled. */
+    bool stby_needed = any_local_motor_enabled();
 
 #if PICO_DIAG_FORCE_MOTOR0_ONLY
-    if (motor_index == 1u) {
-        /* Diagnostic isolation mode: channel B is forced off regardless of
-         * incoming commands. If both motors still spin, issue is hardware. */
+    if (local_slot == 1u) {
+        /* Diagnostic isolation mode: local channel B is forced off regardless
+         * of incoming commands. */
         gpio_put(PIN_MOTOR_BIN1, 0);
         gpio_put(PIN_MOTOR_BIN2, 0);
         pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
-        motors[1].enable = 0u;
-        motors[1].speed_setpoint = 0;
-        motors[1].speed_feedback = 0;
-        motors[1].status = MOTOR_STATUS_AVAILABLE;
-        stby_needed = (motors[0].enable != 0u);
+        motors[motor_index].enable = 0u;
+        motors[motor_index].speed_setpoint = 0;
+        motors[motor_index].speed_feedback = 0;
+        motors[motor_index].status = MOTOR_STATUS_AVAILABLE;
+        stby_needed = any_local_motor_enabled();
         gpio_put(PIN_MOTOR_STBY, stby_needed ? 1 : 0);
         return;
     }
@@ -610,16 +657,28 @@ static void apply_motor_outputs(size_t motor_index)
     int32_t speed = motors[motor_index].speed_setpoint;
     bool forward = speed >= 0;
 
-    /* Both physical motor drivers in this setup use channel A. Motor index 1
-     * is mapped to the same A-output path on its own board. */
-    if (!enabled || speed == 0) {
-        gpio_put(PIN_MOTOR_AIN1, 0);
-        gpio_put(PIN_MOTOR_AIN2, 0);
-        pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
+    if (local_slot == 0u) {
+        /* Local channel A */
+        if (!enabled || speed == 0) {
+            gpio_put(PIN_MOTOR_AIN1, 0);
+            gpio_put(PIN_MOTOR_AIN2, 0);
+            pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, 0u);
+        } else {
+            gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
+            gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
+            pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
+        }
     } else {
-        gpio_put(PIN_MOTOR_AIN1, forward ? 1 : 0);
-        gpio_put(PIN_MOTOR_AIN2, forward ? 0 : 1);
-        pwm_set_chan_level(motor_pwma_slice, motor_pwma_channel, speed_to_pwm_level(speed));
+        /* Local channel B */
+        if (!enabled || speed == 0) {
+            gpio_put(PIN_MOTOR_BIN1, 0);
+            gpio_put(PIN_MOTOR_BIN2, 0);
+            pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, 0u);
+        } else {
+            gpio_put(PIN_MOTOR_BIN1, forward ? 1 : 0);
+            gpio_put(PIN_MOTOR_BIN2, forward ? 0 : 1);
+            pwm_set_chan_level(motor_pwmb_slice, motor_pwmb_channel, speed_to_pwm_level(speed));
+        }
     }
 
     gpio_put(PIN_MOTOR_STBY, stby_needed ? 1 : 0);
@@ -890,33 +949,35 @@ static void motor_write(uint16_t addr, uint32_t value)
         return;
     }
 
-    if (index >= ACTIVE_MOTOR_COUNT) {
+    if (index >= MOTOR_COUNT) {
         return;
     }
 
+    {
+        size_t local_slot = 0u;
+        if (!logical_motor_to_local_slot(index, &local_slot)) {
+            return;
+        }
+    }
+
 #if PICO_DIAG_FORCE_MOTOR0_ONLY
-    if (index == 1u) {
-        /* Ignore channel-B commands in isolation mode and keep outputs low. */
-        motors[1].enable = 0u;
-        motors[1].speed_setpoint = 0;
-        motors[1].speed_feedback = 0;
-        motors[1].status = MOTOR_STATUS_AVAILABLE;
-        apply_motor_outputs(1u);
-        return;
+    {
+        size_t local_slot = 0u;
+        if (logical_motor_to_local_slot(index, &local_slot) && local_slot == 1u) {
+            /* Ignore local channel-B commands in isolation mode and keep outputs low. */
+            motors[index].enable = 0u;
+            motors[index].speed_setpoint = 0;
+            motors[index].speed_feedback = 0;
+            motors[index].status = MOTOR_STATUS_AVAILABLE;
+            apply_motor_outputs(index);
+            return;
+        }
     }
 #endif
 
     switch (offset) {
         case MOTOR_REG_ENABLE_OFFSET:
             motors[index].enable = (value != 0u) ? 1u : 0u;
-            if (motors[index].enable != 0u) {
-                /* Enforce one-hot mode: only one active motor at a time. */
-                size_t other = (index == 0u) ? 1u : 0u;
-                motors[other].enable = 0u;
-                motors[other].speed_setpoint = 0;
-                motors[other].speed_feedback = 0;
-                motors[other].status = MOTOR_STATUS_AVAILABLE;
-            }
             motors[index].status = MOTOR_STATUS_AVAILABLE |
                                    (motors[index].enable ? MOTOR_STATUS_ENABLED : 0u);
             if (!motors[index].enable) {
@@ -927,15 +988,6 @@ static void motor_write(uint16_t addr, uint32_t value)
             break;
         case MOTOR_REG_SPEED_OFFSET:
             motors[index].speed_setpoint = (int32_t)value;
-            if ((motors[index].enable != 0u) && (motors[index].speed_setpoint != 0)) {
-                /* If one motor is actively commanded to move, hard-disable the
-                 * other channel to prevent overlap from out-of-order frames. */
-                size_t other = (index == 0u) ? 1u : 0u;
-                motors[other].enable = 0u;
-                motors[other].speed_setpoint = 0;
-                motors[other].speed_feedback = 0;
-                motors[other].status = MOTOR_STATUS_AVAILABLE;
-            }
             if (motors[index].enable) {
                 motors[index].speed_feedback = motors[index].speed_setpoint;
             } else {
@@ -971,22 +1023,11 @@ static uint32_t motor_read(uint16_t addr)
     }
 }
 
+/* Pre-distort desired TX bytes for the observed serial bit-slippage on the
+ * link by carrying each byte's MSB into the previous byte's LSB. After the
+ * link's SERIAL_ROR1 transform the RW612 receives the intended TX frame. */
 static void prepare_tx_frame_wire(void)
 {
-    /* The link applies SERIAL_ROR1 (1-bit right-shift of the entire MISO bit
-     * stream, carry propagates from LSB of each byte to MSB of the next).
-     * Pre-compensate with SERIAL_ROL1 (1-bit left-shift, carry from MSB of
-     * each byte into LSB of the previous byte) so that after the link's
-     * SERIAL_ROR1 the RW612 receives the intended TX frame exactly.
-     *
-     * W[i] = (desired[i] << 1) | (desired[i+1] >> 7)  for i < FRAME_SIZE-1
-     * W[FRAME_SIZE-1] = desired[FRAME_SIZE-1] << 1
-     *
-     * This is subtle: per-byte ROL1 is correct for bytes where the LSB from
-     * the carry chain happens to match bit7 of the same byte, but fails when
-     * adjacent bytes have differing MSBs (e.g. 0xb0 followed by 0x04, or the
-     * len=0x01 byte preceding 0xaa data).
-     */
     for (size_t i = 0u; i < (FRAME_SIZE - 1u); i++) {
         tx_frame_wire[i] = (uint8_t)((tx_frame_desired[i] << 1u) | (tx_frame_desired[i + 1u] >> 7u));
     }
@@ -1581,10 +1622,16 @@ int main(void)
     sleep_ms(50); // Keep startup short so SPI slave is ready before RW612 traffic starts
     printf("[Pico SPI Slave] FW_ID=%s\n", FW_ID_MAIN);
     printf("[Pico SPI Slave] Firmware version: %s\n", PICO_FIRMWARE_VERSION);
+    printf("[Pico SPI Slave] Node slot=%u logical-map: A->motor%u B->motor%u\n",
+           (unsigned)PICO_NODE_SLOT,
+           (unsigned)(LOCAL_LOGICAL_MOTOR_A + 1u),
+           (unsigned)(LOCAL_LOGICAL_MOTOR_B + 1u));
         printf("[Pico SPI Slave] SPI0 pins: MOSI=GP%u CSn=GP%u SCK=GP%u MISO=GP%u\n",
             PIN_MOSI, PIN_CS, PIN_SCK, PIN_MISO);
-        printf("[Pico SPI Slave] Motor1 pins: PWMA=GP%u STBY=GP%u AIN1=GP%u AIN2=GP%u\n",
+        printf("[Pico SPI Slave] MotorA pins: PWMA=GP%u STBY=GP%u AIN1=GP%u AIN2=GP%u\n",
             PIN_MOTOR_PWMA, PIN_MOTOR_STBY, PIN_MOTOR_AIN1, PIN_MOTOR_AIN2);
+        printf("[Pico SPI Slave] MotorB pins: PWMB=GP%u STBY=GP%u BIN1=GP%u BIN2=GP%u\n",
+            PIN_MOTOR_PWMB, PIN_MOTOR_STBY, PIN_MOTOR_BIN1, PIN_MOTOR_BIN2);
     uint32_t last_heartbeat_ms = 0;
     bool led_on = false;
     
@@ -1598,8 +1645,10 @@ int main(void)
     sonic_init();
     lcd_init_1602();
     for (size_t i = 0; i < MOTOR_COUNT; i++) {
-        motors[i].status = (i < ACTIVE_MOTOR_COUNT) ? MOTOR_STATUS_AVAILABLE : 0u;
+        motors[i].status = 0u;
     }
+    motors[LOCAL_LOGICAL_MOTOR_A].status = MOTOR_STATUS_AVAILABLE;
+    motors[LOCAL_LOGICAL_MOTOR_B].status = MOTOR_STATUS_AVAILABLE;
     memset(rx_frame_raw, 0, sizeof(rx_frame_raw));
     set_default_tx_pattern();
     mark_spi_activity();
@@ -1737,16 +1786,16 @@ int main(void)
                                  * arrived in the last 15 seconds, force all motors off. This handles
                                  * the case where the RW612 reboots mid-test and never sends disable. */
                                 {
-                                    bool any_motor_on = (motors[0].enable != 0u) || (motors[1].enable != 0u);
+                                    bool any_motor_on = any_local_motor_enabled();
                                     bool timed_out = (last_motor_cmd_ms > 0u) &&
                                                      ((now_ms - last_motor_cmd_ms) >= 15000u);
                                     if (any_motor_on && timed_out && !motor_deadman_fired) {
                                         motor_deadman_fired = true;
                                         printf("[Pico DEADMAN] No motor cmd for 15s - forcing all motors OFF\n");
-                                        motors[0].enable = 0u;
-                                        motors[1].enable = 0u;
-                                        apply_motor_outputs(0u);
-                                        apply_motor_outputs(1u);
+                                        motors[LOCAL_LOGICAL_MOTOR_A].enable = 0u;
+                                        motors[LOCAL_LOGICAL_MOTOR_B].enable = 0u;
+                                        apply_motor_outputs(LOCAL_LOGICAL_MOTOR_A);
+                                        apply_motor_outputs(LOCAL_LOGICAL_MOTOR_B);
                                     }
                                 }
 
@@ -1768,7 +1817,7 @@ int main(void)
                              }
                          }
                          if (gpe_pos == 0) { snprintf(gpe_str, sizeof(gpe_str), "(none)"); }
-                         printf("[Pico SPI Slave] alive fw=%s version=%s cs=%u rx=%u tx=%u rxt=%lu scke=%lu most=%lu gpe_mask=0x%08lx gpe=[%s] f8=%lu f8ok=%lu f8w=%lu f8r=%lu f8mw=%lu f8s=%lu f8sok=%lu lfr=%02x%02x%02x%02x%02x%02x%02x%02x lf8_cmd=0x%02x lf8_addr=0x%04x lf8_val=0x%08lx fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld m0_en=%u m0_spd=%ld m1_en=%u m1_spd=%ld\n",
+                                                 printf("[Pico SPI Slave] alive fw=%s version=%s cs=%u rx=%u tx=%u rxt=%lu scke=%lu most=%lu gpe_mask=0x%08lx gpe=[%s] f8=%lu f8ok=%lu f8w=%lu f8r=%lu f8mw=%lu f8s=%lu f8sok=%lu lfr=%02x%02x%02x%02x%02x%02x%02x%02x lf8_cmd=0x%02x lf8_addr=0x%04x lf8_val=0x%08lx fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld mA_idx=%u mA_en=%u mA_spd=%ld mB_idx=%u mB_en=%u mB_spd=%ld\n",
                      FW_ID_MAIN,
                    PICO_FIRMWARE_VERSION,
                    cs_active ? 1u : 0u,
@@ -1808,10 +1857,12 @@ int main(void)
                    (unsigned)last_command_id,
                    (unsigned)last_motor_index,
                    (long)last_motor_value,
-                   (unsigned)motors[0].enable,
-                   (long)motors[0].speed_setpoint,
-                   (unsigned)motors[1].enable,
-                   (long)motors[1].speed_setpoint);
+                   (unsigned)(LOCAL_LOGICAL_MOTOR_A + 1u),
+                   (unsigned)motors[LOCAL_LOGICAL_MOTOR_A].enable,
+                   (long)motors[LOCAL_LOGICAL_MOTOR_A].speed_setpoint,
+                   (unsigned)(LOCAL_LOGICAL_MOTOR_B + 1u),
+                   (unsigned)motors[LOCAL_LOGICAL_MOTOR_B].enable,
+                   (long)motors[LOCAL_LOGICAL_MOTOR_B].speed_setpoint);
             last_heartbeat_ms = now_ms;
         }
 
