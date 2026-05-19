@@ -23,14 +23,14 @@
 #define DBAL_TEST_SERVICE_ID   0x7001u
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
-#define RW612_BUILD_MARKER "RW612 build marker: AUTO_TEST_ON_QUAD_SIMULTANEOUS_2026_05_13"
+#define RW612_BUILD_MARKER "RW612 build marker: SCK_PROBE_ONLY_2026_05_19_A"
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 1u
 #endif
 
 #ifndef DBUS_ENABLE_AUTO_MOTOR_TEST
-#define DBUS_ENABLE_AUTO_MOTOR_TEST 1
+#define DBUS_ENABLE_AUTO_MOTOR_TEST 0
 #endif
 
 #ifndef DBUS_CONTINUOUS_SECONDARY_TEST
@@ -55,7 +55,7 @@
  * This mode pulses GPIO7 as plain GPIO and exits, so Pico can confirm
  * GP18 edge counting independent of Flexcomm SPI traffic. */
 #ifndef DBUS_SCK_PROBE_ONLY
-#define DBUS_SCK_PROBE_ONLY 0
+#define DBUS_SCK_PROBE_ONLY 1
 #endif
 
 /* Isolation mode for Pico2 clocking debug:
@@ -64,11 +64,15 @@
  * This removes cross-target side effects and guarantees the known
  * Flexcomm SCK-gate condition while measuring Pico2 RX behavior. */
 #ifndef DBUS_FORCE_SECONDARY_ONLY
-#define DBUS_FORCE_SECONDARY_ONLY 0
+#define DBUS_FORCE_SECONDARY_ONLY 1
 #endif
 
 #ifndef DBUS_SKIP_GPIO_PROBES
 #define DBUS_SKIP_GPIO_PROBES 1
+#endif
+
+#ifndef DBUS_ENABLE_READBACK_PROBE
+#define DBUS_ENABLE_READBACK_PROBE 1
 #endif
 
 static void pulse_gpio_probe_pin(const struct device *gpio_dev,
@@ -142,6 +146,27 @@ static enum DBC_Error write_motor_reg32(uint8_t motor_index, uint16_t reg_offset
            (unsigned)addr,
            (unsigned)value,
            err);
+
+    return err;
+}
+
+static enum DBC_Error read_motor_reg32(uint8_t motor_index, uint16_t reg_offset, uint32_t *value)
+{
+    uint16_t addr = (uint16_t)(MOTOR_REG_BASE + ((uint16_t)motor_index * MOTOR_REG_STRIDE) + reg_offset);
+    enum DBC_Error err = DBCDRV_readReg32((enum DBC_RegAddr)addr, value);
+
+    if (err == DBC_OK) {
+        printk("Main: DIRECT_REG_READ motor=%u addr=0x%04x val=0x%08x err=%d\n",
+               (unsigned)motor_index,
+               (unsigned)addr,
+               (unsigned)*value,
+               err);
+    } else {
+        printk("Main: DIRECT_REG_READ motor=%u addr=0x%04x err=%d\n",
+               (unsigned)motor_index,
+               (unsigned)addr,
+               err);
+    }
 
     return err;
 }
@@ -265,6 +290,97 @@ static bool run_dual_motor_simul_cycle(void)
     return all_ok;
 }
 
+static bool run_secondary_only_cycle(void)
+{
+    static const uint8_t motors[] = { 1u, 3u };
+    static const uint32_t m1_speeds[] = { 360u, 180u };
+    static const uint32_t m3_speeds[] = { 320u, 200u };
+    static const uint32_t RUN_MS      = 1200u;
+    static const uint32_t GAP_MS      = 250u;
+    const size_t NUM_ROUNDS = ARRAY_SIZE(m1_speeds);
+    bool all_ok = true;
+
+    printk("Motor Toggle [SECONDARY_ONLY_V1]: Starting %u rounds.\n", (uint32_t)NUM_ROUNDS);
+
+    for (size_t i = 0u; i < NUM_ROUNDS; i++) {
+        const uint32_t speeds[] = { m1_speeds[i], m3_speeds[i] };
+
+        printk("Motor Toggle [SECONDARY_ONLY_V1]: round %u/%u speeds m1=%u m3=%u\n",
+               (uint32_t)(i + 1u), (uint32_t)NUM_ROUNDS,
+               (unsigned)m1_speeds[i], (unsigned)m3_speeds[i]);
+
+        for (size_t idx = 0u; idx < ARRAY_SIZE(motors); idx++) {
+            uint8_t motor = motors[idx];
+            enum DBC_Error target_err;
+            enum DBC_Error err;
+
+            target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO);
+            if (target_err != DBC_OK) {
+                printk("Motor Toggle [SECONDARY_ONLY_V1]: round %u motor%u target err=%d\n",
+                       (uint32_t)(i + 1u), motor, target_err);
+                all_ok = false;
+            }
+            k_usleep(100u);
+
+            err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+            if (err != DBC_OK) {
+                printk("Motor Toggle [SECONDARY_ONLY_V1]: round %u motor%u pre disable err=%d\n",
+                       (uint32_t)(i + 1u), motor, err);
+                all_ok = false;
+            }
+
+            err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, 0u);
+            if (err != DBC_OK) {
+                printk("Motor Toggle [SECONDARY_ONLY_V1]: round %u motor%u pre speed0 err=%d\n",
+                       (uint32_t)(i + 1u), motor, err);
+                all_ok = false;
+            }
+
+            err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 1u);
+            if (err != DBC_OK) {
+                printk("Motor Toggle [SECONDARY_ONLY_V1]: round %u motor%u enable err=%d\n",
+                       (uint32_t)(i + 1u), motor, err);
+                all_ok = false;
+            }
+
+            err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, speeds[idx]);
+            if (err != DBC_OK) {
+                printk("Motor Toggle [SECONDARY_ONLY_V1]: round %u motor%u speed err=%d\n",
+                       (uint32_t)(i + 1u), motor, err);
+                all_ok = false;
+            }
+
+            printk("Motor Toggle [SECONDARY_ONLY_V1]: round %u motor%u running at %u for %ums\n",
+                   (uint32_t)(i + 1u), motor, (unsigned)speeds[idx], (unsigned)RUN_MS);
+            k_msleep(RUN_MS);
+
+            err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+            if (err != DBC_OK) {
+                printk("Motor Toggle [SECONDARY_ONLY_V1]: round %u motor%u disable err=%d\n",
+                       (uint32_t)(i + 1u), motor, err);
+                all_ok = false;
+            }
+
+            k_msleep(GAP_MS);
+        }
+    }
+
+    printk("Motor Toggle [SECONDARY_ONLY_V1]: All rounds complete.\n");
+    printk("Motor Toggle [SECONDARY_ONLY_V1]: final shutdown sequence\n");
+
+    for (uint8_t attempt = 0u; attempt < 5u; attempt++) {
+        k_msleep(100u);
+        (void)DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO);
+        (void)write_motor_reg32(1u, MOTOR_REG_ENABLE_OFFSET, 0u);
+        (void)write_motor_reg32(3u, MOTOR_REG_ENABLE_OFFSET, 0u);
+        printk("Motor Toggle [SECONDARY_ONLY_V1]: shutdown attempt %u/5\n",
+               (unsigned)(attempt + 1u));
+    }
+
+    printk("Motor Toggle [SECONDARY_ONLY_V1]: shutdown complete.\n");
+    return all_ok;
+}
+
 /* Finite test where all 4 motors are enabled in each round with
  * independent speeds, run concurrently, then stopped together. */
 static bool run_quad_simultaneous_cycle(void)
@@ -362,7 +478,83 @@ static bool run_toggle_cycle_for_target(enum DBCDRV_SpiTarget target, const char
         return false;
     }
 
+#if DBUS_FORCE_SECONDARY_ONLY
+    if (target == DBCDRV_SPI_TARGET_SECONDARY_PICO) {
+        return run_secondary_only_cycle();
+    }
+#endif
+
     return run_dual_motor_simul_cycle();
+}
+
+static void run_readback_probe(void)
+{
+#if DBUS_ENABLE_READBACK_PROBE
+#if DBUS_FORCE_SECONDARY_ONLY
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } probes[] = {
+        { 1u, 0x00000456u },
+    };
+#else
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } probes[] = {
+        { 0u, 0x00000123u },
+        { 1u, 0x00000456u },
+    };
+#endif
+
+    printk("Main: readback probe start\n");
+
+    for (size_t i = 0u; i < ARRAY_SIZE(probes); i++) {
+        uint32_t read_value = 0u;
+        enum DBC_Error err;
+
+        err = DBCDRV_setSpiTarget(target_for_motor(probes[i].motor));
+        printk("Main: readback probe target motor=%u err=%d\n",
+               (unsigned)probes[i].motor,
+               err);
+        if (err != DBC_OK) {
+            continue;
+        }
+
+        err = write_motor_reg32(probes[i].motor, MOTOR_REG_SPEED_OFFSET, probes[i].speed);
+        if (err != DBC_OK) {
+            printk("Main: readback probe write failed motor=%u err=%d\n",
+                   (unsigned)probes[i].motor,
+                   err);
+            continue;
+        }
+
+         err = write_motor_reg32(probes[i].motor, MOTOR_REG_ENABLE_OFFSET, 1u);
+         if (err != DBC_OK) {
+             printk("Main: readback probe enable failed motor=%u err=%d\n",
+                 (unsigned)probes[i].motor,
+                 err);
+             continue;
+         }
+
+         printk("Main: readback probe motor=%u visible run start\n",
+             (unsigned)probes[i].motor);
+         k_msleep(300u);
+
+        k_usleep(200u);
+
+        err = read_motor_reg32(probes[i].motor, MOTOR_REG_SPEED_OFFSET, &read_value);
+        printk("Main: readback probe result motor=%u expected=0x%08x got=0x%08x err=%d\n",
+               (unsigned)probes[i].motor,
+               (unsigned)probes[i].speed,
+               (unsigned)read_value,
+               err);
+
+         (void)write_motor_reg32(probes[i].motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+    }
+
+    printk("Main: readback probe end\n");
+#endif
 }
 
 static uint32_t g_secondary_cycle_counter = 0u;
@@ -423,8 +615,10 @@ int main(void)
     (void)probe_gpio;
 #endif
 
+#if !DBUS_DISABLE_DBAL_BOOTSTRAP
     (void)lcd_service_clear(0u);
     (void)lcd_service_print(0u, 0u, 0u, "DBAL READY");
+#endif
 
     /* Wait for Pico SPI slave to complete its startup. */
     k_msleep(1000);
@@ -432,18 +626,20 @@ int main(void)
     /* Boot-time pre-disable: ensure motors start OFF even if a previous
      * firmware run left them enabled (e.g. after a reboot).
      * Mapping: PRIMARY owns motors 0+2, SECONDARY owns motors 1+3. */
-    printk("Main: boot-time motor pre-disable\n");
+    printk("Main: boot-time motor pre-disable%s\n",
+           DBUS_FORCE_SECONDARY_ONLY ? " (secondary-only)" : "");
     for (uint8_t pd = 0u; pd < 3u; pd++) {
+#if !DBUS_FORCE_SECONDARY_ONLY
         /* Disable motors 0+2 on PRIMARY */
         target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
         (void)write_motor_reg32(0u, MOTOR_REG_ENABLE_OFFSET, 0u);
         (void)write_motor_reg32(2u, MOTOR_REG_ENABLE_OFFSET, 0u);
-        
+#endif
         /* Disable motors 1+3 on SECONDARY */
         target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO);
         (void)write_motor_reg32(1u, MOTOR_REG_ENABLE_OFFSET, 0u);
         (void)write_motor_reg32(3u, MOTOR_REG_ENABLE_OFFSET, 0u);
-        
+
         k_msleep(150u);
     }
     printk("Main: boot-time pre-disable done\n");
@@ -454,8 +650,14 @@ int main(void)
 
             printk("\n==== Repeat Run %u/%u ====\n", run, DBUS_REPEATABILITY_RUNS);
 
-            printk("Main: starting QUAD simultaneous motor test (motor0..motor3)\n");
-            toggle_ok = run_quad_simultaneous_cycle();
+            if (DBUS_FORCE_SECONDARY_ONLY) {
+                printk("Main: starting secondary-only motor test (motor1,motor3)\n");
+                toggle_ok = run_toggle_cycle_for_target(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                                        "secondary_only_cycle");
+            } else {
+                printk("Main: starting QUAD simultaneous motor test (motor0..motor3)\n");
+                toggle_ok = run_quad_simultaneous_cycle();
+            }
 
             if (toggle_ok) {
                 run_pass++;
@@ -510,16 +712,21 @@ int main(void)
 #endif
 
     /* Final stop command burst before exit. */
-    printk("Main: final motor stop before exit\n");
+    printk("Main: final motor stop before exit%s\n",
+           DBUS_FORCE_SECONDARY_ONLY ? " (secondary-only)" : "");
     for (uint8_t i = 0u; i < 3u; i++) {
+#if !DBUS_FORCE_SECONDARY_ONLY
         target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
         (void)write_motor_reg32(0u, MOTOR_REG_ENABLE_OFFSET, 0u);
         (void)write_motor_reg32(2u, MOTOR_REG_ENABLE_OFFSET, 0u);
+#endif
         target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO);
         (void)write_motor_reg32(1u, MOTOR_REG_ENABLE_OFFSET, 0u);
         (void)write_motor_reg32(3u, MOTOR_REG_ENABLE_OFFSET, 0u);
         k_msleep(100u);
     }
+
+    run_readback_probe();
 
     printk("Main: test complete, exiting main\n");
     return 0;

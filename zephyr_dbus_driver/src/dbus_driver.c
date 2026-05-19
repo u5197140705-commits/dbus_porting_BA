@@ -112,77 +112,15 @@ static int dbus_drv_set_cs_state(enum DBCDRV_SpiTarget target, bool asserted)
     /* Flexcomm SSEL0 (GPIO6) is handled natively by the SPI controller.
      * We manually drive only GPIO10 for selecting the secondary Pico. */
     if (target == DBCDRV_SPI_TARGET_SECONDARY_PICO) {
-        int observed;
-        int ret;
+        int ret = gpio_pin_set(dbus_cs_gpio_dev,
+                               DBUS_CS_GPIO_SECONDARY_PIN,
+                               asserted ? 0u : 1u);
 
-        /* Re-assert GPIO ownership/direction defensively in case another
-         * component changed pin mode at runtime. */
-        ret = gpio_pin_configure(dbus_cs_gpio_dev,
-                                 DBUS_CS_GPIO_SECONDARY_PIN,
-                                 GPIO_OUTPUT_HIGH);
         if (ret < 0) {
             return ret;
         }
 
-        if (asserted) {
-            /* Force a clean high->low edge even if line was left low. */
-            ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 1u);
-            if (ret < 0) {
-                return ret;
-            }
-            k_usleep(1u);
-            ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 0u);
-            if (ret < 0) {
-                return ret;
-            }
-            observed = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
-            if (observed < 0) {
-                return observed;
-            }
-            if (observed != 0) {
-                k_usleep(2u);
-                ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 0u);
-                if (ret < 0) {
-                    return ret;
-                }
-                observed = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
-                if (observed < 0) {
-                    return observed;
-                }
-                if (observed != 0) {
-                    LOG_ERR("secondary CS assert failed: gpio10=%d", observed);
-                    return -EIO;
-                }
-            }
-            return 0;
-        }
-
-        {
-            ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 1u);
-            if (ret < 0) {
-                return ret;
-            }
-            observed = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
-            if (observed < 0) {
-                return observed;
-            }
-            if (observed != 1) {
-                k_usleep(2u);
-                ret = gpio_pin_set(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN, 1u);
-                if (ret < 0) {
-                    return ret;
-                }
-                observed = gpio_pin_get(dbus_cs_gpio_dev, DBUS_CS_GPIO_SECONDARY_PIN);
-                if (observed < 0) {
-                    return observed;
-                }
-                if (observed != 1) {
-                    LOG_ERR("secondary CS deassert failed: gpio10=%d", observed);
-                    return -EIO;
-                }
-            }
-            return 0;
-        }
+        return 0;
     }
 
     return 0;
@@ -540,7 +478,7 @@ static int DBCDRV_spiTransceiveBytewise(const uint8_t *tx_data, uint8_t *rx_data
     }
 
     struct spi_buf rx_spi_buf = {
-        .buf = (void *)rx_data,
+        .buf = rx_data,
         .len = len,
     };
     struct spi_buf_set rx_bufs = {
@@ -736,6 +674,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     k_usleep(DBCDRV_SPI_DUMMY_GAP_US);
 
     for (uint8_t attempt = 1; attempt <= DBCDRV_SPI_DUMMY_RETRIES; attempt++) {
+        DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_READ, dummy_tx);
         memset(data_rx, 0, sizeof(data_rx));
 
         if (dbus_drv_set_cs_state(dbus_spi_target, true) < 0) {
