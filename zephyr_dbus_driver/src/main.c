@@ -23,7 +23,7 @@
 #define DBAL_TEST_SERVICE_ID   0x7001u
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
-#define RW612_BUILD_MARKER "RW612 build marker: SCK_PROBE_ONLY_2026_05_19_A"
+#define RW612_BUILD_MARKER "RW612 build marker: SECONDARY_READBACK_V1_2026_05_19"
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 1u
@@ -55,7 +55,7 @@
  * This mode pulses GPIO7 as plain GPIO and exits, so Pico can confirm
  * GP18 edge counting independent of Flexcomm SPI traffic. */
 #ifndef DBUS_SCK_PROBE_ONLY
-#define DBUS_SCK_PROBE_ONLY 1
+#define DBUS_SCK_PROBE_ONLY 0
 #endif
 
 /* Isolation mode for Pico2 clocking debug:
@@ -73,6 +73,10 @@
 
 #ifndef DBUS_ENABLE_READBACK_PROBE
 #define DBUS_ENABLE_READBACK_PROBE 1
+#endif
+
+#ifndef DBUS_READBACK_PROBE_PRIMARY_ONLY
+#define DBUS_READBACK_PROBE_PRIMARY_ONLY 0
 #endif
 
 static void pulse_gpio_probe_pin(const struct device *gpio_dev,
@@ -490,7 +494,17 @@ static bool run_toggle_cycle_for_target(enum DBCDRV_SpiTarget target, const char
 static void run_readback_probe(void)
 {
 #if DBUS_ENABLE_READBACK_PROBE
+#if DBUS_READBACK_PROBE_PRIMARY_ONLY
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } probes[] = {
+        { 0u, 0x00000456u },
+    };
 #if DBUS_FORCE_SECONDARY_ONLY
+    printk("Main: readback probe overriding secondary-only mode to test Pico1\n");
+#endif
+#elif DBUS_FORCE_SECONDARY_ONLY
     static const struct {
         uint8_t motor;
         uint32_t speed;
@@ -593,10 +607,17 @@ int main(void)
     printk("Main: DBAL bootstrap disabled for SPI isolation\n");
 #endif
 
+#if DBUS_READBACK_PROBE_PRIMARY_ONLY
+    target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
+    printk("Main: SPI target select primary -> %s (err=%d)\n",
+        (target_err == DBC_OK) ? "OK" : "FAIL",
+        target_err);
+#else
     target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO);
     printk("Main: SPI target select secondary -> %s (err=%d)\n",
         (target_err == DBC_OK) ? "OK" : "FAIL",
         target_err);
+#endif
     DBCDRV_logSpiRouting("main_after_target_select");
 
 #if !DBUS_SKIP_GPIO_PROBES
@@ -629,6 +650,11 @@ int main(void)
     printk("Main: boot-time motor pre-disable%s\n",
            DBUS_FORCE_SECONDARY_ONLY ? " (secondary-only)" : "");
     for (uint8_t pd = 0u; pd < 3u; pd++) {
+    #if DBUS_READBACK_PROBE_PRIMARY_ONLY
+        target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
+        (void)write_motor_reg32(0u, MOTOR_REG_ENABLE_OFFSET, 0u);
+        (void)write_motor_reg32(2u, MOTOR_REG_ENABLE_OFFSET, 0u);
+    #else
 #if !DBUS_FORCE_SECONDARY_ONLY
         /* Disable motors 0+2 on PRIMARY */
         target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
@@ -639,6 +665,7 @@ int main(void)
         target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO);
         (void)write_motor_reg32(1u, MOTOR_REG_ENABLE_OFFSET, 0u);
         (void)write_motor_reg32(3u, MOTOR_REG_ENABLE_OFFSET, 0u);
+#endif
 
         k_msleep(150u);
     }
@@ -715,6 +742,11 @@ int main(void)
     printk("Main: final motor stop before exit%s\n",
            DBUS_FORCE_SECONDARY_ONLY ? " (secondary-only)" : "");
     for (uint8_t i = 0u; i < 3u; i++) {
+    #if DBUS_READBACK_PROBE_PRIMARY_ONLY
+        target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
+        (void)write_motor_reg32(0u, MOTOR_REG_ENABLE_OFFSET, 0u);
+        (void)write_motor_reg32(2u, MOTOR_REG_ENABLE_OFFSET, 0u);
+    #else
 #if !DBUS_FORCE_SECONDARY_ONLY
         target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
         (void)write_motor_reg32(0u, MOTOR_REG_ENABLE_OFFSET, 0u);
@@ -723,6 +755,7 @@ int main(void)
         target_err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO);
         (void)write_motor_reg32(1u, MOTOR_REG_ENABLE_OFFSET, 0u);
         (void)write_motor_reg32(3u, MOTOR_REG_ENABLE_OFFSET, 0u);
+    #endif
         k_msleep(100u);
     }
 

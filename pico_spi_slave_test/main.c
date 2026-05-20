@@ -29,7 +29,7 @@
 #define PICO_NODE_SLOT 1
 #endif
 #define CS_END_DRAIN_TIMEOUT_US 200u
-#define CS_END_DRAIN_IDLE_US 20u
+#define CS_END_DRAIN_IDLE_US 1u
 #define RX_ACCUM_GAP_RESET_US 3000u
 typedef struct { char msg[DLOG_MSG_LEN]; } dlog_entry_t;
 static dlog_entry_t dlog_buf[DLOG_ENTRIES];
@@ -148,10 +148,22 @@ static motor_channel_t motors[MOTOR_COUNT];
 static uint8_t rx_frame_raw[DBAL_MAX_FRAME_SIZE];
 static uint8_t tx_frame_desired[FRAME_SIZE];
 static uint8_t tx_frame_wire[FRAME_SIZE];
+static uint8_t last_read_rsp_desired[FRAME_SIZE] = {0};
+static uint8_t last_read_rsp_wire[FRAME_SIZE] = {0};
+static volatile uint32_t last_read_rsp_count = 0u;
+static volatile uint16_t last_read_rsp_addr = 0u;
+static volatile uint32_t last_read_rsp_value = 0u;
+static volatile uint32_t last_cs_end_preload_count = 0u;
+static volatile uint32_t last_cs_start_queue_count = 0u;
+static volatile uint32_t current_active_tx_pushes = 0u;
+static volatile uint32_t last_active_tx_pushes = 0u;
+static volatile uint32_t last_tx_index_at_cs_fall = 0u;
+static volatile uint32_t last_tx_index_at_cs_rise = 0u;
 
 static size_t rx_index = 0;
 static size_t tx_index = 0;
 static bool tx_frame_prequeued = false;
+static bool tx_read_response_pending = false;
 static volatile bool cs_active_flag = false;
 static volatile bool cs_start_pending = false;
 static volatile bool cs_end_pending = false;
@@ -194,6 +206,7 @@ static volatile uint32_t mosi_toggle_count = 0u;
 static volatile uint8_t last_frame8_cmd = 0u;
 static volatile uint16_t last_frame8_addr = 0u;
 static volatile uint32_t last_frame8_value = 0u;
+static volatile bool sniff_finalize_pending = false;
 static bool sck_prev_level = false;
 static bool mosi_prev_level = false;
 
@@ -217,21 +230,30 @@ static bool process_rx_frame(void);
 static bool addr_is_valid(uint16_t addr);
 static void motor_write(uint16_t addr, uint32_t value);
 static uint32_t motor_read(uint16_t addr);
+static inline bool cs_is_active(void);
 static inline void spi_slave_rearm(spi_inst_t *spi);
 static inline size_t spi_slave_queue_current_tx_frame(spi_inst_t *spi);
+static inline size_t spi_slave_force_queue_current_tx_frame(spi_inst_t *spi);
 static void prepare_tx_frame_wire(void);
 static void prepare_tx_frame_identity(void);
 static void set_default_tx_pattern(void);
+static void prepare_read_response_frame(uint16_t addr, uint32_t value);
 
 static void sniff_process_frame(void)
 {
     last_frame_len = sniff_len;
 
-    if (sniff_len < FRAME_SIZE) {
+    bool missing_tail_byte = false;
+
+    if (sniff_len < (FRAME_SIZE - 1u)) {
         if (sniff_len > 0u) {
             frame_other_total++;
         }
         return;
+    }
+
+    if (sniff_len == (FRAME_SIZE - 1u)) {
+        missing_tail_byte = true;
     }
 
     uint8_t cmd = sniff_frame[0];
@@ -254,7 +276,7 @@ static void sniff_process_frame(void)
             (uint32_t)sniff_frame[4] |
             ((uint32_t)sniff_frame[5] << 8) |
             ((uint32_t)sniff_frame[6] << 16) |
-            ((uint32_t)sniff_frame[7] << 24);
+            ((uint32_t)(missing_tail_byte ? 0u : sniff_frame[7]) << 24);
         last_frame8_value = value;
         frame8_write_count++;
         if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
@@ -263,6 +285,7 @@ static void sniff_process_frame(void)
         motor_write(addr, value);
         reg_write(addr, value);
         set_default_tx_pattern();
+        tx_read_response_pending = false;
         /* Only prepare the next frame here. The actual SPI rearm/preload must
          * wait until cs_end drain completes so we do not flush/reseed the SSP
          * while BSY may still reflect the just-finished transaction. */
@@ -281,25 +304,27 @@ static void sniff_process_frame(void)
         }
         last_frame8_value = value;
         frame8_read_count++;
-        memset(tx_frame_desired, 0, sizeof(tx_frame_desired));
-        tx_frame_desired[0] = DBUS_RSP_MARKER;
-        tx_frame_desired[1] = (uint8_t)(addr >> 8);
-        tx_frame_desired[2] = (uint8_t)(addr & 0xFFu);
-        tx_frame_desired[3] = 0x01u;
-        tx_frame_desired[4] = (uint8_t)(value);
-        tx_frame_desired[5] = (uint8_t)(value >> 8);
-        tx_frame_desired[6] = (uint8_t)(value >> 16);
-        tx_frame_desired[7] = (uint8_t)(value >> 24);
-        prepare_tx_frame_wire();
-        /* Only prepare the next frame here. The actual SPI rearm/preload must
-         * wait until cs_end drain completes so we do not flush/reseed the SSP
-         * while BSY may still reflect the just-finished transaction. */
-        tx_frame_prequeued = false;
+        last_read_rsp_count++;
+        last_read_rsp_addr = addr;
+        last_read_rsp_value = value;
+        prepare_read_response_frame(addr, value);
     }
 }
 
 static inline void sniff_update(void)
 {
+    if (sniff_finalize_pending) {
+        sniff_finalize_pending = false;
+        if (sniff_prev_cs_active) {
+            sniff_process_frame();
+            sniff_len = 0u;
+            sniff_byte = 0u;
+            sniff_bit_count = 0u;
+            sniff_prev_cs_active = false;
+        }
+        sniff_prev_sck_level = gpio_get(PIN_SCK);
+    }
+
     bool cs_active = !gpio_get(PIN_CS);
     bool sck_level = gpio_get(PIN_SCK);
 
@@ -1048,15 +1073,12 @@ static uint32_t motor_read(uint16_t addr)
     }
 }
 
-/* Pre-distort desired TX bytes for the observed serial bit-slippage on the
- * link by carrying each byte's MSB into the previous byte's LSB. After the
- * link's SERIAL_ROR1 transform the RW612 receives the intended TX frame. */
+/* Current capture logs show RW612 receiving the Pico's prepared bytes nearly
+ * verbatim. Treat tx_frame_desired as the actual on-wire frame and copy it
+ * unchanged into tx_frame_wire. */
 static void prepare_tx_frame_wire(void)
 {
-    for (size_t i = 0u; i < (FRAME_SIZE - 1u); i++) {
-        tx_frame_wire[i] = (uint8_t)((tx_frame_desired[i] << 1u) | (tx_frame_desired[i + 1u] >> 7u));
-    }
-    tx_frame_wire[FRAME_SIZE - 1u] = (uint8_t)(tx_frame_desired[FRAME_SIZE - 1u] << 1u);
+    prepare_tx_frame_identity();
 }
 
 static void prepare_tx_frame_identity(void)
@@ -1067,9 +1089,39 @@ static void prepare_tx_frame_identity(void)
 static void set_default_tx_pattern(void)
 {
     for (size_t i = 0; i < FRAME_SIZE; i++) {
-        tx_frame_desired[i] = 0xA5;
+        tx_frame_desired[i] = 0xFF;
     }
     prepare_tx_frame_wire();
+}
+
+static void prepare_read_response_frame(uint16_t addr, uint32_t value)
+{
+    uint8_t next_frame[FRAME_SIZE] = {0};
+    bool same_pending_response;
+
+    next_frame[0] = DBUS_RSP_MARKER;
+    next_frame[1] = (uint8_t)(addr >> 8);
+    next_frame[2] = (uint8_t)(addr & 0xFFu);
+    next_frame[3] = 0x01u;
+    next_frame[4] = (uint8_t)(value);
+    next_frame[5] = (uint8_t)(value >> 8);
+    next_frame[6] = (uint8_t)(value >> 16);
+    next_frame[7] = (uint8_t)(value >> 24);
+
+    same_pending_response = tx_read_response_pending &&
+                            tx_index < FRAME_SIZE &&
+                            (memcmp(last_read_rsp_desired, next_frame, FRAME_SIZE) == 0);
+
+    memcpy(tx_frame_desired, next_frame, FRAME_SIZE);
+    prepare_tx_frame_wire();
+    memcpy(last_read_rsp_desired, tx_frame_desired, FRAME_SIZE);
+    memcpy(last_read_rsp_wire, tx_frame_wire, FRAME_SIZE);
+    tx_read_response_pending = true;
+
+    if (!same_pending_response) {
+        tx_index = 0u;
+        tx_frame_prequeued = false;
+    }
 }
 
 /* DBAL wire frame layout (all bytes after per-byte ROL1 decode):
@@ -1400,6 +1452,7 @@ frame_decoded:
         reg_write(addr, value);
         dlog("[PICO] WRITE addr=0x%04x val=0x%08x\n", addr, value);
         set_default_tx_pattern();
+        tx_read_response_pending = false;
         tx_index = 0u;
         tx_frame_prequeued = false;
         return true;
@@ -1413,23 +1466,15 @@ frame_decoded:
         }
         last_frame8_value = value;
         dlog("[PICO] READ addr=0x%04x val=0x%08x\n", addr, value);
-        memset(tx_frame_desired, 0, sizeof(tx_frame_desired));
-        tx_frame_desired[0] = DBUS_RSP_MARKER;
-        tx_frame_desired[1] = (uint8_t)(addr >> 8);
-        tx_frame_desired[2] = (uint8_t)(addr & 0xFFu);
-        tx_frame_desired[3] = 0x01u;
-        tx_frame_desired[4] = (uint8_t)(value);
-        tx_frame_desired[5] = (uint8_t)(value >> 8);
-        tx_frame_desired[6] = (uint8_t)(value >> 16);
-        tx_frame_desired[7] = (uint8_t)(value >> 24);
-        prepare_tx_frame_wire();
-        /* The next cs_start queues tx_frame_wire into hardware. Do not mark it
-         * prequeued here; in blocking-RX mode there is no cs_end preload path. */
-        tx_frame_prequeued = false;
+        last_read_rsp_count++;
+        last_read_rsp_addr = addr;
+        last_read_rsp_value = value;
+        prepare_read_response_frame(addr, value);
         return true;
     }
 
     set_default_tx_pattern();
+    tx_read_response_pending = false;
     tx_index = 0u;
     tx_frame_prequeued = false;
     return false;
@@ -1478,16 +1523,59 @@ static inline void spi_slave_rearm(spi_inst_t *spi)
     hw_set_bits(&hw->cr1, SPI_SSPCR1_SSE_BITS);    /* SSE=1: re-enable   */
 }
 
+static inline size_t spi_slave_continue_tx_frame(spi_inst_t *spi)
+{
+    spi_hw_t *hw = spi_get_hw(spi);
+    uint32_t start_us = time_us_32();
+
+    while (tx_index < FRAME_SIZE) {
+        if (spi_is_writable(spi)) {
+            hw->dr = tx_frame_wire[tx_index++];
+            continue;
+        }
+        if ((uint32_t)(time_us_32() - start_us) >= 200u) {
+            break;
+        }
+        tight_loop_contents();
+    }
+
+    return tx_index;
+}
+
+static inline size_t spi_slave_fill_tx_frame_now(spi_inst_t *spi)
+{
+    spi_hw_t *hw = spi_get_hw(spi);
+
+    while (spi_is_writable(spi) && tx_index < FRAME_SIZE) {
+        hw->dr = tx_frame_wire[tx_index++];
+    }
+
+    return tx_index;
+}
+
 static inline size_t spi_slave_queue_current_tx_frame(spi_inst_t *spi)
+{
+    /* Preserve progress for a pending read response so repeated RW612 dummy
+     * retries can collect bytes 1..7 instead of restarting at byte 0 on
+     * every CS pulse. For idle/default traffic, restart from the beginning. */
+    if (!tx_read_response_pending || tx_index >= FRAME_SIZE) {
+        tx_index = 0u;
+    }
+
+    /* Count only bytes the SSP reports as accepted. Idle-time preload may
+     * only take a prefix of the frame; preserve that prefix and let cs_start
+     * plus the active service loop feed the remainder. */
+    return spi_slave_continue_tx_frame(spi);
+}
+
+static inline size_t spi_slave_force_queue_current_tx_frame(spi_inst_t *spi)
 {
     spi_hw_t *hw = spi_get_hw(spi);
 
     tx_index = 0u;
-    /* On this link, preloading the whole frame while CS is high often
-     * degrades into "first byte only" on the wire. Seed only byte 0 here and
-     * let the active-transaction loop feed bytes 1..7 while BSY/CS are live. */
-    if (spi_is_writable(spi)) {
-        hw->dr = tx_frame_wire[tx_index++];
+    for (size_t i = 0u; i < FRAME_SIZE; i++) {
+        hw->dr = tx_frame_wire[i];
+        tx_index++;
     }
 
     return tx_index;
@@ -1508,7 +1596,7 @@ static inline bool spi_slave_drain_rx_fifo(spi_inst_t *spi)
 
 static inline bool cs_is_active(void)
 {
-    return cs_active_flag;
+    return !gpio_get(PIN_CS);
 }
 
 static inline void mark_spi_activity(void)
@@ -1533,6 +1621,8 @@ static void cs_gpio_irq_handler(uint gpio, uint32_t events)
     if ((events & GPIO_IRQ_EDGE_FALL) != 0u) {
         cs_active_flag = true;
         cs_fall_count++;
+        last_tx_index_at_cs_fall = (uint32_t)tx_index;
+        current_active_tx_pushes = 0u;
         spi_slave_set_miso_active(true);
         cs_start_pending = true;
     }
@@ -1540,6 +1630,9 @@ static void cs_gpio_irq_handler(uint gpio, uint32_t events)
     if ((events & GPIO_IRQ_EDGE_RISE) != 0u) {
         cs_active_flag = false;
         cs_rise_count++;
+        last_tx_index_at_cs_rise = (uint32_t)tx_index;
+        last_active_tx_pushes = current_active_tx_pushes;
+        sniff_finalize_pending = true;
         spi_slave_set_miso_active(false);
         cs_end_pending = true;
     }
@@ -1597,24 +1690,16 @@ static void service_spi_frame(spi_inst_t *spi)
 {
     spi_hw_t *hw = spi_get_hw(spi);
 
-    if (cs_start_pending) {
-        cs_start_pending = false;
-        /* New transaction started: if CS-rise preloading already filled the
-         * FIFO for this frame, keep it. Otherwise reload from byte 0 here. */
-        mark_spi_activity();
-        if (!tx_frame_prequeued) {
-            tx_index = 0u;
-            tx_frame_prequeued = (spi_slave_queue_current_tx_frame(spi0) == FRAME_SIZE);
-        }
-        tx_frame_prequeued = false;
-    }
-
     if (cs_end_pending) {
         uint32_t drain_start_us;
         uint32_t last_rx_us;
-        uint32_t idle_wait_start_us;
 
         cs_end_pending = false;
+        /* If the active service loop exited immediately after CS rose, the
+         * sniff decoder may not have consumed that final CS-high transition
+         * yet. Force one pass here so the just-finished frame prepares the
+         * correct tx_frame_wire before we rearm and preload the SSP. */
+        sniff_update();
         /* Keep draining until the RX FIFO has stayed idle
          * briefly, or a short overall timeout expires. This is more robust
          * than a fixed one-shot delay when the final byte lands slightly late
@@ -1651,11 +1736,34 @@ static void service_spi_frame(spi_inst_t *spi)
             rx_index = 0u;
         }
 
-        /* The authoritative sniff decoder prepares tx_frame_wire on CS rise,
-         * but the safe moment to flush/reseed the SSP is after cs_end drain,
-         * once the just-finished transfer is no longer busy. */
-        spi_slave_rearm(spi0);
-        tx_frame_prequeued = (spi_slave_queue_current_tx_frame(spi0) == FRAME_SIZE);
+        /* The just-finished frame has now been sniff-decoded and the drain is
+         * complete, so it is safe to preload the next TX frame.
+         *
+         * For pending read responses on Pico2, partial cs_end preload has been
+         * observed to stall at a 5-byte prefix (`qend=5`, `tx=5`), which is
+         * enough for marker/header leakage but not for the payload bytes to
+         * escape. Skip preload in that case and queue the full frame only at
+         * cs_start instead. */
+        if (!tx_read_response_pending) {
+            spi_slave_rearm(spi);
+            last_cs_end_preload_count = (uint32_t)spi_slave_queue_current_tx_frame(spi);
+            tx_frame_prequeued = (last_cs_end_preload_count == FRAME_SIZE);
+        } else {
+            last_cs_end_preload_count = 0u;
+            tx_frame_prequeued = false;
+        }
+    }
+
+    if (cs_start_pending) {
+        cs_start_pending = false;
+        /* Preserve any bytes already accepted during the cs_end preload. If we
+         * rearm here, we flush that prefix right before the master clocks the
+         * frame. Also do not blindly advance tx_index to 8: on this link the
+         * SSP may only accept one start-of-frame byte immediately, and the
+         * active loop must be allowed to feed the remaining tail. */
+        mark_spi_activity();
+        last_cs_start_queue_count = (uint32_t)spi_slave_fill_tx_frame_now(spi);
+        tx_frame_prequeued = (last_cs_start_queue_count == FRAME_SIZE);
     }
 
     if (cs_is_active() || ((hw->sr & 0x10u) != 0u)) {
@@ -1668,6 +1776,16 @@ static void service_spi_frame(spi_inst_t *spi)
         while (cs_is_active() || ((hw->sr & 0x10u) != 0u)) {
             bool progressed = false;
 
+            if ((cs_is_active() || ((hw->sr & 0x10u) != 0u)) && tx_index < FRAME_SIZE) {
+                size_t tx_before = tx_index;
+                size_t tx_after = spi_slave_fill_tx_frame_now(spi);
+
+                if (tx_after > tx_before) {
+                    current_active_tx_pushes += (uint32_t)(tx_after - tx_before);
+                    progressed = true;
+                }
+            }
+
             while (spi_is_readable(spi)) {
                 uint8_t rx_byte = (uint8_t)hw->dr;
                 mark_spi_activity();
@@ -1675,15 +1793,7 @@ static void service_spi_frame(spi_inst_t *spi)
                 progressed = true;
             }
 
-            while ((cs_is_active() || ((hw->sr & 0x10u) != 0u)) &&
-                   spi_is_writable(spi) &&
-                   tx_index < FRAME_SIZE) {
-                hw->dr = tx_frame_wire[tx_index++];
-                progressed = true;
-            }
-
             sample_spi_pin_activity();
-            cs_poll_update();
             sniff_update();
 
             if (!progressed) {
@@ -1792,7 +1902,13 @@ int main(void)
         diag_full_edges[i] = 0u;
     }
     diag_full_bitmask = 0u;
-    /* No GPIO IRQ for CS — hardware SSEL handles framing; poll via cs_poll_update() */
+    /* Keep hardware SSEL on GP17 for the PL022 slave, but also latch edges via
+     * GPIO IRQ so service_spi_frame() sees CS transitions immediately instead
+     * of waiting for the next polling pass. */
+    gpio_set_irq_enabled_with_callback(PIN_CS,
+                                       GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
+                                       true,
+                                       &cs_gpio_irq_handler);
 
     /* Brief startup indicator only — keep delay minimal so Pico is ready
      * before the SPI master (RW612) begins its first exchange. */
@@ -1809,11 +1925,7 @@ int main(void)
 #error "PICO_MINIMAL_BLOCKING_RX must remain disabled"
 #else
         sample_spi_pin_activity();
-        cs_poll_update();  /* Detect CS edges via polling (hardware SSEL replaces GPIO IRQ) */
-    sniff_update();
-        
-        /* CS edges are handled by GPIO IRQ callback. Do not also poll CS here,
-         * otherwise each edge can be processed twice and reset frame state. */
+        sniff_update();
         service_spi_frame(spi0);
         sonic_poll();
         cs_active = cs_is_active();
@@ -1869,7 +1981,7 @@ int main(void)
                              }
                          }
                          if (gpe_pos == 0) { snprintf(gpe_str, sizeof(gpe_str), "(none)"); }
-                                                 printf("[Pico SPI Slave] alive fw=%s version=%s cs=%u rx=%u tx=%u rxt=%lu scke=%lu most=%lu gpe_mask=0x%08lx gpe=[%s] f8=%lu f8ok=%lu f8w=%lu f8r=%lu f8mw=%lu f8s=%lu f8sok=%lu lfr=%02x%02x%02x%02x%02x%02x%02x%02x lf8_cmd=0x%02x lf8_addr=0x%04x lf8_val=0x%08lx fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld mA_idx=%u mA_en=%u mA_spd=%ld mB_idx=%u mB_en=%u mB_spd=%ld\n",
+                                                                                                 printf("[Pico SPI Slave] alive fw=%s version=%s cs=%u rx=%u tx=%u rxt=%lu scke=%lu most=%lu gpe_mask=0x%08lx gpe=[%s] f8=%lu f8ok=%lu f8w=%lu f8r=%lu f8mw=%lu f8s=%lu f8sok=%lu lfr=%02x%02x%02x%02x%02x%02x%02x%02x lf8_cmd=0x%02x lf8_addr=0x%04x lf8_val=0x%08lx txd=%02x%02x%02x%02x%02x%02x%02x%02x txw=%02x%02x%02x%02x%02x%02x%02x%02x lrrn=%lu lrra=0x%04x lrrv=0x%08lx lrrd=%02x%02x%02x%02x%02x%02x%02x%02x lrrw=%02x%02x%02x%02x%02x%02x%02x%02x qend=%lu qstart=%lu txfall=%lu txrise=%lu txact=%lu fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld mA_idx=%u mA_en=%u mA_spd=%ld mB_idx=%u mB_en=%u mB_spd=%ld\n",
                      FW_ID_MAIN,
                    PICO_FIRMWARE_VERSION,
                    cs_active ? 1u : 0u,
@@ -1898,6 +2010,46 @@ int main(void)
                                  (unsigned)last_frame8_cmd,
                                  (unsigned)last_frame8_addr,
                                  (unsigned long)last_frame8_value,
+                                                                 (unsigned)tx_frame_desired[0],
+                                                                 (unsigned)tx_frame_desired[1],
+                                                                 (unsigned)tx_frame_desired[2],
+                                                                 (unsigned)tx_frame_desired[3],
+                                                                 (unsigned)tx_frame_desired[4],
+                                                                 (unsigned)tx_frame_desired[5],
+                                                                 (unsigned)tx_frame_desired[6],
+                                                                 (unsigned)tx_frame_desired[7],
+                                                                 (unsigned)tx_frame_wire[0],
+                                                                 (unsigned)tx_frame_wire[1],
+                                                                 (unsigned)tx_frame_wire[2],
+                                                                 (unsigned)tx_frame_wire[3],
+                                                                 (unsigned)tx_frame_wire[4],
+                                                                 (unsigned)tx_frame_wire[5],
+                                                                 (unsigned)tx_frame_wire[6],
+                                                                 (unsigned)tx_frame_wire[7],
+                                                                 (unsigned long)last_read_rsp_count,
+                                                                 (unsigned)last_read_rsp_addr,
+                                                                 (unsigned long)last_read_rsp_value,
+                                                                 (unsigned)last_read_rsp_desired[0],
+                                                                 (unsigned)last_read_rsp_desired[1],
+                                                                 (unsigned)last_read_rsp_desired[2],
+                                                                 (unsigned)last_read_rsp_desired[3],
+                                                                 (unsigned)last_read_rsp_desired[4],
+                                                                 (unsigned)last_read_rsp_desired[5],
+                                                                 (unsigned)last_read_rsp_desired[6],
+                                                                 (unsigned)last_read_rsp_desired[7],
+                                                                 (unsigned)last_read_rsp_wire[0],
+                                                                 (unsigned)last_read_rsp_wire[1],
+                                                                 (unsigned)last_read_rsp_wire[2],
+                                                                 (unsigned)last_read_rsp_wire[3],
+                                                                 (unsigned)last_read_rsp_wire[4],
+                                                                 (unsigned)last_read_rsp_wire[5],
+                                                                 (unsigned)last_read_rsp_wire[6],
+                                                                 (unsigned)last_read_rsp_wire[7],
+                                                                 (unsigned long)last_cs_end_preload_count,
+                                                                 (unsigned long)last_cs_start_queue_count,
+                                                                 (unsigned long)last_tx_index_at_cs_fall,
+                                                                 (unsigned long)last_tx_index_at_cs_rise,
+                                                                 (unsigned long)last_active_tx_pushes,
                  (unsigned long)frame_dbal_total,
                  (unsigned long)frame_other_total,
                  (unsigned long)last_frame_len,
