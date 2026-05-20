@@ -7,6 +7,25 @@
 
 **Next Major Milestone:** (To be defined based on future tasks)
 
+## Task: RW612 Four-Motor Validation
+*   **Status:** Completed
+*   **Date Updated:** 2026-05-20
+*   **Summary:** A dedicated RW612 validation image (`AUTO_TEST_ALL4_V1_2026_05_20`) was built and exercised against all four wired motors. The harness switched out of secondary-only readback mode, enabled the auto motor test, and ran three simultaneous rounds across motors 0..3 with target switching between Pico1 and Pico2. The bench log completed with `PASS: 1`, `FAIL: 0`, and a clean final stop sequence.
+
+### Verified Result
+*   The correct quad-motor image booted: `Hello from Zephyr DBus Driver project! [AUTO_TEST_ALL4_V1]` and `Main: mode=AUTO_TEST_ALL4_V1`.
+*   Boot-time pre-disable reached both targets: primary writes hit `0x5000` and `0x5020`, while secondary writes hit `0x5010` and `0x5030`.
+*   The simultaneous test ran all three rounds successfully with the intended speed sets:
+*   Round 1: `m0=200`, `m1=500`, `m2=800`, `m3=1100`
+*   Round 2: `m0=650`, `m1=1000`, `m2=300`, `m3=750`
+*   Round 3: `m0=1100`, `m1=250`, `m2=900`, `m3=450`
+*   The run completed with `Main: RUN 1 RESULT: PASS`, summary `PASS: 1`, `FAIL: 0`, `Overall: PASS`, and a final stop burst to all four enable registers.
+
+### Scope Of What Is Solved
+*   RW612 can now drive and coordinate all four logical motors across both Pico targets in the current direct-register harness.
+*   This validates the combined write-path routing for motor0 and motor2 on Pico1 plus motor1 and motor3 on Pico2 under a real multi-node exercise, not just isolated single-target probes.
+*   The next major functional step is endstop integration and interrupt-driven stop handling, not further basic four-motor bring-up.
+
 ## Task: DBus Driver Structure Analysis
 *   **Status:** Completed
 *   **Date Completed:** 2025-09-12 (Current Date)
@@ -64,4 +83,4 @@
 ### Scope Of What Is Solved
 *   The remaining readback bug is no longer on the shared RW612 reconstruction path for this Pico1 probe case.
 *   This checkpoint proves the transport can complete native readback even when the slave releases only one meaningful byte per retry transaction.
-*   Pico2 / secondary-path readback still needs its own follow-up before calling the broader multi-node readback effort complete.
+*   The later Pico2 / secondary-path validation is now also complete, so the broader multi-node readback checkpoint has been reached for the current probe cases.

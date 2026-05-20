@@ -23,14 +23,14 @@
 #define DBAL_TEST_SERVICE_ID   0x7001u
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
-#define RW612_BUILD_MARKER "RW612 build marker: SECONDARY_READBACK_V1_2026_05_19"
+#define RW612_BUILD_MARKER "RW612 build marker: AUTO_TEST_ALL4_V1_2026_05_20"
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 1u
 #endif
 
 #ifndef DBUS_ENABLE_AUTO_MOTOR_TEST
-#define DBUS_ENABLE_AUTO_MOTOR_TEST 0
+#define DBUS_ENABLE_AUTO_MOTOR_TEST 1
 #endif
 
 #ifndef DBUS_CONTINUOUS_SECONDARY_TEST
@@ -64,7 +64,7 @@
  * This removes cross-target side effects and guarantees the known
  * Flexcomm SCK-gate condition while measuring Pico2 RX behavior. */
 #ifndef DBUS_FORCE_SECONDARY_ONLY
-#define DBUS_FORCE_SECONDARY_ONLY 1
+#define DBUS_FORCE_SECONDARY_ONLY 0
 #endif
 
 #ifndef DBUS_SKIP_GPIO_PROBES
@@ -72,7 +72,7 @@
 #endif
 
 #ifndef DBUS_ENABLE_READBACK_PROBE
-#define DBUS_ENABLE_READBACK_PROBE 1
+#define DBUS_ENABLE_READBACK_PROBE 0
 #endif
 
 #ifndef DBUS_READBACK_PROBE_PRIMARY_ONLY
@@ -583,9 +583,9 @@ int main(void)
     enum DBC_Error pulse_err;
     const struct device *probe_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
 
-    printk("Hello from Zephyr DBus Driver project! [PRE_MOTOR_V1]\n");
+    printk("Hello from Zephyr DBus Driver project! [AUTO_TEST_ALL4_V1]\n");
     printk("%s\n", RW612_BUILD_MARKER);
-    printk("Main: mode=DIRECT_REGISTER_MOTOR_WRITES_V1\n");
+    printk("Main: mode=AUTO_TEST_ALL4_V1\n");
         printk("Repeatability mode: %u run(s). auto_test=%u\n",
             DBUS_REPEATABILITY_RUNS,
             (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
