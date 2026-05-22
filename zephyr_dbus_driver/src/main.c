@@ -23,7 +23,17 @@
 #define DBAL_TEST_SERVICE_ID   0x7001u
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
+#ifndef RW612_BUILD_MARKER
 #define RW612_BUILD_MARKER "RW612 build marker: AUTO_TEST_ALL4_V1_2026_05_20"
+#endif
+
+#ifndef RW612_BOOT_BANNER
+#define RW612_BOOT_BANNER "AUTO_TEST_ALL4_V1"
+#endif
+
+#ifndef RW612_MODE_LABEL
+#define RW612_MODE_LABEL "AUTO_TEST_ALL4_V1"
+#endif
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 1u
@@ -72,7 +82,7 @@
 #endif
 
 #ifndef DBUS_ENABLE_READBACK_PROBE
-#define DBUS_ENABLE_READBACK_PROBE 0
+#define DBUS_ENABLE_READBACK_PROBE 1
 #endif
 
 #ifndef DBUS_READBACK_PROBE_PRIMARY_ONLY
@@ -746,9 +756,9 @@ int main(void)
     enum DBC_Error pulse_err;
     const struct device *probe_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
 
-    printk("Hello from Zephyr DBus Driver project! [AUTO_TEST_ALL4_V1]\n");
+    printk("Hello from Zephyr DBus Driver project! [%s]\n", RW612_BOOT_BANNER);
     printk("%s\n", RW612_BUILD_MARKER);
-    printk("Main: mode=AUTO_TEST_ALL4_V1\n");
+    printk("Main: mode=%s\n", RW612_MODE_LABEL);
         printk("Repeatability mode: %u run(s). auto_test=%u\n",
             DBUS_REPEATABILITY_RUNS,
             (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);

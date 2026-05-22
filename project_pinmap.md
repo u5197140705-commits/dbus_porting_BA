@@ -23,7 +23,7 @@ Project: FRDM-RW612 + Raspberry Pi Pico W + TB6612FNG + LCD1602A + Ultrasonic
 
 ## Board-to-Board SPI (RW612 -> Pico)
 
-1. RW612 GPIO6 / FC1 SSELN0 -> Pico GP17 (CS)
+1. RW612 GPIO6 / FC1 SSELN0 -> Primary Pico GP17 (CS)
 2. RW612 GPIO7 / FC1 SCK -> Pico GP18 (SCK)
 3. RW612 GPIO9 / FC1 MOSI -> Pico GP16 (MOSI)
 4. RW612 GPIO8 / FC1 MISO <- Pico GP19 (MISO)
@@ -33,7 +33,7 @@ Project: FRDM-RW612 + Raspberry Pi Pico W + TB6612FNG + LCD1602A + Ultrasonic
 
 ### SPI / Bus Control
 
-1. GPIO6 -> Primary SPI chip select / FC1 SSELN0
+1. GPIO6 -> Primary Pico chip select / FC1 SSELN0
 2. GPIO7 -> FC1 SCK
 3. GPIO8 -> FC1 MISO
 4. GPIO9 -> FC1 MOSI

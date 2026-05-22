@@ -2,9 +2,9 @@
 setlocal EnableDelayedExpansion
 
 set "JLINK_EXE=C:\Program Files\SEGGER\JLink_V924a\JLink.exe"
-set "SCRIPT_FILE=%~dp0flash_rw612.jlink"
-set "ELF_UNC=\\wsl.localhost\Ubuntu\home\swied\projects\dbus_porting_BA\zephyr_dbus_driver\build_local\zephyr\zephyr.elf"
-set "ELF_WSL=/home/swied/projects/dbus_porting_BA/zephyr_dbus_driver/build_local/zephyr/zephyr.elf"
+set "SCRIPT_FILE=%~dp0flash_rw612_readback_5c624f5.jlink"
+set "ELF_UNC=\\wsl.localhost\Ubuntu\home\swied\projects\dbus_porting_BA_readback_5c624f5\zephyr_dbus_driver\build_local\zephyr\zephyr.elf"
+set "ELF_WSL=/home/swied/projects/dbus_porting_BA_readback_5c624f5/zephyr_dbus_driver/build_local/zephyr/zephyr.elf"
 
 if not exist "%JLINK_EXE%" (
     echo [ERROR] J-Link nicht gefunden: %JLINK_EXE%
@@ -36,7 +36,7 @@ if "%ERRORLEVEL%"=="0" (
     echo [WARN] wsl.exe nicht gefunden, Marker-Preflight uebersprungen.
 )
 
-echo Starte J-Link Flash fuer RW612...
+echo Starte J-Link Flash fuer RW612 (5c624f5 readback image)...
 "%JLINK_EXE%" -CommanderScript "%SCRIPT_FILE%"
 
 set "RET=%ERRORLEVEL%"

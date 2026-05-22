@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define PICO_FIRMWARE_VERSION "dbal_motor_v1_onehot_v3_isoD_v21_2026-05-19"
+#define PICO_FIRMWARE_VERSION "dbal_motor_v1_onehot_v3_isoD_v22_2026-05-22"
 
 /* Non-blocking deferred log buffer: process_rx_frame must never call printf
  * directly — USB CDC printf blocks for milliseconds, which stalls the SPI
@@ -100,7 +100,7 @@ static void led_update_from_distance(uint32_t dist_mm);
 #define FRAME_SIZE 8
 #define DBAL_MAX_FRAME_SIZE  32u  /* max DBAL frame: SOF+len+CRC+headers+payload */
 #define PICO_MINIMAL_BLOCKING_RX 0
-#define FW_ID_MAIN "MAIN_HWSSEL_V21_2026-05-19"
+#define FW_ID_MAIN "MAIN_HWSSEL_V22_2026-05-22"
 #define DBUS_CMD_READ  0x40
 #define DBUS_CMD_READ_SHIFTED 0x20
 #define DBUS_CMD_WRITE 0x60
@@ -1606,10 +1606,11 @@ static inline void mark_spi_activity(void)
 
 static void spi_slave_set_miso_active(bool active)
 {
-    /* SPI slave MISO must stay in SPI function at all times, not toggled.
-     * Toggling it off breaks the slave receiver. Keep it enabled. */
-    (void)active;  /* Suppress unused parameter warning */
+    /* Keep MISO on the SPI peripheral, but disable the output driver whenever
+     * this slave is not selected so two powered Picos cannot fight on the
+     * shared RW612 MISO line. */
     gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
+    gpio_set_oeover(PIN_MISO, active ? GPIO_OVERRIDE_NORMAL : GPIO_OVERRIDE_LOW);
 }
 
 static void cs_gpio_irq_handler(uint gpio, uint32_t events)

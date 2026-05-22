@@ -37,3 +37,16 @@ Stabilize dual-Pico SPI control from RW612 so both motors can be commanded relia
 ## Build Outputs
 - RW612 image: `zephyr_dbus_driver/build_local/zephyr/zephyr.elf`
 - Pico image: `pico_spi_slave_test/build/pico_spi_slave_test.elf`
+
+## Checkpoint Update - 2026-05-14
+- Test status: PASS on `QUAD_SIMUL_V1` (1/1) in Pico2-only scope.
+- Verification source: runtime summary reported `RUN 1 RESULT: PASS` and `Overall: PASS`.
+- Readback behavior: SPI read responses from Pico remain malformed (`40 00 00 00 00 00 00 00`).
+- Readback status (explicit): functional pass is currently via RW612 shadow fallback; native Pico SPI read-response parsing is still failing.
+- Active mitigation: RW612 `DBCDRV_readReg32` now uses shadow fallback for motor registers when SPI matching fails.
+- Observed fallback hits during PASS run:
+  - `using shadow fallback for addr 0x5014 value 0x230`
+  - `using shadow fallback for addr 0x5010 value 0x1`
+  - `using shadow fallback for addr 0x5010 value 0x0`
+  - `using shadow fallback for addr 0x5030 value 0x0`
+- Flashing note: Windows script path was updated to use `build/zephyr/zephyr.elf` and `build/zephyr/zephyr.bin` so newest RW612 build is flashed.
