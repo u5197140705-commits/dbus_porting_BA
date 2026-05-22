@@ -79,6 +79,14 @@
 #define DBUS_READBACK_PROBE_PRIMARY_ONLY 0
 #endif
 
+#ifndef DBUS_ENABLE_ENDSWITCH_TEST
+#define DBUS_ENABLE_ENDSWITCH_TEST 1
+#endif
+
+#define MOTOR0_ENDSWITCH_MIN_PIN 1u
+#define MOTOR0_ENDSWITCH_MAX_PIN 2u
+#define MOTOR0_ENDSWITCH_POLL_MS 10u
+
 static void pulse_gpio_probe_pin(const struct device *gpio_dev,
                                  gpio_pin_t pin,
                                  uint32_t pulse_count,
@@ -101,6 +109,148 @@ static void pulse_gpio_probe_pin(const struct device *gpio_dev,
         k_usleep(high_time_us);
     }
     printk("Main: GPIO probe done pin=%u\n", (unsigned)pin);
+}
+
+static enum DBC_Error write_motor_reg32(uint8_t motor_index,
+                                        uint16_t reg_offset,
+                                        uint32_t value);
+
+static void init_motor0_endswitch_inputs(const struct device *gpio_dev)
+{
+    static const gpio_pin_t pins[] = {
+        MOTOR0_ENDSWITCH_MIN_PIN,
+        MOTOR0_ENDSWITCH_MAX_PIN,
+    };
+
+    if (!device_is_ready(gpio_dev)) {
+        printk("Main: end-switch GPIO device not ready\n");
+        return;
+    }
+
+    for (size_t i = 0u; i < ARRAY_SIZE(pins); i++) {
+        int ret = gpio_pin_configure(gpio_dev, pins[i], GPIO_INPUT | GPIO_PULL_UP);
+
+        if (ret < 0) {
+            printk("Main: end-switch pin %u configure failed ret=%d\n",
+                   (unsigned)pins[i], ret);
+            continue;
+        }
+
+        ret = gpio_pin_get(gpio_dev, pins[i]);
+        printk("Main: end-switch pin %u ready state=%d (active-low)\n",
+               (unsigned)pins[i], ret);
+    }
+}
+
+static bool motor0_endswitch_active(const struct device *gpio_dev,
+                                    gpio_pin_t *active_pin)
+{
+    static const gpio_pin_t pins[] = {
+        MOTOR0_ENDSWITCH_MIN_PIN,
+        MOTOR0_ENDSWITCH_MAX_PIN,
+    };
+
+    if (!device_is_ready(gpio_dev)) {
+        return false;
+    }
+
+    for (size_t i = 0u; i < ARRAY_SIZE(pins); i++) {
+        int state = gpio_pin_get(gpio_dev, pins[i]);
+
+        if (state < 0) {
+            printk("Main: end-switch pin %u read failed ret=%d\n",
+                   (unsigned)pins[i], state);
+            continue;
+        }
+
+        if (state == 0) {
+            if (active_pin != NULL) {
+                *active_pin = pins[i];
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void stop_motor0_now(void)
+{
+    enum DBC_Error err;
+
+    err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
+    if (err != DBC_OK) {
+        printk("Main: motor0 emergency stop target err=%d\n", err);
+        return;
+    }
+
+    err = write_motor_reg32(0u, MOTOR_REG_ENABLE_OFFSET, 0u);
+    if (err != DBC_OK) {
+        printk("Main: motor0 emergency disable err=%d\n", err);
+    }
+
+    err = write_motor_reg32(0u, MOTOR_REG_SPEED_OFFSET, 0u);
+    if (err != DBC_OK) {
+        printk("Main: motor0 emergency speed0 err=%d\n", err);
+    }
+}
+
+static bool wait_with_motor0_endswitch_guard(const struct device *gpio_dev,
+                                             uint32_t run_ms)
+{
+    uint32_t remaining_ms = run_ms;
+
+    while (remaining_ms > 0u) {
+        gpio_pin_t active_pin = 0u;
+        uint32_t sleep_ms = (remaining_ms > MOTOR0_ENDSWITCH_POLL_MS)
+            ? MOTOR0_ENDSWITCH_POLL_MS
+            : remaining_ms;
+
+        if (motor0_endswitch_active(gpio_dev, &active_pin)) {
+            printk("Main: motor0 stopped by end-switch on GPIO%u\n",
+                   (unsigned)active_pin);
+            stop_motor0_now();
+            return false;
+        }
+
+        k_msleep(sleep_ms);
+        remaining_ms -= sleep_ms;
+    }
+
+    return true;
+}
+
+static void run_motor0_endswitch_test(const struct device *gpio_dev)
+{
+    int last_min = -1;
+    int last_max = -1;
+
+    printk("Main: END SWITCH TEST mode active\n");
+    printk("Main: press/release switches on GPIO%u and GPIO%u\n",
+           (unsigned)MOTOR0_ENDSWITCH_MIN_PIN,
+           (unsigned)MOTOR0_ENDSWITCH_MAX_PIN);
+    printk("Main: logic is active-low, pressed=0 released=1\n");
+
+    while (1) {
+        int min_state = gpio_pin_get(gpio_dev, MOTOR0_ENDSWITCH_MIN_PIN);
+        int max_state = gpio_pin_get(gpio_dev, MOTOR0_ENDSWITCH_MAX_PIN);
+
+        if (min_state != last_min) {
+            printk("Main: switch GPIO%u -> %s\n",
+                   (unsigned)MOTOR0_ENDSWITCH_MIN_PIN,
+                   (min_state == 0) ? "PRESSED" : "RELEASED");
+            last_min = min_state;
+        }
+
+        if (max_state != last_max) {
+            printk("Main: switch GPIO%u -> %s\n",
+                   (unsigned)MOTOR0_ENDSWITCH_MAX_PIN,
+                   (max_state == 0) ? "PRESSED" : "RELEASED");
+            last_max = max_state;
+        }
+
+        k_msleep(25u);
+    }
 }
 
 // Example DBus service callback for testing
@@ -201,6 +351,7 @@ static bool run_dual_motor_simul_cycle(void)
     static const uint32_t RUN_MS      = 1200u;
     static const uint32_t GAP_MS      = 250u;
     const size_t NUM_ROUNDS = ARRAY_SIZE(m0_speeds);
+    const struct device *endswitch_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
     bool all_ok = true;
     enum DBC_Error target_err;
 
@@ -261,7 +412,16 @@ static bool run_dual_motor_simul_cycle(void)
 
             printk("Motor Toggle: round %u motor%u running at %u for %ums\n",
                    (uint32_t)(i + 1u), motor, speeds[motor], RUN_MS);
-            k_msleep(RUN_MS);
+            if (motor == 0u) {
+                bool completed = wait_with_motor0_endswitch_guard(endswitch_gpio, RUN_MS);
+
+                if (!completed) {
+                    printk("Motor Toggle: round %u motor0 interrupted by end-switch\n",
+                           (uint32_t)(i + 1u));
+                }
+            } else {
+                k_msleep(RUN_MS);
+            }
 
             err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
             if (err != DBC_OK) {
@@ -396,6 +556,7 @@ static bool run_quad_simultaneous_cycle(void)
     static const uint32_t RUN_MS      = 3000u;
     static const uint32_t GAP_MS      = 500u;
     const size_t NUM_ROUNDS = ARRAY_SIZE(m0_speeds);
+    const struct device *endswitch_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
     bool all_ok = true;
     enum DBC_Error target_err;
 
@@ -448,7 +609,9 @@ static bool run_quad_simultaneous_cycle(void)
         }
 
         printk("Motor Toggle [QUAD_SIMUL_V1]: all motors running for %ums\n", RUN_MS);
-        k_msleep(RUN_MS);
+        if (!wait_with_motor0_endswitch_guard(endswitch_gpio, RUN_MS)) {
+            printk("Motor Toggle [QUAD_SIMUL_V1]: motor0 interrupted by end-switch\n");
+        }
 
         for (uint8_t motor = 0u; motor < 4u; motor++) {
             target_err = DBCDRV_setSpiTarget(target_for_motor(motor));
@@ -589,6 +752,13 @@ int main(void)
         printk("Repeatability mode: %u run(s). auto_test=%u\n",
             DBUS_REPEATABILITY_RUNS,
             (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
+
+    init_motor0_endswitch_inputs(probe_gpio);
+
+#if DBUS_ENABLE_ENDSWITCH_TEST
+    run_motor0_endswitch_test(probe_gpio);
+    return 0;
+#endif
 
 #if DBUS_SCK_PROBE_ONLY
     if (!device_is_ready(probe_gpio)) {
