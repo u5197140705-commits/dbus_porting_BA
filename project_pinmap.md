@@ -57,6 +57,20 @@ Recommended electrical mode:
    - pressed = 0
    - released = 1
 
+### Planned Additional End Switches
+
+1. GPIO3 -> motor1 end-switch min/home
+2. GPIO4 -> motor1 end-switch max/end
+3. GPIO5 -> motor2 end-switch min/home
+4. GPIO13 -> motor2 end-switch max/end
+
+Recommended electrical mode:
+1. Configure as GPIO input with pull-up
+2. Wire each switch between GPIO and GND
+3. Logic is active-low
+   - pressed = 0
+   - released = 1
+
 ### RW612 Pins To Avoid For End Switches
 
 1. GPIO6
@@ -67,6 +81,13 @@ Recommended electrical mode:
 6. GPIO18
 7. GPIO11
 8. GPIO12
+
+## Planned MISO Hardware Fix
+
+1. Pico1 GP19 should no longer merge directly with Pico2 GP19.
+2. Use one tri-state buffer per Pico MISO branch.
+3. Connect Pico GP19 -> buffer input, buffer output -> shared MISO node -> RW612 GPIO8.
+4. Drive each buffer enable from that Pico's CS line so only the selected Pico is connected to the shared MISO node.
 
 ## Pico Pin Map (Current Firmware)
 

@@ -1,4 +1,5 @@
 #include "pico/stdlib.h"
+#include "pico/bootrom.h"
 #include "hardware/spi.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
@@ -36,6 +37,8 @@ static dlog_entry_t dlog_buf[DLOG_ENTRIES];
 static unsigned int dlog_head = 0u;
 static unsigned int dlog_tail = 0u;
 static uint32_t last_spi_activity_us = 0u;
+static char usb_cmd_buf[16];
+static size_t usb_cmd_len = 0u;
 
 static void dlog(const char *fmt, ...) {
     unsigned int next = (dlog_head + 1u) % DLOG_ENTRIES;
@@ -58,6 +61,42 @@ static void dlog_flush_limited(unsigned int budget) {
 #else
     (void)budget;
 #endif
+}
+
+static void usb_console_poll(void)
+{
+    for (;;) {
+        int ch = getchar_timeout_us(0);
+
+        if (ch == PICO_ERROR_TIMEOUT) {
+            return;
+        }
+
+        if (ch == '\r' || ch == '\n') {
+            usb_cmd_buf[usb_cmd_len] = '\0';
+
+            if (usb_cmd_len > 0u) {
+                if (strcmp(usb_cmd_buf, "BOOTSEL") == 0 ||
+                    strcmp(usb_cmd_buf, "bootsel") == 0 ||
+                    strcmp(usb_cmd_buf, "B") == 0 ||
+                    strcmp(usb_cmd_buf, "b") == 0) {
+                    printf("[Pico SPI Slave] USB command '%s' -> rebooting to BOOTSEL\n",
+                           usb_cmd_buf);
+                    sleep_ms(50);
+                    reset_usb_boot(0u, 0u);
+                }
+                usb_cmd_len = 0u;
+            }
+
+            continue;
+        }
+
+        if (usb_cmd_len < (sizeof(usb_cmd_buf) - 1u)) {
+            usb_cmd_buf[usb_cmd_len++] = (char)ch;
+        } else {
+            usb_cmd_len = 0u;
+        }
+    }
 }
 
 static uint32_t reg_read(uint16_t addr);
@@ -1606,11 +1645,17 @@ static inline void mark_spi_activity(void)
 
 static void spi_slave_set_miso_active(bool active)
 {
-    /* Keep MISO on the SPI peripheral, but disable the output driver whenever
-     * this slave is not selected so two powered Picos cannot fight on the
-     * shared RW612 MISO line. */
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-    gpio_set_oeover(PIN_MISO, active ? GPIO_OVERRIDE_NORMAL : GPIO_OVERRIDE_LOW);
+    /* When this slave is inactive, make MISO a plain high-impedance input with
+     * no pulls so a powered sibling Pico cannot be loaded by this pad state. */
+    if (active) {
+        gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
+        gpio_set_oeover(PIN_MISO, GPIO_OVERRIDE_NORMAL);
+        return;
+    }
+
+    gpio_init(PIN_MISO);
+    gpio_set_dir(PIN_MISO, GPIO_IN);
+    gpio_disable_pulls(PIN_MISO);
 }
 
 static void cs_gpio_irq_handler(uint gpio, uint32_t events)
@@ -1814,6 +1859,7 @@ int main(void)
     sleep_ms(50); // Keep startup short so SPI slave is ready before RW612 traffic starts
     printf("[Pico SPI Slave] FW_ID=%s\n", FW_ID_MAIN);
     printf("[Pico SPI Slave] Firmware version: %s\n", PICO_FIRMWARE_VERSION);
+    printf("[Pico SPI Slave] USB command: send BOOTSEL + Enter to reboot into UF2 mode\n");
     printf("[Pico SPI Slave] Node slot=%u logical-map: A->motor%u B->motor%u\n",
            (unsigned)PICO_NODE_SLOT,
            (unsigned)(LOCAL_LOGICAL_MOTOR_A + 1u),
@@ -1943,6 +1989,10 @@ int main(void)
         if (PICO_RUNTIME_LOG_FLUSH &&
             !cs_active && rx_index == 0 && (uint32_t)(now_us - last_spi_activity_us) >= LOG_IDLE_FLUSH_US) {
             dlog_flush_limited(DLOG_FLUSH_BUDGET);
+        }
+
+        if (!cs_active && rx_index == 0u) {
+            usb_console_poll();
         }
 
         if (PICO_HEARTBEAT_ENABLE &&
