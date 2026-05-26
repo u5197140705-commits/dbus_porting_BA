@@ -182,6 +182,75 @@ Firmware markers expected in this build lineage:
   - motor2 speed readback passed with `expected_speed=0x00000789 read_speed=0x00000789`
 - This is the first validated result showing that primary Pico register readback still works while all four motors are actively moving.
 
+## Live Quad Secondary Readback Result
+- The analogous RW612 live-quad mode was then run for the secondary Pico while all 4 motors were again commanded on.
+- Bench observation: all 4 motors did move during this run as well.
+- Secondary enable readback remained correct for both probed motors:
+  - motor1 enable readback passed with `read_enable=0x00000001`
+  - motor3 enable readback passed with `read_enable=0x00000001`
+- Secondary speed readback was mixed:
+  - motor1 speed readback failed with `expected_speed=0x000001f4 read_speed=0x000004f4`
+  - motor3 speed readback passed with `expected_speed=0x0000044c read_speed=0x0000044c`
+- The same live-quad secondary run was repeated once more and reproduced the exact same motor1 mismatch: `expected_speed=0x000001f4 read_speed=0x000004f4`, while motor3 still read back correctly.
+- After instrumenting the probe to perform an immediate second speed read for motor1, a follow-up run changed the result again:
+  - motor1 first speed readback passed with `read_speed=0x000001f4`
+  - motor1 second immediate speed readback also passed with `read_speed_second=0x000001f4`
+  - motor3 speed readback still passed with `expected_speed=0x0000044c read_speed=0x0000044c`
+- The provisional payload for motor1 briefly showed `f4 00 00 00` before stabilizing to `f4 01 00 00`, which then reconstructed to the correct `0x000001f4`.
+- This changes the diagnosis: the secondary live-quad issue is timing-sensitive and probe-sequence-sensitive, not a fixed stable wrong value. The earlier `0x000004f4` result is real, but it is now shown to be perturbable by the read timing.
+- A follow-up timing sweep then tested motor1 speed reads at `0 us`, `100 us`, and `500 us` after the first read.
+- That result falsified the simple settle-delay hypothesis:
+  - motor1 returned the same wrong value on all three reads: `delay0=0x000000f4`, `delay100=0x000000f4`, `delay500=0x000000f4`
+  - motor3 also failed in that same run, reading `0x0000104c` instead of `0x0000044c`
+- The corruption pattern therefore moved again:
+  - earlier runs produced `0x000004f4` for motor1
+  - the immediate second-read experiment produced correct `0x000001f4`
+  - the delay-sweep experiment produced stable `0x000000f4` for motor1 and `0x0000104c` for motor3
+- This now points away from a pure settle-time problem and more toward byte-lane contamination or interleaved payload reconstruction instability under the secondary live-quad load.
+- A final discriminating run then separated secondary start order from probe order:
+  - secondary start order was kept at the original `motor1 -> motor3`
+  - secondary probe order was changed to `motor3 -> motor1`
+- Result:
+  - motor3 became the failing probe, reading `expected_speed=0x0000044c read_speed=0x00001048`
+  - motor1 then read back correctly on all three delay samples: `delay0=0x000001f4`, `delay100=0x000001f4`, `delay500=0x000001f4`
+- This is the clearest result so far that the corruption follows probe slot / probe sequencing more than it follows one fixed motor register.
+- Current best diagnosis: the secondary live-quad failure is dominated by readback sequencing or payload reconstruction instability on the shared bus, not by one permanently bad secondary motor register.
+- A final follow-up added a throwaway warm-up speed read before each logged secondary speed read.
+- Two immediate outcomes were observed with that build:
+  - one run still showed first-slot corruption on motor3 before the warm-up instrumentation was reflected in the final log line, with `motor3 read_speed=0x00001048`
+  - the next run showed both warm-up and logged speed reads cleanly for both motors:
+    - motor3 `warmup=0x0000044c read_speed=0x0000044c`
+    - motor1 `warmup=0x000001f4 delay0=0x000001f4 delay100=0x000001f4 delay500=0x000001f4`
+- This is the strongest evidence so far that the first secondary speed read after probe selection is the unstable one, and that consuming one read before the logged read can stabilize the subsequent payload reconstruction.
+
+## Combined All-4 Readback Result
+- A combined mode was then added to start all 4 motors and probe both Picos in one run.
+- That merged test did not pass cleanly.
+- Primary-side result in the same run was mixed:
+  - motor0 passed with `expected_speed=0x00000123 read_speed=0x00000123`
+  - motor2 failed with `expected_speed=0x00000789 read_speed=0x00001c89`
+- Secondary-side result then degraded further after the primary probe:
+  - motor3 enable readback came back as `0x00000000`
+  - motor3 warm-up speed read failed with `err=1`
+  - motor1 enable read failed with `err=1`
+- This means the currently merged “probe primary then secondary in one runtime” sequence is not yet a working all-4 readback test, even though the separated primary-only and secondary-only live-quad modes each produced successful runs on their own.
+- A decisive isolation rerun was then performed with Pico1 MISO physically disconnected.
+- Result in that state:
+  - primary readback failed immediately, which is expected once Pico1 can no longer drive MISO
+  - secondary readback completed cleanly in the same merged all-4 mode:
+    - motor3 `warmup=0x0000044c read_speed=0x0000044c read_enable=0x00000001`
+    - motor1 `warmup=0x000001f4 read_speed=0x000001f4 read_enable=0x00000001`
+- This is a strong confirmation that the merged all-4 readback failure still depends on Pico1's MISO electrical participation. With Pico1 removed from MISO, the secondary side becomes clean again even in the combined test.
+- The symmetric isolation rerun was then performed with only Pico1 MISO connected.
+- Result in that state:
+  - primary readback completed cleanly in the same merged all-4 mode:
+    - motor0 `expected_speed=0x00000123 read_speed=0x00000123 read_enable=0x00000001`
+    - motor2 `expected_speed=0x00000789 read_speed=0x00000789 read_enable=0x00000001`
+  - secondary readback collapsed to zeros:
+    - motor3 `warmup=0x00000000 read_speed=0x00000000 read_enable=0x00000000`
+    - motor1 `warmup=0x00000000 read_speed=0x00000000 read_enable=0x00000000`
+- Together with the previous Pico1-MISO-disconnected test, this is now the clearest possible symmetry check: each side reads back correctly when it is the only active MISO participant, and the combined failure only appears when both slaves share the MISO node.
+
 ## Next Resume Step
 When work resumes:
 1. Treat Pico2 transport as re-proven when Pico1 MISO is absent from the shared bus.
@@ -189,8 +258,132 @@ When work resumes:
 3. Treat the series-resistor attempt as insufficient.
 4. The next engineering choices are now:
   - inspect Pico1 GP19 hardware path for pull/load/board-level coupling
+  - install the ordered tri-state buffer hardware before spending more effort on merged shared-MISO readback software sequencing
+
+## Final All-4 Plus Switch Test Result
+- A dedicated final RW612 image was built and run with marker `AUTO_TEST_ALL4_SWITCH_V1_2026_05_26`.
+- Phase 1/2 reran the merged all-4 live readback immediately before the switch checks.
+- Important bench condition for that run: Pico2 MISO was disconnected.
+- That phase reconfirmed the shared-MISO blocker is still present in the combined configuration:
+  - primary motor2 still read back correctly with `expected_speed=0x00000789 read_speed=0x00000789 read_enable=0x00000001`
+  - primary motor0 speed was corrupted in this run, reading `0x00000423` instead of `0x00000123`
+  - both secondary probes collapsed to zeros again:
+    - motor3 `warmup=0x00000000 read_speed=0x00000000 read_enable=0x00000000`
+    - motor1 `warmup=0x00000000 read_speed=0x00000000 read_enable=0x00000000`
+- Because Pico2 MISO was disconnected, the secondary all-zero readback in this specific run is expected and should not be treated as a fresh discriminator for shared-bus behavior.
+- Phase 2/2 then ran the guided end-switch sequence.
+- Observed switch outcomes:
+  - motor0 MIN test on GPIO1 triggered GPIO2 instead
+  - motor0 MAX test on GPIO2 triggered GPIO1 instead
+  - motor1 MIN test on GPIO15 triggered GPIO4 instead
+  - motor1 MAX test on GPIO4 triggered GPIO15 instead
+  - motor2 MIN on GPIO5 passed
+  - motor2 MAX on GPIO11 passed
+- Summary from the bench log: `pass=2 fail=4`.
+- Interpretation:
+  - the switch sequence still served its intended purpose as a quick "does every switch fire" check
+  - switch label/order mismatches from this run should not be overinterpreted yet, because the current goal was presence detection rather than final mechanical mapping
   - move to an active isolation fix on MISO, such as a tri-state buffer or analog switch gated by CS
   - only keep probing firmware if you specifically want root-cause understanding of the RP2040 pad behavior
+
+## Latest Combined Readback Confirmation
+- A later rerun of the combined all-4 readback again showed the same split result:
+  - primary readback passed cleanly in the merged run:
+    - motor0 `expected_speed=0x00000123 read_speed=0x00000123 read_enable=0x00000001`
+    - motor2 `expected_speed=0x00000789 read_speed=0x00000789 read_enable=0x00000001`
+  - secondary readback again collapsed to zeros in that same run:
+    - motor3 `warmup=0x00000000 read_speed=0x00000000 read_enable=0x00000000`
+    - motor1 `warmup=0x00000000 read_speed=0x00000000 read_enable=0x00000000`
+- This is another straight confirmation of the existing diagnosis rather than a new behavior change: in the combined shared-MISO setup, primary can still look clean while the secondary path collapses.
+
+## Short Confirmation Mode
+- After saving that rerun, the RW612 test image was simplified for faster bench iteration.
+- New active image marker:
+  - `AUTO_TEST_SHORT_CONFIRM_V1_2026_05_26`
+- New active mode intent:
+  - start all 4 motors
+  - perform one compact readback pass for motors 0, 2, 3, and 1
+  - keep the motors running for at most 3 seconds
+  - stop a motor immediately if one of its configured end switches fires during that window
+  - stop all remaining motors at the 3-second limit
+- Log-shortening change:
+  - provisional interleaved per-attempt readback logs were gated off in `dbus_driver.c`
+  - final `DBCDRV_readReg32 summary` lines are still kept so each read result remains visible without the long retry spam
+- The new short confirmation image rebuilt successfully and is ready for the next flash/test cycle.
+
+## Short Confirmation Isolation Results
+- The short all-4 mode was then run with only Pico1 MISO connected.
+- In that configuration:
+  - the switch phase still worked and motor2 stopped on GPIO11 during the 3-second window
+  - the later stopped readback phase did not give a clean primary confirmation:
+    - motor0 enable read errored
+    - motor2 speed read back as `0x00001c89` instead of `0x00000789`
+  - secondary motors 1 and 3 read back zeros, which is expected with Pico2 MISO disconnected
+- The same short all-4 mode was then run with only Pico2 MISO connected.
+- In that configuration:
+  - primary motors 0 and 2 did not read back cleanly, which is expected with Pico1 MISO disconnected
+  - secondary stopped readback did confirm the written speeds:
+    - motor1 `expected=0x000001f4 speed=0x000001f4`
+    - motor3 `expected=0x0000044c speed=0x0000044c`
+- Interpretation:
+  - the short all-4 mode remains useful for quick switch checks and for confirming the Pico2 side in isolation
+  - it is not a clean apples-to-apples replacement for the earlier primary isolation readback proof, because the new sequence did not reproduce a clean primary-only stopped readback result
+
+## New Active Primary Isolation Mode
+- To restore a symmetric, directly comparable primary isolation check, a separate ultra-short primary-only stopped-readback image was added and made active.
+- New active image marker:
+  - `AUTO_TEST_PRIMARY_STOPPED_V1_2026_05_26`
+- This active mode reuses the existing primary register log probe for motors 0 and 2 only, with no switch window and no all-4 run phase.
+- The image rebuilt successfully and is now the correct next flash target for a clean Pico1-only stopped readback confirmation.
+
+## Primary-Only Stopped Readback Confirmation
+- The dedicated primary-only stopped-readback image was then run and produced a clean confirmation for Pico1-only isolated readback.
+- Result:
+  - motor0 `wrote_speed=0x00000123 read_speed=0x00000123 read_enable=0x00000000`
+  - motor2 `wrote_speed=0x00000789 read_speed=0x00000789 read_enable=0x00000000`
+- In this mode, `read_enable=0x00000000` is expected because the probe writes speed while leaving enable cleared.
+- This restores the symmetric isolation result set:
+  - Pico1-only stopped readback can be clean
+  - Pico2-only stopped readback can be clean
+  - the combined shared-MISO configuration is still the case that fails
+
+## Latest Both-MISO Short Confirmation Run
+- The short all-4 confirmation image was then rerun with both Pico MISO lines connected.
+- During the 3-second motion phase, switch handling worked as intended:
+  - motor1 stopped on GPIO4
+  - motor0 stopped on GPIO2
+  - switch summary was `motor0=1 motor1=1 motor2=0`
+- The later stopped write/readback phase was mixed again rather than clean:
+  - motor0 enable read failed, so there was no clean confirmation for motor0
+  - motor2 speed read came back corrupted as `0x00000489` instead of `0x00000789`
+  - motor1 speed readback was clean with `0x000001f4`
+  - motor3 speed read failed
+- This is still consistent with the established shared-MISO diagnosis:
+  - combined readback is unstable and can fail in different slots on different runs
+  - the isolated single-MISO cases can be clean, but the both-connected case is not reliable enough to treat as working
+
+## Latest Isolated Short-Mode Reruns
+- The short all-4 confirmation image was then rerun again in the single-MISO isolation setups.
+- With only Pico1 MISO connected:
+  - the 3-second switch phase completed with no switch hits in the logged rerun
+  - primary stopped readback was mixed:
+    - motor0 speed read back cleanly as `0x00000123`
+    - motor2 enable read failed, so there was no clean confirmation for motor2
+  - secondary remained unusable in that same run:
+    - motor1 enable read failed
+    - motor3 speed read back as `0x00000000`
+- With only Pico2 MISO connected:
+  - the 3-second switch phase stopped motor0 on GPIO2
+  - primary stopped readback failed, which is expected with Pico1 MISO absent:
+    - motor0 enable read failed
+    - motor2 enable read failed
+  - secondary stopped readback was clean again:
+    - motor1 `expected=0x000001f4 speed=0x000001f4`
+    - motor3 `expected=0x0000044c speed=0x0000044c`
+- Interpretation:
+  - the short all-4 mode remains a good practical switch-plus-secondary check
+  - the dedicated primary-only stopped-readback image is still the authoritative Pico1 isolation proof
+  - the short all-4 mode is not stable enough to replace the dedicated primary-only isolation check
 
 ## Hardware Purchase Recommendation
 - Passive fixes are now exhausted enough that the next justified step is active MISO isolation.

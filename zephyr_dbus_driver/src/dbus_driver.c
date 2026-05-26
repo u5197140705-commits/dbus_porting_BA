@@ -27,6 +27,7 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 #define DBCDRV_SPI_DUMMY_GAP_US 500u
 #define DBCDRV_LOG_READ_RETRY_HEXDUMPS 0
 #define DBCDRV_LOG_WRITE_HEXDUMPS 0
+#define DBCDRV_LOG_PROVISIONAL_INTERLEAVED 0
 #define DBCDRV_FAIL_DIAG_TAIL_BYTES 32u
 #define DBCDRV_FAIL_DIAG_LANE_TAIL_FRAMES 8u
 #define DBCDRV_FAIL_DIAG_MAX_BYTE_HITS 24u
@@ -1241,13 +1242,15 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
                 have_interleaved_candidate = true;
             }
 
-            LOG_INF("DBCDRV_readReg32 provisional interleaved match attempt=%u score=%u payload=%02x %02x %02x %02x",
+        #if DBCDRV_LOG_PROVISIONAL_INTERLEAVED
+                LOG_INF("DBCDRV_readReg32 provisional interleaved match attempt=%u score=%u payload=%02x %02x %02x %02x",
                     (unsigned)attempt,
                     (unsigned)candidate_score,
                     provisional_data[0],
                     provisional_data[1],
                     provisional_data[2],
                     provisional_data[3]);
+        #endif
         }
 
         k_usleep(DBCDRV_SPI_DUMMY_GAP_US);
@@ -1256,8 +1259,10 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     if (!have_match && have_interleaved_candidate) {
         memcpy(matched_data, interleaved_candidate, sizeof(matched_data));
         have_match = true;
+    #if DBCDRV_LOG_PROVISIONAL_INTERLEAVED
         LOG_INF("DBCDRV_readReg32 using best provisional interleaved payload score=%u",
-                (unsigned)interleaved_candidate_score);
+            (unsigned)interleaved_candidate_score);
+    #endif
     }
 
     if (!have_match) {

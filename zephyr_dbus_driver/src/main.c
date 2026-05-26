@@ -24,15 +24,15 @@
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
 #ifndef RW612_BUILD_MARKER
-#define RW612_BUILD_MARKER "RW612 build marker: AUTO_TEST_ALL4_V1_2026_05_20"
+#define RW612_BUILD_MARKER "RW612 build marker: AUTO_TEST_SHORT_CONFIRM_V1_2026_05_27"
 #endif
 
 #ifndef RW612_BOOT_BANNER
-#define RW612_BOOT_BANNER "AUTO_TEST_ALL4_V1"
+#define RW612_BOOT_BANNER "AUTO_TEST_SHORT_CONFIRM_V1"
 #endif
 
 #ifndef RW612_MODE_LABEL
-#define RW612_MODE_LABEL "AUTO_TEST_ALL4_V1"
+#define RW612_MODE_LABEL "AUTO_TEST_SHORT_CONFIRM_V1"
 #endif
 
 #ifndef DBUS_REPEATABILITY_RUNS
@@ -102,13 +102,34 @@
 #endif
 
 #ifndef DBUS_PRIMARY_LIVE_QUAD_READBACK_TEST
-#define DBUS_PRIMARY_LIVE_QUAD_READBACK_TEST 1
+#define DBUS_PRIMARY_LIVE_QUAD_READBACK_TEST 0
+#endif
+
+#ifndef DBUS_ALL4_LIVE_QUAD_READBACK_TEST
+#define DBUS_ALL4_LIVE_QUAD_READBACK_TEST 0
+#endif
+
+#ifndef DBUS_SECONDARY_LIVE_QUAD_READBACK_TEST
+#define DBUS_SECONDARY_LIVE_QUAD_READBACK_TEST 0
+#endif
+
+#ifndef DBUS_FINAL_ALL4_SWITCH_TEST
+#define DBUS_FINAL_ALL4_SWITCH_TEST 0
+#endif
+
+#ifndef DBUS_SHORT_ALL4_CONFIRM_TEST
+#define DBUS_SHORT_ALL4_CONFIRM_TEST 1
+#endif
+
+#ifndef DBUS_SHORT_PRIMARY_STOPPED_READBACK_TEST
+#define DBUS_SHORT_PRIMARY_STOPPED_READBACK_TEST 0
 #endif
 
 #define ENDSWITCH_TEST_VISUAL_RUN_MS 1500u
 #define ENDSWITCH_TEST_SWITCH_RUN_MS 1800u
 #define ENDSWITCH_TEST_ARM_MS        900u
 #define ENDSWITCH_TEST_GAP_MS        250u
+#define SHORT_CONFIRM_RUN_MS         3000u
 
 #define MOTOR1_ENDSWITCH_MIN_PIN 15u
 #define MOTOR1_ENDSWITCH_MAX_PIN 4u
@@ -164,6 +185,14 @@ static bool run_quad_simultaneous_cycle_custom(uint32_t run_ms,
                                                uint32_t guard_motor_mask);
 static void run_register_log_probe(void);
 static void run_primary_live_quad_readback_test(void);
+static void run_all4_live_quad_readback_test(void);
+static void run_secondary_live_quad_readback_test(void);
+static void run_final_all4_switch_test(const struct device *gpio_dev);
+static void run_short_all4_confirm_test(const struct device *gpio_dev);
+static void run_short_primary_stopped_readback_test(void);
+static enum DBC_Error read_motor_reg32(uint8_t motor_index,
+                                       uint16_t reg_offset,
+                                       uint32_t *value);
 
 static bool select_spi_target_with_settle(enum DBCDRV_SpiTarget target,
                                           const char *log_tag,
@@ -623,6 +652,249 @@ static void run_guided_endswitch_test(const struct device *gpio_dev)
 static void run_motor0_endswitch_test(const struct device *gpio_dev)
 {
     run_guided_endswitch_test(gpio_dev);
+}
+
+static void run_final_all4_switch_test(const struct device *gpio_dev)
+{
+    printk("Main: FINAL all-4 plus switch test mode active\n");
+    printk("Main: phase 1/2 merged all-4 live readback\n");
+    run_all4_live_quad_readback_test();
+
+    stop_all_motors_now();
+    k_msleep(ENDSWITCH_TEST_GAP_MS);
+
+    printk("Main: phase 2/2 guided end-switch checks\n");
+    init_endswitch_inputs(gpio_dev);
+    run_guided_endswitch_test(gpio_dev);
+}
+
+static void run_short_all4_confirm_test(const struct device *gpio_dev)
+{
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } primary_motors[] = {
+        { 0u, 0x00000123u },
+        { 2u, 0x00000789u },
+    };
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } secondary_motors[] = {
+        { 1u, 0x000001F4u },
+        { 3u, 0x0000044Cu },
+    };
+    uint32_t remaining_ms = SHORT_CONFIRM_RUN_MS;
+    uint32_t switch_hit_mask = 0u;
+    uint32_t switchable_mask = (1u << 0) | (1u << 1) | (1u << 2);
+
+    printk("Main: SHORT all-4 confirm test start\n");
+    printk("Main: goal = write + readback + switch activity within %ums\n",
+           (unsigned)SHORT_CONFIRM_RUN_MS);
+
+    init_endswitch_inputs(gpio_dev);
+    stop_all_motors_now();
+    k_msleep(100u);
+
+    printk("Main: phase 1/2 run motors with immediate switch guard\n");
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                      "Main:",
+                                      "short confirm primary start")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(primary_motors); i++) {
+            if (!start_motor_on_selected_target(primary_motors[i].motor,
+                                                primary_motors[i].speed,
+                                                "Main: short confirm")) {
+                printk("Main: short confirm start failed motor=%u\n",
+                       (unsigned)primary_motors[i].motor);
+            }
+        }
+    }
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                      "Main:",
+                                      "short confirm secondary start")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(secondary_motors); i++) {
+            if (!start_motor_on_selected_target(secondary_motors[i].motor,
+                                                secondary_motors[i].speed,
+                                                "Main: short confirm")) {
+                printk("Main: short confirm start failed motor=%u\n",
+                       (unsigned)secondary_motors[i].motor);
+            }
+        }
+    }
+
+    printk("Main: switch window active for %ums, press any corresponding switch to stop that motor early\n",
+           (unsigned)SHORT_CONFIRM_RUN_MS);
+
+    while (remaining_ms > 0u) {
+        gpio_pin_t active_pin = 0u;
+        uint8_t active_motor = 0u;
+        uint32_t sleep_ms = (remaining_ms > MOTOR0_ENDSWITCH_POLL_MS)
+            ? MOTOR0_ENDSWITCH_POLL_MS
+            : remaining_ms;
+
+        if (device_is_ready(gpio_dev) &&
+            switchable_mask != 0u &&
+            motor_endswitch_active(gpio_dev, switchable_mask, &active_motor, &active_pin)) {
+            const char *active_label = "UNKNOWN";
+
+            for (size_t i = 0u; i < ARRAY_SIZE(motor_endswitch_bindings); i++) {
+                const struct motor_endswitch_binding *binding = &motor_endswitch_bindings[i];
+
+                if (binding->motor != active_motor) {
+                    continue;
+                }
+
+                if (binding->min_pin == active_pin) {
+                    active_label = "MIN";
+                } else if (binding->max_pin == active_pin) {
+                    active_label = "MAX";
+                }
+                break;
+            }
+
+            printk("Main: short confirm switch motor%u %s GPIO%u -> stopping that motor\n",
+                   (unsigned)active_motor,
+                   active_label,
+                   (unsigned)active_pin);
+            stop_motor_now(active_motor);
+            switch_hit_mask |= (1u << active_motor);
+            switchable_mask &= ~(1u << active_motor);
+            continue;
+        }
+
+        k_msleep(sleep_ms);
+        remaining_ms -= sleep_ms;
+    }
+
+    stop_all_motors_now();
+    printk("Main: short confirm switch summary motor0=%u motor1=%u motor2=%u\n",
+           (unsigned)((switch_hit_mask >> 0) & 0x1u),
+           (unsigned)((switch_hit_mask >> 1) & 0x1u),
+           (unsigned)((switch_hit_mask >> 2) & 0x1u));
+
+    printk("Main: phase 2/2 compact write+readback confirmation while motors are stopped\n");
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                      "Main:",
+                                      "short confirm primary readback")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(primary_motors); i++) {
+            uint32_t enable_value = 0u;
+            uint32_t speed_value = 0u;
+            enum DBC_Error err;
+
+            err = write_motor_reg32(primary_motors[i].motor,
+                                    MOTOR_REG_ENABLE_OFFSET,
+                                    0u);
+            if (err != DBC_OK) {
+                printk("Main: short confirm preset motor=%u enable write err=%d\n",
+                       (unsigned)primary_motors[i].motor,
+                       err);
+                continue;
+            }
+
+            err = write_motor_reg32(primary_motors[i].motor,
+                                    MOTOR_REG_SPEED_OFFSET,
+                                    primary_motors[i].speed);
+            if (err != DBC_OK) {
+                printk("Main: short confirm preset motor=%u speed write err=%d\n",
+                       (unsigned)primary_motors[i].motor,
+                       err);
+                continue;
+            }
+
+            err = read_motor_reg32(primary_motors[i].motor,
+                                   MOTOR_REG_ENABLE_OFFSET,
+                                   &enable_value);
+            if (err != DBC_OK) {
+                printk("Main: short confirm readback motor=%u enable err=%d\n",
+                       (unsigned)primary_motors[i].motor,
+                       err);
+                continue;
+            }
+
+            err = read_motor_reg32(primary_motors[i].motor,
+                                   MOTOR_REG_SPEED_OFFSET,
+                                   &speed_value);
+            if (err != DBC_OK) {
+                printk("Main: short confirm readback motor=%u speed err=%d\n",
+                       (unsigned)primary_motors[i].motor,
+                       err);
+                continue;
+            }
+
+            printk("Main: short confirm readback motor=%u expected=0x%08x speed=0x%08x enable=0x%08x\n",
+                   (unsigned)primary_motors[i].motor,
+                   (unsigned)primary_motors[i].speed,
+                   (unsigned)speed_value,
+                   (unsigned)enable_value);
+        }
+    }
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                      "Main:",
+                                      "short confirm secondary readback")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(secondary_motors); i++) {
+            uint32_t enable_value = 0u;
+            uint32_t speed_value = 0u;
+            enum DBC_Error err;
+
+            err = write_motor_reg32(secondary_motors[i].motor,
+                                    MOTOR_REG_ENABLE_OFFSET,
+                                    0u);
+            if (err != DBC_OK) {
+                printk("Main: short confirm preset motor=%u enable write err=%d\n",
+                       (unsigned)secondary_motors[i].motor,
+                       err);
+                continue;
+            }
+
+            err = write_motor_reg32(secondary_motors[i].motor,
+                                    MOTOR_REG_SPEED_OFFSET,
+                                    secondary_motors[i].speed);
+            if (err != DBC_OK) {
+                printk("Main: short confirm preset motor=%u speed write err=%d\n",
+                       (unsigned)secondary_motors[i].motor,
+                       err);
+                continue;
+            }
+
+            err = read_motor_reg32(secondary_motors[i].motor,
+                                   MOTOR_REG_ENABLE_OFFSET,
+                                   &enable_value);
+            if (err != DBC_OK) {
+                printk("Main: short confirm readback motor=%u enable err=%d\n",
+                       (unsigned)secondary_motors[i].motor,
+                       err);
+                continue;
+            }
+
+            err = read_motor_reg32(secondary_motors[i].motor,
+                                   MOTOR_REG_SPEED_OFFSET,
+                                   &speed_value);
+            if (err != DBC_OK) {
+                printk("Main: short confirm readback motor=%u speed err=%d\n",
+                       (unsigned)secondary_motors[i].motor,
+                       err);
+                continue;
+            }
+
+            printk("Main: short confirm readback motor=%u expected=0x%08x speed=0x%08x enable=0x%08x\n",
+                   (unsigned)secondary_motors[i].motor,
+                   (unsigned)secondary_motors[i].speed,
+                   (unsigned)speed_value,
+                   (unsigned)enable_value);
+        }
+    }
+
+    printk("Main: SHORT all-4 confirm test end\n");
+}
+
+static void run_short_primary_stopped_readback_test(void)
+{
+    printk("Main: SHORT primary stopped-readback mode active\n");
+    run_register_log_probe();
 }
 
 static bool run_quad_simultaneous_cycle_custom(uint32_t run_ms,
@@ -1330,6 +1602,299 @@ static void run_primary_live_quad_readback_test(void)
     printk("Main: live quad primary readback test end\n");
 }
 
+static void run_all4_live_quad_readback_test(void)
+{
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } primary_probes[] = {
+        { 0u, 0x00000123u },
+        { 2u, 0x00000789u },
+    };
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } secondary_start[] = {
+        { 1u, 0x000001F4u },
+        { 3u, 0x0000044Cu },
+    };
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } secondary_probes[] = {
+        { 3u, 0x0000044Cu },
+        { 1u, 0x000001F4u },
+    };
+
+    printk("Main: live quad all-4 readback test start\n");
+    stop_all_motors_now();
+    k_msleep(100u);
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                      "Main:",
+                                      "live quad primary start")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(primary_probes); i++) {
+            if (!start_motor_on_selected_target(primary_probes[i].motor,
+                                                primary_probes[i].speed,
+                                                "Main: live quad")) {
+                printk("Main: live quad start failed motor=%u\n",
+                       (unsigned)primary_probes[i].motor);
+            }
+        }
+    }
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                      "Main:",
+                                      "live quad secondary start")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(secondary_start); i++) {
+            if (!start_motor_on_selected_target(secondary_start[i].motor,
+                                                secondary_start[i].speed,
+                                                "Main: live quad")) {
+                printk("Main: live quad start failed motor=%u\n",
+                       (unsigned)secondary_start[i].motor);
+            }
+        }
+    }
+
+    printk("Main: all 4 motors commanded on, probing primary then secondary readback while running\n");
+    k_msleep(250u);
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                      "Main:",
+                                      "live quad primary probe")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(primary_probes); i++) {
+            uint32_t enable_value = 0u;
+            uint32_t speed_value = 0u;
+            enum DBC_Error err;
+
+            err = read_motor_reg32(primary_probes[i].motor,
+                                   MOTOR_REG_ENABLE_OFFSET,
+                                   &enable_value);
+            if (err != DBC_OK) {
+                printk("Main: live quad primary enable read failed motor=%u err=%d\n",
+                       (unsigned)primary_probes[i].motor,
+                       err);
+                continue;
+            }
+
+            err = read_motor_reg32(primary_probes[i].motor,
+                                   MOTOR_REG_SPEED_OFFSET,
+                                   &speed_value);
+            if (err != DBC_OK) {
+                printk("Main: live quad primary speed read failed motor=%u err=%d\n",
+                       (unsigned)primary_probes[i].motor,
+                       err);
+                continue;
+            }
+
+            printk("Main: live quad probe motor=%u expected_speed=0x%08x read_speed=0x%08x read_enable=0x%08x\n",
+                   (unsigned)primary_probes[i].motor,
+                   (unsigned)primary_probes[i].speed,
+                   (unsigned)speed_value,
+                   (unsigned)enable_value);
+        }
+    }
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                      "Main:",
+                                      "live quad secondary probe")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(secondary_probes); i++) {
+            uint32_t enable_value = 0u;
+            uint32_t warmup_speed_value = 0u;
+            uint32_t speed_value = 0u;
+            enum DBC_Error err;
+            enum DBC_Error warmup_err;
+
+            err = read_motor_reg32(secondary_probes[i].motor,
+                                   MOTOR_REG_ENABLE_OFFSET,
+                                   &enable_value);
+            if (err != DBC_OK) {
+                printk("Main: live quad secondary enable read failed motor=%u err=%d\n",
+                       (unsigned)secondary_probes[i].motor,
+                       err);
+                continue;
+            }
+
+            warmup_err = read_motor_reg32(secondary_probes[i].motor,
+                                          MOTOR_REG_SPEED_OFFSET,
+                                          &warmup_speed_value);
+            if (warmup_err != DBC_OK) {
+                printk("Main: live quad secondary warmup speed read failed motor=%u err=%d\n",
+                       (unsigned)secondary_probes[i].motor,
+                       warmup_err);
+                continue;
+            }
+
+            err = read_motor_reg32(secondary_probes[i].motor,
+                                   MOTOR_REG_SPEED_OFFSET,
+                                   &speed_value);
+            if (err != DBC_OK) {
+                printk("Main: live quad secondary speed read failed motor=%u err=%d\n",
+                       (unsigned)secondary_probes[i].motor,
+                       err);
+                continue;
+            }
+
+            printk("Main: live quad probe motor=%u expected_speed=0x%08x warmup=0x%08x warmup_err=%d read_speed=0x%08x read_enable=0x%08x\n",
+                   (unsigned)secondary_probes[i].motor,
+                   (unsigned)secondary_probes[i].speed,
+                   (unsigned)warmup_speed_value,
+                   warmup_err,
+                   (unsigned)speed_value,
+                   (unsigned)enable_value);
+        }
+    }
+
+    k_msleep(350u);
+    stop_all_motors_now();
+    printk("Main: live quad all-4 readback test end\n");
+}
+
+static void run_secondary_live_quad_readback_test(void)
+{
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } primary_support[] = {
+        { 0u, 0x00000123u },
+        { 2u, 0x00000789u },
+    };
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } secondary_start[] = {
+        { 1u, 0x000001F4u },
+        { 3u, 0x0000044Cu },
+    };
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } secondary_probes[] = {
+        { 3u, 0x0000044Cu },
+        { 1u, 0x000001F4u },
+    };
+
+    printk("Main: live quad secondary readback test start\n");
+    stop_all_motors_now();
+    k_msleep(100u);
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                      "Main:",
+                                      "live quad primary start")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(primary_support); i++) {
+            if (!start_motor_on_selected_target(primary_support[i].motor,
+                                                primary_support[i].speed,
+                                                "Main: live quad")) {
+                printk("Main: live quad start failed motor=%u\n",
+                       (unsigned)primary_support[i].motor);
+            }
+        }
+    }
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                      "Main:",
+                                      "live quad secondary start")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(secondary_start); i++) {
+            if (!start_motor_on_selected_target(secondary_start[i].motor,
+                                                secondary_start[i].speed,
+                                                "Main: live quad")) {
+                printk("Main: live quad start failed motor=%u\n",
+                       (unsigned)secondary_start[i].motor);
+            }
+        }
+    }
+
+    printk("Main: all 4 motors commanded on, probing secondary readback while running (order: motor3 then motor1)\n");
+    k_msleep(250u);
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                      "Main:",
+                                      "live quad secondary probe")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(secondary_probes); i++) {
+            uint32_t enable_value = 0u;
+            uint32_t warmup_speed_value = 0u;
+            uint32_t speed_value = 0u;
+            enum DBC_Error err;
+            enum DBC_Error warmup_err;
+
+            err = read_motor_reg32(secondary_probes[i].motor,
+                                   MOTOR_REG_ENABLE_OFFSET,
+                                   &enable_value);
+            if (err != DBC_OK) {
+                printk("Main: live quad enable read failed motor=%u err=%d\n",
+                       (unsigned)secondary_probes[i].motor,
+                       err);
+                continue;
+            }
+
+            warmup_err = read_motor_reg32(secondary_probes[i].motor,
+                                          MOTOR_REG_SPEED_OFFSET,
+                                          &warmup_speed_value);
+            if (warmup_err != DBC_OK) {
+                printk("Main: live quad warmup speed read failed motor=%u err=%d\n",
+                       (unsigned)secondary_probes[i].motor,
+                       warmup_err);
+                continue;
+            }
+
+            err = read_motor_reg32(secondary_probes[i].motor,
+                                   MOTOR_REG_SPEED_OFFSET,
+                                   &speed_value);
+            if (err != DBC_OK) {
+                printk("Main: live quad speed read failed motor=%u err=%d\n",
+                       (unsigned)secondary_probes[i].motor,
+                       err);
+                continue;
+            }
+
+                 if (secondary_probes[i].motor == 1u) {
+                static const uint32_t delay_sweep_us[] = { 0u, 100u, 500u };
+                uint32_t sweep_values[ARRAY_SIZE(delay_sweep_us)] = { speed_value, 0u, 0u };
+                int sweep_errs[ARRAY_SIZE(delay_sweep_us)] = { err, 0, 0 };
+
+                for (size_t sweep_index = 1u; sweep_index < ARRAY_SIZE(delay_sweep_us); sweep_index++) {
+                    k_usleep(delay_sweep_us[sweep_index]);
+                    sweep_errs[sweep_index] = read_motor_reg32(secondary_probes[i].motor,
+                                                               MOTOR_REG_SPEED_OFFSET,
+                                                               &sweep_values[sweep_index]);
+                    if (sweep_errs[sweep_index] != DBC_OK) {
+                        printk("Main: live quad delayed speed read failed motor=%u delay_us=%u err=%d\n",
+                               (unsigned)secondary_probes[i].motor,
+                               (unsigned)delay_sweep_us[sweep_index],
+                               sweep_errs[sweep_index]);
+                    }
+                }
+
+                  printk("Main: live quad probe motor=%u expected_speed=0x%08x read_enable=0x%08x warmup=0x%08x warmup_err=%d delay0=0x%08x err0=%d delay100=0x%08x err100=%d delay500=0x%08x err500=%d\n",
+                       (unsigned)secondary_probes[i].motor,
+                       (unsigned)secondary_probes[i].speed,
+                       (unsigned)enable_value,
+                      (unsigned)warmup_speed_value,
+                      warmup_err,
+                       (unsigned)sweep_values[0],
+                       sweep_errs[0],
+                       (unsigned)sweep_values[1],
+                       sweep_errs[1],
+                       (unsigned)sweep_values[2],
+                       sweep_errs[2]);
+                  continue;
+                 }
+
+                 printk("Main: live quad probe motor=%u expected_speed=0x%08x warmup=0x%08x warmup_err=%d read_speed=0x%08x read_enable=0x%08x\n",
+                     (unsigned)secondary_probes[i].motor,
+                     (unsigned)secondary_probes[i].speed,
+                     (unsigned)warmup_speed_value,
+                     warmup_err,
+                     (unsigned)speed_value,
+                     (unsigned)enable_value);
+        }
+    }
+
+    k_msleep(350u);
+    stop_all_motors_now();
+    printk("Main: live quad secondary readback test end\n");
+}
+
 static uint32_t g_secondary_cycle_counter = 0u;
 
 
@@ -1353,6 +1918,33 @@ int main(void)
     init_endswitch_inputs(probe_gpio);
     run_motor0_endswitch_test(probe_gpio);
     run_register_log_probe();
+    return 0;
+#endif
+
+#if DBUS_SHORT_ALL4_CONFIRM_TEST
+    run_short_all4_confirm_test(probe_gpio);
+    return 0;
+#endif
+
+#if DBUS_SHORT_PRIMARY_STOPPED_READBACK_TEST
+    run_short_primary_stopped_readback_test();
+    return 0;
+#endif
+
+#if DBUS_FINAL_ALL4_SWITCH_TEST
+    run_final_all4_switch_test(probe_gpio);
+    return 0;
+#endif
+
+#if DBUS_ALL4_LIVE_QUAD_READBACK_TEST
+    printk("Main: ALL-4 live quad readback mode active\n");
+    run_all4_live_quad_readback_test();
+    return 0;
+#endif
+
+#if DBUS_SECONDARY_LIVE_QUAD_READBACK_TEST
+    printk("Main: SECONDARY live quad readback mode active\n");
+    run_secondary_live_quad_readback_test();
     return 0;
 #endif
 
