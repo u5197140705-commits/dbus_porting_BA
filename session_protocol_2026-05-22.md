@@ -172,6 +172,16 @@ Firmware markers expected in this build lineage:
 - This confirms the primary Pico readback path is restored for the focused register probe after the latest Pico flash.
 - Because the short mode did not keep all four motors moving, a follow-up RW612 mode was added next to test primary readback while all four motors are commanded on.
 
+## Live Quad Primary Readback Result
+- The follow-up RW612 live-quad mode was run with all 4 motors commanded on before the primary readback probe.
+- Bench observation: all 4 motors did move during this run.
+- While those motors were still running, the primary Pico readback stayed correct:
+  - motor0 enable readback passed with `read_enable=0x00000001`
+  - motor0 speed readback passed with `expected_speed=0x00000123 read_speed=0x00000123`
+  - motor2 enable readback passed with `read_enable=0x00000001`
+  - motor2 speed readback passed with `expected_speed=0x00000789 read_speed=0x00000789`
+- This is the first validated result showing that primary Pico register readback still works while all four motors are actively moving.
+
 ## Next Resume Step
 When work resumes:
 1. Treat Pico2 transport as re-proven when Pico1 MISO is absent from the shared bus.
