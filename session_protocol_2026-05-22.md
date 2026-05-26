@@ -118,6 +118,9 @@ Firmware markers expected in this build lineage:
 - Both Picos were manually reflashed with the newer firmware that adds:
   - inactive MISO switched to GPIO input with pulls disabled
   - USB `BOOTSEL` command support for future reflashing
+- Primary Pico BOOTSEL-free reboot command used successfully from this workspace:
+  - `powershell.exe -NoProfile -Command '$port = [System.IO.Ports.SerialPort]::new("COM10",115200); $port.NewLine = "`r`n"; $port.DtrEnable = $true; $port.RtsEnable = $true; $port.Open(); Start-Sleep -Milliseconds 200; $port.WriteLine("BOOTSEL"); $port.BaseStream.Flush(); $port.Close(); Write-Output "BOOTSEL sent to COM10"'`
+  - after running that command, copy `pico_spi_slave_test/build/pico_spi_slave_test.uf2` to the `RPI-RP2` drive
 - After that reflash, the original integrated RW612 image was rerun.
 - Result:
   - quad motor test still `PASS`
@@ -160,6 +163,15 @@ Firmware markers expected in this build lineage:
 - This re-establishes that the secondary Pico read-response path itself works when Pico1 is not present as a powered participant on the bus.
 - Therefore the remaining problem is narrower: Pico1 being powered and connected is what breaks secondary-selected readback in the combined setup.
 
+## Primary Pico Readback Recovery Checkpoint
+- After reflashing the primary Pico with the updated firmware, RW612 was switched to a short primary-only register log mode.
+- That short mode did not drive motors 1 and 3; it only exercised register writes and reads for primary motors 0 and 2.
+- Result:
+  - motor0 speed write/readback passed with `wrote_speed=0x00000123 read_speed=0x00000123`
+  - motor2 speed write/readback passed with `wrote_speed=0x00000789 read_speed=0x00000789`
+- This confirms the primary Pico readback path is restored for the focused register probe after the latest Pico flash.
+- Because the short mode did not keep all four motors moving, a follow-up RW612 mode was added next to test primary readback while all four motors are commanded on.
+
 ## Next Resume Step
 When work resumes:
 1. Treat Pico2 transport as re-proven when Pico1 MISO is absent from the shared bus.
@@ -198,16 +210,30 @@ When work resumes:
   - motor1 min/home -> GPIO3
   - motor1 max/end -> GPIO4
   - motor2 min/home -> GPIO5
-  - motor2 max/end -> GPIO13
+  - motor2 max/end -> GPIO11
 - Reason for this recommendation:
   - avoids the current SPI pins GPIO6-10
   - avoids already-used motor0 end-switch pins GPIO1-2
   - avoids GPIO18, which is already reserved in the project
-  - avoids GPIO11 and GPIO12, which were already noted as impractical choices in this board setup
+  - uses GPIO11 because it is available and practical in the current physical wiring plan
 - Electrical recommendation stays the same as motor0:
   - input with pull-up
   - switch wired between GPIO and GND
   - active-low logic
+
+### Current Firmware Test Flow
+- RW612 runtime guard logic now covers motor0, motor1, and motor2 using the six configured GPIOs above.
+- A dedicated short guided test mode now exists behind `DBUS_ENABLE_ENDSWITCH_TEST` in `zephyr_dbus_driver/src/main.c`.
+- That guided mode is intentionally finite and log-light:
+  - short all-4-motor preview run first
+  - then 6 separate single-switch runs:
+    - motor0 on GPIO1
+    - motor0 on GPIO2
+    - motor1 on GPIO3
+    - motor1 on GPIO4
+    - motor2 on GPIO5
+    - motor2 on GPIO11
+- Each single-switch step gives a short arm window, then runs one motor briefly until the named switch stops it or a timeout is reported.
 
 ---
 

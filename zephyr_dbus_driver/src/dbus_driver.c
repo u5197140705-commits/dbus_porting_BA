@@ -1151,7 +1151,10 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     cumulative_len = frame_len;
 
     for (uint8_t attempt = 1u; attempt <= DBCDRV_SPI_DUMMY_RETRIES; attempt++) {
-        DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_READ, dummy_tx);
+        /* After the initial READ command, send pure dummy clocks so the Pico
+         * can return the already-queued response frame without parsing a fresh
+         * command on every retry. */
+        memset(dummy_tx, 0, sizeof(dummy_tx));
         memset(data_rx, 0, sizeof(data_rx));
 
         if (dbus_drv_set_cs_state(dbus_spi_target, true) < 0) {

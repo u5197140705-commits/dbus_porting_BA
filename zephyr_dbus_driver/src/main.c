@@ -90,7 +90,19 @@
 #endif
 
 #ifndef DBUS_ENABLE_ENDSWITCH_TEST
-#define DBUS_ENABLE_ENDSWITCH_TEST 1
+#define DBUS_ENABLE_ENDSWITCH_TEST 0
+#endif
+
+#ifndef DBUS_ENABLE_REGISTER_LOG_PROBE
+#define DBUS_ENABLE_REGISTER_LOG_PROBE 1
+#endif
+
+#ifndef DBUS_PRIMARY_REGISTER_LOG_ONLY
+#define DBUS_PRIMARY_REGISTER_LOG_ONLY 0
+#endif
+
+#ifndef DBUS_PRIMARY_LIVE_QUAD_READBACK_TEST
+#define DBUS_PRIMARY_LIVE_QUAD_READBACK_TEST 1
 #endif
 
 #define ENDSWITCH_TEST_VISUAL_RUN_MS 1500u
@@ -150,6 +162,8 @@ static bool run_quad_simultaneous_cycle_custom(uint32_t run_ms,
                                                uint32_t gap_ms,
                                                const char *label,
                                                uint32_t guard_motor_mask);
+static void run_register_log_probe(void);
+static void run_primary_live_quad_readback_test(void);
 
 static bool select_spi_target_with_settle(enum DBCDRV_SpiTarget target,
                                           const char *log_tag,
@@ -427,8 +441,26 @@ static bool wait_with_endswitch_guard(const struct device *gpio_dev,
             : remaining_ms;
 
         if (motor_endswitch_active(gpio_dev, motor_mask, &active_motor, &active_pin)) {
-            printk("Main: motor%u stopped by end-switch on GPIO%u\n",
+            const char *active_label = "UNKNOWN";
+
+            for (size_t i = 0u; i < ARRAY_SIZE(motor_endswitch_bindings); i++) {
+                const struct motor_endswitch_binding *binding = &motor_endswitch_bindings[i];
+
+                if (binding->motor != active_motor) {
+                    continue;
+                }
+
+                if (binding->min_pin == active_pin) {
+                    active_label = "MIN";
+                } else if (binding->max_pin == active_pin) {
+                    active_label = "MAX";
+                }
+                break;
+            }
+
+            printk("Main: SWITCH PRESSED motor%u %s GPIO%u -> stopping motor\n",
                    (unsigned)active_motor,
+                   active_label,
                    (unsigned)active_pin);
             stop_motor_now(active_motor);
             return false;
@@ -488,12 +520,15 @@ static bool run_single_motor_endswitch_window(const struct device *gpio_dev,
                                        (1u << motor),
                                        &active_motor,
                                        &active_pin)) {
-                printk("Main: motor%u stopped by GPIO%u\n",
-                       (unsigned)active_motor,
-                       (unsigned)active_pin);
+                     printk("Main: SWITCH PRESSED expected motor%u %s GPIO%u / observed motor%u GPIO%u\n",
+                              (unsigned)motor,
+                              expected_label,
+                              (unsigned)expected_pin,
+                              (unsigned)active_motor,
+                              (unsigned)active_pin);
                 stop_motor_now(active_motor);
                 if (active_motor == motor && active_pin == expected_pin) {
-                          printk("Main: switch test PASS motor%u %s GPIO%u\n",
+                                  printk("Main: switch test PASS motor%u %s GPIO%u\n",
                            (unsigned)motor,
                               expected_label,
                            (unsigned)expected_pin);
@@ -1133,6 +1168,168 @@ static void run_readback_probe(void)
 #endif
 }
 
+static void run_register_log_probe(void)
+{
+#if DBUS_ENABLE_REGISTER_LOG_PROBE
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } probes[] = {
+        { 0u, 0x00000123u },
+        { 2u, 0x00000789u },
+    };
+
+    printk("Main: register log probe start (primary motors 0 and 2 only)\n");
+
+    for (size_t i = 0u; i < ARRAY_SIZE(probes); i++) {
+        uint32_t enable_value = 0u;
+        uint32_t speed_value = 0u;
+        enum DBC_Error err;
+
+        if (!select_spi_target_with_settle(target_for_motor(probes[i].motor),
+                                           "Main:",
+                                           "register log probe")) {
+            printk("Main: register log probe target select failed motor=%u\n",
+                   (unsigned)probes[i].motor);
+            continue;
+        }
+
+        err = write_motor_reg32(probes[i].motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+        if (err != DBC_OK) {
+            printk("Main: register log probe disable failed motor=%u err=%d\n",
+                   (unsigned)probes[i].motor,
+                   err);
+            continue;
+        }
+
+        err = write_motor_reg32(probes[i].motor, MOTOR_REG_SPEED_OFFSET, probes[i].speed);
+        if (err != DBC_OK) {
+            printk("Main: register log probe speed write failed motor=%u err=%d\n",
+                   (unsigned)probes[i].motor,
+                   err);
+            continue;
+        }
+
+        k_usleep(200u);
+
+        err = read_motor_reg32(probes[i].motor, MOTOR_REG_ENABLE_OFFSET, &enable_value);
+        if (err != DBC_OK) {
+            printk("Main: register log probe enable read failed motor=%u err=%d\n",
+                   (unsigned)probes[i].motor,
+                   err);
+            continue;
+        }
+
+        err = read_motor_reg32(probes[i].motor, MOTOR_REG_SPEED_OFFSET, &speed_value);
+        if (err != DBC_OK) {
+            printk("Main: register log probe speed read failed motor=%u err=%d\n",
+                   (unsigned)probes[i].motor,
+                   err);
+            continue;
+        }
+
+        printk("Main: register log probe motor=%u wrote_speed=0x%08x read_speed=0x%08x read_enable=0x%08x\n",
+               (unsigned)probes[i].motor,
+               (unsigned)probes[i].speed,
+               (unsigned)speed_value,
+               (unsigned)enable_value);
+    }
+
+    printk("Main: register log probe end\n");
+#endif
+}
+
+static void run_primary_live_quad_readback_test(void)
+{
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } primary_probes[] = {
+        { 0u, 0x00000123u },
+        { 2u, 0x00000789u },
+    };
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } secondary_support[] = {
+        { 1u, 0x000001F4u },
+        { 3u, 0x0000044Cu },
+    };
+
+    printk("Main: live quad primary readback test start\n");
+    stop_all_motors_now();
+    k_msleep(100u);
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                      "Main:",
+                                      "live quad primary start")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(primary_probes); i++) {
+            if (!start_motor_on_selected_target(primary_probes[i].motor,
+                                                primary_probes[i].speed,
+                                                "Main: live quad")) {
+                printk("Main: live quad start failed motor=%u\n",
+                       (unsigned)primary_probes[i].motor);
+            }
+        }
+    }
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                      "Main:",
+                                      "live quad secondary start")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(secondary_support); i++) {
+            if (!start_motor_on_selected_target(secondary_support[i].motor,
+                                                secondary_support[i].speed,
+                                                "Main: live quad")) {
+                printk("Main: live quad start failed motor=%u\n",
+                       (unsigned)secondary_support[i].motor);
+            }
+        }
+    }
+
+    printk("Main: all 4 motors commanded on, probing primary readback while running\n");
+    k_msleep(250u);
+
+    if (select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                      "Main:",
+                                      "live quad primary probe")) {
+        for (size_t i = 0u; i < ARRAY_SIZE(primary_probes); i++) {
+            uint32_t enable_value = 0u;
+            uint32_t speed_value = 0u;
+            enum DBC_Error err;
+
+            err = read_motor_reg32(primary_probes[i].motor,
+                                   MOTOR_REG_ENABLE_OFFSET,
+                                   &enable_value);
+            if (err != DBC_OK) {
+                printk("Main: live quad enable read failed motor=%u err=%d\n",
+                       (unsigned)primary_probes[i].motor,
+                       err);
+                continue;
+            }
+
+            err = read_motor_reg32(primary_probes[i].motor,
+                                   MOTOR_REG_SPEED_OFFSET,
+                                   &speed_value);
+            if (err != DBC_OK) {
+                printk("Main: live quad speed read failed motor=%u err=%d\n",
+                       (unsigned)primary_probes[i].motor,
+                       err);
+                continue;
+            }
+
+            printk("Main: live quad probe motor=%u expected_speed=0x%08x read_speed=0x%08x read_enable=0x%08x\n",
+                   (unsigned)primary_probes[i].motor,
+                   (unsigned)primary_probes[i].speed,
+                   (unsigned)speed_value,
+                   (unsigned)enable_value);
+        }
+    }
+
+    k_msleep(350u);
+    stop_all_motors_now();
+    printk("Main: live quad primary readback test end\n");
+}
+
 static uint32_t g_secondary_cycle_counter = 0u;
 
 
@@ -1148,14 +1345,26 @@ int main(void)
     printk("Hello from Zephyr DBus Driver project! [%s]\n", RW612_BOOT_BANNER);
     printk("%s\n", RW612_BUILD_MARKER);
     printk("Main: mode=%s\n", RW612_MODE_LABEL);
-        printk("Repeatability mode: %u run(s). auto_test=%u\n",
-            DBUS_REPEATABILITY_RUNS,
-            (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
-
-    init_endswitch_inputs(probe_gpio);
+    printk("Repeatability mode: %u run(s). auto_test=%u\n",
+           DBUS_REPEATABILITY_RUNS,
+           (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
 
 #if DBUS_ENABLE_ENDSWITCH_TEST
+    init_endswitch_inputs(probe_gpio);
     run_motor0_endswitch_test(probe_gpio);
+    run_register_log_probe();
+    return 0;
+#endif
+
+#if DBUS_PRIMARY_LIVE_QUAD_READBACK_TEST
+    printk("Main: PRIMARY live quad readback mode active\n");
+    run_primary_live_quad_readback_test();
+    return 0;
+#endif
+
+#if DBUS_PRIMARY_REGISTER_LOG_ONLY
+    printk("Main: PRIMARY register log-only mode active\n");
+    run_register_log_probe();
     return 0;
 #endif
 

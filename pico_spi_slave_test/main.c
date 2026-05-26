@@ -1785,12 +1785,17 @@ static void service_spi_frame(spi_inst_t *spi)
         /* The just-finished frame has now been sniff-decoded and the drain is
          * complete, so it is safe to preload the next TX frame.
          *
-         * For pending read responses on Pico2, partial cs_end preload has been
-         * observed to stall at a 5-byte prefix (`qend=5`, `tx=5`), which is
-         * enough for marker/header leakage but not for the payload bytes to
-         * escape. Skip preload in that case and queue the full frame only at
-         * cs_start instead. */
+         * Pending read responses need different handling on the two Pico
+         * roles:
+         * - Pico1 (motors 0/2) benefits from cs_end preload so the response is
+         *   already in the SSP before the RW612 starts the next transfer.
+         * - Pico2 (motors 1/3) has shown truncated prefixes when preloaded at
+         *   cs_end, so keep its read responses queued only at cs_start. */
+    #if PICO_NODE_SLOT == 1
+        if (true) {
+    #else
         if (!tx_read_response_pending) {
+    #endif
             spi_slave_rearm(spi);
             last_cs_end_preload_count = (uint32_t)spi_slave_queue_current_tx_frame(spi);
             tx_frame_prequeued = (last_cs_end_preload_count == FRAME_SIZE);
