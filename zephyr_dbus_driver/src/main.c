@@ -90,12 +90,33 @@
 #endif
 
 #ifndef DBUS_ENABLE_ENDSWITCH_TEST
-#define DBUS_ENABLE_ENDSWITCH_TEST 0
+#define DBUS_ENABLE_ENDSWITCH_TEST 1
 #endif
 
+#define ENDSWITCH_TEST_VISUAL_RUN_MS 1500u
+#define ENDSWITCH_TEST_SWITCH_RUN_MS 1800u
+#define ENDSWITCH_TEST_ARM_MS        900u
+#define ENDSWITCH_TEST_GAP_MS        250u
+
+#define MOTOR1_ENDSWITCH_MIN_PIN 15u
+#define MOTOR1_ENDSWITCH_MAX_PIN 4u
+#define MOTOR2_ENDSWITCH_MIN_PIN 5u
+#define MOTOR2_ENDSWITCH_MAX_PIN 11u
 #define MOTOR0_ENDSWITCH_MIN_PIN 1u
 #define MOTOR0_ENDSWITCH_MAX_PIN 2u
 #define MOTOR0_ENDSWITCH_POLL_MS 10u
+
+struct motor_endswitch_binding {
+    uint8_t motor;
+    gpio_pin_t min_pin;
+    gpio_pin_t max_pin;
+};
+
+static const struct motor_endswitch_binding motor_endswitch_bindings[] = {
+    { 0u, MOTOR0_ENDSWITCH_MIN_PIN, MOTOR0_ENDSWITCH_MAX_PIN },
+    { 1u, MOTOR1_ENDSWITCH_MIN_PIN, MOTOR1_ENDSWITCH_MAX_PIN },
+    { 2u, MOTOR2_ENDSWITCH_MIN_PIN, MOTOR2_ENDSWITCH_MAX_PIN },
+};
 
 static void pulse_gpio_probe_pin(const struct device *gpio_dev,
                                  gpio_pin_t pin,
@@ -124,102 +145,292 @@ static void pulse_gpio_probe_pin(const struct device *gpio_dev,
 static enum DBC_Error write_motor_reg32(uint8_t motor_index,
                                         uint16_t reg_offset,
                                         uint32_t value);
+static enum DBCDRV_SpiTarget target_for_motor(uint8_t motor_index);
+static bool run_quad_simultaneous_cycle_custom(uint32_t run_ms,
+                                               uint32_t gap_ms,
+                                               const char *label,
+                                               uint32_t guard_motor_mask);
 
-static void init_motor0_endswitch_inputs(const struct device *gpio_dev)
+static bool select_spi_target_with_settle(enum DBCDRV_SpiTarget target,
+                                          const char *log_tag,
+                                          const char *phase)
 {
-    static const gpio_pin_t pins[] = {
-        MOTOR0_ENDSWITCH_MIN_PIN,
-        MOTOR0_ENDSWITCH_MAX_PIN,
-    };
+    enum DBC_Error err = DBCDRV_setSpiTarget(target);
 
+    if (err != DBC_OK) {
+        printk("%s %s target err=%d\n",
+               (log_tag != NULL) ? log_tag : "Main:",
+               (phase != NULL) ? phase : "spi",
+               err);
+        return false;
+    }
+
+    k_usleep(100u);
+    return true;
+}
+
+static void init_endswitch_inputs(const struct device *gpio_dev)
+{
     if (!device_is_ready(gpio_dev)) {
         printk("Main: end-switch GPIO device not ready\n");
         return;
     }
 
-    for (size_t i = 0u; i < ARRAY_SIZE(pins); i++) {
-        int ret = gpio_pin_configure(gpio_dev, pins[i], GPIO_INPUT | GPIO_PULL_UP);
+    for (size_t i = 0u; i < ARRAY_SIZE(motor_endswitch_bindings); i++) {
+        const gpio_pin_t pins[] = {
+            motor_endswitch_bindings[i].min_pin,
+            motor_endswitch_bindings[i].max_pin,
+        };
 
-        if (ret < 0) {
-            printk("Main: end-switch pin %u configure failed ret=%d\n",
-                   (unsigned)pins[i], ret);
-            continue;
+        for (size_t pin_index = 0u; pin_index < ARRAY_SIZE(pins); pin_index++) {
+            int ret = gpio_pin_configure(gpio_dev, pins[pin_index], GPIO_INPUT | GPIO_PULL_UP);
+
+            if (ret < 0) {
+                printk("Main: end-switch pin %u configure failed ret=%d\n",
+                       (unsigned)pins[pin_index], ret);
+                continue;
+            }
+
+            ret = gpio_pin_get(gpio_dev, pins[pin_index]);
+            printk("Main: end-switch pin %u ready state=%d (active-low)\n",
+                   (unsigned)pins[pin_index], ret);
         }
-
-        ret = gpio_pin_get(gpio_dev, pins[i]);
-        printk("Main: end-switch pin %u ready state=%d (active-low)\n",
-               (unsigned)pins[i], ret);
     }
 }
 
-static bool motor0_endswitch_active(const struct device *gpio_dev,
-                                    gpio_pin_t *active_pin)
+static bool motor_endswitch_active(const struct device *gpio_dev,
+                                   uint32_t motor_mask,
+                                   uint8_t *active_motor,
+                                   gpio_pin_t *active_pin)
 {
-    static const gpio_pin_t pins[] = {
-        MOTOR0_ENDSWITCH_MIN_PIN,
-        MOTOR0_ENDSWITCH_MAX_PIN,
-    };
-
     if (!device_is_ready(gpio_dev)) {
         return false;
     }
 
-    for (size_t i = 0u; i < ARRAY_SIZE(pins); i++) {
-        int state = gpio_pin_get(gpio_dev, pins[i]);
+    for (size_t i = 0u; i < ARRAY_SIZE(motor_endswitch_bindings); i++) {
+        const struct motor_endswitch_binding *binding = &motor_endswitch_bindings[i];
+        const gpio_pin_t pins[] = { binding->min_pin, binding->max_pin };
 
-        if (state < 0) {
-            printk("Main: end-switch pin %u read failed ret=%d\n",
-                   (unsigned)pins[i], state);
+        if ((motor_mask & (1u << binding->motor)) == 0u) {
             continue;
         }
 
-        if (state == 0) {
-            if (active_pin != NULL) {
-                *active_pin = pins[i];
+        for (size_t pin_index = 0u; pin_index < ARRAY_SIZE(pins); pin_index++) {
+            int state = gpio_pin_get(gpio_dev, pins[pin_index]);
+
+            if (state < 0) {
+                printk("Main: end-switch pin %u read failed ret=%d\n",
+                       (unsigned)pins[pin_index], state);
+                continue;
             }
-            return true;
+
+            if (state == 0) {
+                if (active_motor != NULL) {
+                    *active_motor = binding->motor;
+                }
+                if (active_pin != NULL) {
+                    *active_pin = pins[pin_index];
+                }
+                return true;
+            }
         }
     }
 
     return false;
 }
 
-static void stop_motor0_now(void)
+static void stop_motor_now(uint8_t motor)
 {
     enum DBC_Error err;
 
-    err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO);
-    if (err != DBC_OK) {
-        printk("Main: motor0 emergency stop target err=%d\n", err);
+    if (!select_spi_target_with_settle(target_for_motor(motor),
+                                       "Main:",
+                                       "emergency stop")) {
+        printk("Main: motor%u emergency stop target select failed\n", (unsigned)motor);
         return;
     }
 
-    err = write_motor_reg32(0u, MOTOR_REG_ENABLE_OFFSET, 0u);
-    if (err != DBC_OK) {
-        printk("Main: motor0 emergency disable err=%d\n", err);
-    }
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+        if (err != DBC_OK) {
+            printk("Main: motor%u emergency disable err=%d attempt=%u\n",
+                   (unsigned)motor,
+                   err,
+                   (unsigned)(attempt + 1u));
+        }
 
-    err = write_motor_reg32(0u, MOTOR_REG_SPEED_OFFSET, 0u);
-    if (err != DBC_OK) {
-        printk("Main: motor0 emergency speed0 err=%d\n", err);
+        err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, 0u);
+        if (err != DBC_OK) {
+            printk("Main: motor%u emergency speed0 err=%d attempt=%u\n",
+                   (unsigned)motor,
+                   err,
+                   (unsigned)(attempt + 1u));
+        }
+
+        k_usleep(150u);
     }
 }
 
-static bool wait_with_motor0_endswitch_guard(const struct device *gpio_dev,
-                                             uint32_t run_ms)
+static bool stop_motor_on_selected_target(uint8_t motor, const char *log_tag)
+{
+    enum DBC_Error err;
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+        if (err != DBC_OK) {
+            printk("%s motor%u disable err=%d attempt=%u\n",
+                   (log_tag != NULL) ? log_tag : "Main:",
+                   (unsigned)motor,
+                   err,
+                   (unsigned)(attempt + 1u));
+            return false;
+        }
+
+        err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, 0u);
+        if (err != DBC_OK) {
+            printk("%s motor%u speed0 err=%d attempt=%u\n",
+                   (log_tag != NULL) ? log_tag : "Main:",
+                   (unsigned)motor,
+                   err,
+                   (unsigned)(attempt + 1u));
+            return false;
+        }
+
+        k_usleep(150u);
+    }
+
+    return true;
+}
+
+static bool start_motor_now(uint8_t motor, uint32_t speed, const char *log_tag)
+{
+    enum DBC_Error err;
+
+    if (!select_spi_target_with_settle(target_for_motor(motor),
+                                       log_tag,
+                                       "start")) {
+        printk("%s motor%u target select failed\n",
+               (log_tag != NULL) ? log_tag : "Main:",
+               (unsigned)motor);
+        return false;
+    }
+
+    err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+    if (err != DBC_OK) {
+        printk("%s motor%u pre-disable err=%d\n",
+               (log_tag != NULL) ? log_tag : "Main:",
+               (unsigned)motor,
+               err);
+        return false;
+    }
+
+    err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, 0u);
+    if (err != DBC_OK) {
+        printk("%s motor%u pre-speed0 err=%d\n",
+               (log_tag != NULL) ? log_tag : "Main:",
+               (unsigned)motor,
+               err);
+        return false;
+    }
+
+    k_usleep(150u);
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 1u);
+        if (err != DBC_OK) {
+            printk("%s motor%u enable err=%d attempt=%u\n",
+                   (log_tag != NULL) ? log_tag : "Main:",
+                   (unsigned)motor,
+                   err,
+                   (unsigned)(attempt + 1u));
+            return false;
+        }
+
+        err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, speed);
+        if (err != DBC_OK) {
+            printk("%s motor%u speed err=%d attempt=%u\n",
+                   (log_tag != NULL) ? log_tag : "Main:",
+                   (unsigned)motor,
+                   err,
+                   (unsigned)(attempt + 1u));
+            return false;
+        }
+
+        k_usleep(200u);
+    }
+
+    return true;
+}
+
+static bool start_motor_on_selected_target(uint8_t motor, uint32_t speed, const char *log_tag)
+{
+    enum DBC_Error err;
+
+    err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+    if (err != DBC_OK) {
+        printk("%s motor%u pre-disable err=%d\n",
+               (log_tag != NULL) ? log_tag : "Main:",
+               (unsigned)motor,
+               err);
+        return false;
+    }
+
+    err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, 0u);
+    if (err != DBC_OK) {
+        printk("%s motor%u pre-speed0 err=%d\n",
+               (log_tag != NULL) ? log_tag : "Main:",
+               (unsigned)motor,
+               err);
+        return false;
+    }
+
+    k_usleep(150u);
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 1u);
+        if (err != DBC_OK) {
+            printk("%s motor%u enable err=%d attempt=%u\n",
+                   (log_tag != NULL) ? log_tag : "Main:",
+                   (unsigned)motor,
+                   err,
+                   (unsigned)(attempt + 1u));
+            return false;
+        }
+
+        err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, speed);
+        if (err != DBC_OK) {
+            printk("%s motor%u speed err=%d attempt=%u\n",
+                   (log_tag != NULL) ? log_tag : "Main:",
+                   (unsigned)motor,
+                   err,
+                   (unsigned)(attempt + 1u));
+            return false;
+        }
+
+        k_usleep(200u);
+    }
+
+    return true;
+}
+
+static bool wait_with_endswitch_guard(const struct device *gpio_dev,
+                                      uint32_t run_ms,
+                                      uint32_t motor_mask)
 {
     uint32_t remaining_ms = run_ms;
 
     while (remaining_ms > 0u) {
+        uint8_t active_motor = 0u;
         gpio_pin_t active_pin = 0u;
         uint32_t sleep_ms = (remaining_ms > MOTOR0_ENDSWITCH_POLL_MS)
             ? MOTOR0_ENDSWITCH_POLL_MS
             : remaining_ms;
 
-        if (motor0_endswitch_active(gpio_dev, &active_pin)) {
-            printk("Main: motor0 stopped by end-switch on GPIO%u\n",
+        if (motor_endswitch_active(gpio_dev, motor_mask, &active_motor, &active_pin)) {
+            printk("Main: motor%u stopped by end-switch on GPIO%u\n",
+                   (unsigned)active_motor,
                    (unsigned)active_pin);
-            stop_motor0_now();
+            stop_motor_now(active_motor);
             return false;
         }
 
@@ -230,37 +441,296 @@ static bool wait_with_motor0_endswitch_guard(const struct device *gpio_dev,
     return true;
 }
 
-static void run_motor0_endswitch_test(const struct device *gpio_dev)
+static void stop_all_motors_now(void)
 {
-    int last_min = -1;
-    int last_max = -1;
+    for (uint8_t motor = 0u; motor < 4u; motor++) {
+        stop_motor_now(motor);
+    }
+}
+
+static bool run_single_motor_endswitch_window(const struct device *gpio_dev,
+                                              uint8_t motor,
+                                              gpio_pin_t expected_pin,
+                                              const char *expected_label,
+                                              uint32_t speed,
+                                              uint32_t run_ms)
+{
+    gpio_pin_t active_pin = 0u;
+    uint8_t active_motor = 0u;
+
+        printk("Main: test motor%u / expect %s on GPIO%u / speed=%u\n",
+           (unsigned)motor,
+            expected_label,
+           (unsigned)expected_pin,
+           (unsigned)speed);
+        printk("Main: press only this switch during this run\n");
+    printk("Main: arm window %ums\n", (unsigned)ENDSWITCH_TEST_ARM_MS);
+    k_msleep(ENDSWITCH_TEST_ARM_MS);
+
+    if (!start_motor_now(motor, speed, "Main: test")) {
+        return false;
+    }
+
+    printk("Main: motor%u running for up to %ums, press GPIO%u\n",
+           (unsigned)motor,
+           (unsigned)run_ms,
+           (unsigned)expected_pin);
+
+    if (device_is_ready(gpio_dev)) {
+        uint32_t remaining_ms = run_ms;
+
+        while (remaining_ms > 0u) {
+            uint32_t sleep_ms = (remaining_ms > MOTOR0_ENDSWITCH_POLL_MS)
+                ? MOTOR0_ENDSWITCH_POLL_MS
+                : remaining_ms;
+
+            if (motor_endswitch_active(gpio_dev,
+                                       (1u << motor),
+                                       &active_motor,
+                                       &active_pin)) {
+                printk("Main: motor%u stopped by GPIO%u\n",
+                       (unsigned)active_motor,
+                       (unsigned)active_pin);
+                stop_motor_now(active_motor);
+                if (active_motor == motor && active_pin == expected_pin) {
+                          printk("Main: switch test PASS motor%u %s GPIO%u\n",
+                           (unsigned)motor,
+                              expected_label,
+                           (unsigned)expected_pin);
+                    return true;
+                }
+
+                      printk("Main: switch test FAIL motor%u expected %s GPIO%u got motor%u GPIO%u\n",
+                       (unsigned)motor,
+                          expected_label,
+                       (unsigned)expected_pin,
+                       (unsigned)active_motor,
+                       (unsigned)active_pin);
+                return false;
+            }
+
+            k_msleep(sleep_ms);
+            remaining_ms -= sleep_ms;
+        }
+    } else {
+        k_msleep(run_ms);
+    }
+
+    stop_motor_now(motor);
+        printk("Main: switch test TIMEOUT motor%u %s GPIO%u\n",
+           (unsigned)motor,
+            expected_label,
+           (unsigned)expected_pin);
+    return false;
+}
+
+static void run_guided_endswitch_test(const struct device *gpio_dev)
+{
+    static const struct {
+        uint8_t motor;
+        gpio_pin_t pin;
+        const char *label;
+        uint32_t speed;
+    } steps[] = {
+        { 0u, MOTOR0_ENDSWITCH_MIN_PIN, "MIN", 420u },
+        { 0u, MOTOR0_ENDSWITCH_MAX_PIN, "MAX", 420u },
+        { 1u, MOTOR1_ENDSWITCH_MIN_PIN, "MIN", 520u },
+        { 1u, MOTOR1_ENDSWITCH_MAX_PIN, "MAX", 520u },
+        { 2u, MOTOR2_ENDSWITCH_MIN_PIN, "MIN", 460u },
+        { 2u, MOTOR2_ENDSWITCH_MAX_PIN, "MAX", 460u },
+    };
+    uint32_t pass_count = 0u;
 
     printk("Main: END SWITCH TEST mode active\n");
-    printk("Main: press/release switches on GPIO%u and GPIO%u\n",
-           (unsigned)MOTOR0_ENDSWITCH_MIN_PIN,
-           (unsigned)MOTOR0_ENDSWITCH_MAX_PIN);
-    printk("Main: logic is active-low, pressed=0 released=1\n");
+    printk("Main: step 1/7 short quad preview (%ums)\n",
+           (unsigned)ENDSWITCH_TEST_VISUAL_RUN_MS);
+    printk("Main: do not press any end switch during the quad preview\n");
 
-    while (1) {
-        int min_state = gpio_pin_get(gpio_dev, MOTOR0_ENDSWITCH_MIN_PIN);
-        int max_state = gpio_pin_get(gpio_dev, MOTOR0_ENDSWITCH_MAX_PIN);
-
-        if (min_state != last_min) {
-            printk("Main: switch GPIO%u -> %s\n",
-                   (unsigned)MOTOR0_ENDSWITCH_MIN_PIN,
-                   (min_state == 0) ? "PRESSED" : "RELEASED");
-            last_min = min_state;
-        }
-
-        if (max_state != last_max) {
-            printk("Main: switch GPIO%u -> %s\n",
-                   (unsigned)MOTOR0_ENDSWITCH_MAX_PIN,
-                   (max_state == 0) ? "PRESSED" : "RELEASED");
-            last_max = max_state;
-        }
-
-        k_msleep(25u);
+    if (!run_quad_simultaneous_cycle_custom(ENDSWITCH_TEST_VISUAL_RUN_MS,
+                                            ENDSWITCH_TEST_GAP_MS,
+                                            "QUAD_SIMUL_SHORT_V1",
+                                            0u)) {
+        printk("Main: short quad preview reported errors\n");
     }
+
+    stop_all_motors_now();
+    k_msleep(ENDSWITCH_TEST_GAP_MS);
+
+    printk("Main: step 2/7..7/7 single-switch checks\n");
+    printk("Main: each step arms briefly, then runs one motor until the named switch stops it\n");
+
+    for (size_t i = 0u; i < ARRAY_SIZE(steps); i++) {
+         printk("Main: switch step %u/%u -> motor%u %s on GPIO%u\n",
+               (unsigned)(i + 1u),
+             (unsigned)ARRAY_SIZE(steps),
+             (unsigned)steps[i].motor,
+             steps[i].label,
+             (unsigned)steps[i].pin);
+
+        if (run_single_motor_endswitch_window(gpio_dev,
+                                              steps[i].motor,
+                                              steps[i].pin,
+                                steps[i].label,
+                                              steps[i].speed,
+                                              ENDSWITCH_TEST_SWITCH_RUN_MS)) {
+            pass_count++;
+        }
+
+        stop_all_motors_now();
+        k_msleep(ENDSWITCH_TEST_GAP_MS);
+    }
+
+    printk("Main: END SWITCH TEST summary pass=%u fail=%u\n",
+           (unsigned)pass_count,
+           (unsigned)(ARRAY_SIZE(steps) - pass_count));
+}
+
+static void run_motor0_endswitch_test(const struct device *gpio_dev)
+{
+    run_guided_endswitch_test(gpio_dev);
+}
+
+static bool run_quad_simultaneous_cycle_custom(uint32_t run_ms,
+                                               uint32_t gap_ms,
+                                               const char *label,
+                                               uint32_t guard_motor_mask)
+{
+    static const uint32_t m0_speeds[] = { 200u };
+    static const uint32_t m1_speeds[] = { 500u };
+    static const uint32_t m2_speeds[] = { 800u };
+    static const uint32_t m3_speeds[] = { 1100u };
+    const size_t NUM_ROUNDS = ARRAY_SIZE(m0_speeds);
+    const struct device *endswitch_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
+    static const uint8_t primary_motors[] = { 0u, 2u };
+    static const uint8_t secondary_motors[] = { 1u, 3u };
+    bool all_ok = true;
+
+    printk("Motor Toggle [%s]: Starting %u rounds.\n", label, (uint32_t)NUM_ROUNDS);
+
+    for (size_t i = 0u; i < NUM_ROUNDS; i++) {
+        const uint32_t speeds[4] = {
+            m0_speeds[i],
+            m1_speeds[i],
+            m2_speeds[i],
+            m3_speeds[i],
+        };
+
+        printk("Motor Toggle [%s]: round %u/%u speeds m0=%u m1=%u m2=%u m3=%u\n",
+               label,
+               (uint32_t)(i + 1u),
+               (uint32_t)NUM_ROUNDS,
+               m0_speeds[i],
+               m1_speeds[i],
+               m2_speeds[i],
+               m3_speeds[i]);
+
+         stop_all_motors_now();
+         k_msleep(50u);
+
+        if (!select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                           "Motor Toggle",
+                                           "primary start")) {
+            printk("Motor Toggle [%s]: round %u primary target select failed\n",
+                   label,
+                   (uint32_t)(i + 1u));
+            all_ok = false;
+        } else {
+            for (size_t idx = 0u; idx < ARRAY_SIZE(primary_motors); idx++) {
+                uint8_t motor = primary_motors[idx];
+
+                if (!start_motor_on_selected_target(motor, speeds[motor], "Motor Toggle")) {
+                    printk("Motor Toggle [%s]: round %u motor%u start sequence failed\n",
+                           label,
+                           (uint32_t)(i + 1u),
+                           motor);
+                    all_ok = false;
+                }
+            }
+        }
+
+        k_usleep(300u);
+
+        if (!select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                           "Motor Toggle",
+                                           "secondary start")) {
+            printk("Motor Toggle [%s]: round %u secondary target select failed\n",
+                   label,
+                   (uint32_t)(i + 1u));
+            all_ok = false;
+        } else {
+            for (size_t idx = 0u; idx < ARRAY_SIZE(secondary_motors); idx++) {
+                uint8_t motor = secondary_motors[idx];
+
+                if (!start_motor_on_selected_target(motor, speeds[motor], "Motor Toggle")) {
+                    printk("Motor Toggle [%s]: round %u motor%u start sequence failed\n",
+                           label,
+                           (uint32_t)(i + 1u),
+                           motor);
+                    all_ok = false;
+                }
+            }
+        }
+
+        k_usleep(300u);
+
+        printk("Motor Toggle [%s]: all motors running for %ums\n", label, (unsigned)run_ms);
+        if (guard_motor_mask != 0u) {
+            if (!wait_with_endswitch_guard(endswitch_gpio, run_ms, guard_motor_mask)) {
+                printk("Motor Toggle [%s]: simultaneous run interrupted by end-switch\n", label);
+            }
+        } else {
+            k_msleep(run_ms);
+        }
+
+        if (!select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                           "Motor Toggle",
+                                           "primary stop")) {
+            printk("Motor Toggle [%s]: round %u primary stop target select failed\n",
+                   label,
+                   (uint32_t)(i + 1u));
+            all_ok = false;
+        } else {
+            for (size_t idx = 0u; idx < ARRAY_SIZE(primary_motors); idx++) {
+                uint8_t motor = primary_motors[idx];
+
+                if (!stop_motor_on_selected_target(motor, "Motor Toggle")) {
+                    printk("Motor Toggle [%s]: round %u motor%u stop sequence failed\n",
+                           label,
+                           (uint32_t)(i + 1u),
+                           motor);
+                    all_ok = false;
+                }
+            }
+        }
+
+        k_usleep(300u);
+
+        if (!select_spi_target_with_settle(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                           "Motor Toggle",
+                                           "secondary stop")) {
+            printk("Motor Toggle [%s]: round %u secondary stop target select failed\n",
+                   label,
+                   (uint32_t)(i + 1u));
+            all_ok = false;
+        } else {
+            for (size_t idx = 0u; idx < ARRAY_SIZE(secondary_motors); idx++) {
+                uint8_t motor = secondary_motors[idx];
+
+                if (!stop_motor_on_selected_target(motor, "Motor Toggle")) {
+                    printk("Motor Toggle [%s]: round %u motor%u stop sequence failed\n",
+                           label,
+                           (uint32_t)(i + 1u),
+                           motor);
+                    all_ok = false;
+                }
+            }
+        }
+
+        k_msleep(gap_ms);
+    }
+
+    printk("Motor Toggle [%s]: All rounds complete.\n", label);
+    return all_ok;
 }
 
 // Example DBus service callback for testing
@@ -423,11 +893,13 @@ static bool run_dual_motor_simul_cycle(void)
             printk("Motor Toggle: round %u motor%u running at %u for %ums\n",
                    (uint32_t)(i + 1u), motor, speeds[motor], RUN_MS);
             if (motor == 0u) {
-                bool completed = wait_with_motor0_endswitch_guard(endswitch_gpio, RUN_MS);
+                bool completed = wait_with_endswitch_guard(endswitch_gpio,
+                                                          RUN_MS,
+                                                          (1u << motor));
 
                 if (!completed) {
-                    printk("Motor Toggle: round %u motor0 interrupted by end-switch\n",
-                           (uint32_t)(i + 1u));
+                    printk("Motor Toggle: round %u motor%u interrupted by end-switch\n",
+                           (uint32_t)(i + 1u), motor);
                 }
             } else {
                 k_msleep(RUN_MS);
@@ -559,90 +1031,7 @@ static bool run_secondary_only_cycle(void)
  * independent speeds, run concurrently, then stopped together. */
 static bool run_quad_simultaneous_cycle(void)
 {
-    static const uint32_t m0_speeds[] = { 200u, 650u, 1100u };
-    static const uint32_t m1_speeds[] = { 500u, 1000u, 250u };
-    static const uint32_t m2_speeds[] = { 800u, 300u, 900u };
-    static const uint32_t m3_speeds[] = { 1100u, 750u, 450u };
-    static const uint32_t RUN_MS      = 3000u;
-    static const uint32_t GAP_MS      = 500u;
-    const size_t NUM_ROUNDS = ARRAY_SIZE(m0_speeds);
-    const struct device *endswitch_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
-    bool all_ok = true;
-    enum DBC_Error target_err;
-
-    printk("Motor Toggle [QUAD_SIMUL_V1]: Starting %u rounds.\n", (uint32_t)NUM_ROUNDS);
-
-    for (size_t i = 0u; i < NUM_ROUNDS; i++) {
-        enum DBC_Error err;
-        const uint32_t speeds[4] = {
-            m0_speeds[i],
-            m1_speeds[i],
-            m2_speeds[i],
-            m3_speeds[i],
-        };
-
-        printk("Motor Toggle [QUAD_SIMUL_V1]: round %u/%u speeds m0=%u m1=%u m2=%u m3=%u\n",
-               (uint32_t)(i + 1u), (uint32_t)NUM_ROUNDS,
-               m0_speeds[i], m1_speeds[i], m2_speeds[i], m3_speeds[i]);
-
-        for (uint8_t motor = 0u; motor < 4u; motor++) {
-            target_err = DBCDRV_setSpiTarget(target_for_motor(motor));
-            if (target_err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u target err=%d\n",
-                       (uint32_t)(i + 1u), motor, target_err);
-                all_ok = false;
-            }
-            k_usleep(100u);
-
-            err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, speeds[motor]);
-            if (err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u speed err=%d\n",
-                       (uint32_t)(i + 1u), motor, err);
-                all_ok = false;
-            }
-        }
-
-        /* Issue enable commands in a second pass so all motors start closer in time. */
-        for (uint8_t motor = 0u; motor < 4u; motor++) {
-            target_err = DBCDRV_setSpiTarget(target_for_motor(motor));
-            if (target_err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u target-enable err=%d\n",
-                       (uint32_t)(i + 1u), motor, target_err);
-                all_ok = false;
-            }
-            err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 1u);
-            if (err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u enable err=%d\n",
-                       (uint32_t)(i + 1u), motor, err);
-                all_ok = false;
-            }
-        }
-
-        printk("Motor Toggle [QUAD_SIMUL_V1]: all motors running for %ums\n", RUN_MS);
-        if (!wait_with_motor0_endswitch_guard(endswitch_gpio, RUN_MS)) {
-            printk("Motor Toggle [QUAD_SIMUL_V1]: motor0 interrupted by end-switch\n");
-        }
-
-        for (uint8_t motor = 0u; motor < 4u; motor++) {
-            target_err = DBCDRV_setSpiTarget(target_for_motor(motor));
-            if (target_err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u target-stop err=%d\n",
-                       (uint32_t)(i + 1u), motor, target_err);
-                all_ok = false;
-            }
-            err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
-            if (err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u disable err=%d\n",
-                       (uint32_t)(i + 1u), motor, err);
-                all_ok = false;
-            }
-        }
-
-        k_msleep(GAP_MS);
-    }
-
-    printk("Motor Toggle [QUAD_SIMUL_V1]: All rounds complete.\n");
-    return all_ok;
+    return run_quad_simultaneous_cycle_custom(3000u, 500u, "QUAD_SIMUL_V1", 0x07u);
 }
 
 static bool run_toggle_cycle_for_target(enum DBCDRV_SpiTarget target, const char *label)
@@ -763,7 +1152,7 @@ int main(void)
             DBUS_REPEATABILITY_RUNS,
             (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
 
-    init_motor0_endswitch_inputs(probe_gpio);
+    init_endswitch_inputs(probe_gpio);
 
 #if DBUS_ENABLE_ENDSWITCH_TEST
     run_motor0_endswitch_test(probe_gpio);

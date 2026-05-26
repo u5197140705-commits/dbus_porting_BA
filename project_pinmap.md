@@ -59,10 +59,10 @@ Recommended electrical mode:
 
 ### Planned Additional End Switches
 
-1. GPIO3 -> motor1 end-switch min/home
+1. GPIO15 -> motor1 end-switch min/home
 2. GPIO4 -> motor1 end-switch max/end
 3. GPIO5 -> motor2 end-switch min/home
-4. GPIO13 -> motor2 end-switch max/end
+4. GPIO11 -> motor2 end-switch max/end
 
 Recommended electrical mode:
 1. Configure as GPIO input with pull-up
@@ -79,8 +79,7 @@ Recommended electrical mode:
 4. GPIO9
 5. GPIO10
 6. GPIO18
-7. GPIO11
-8. GPIO12
+7. GPIO12
 
 ## Planned MISO Hardware Fix
 

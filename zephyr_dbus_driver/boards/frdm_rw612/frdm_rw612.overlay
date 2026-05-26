@@ -16,7 +16,13 @@
 
 &hsgpio0 {
     status = "okay";
-    pinctrl-0 = <&pinmux_dbus_cs_gpio10 &pinmux_endswitch_gpio1 &pinmux_endswitch_gpio2>;
+    pinctrl-0 = <&pinmux_dbus_cs_gpio10
+                 &pinmux_endswitch_gpio1
+                 &pinmux_endswitch_gpio2
+                 &pinmux_endswitch_gpio15
+                 &pinmux_endswitch_gpio4
+                 &pinmux_endswitch_gpio5
+                 &pinmux_endswitch_gpio11>;
     pinctrl-names = "default";
 };
 
@@ -39,6 +45,34 @@
     pinmux_endswitch_gpio2: pinmux_endswitch_gpio2 {
         group0 {
             pinmux = <0x302>; /* GPIO2 as HSGPIO0_2 for motor0 end-switch max/end */
+            slew-rate = "normal";
+        };
+    };
+
+    pinmux_endswitch_gpio15: pinmux_endswitch_gpio15 {
+        group0 {
+            pinmux = <0x30f>; /* GPIO15 as HSGPIO0_15 for motor1 end-switch min/home */
+            slew-rate = "normal";
+        };
+    };
+
+    pinmux_endswitch_gpio4: pinmux_endswitch_gpio4 {
+        group0 {
+            pinmux = <0x304>; /* GPIO4 as HSGPIO0_4 for motor1 end-switch max/end */
+            slew-rate = "normal";
+        };
+    };
+
+    pinmux_endswitch_gpio5: pinmux_endswitch_gpio5 {
+        group0 {
+            pinmux = <0x305>; /* GPIO5 as HSGPIO0_5 for motor2 end-switch min/home */
+            slew-rate = "normal";
+        };
+    };
+
+    pinmux_endswitch_gpio11: pinmux_endswitch_gpio11 {
+        group0 {
+            pinmux = <0x30b>; /* GPIO11 as HSGPIO0_11 for motor2 end-switch max/end */
             slew-rate = "normal";
         };
     };
