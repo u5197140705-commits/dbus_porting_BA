@@ -24,15 +24,15 @@
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
 #ifndef RW612_BUILD_MARKER
-#define RW612_BUILD_MARKER "RW612 build marker: AUTO_TEST_SHORT_CONFIRM_V1_2026_05_27"
+#define RW612_BUILD_MARKER "RW612 build marker: SHORT_ALL4_CONFIRM_V1_2026_05_28"
 #endif
 
 #ifndef RW612_BOOT_BANNER
-#define RW612_BOOT_BANNER "AUTO_TEST_SHORT_CONFIRM_V1"
+#define RW612_BOOT_BANNER "SHORT_ALL4_CONFIRM_V1"
 #endif
 
 #ifndef RW612_MODE_LABEL
-#define RW612_MODE_LABEL "AUTO_TEST_SHORT_CONFIRM_V1"
+#define RW612_MODE_LABEL "SHORT_ALL4_CONFIRM_V1"
 #endif
 
 #ifndef DBUS_REPEATABILITY_RUNS
@@ -125,6 +125,14 @@
 #define DBUS_SHORT_PRIMARY_STOPPED_READBACK_TEST 0
 #endif
 
+#ifndef DBUS_ALL_TOGETHER_TEST
+#define DBUS_ALL_TOGETHER_TEST 0
+#endif
+
+#ifndef DBUS_LCD_SONIC_TEST
+#define DBUS_LCD_SONIC_TEST 0
+#endif
+
 #define ENDSWITCH_TEST_VISUAL_RUN_MS 1500u
 #define ENDSWITCH_TEST_SWITCH_RUN_MS 1800u
 #define ENDSWITCH_TEST_ARM_MS        900u
@@ -190,6 +198,8 @@ static void run_secondary_live_quad_readback_test(void);
 static void run_final_all4_switch_test(const struct device *gpio_dev);
 static void run_short_all4_confirm_test(const struct device *gpio_dev);
 static void run_short_primary_stopped_readback_test(void);
+static void run_all_together_test(const struct device *gpio_dev);
+static void run_lcd_sonic_test(void);
 static enum DBC_Error read_motor_reg32(uint8_t motor_index,
                                        uint16_t reg_offset,
                                        uint32_t *value);
@@ -280,6 +290,36 @@ static bool motor_endswitch_active(const struct device *gpio_dev,
     }
 
     return false;
+}
+
+static uint32_t motor_endswitch_active_mask(const struct device *gpio_dev,
+                                            uint32_t motor_mask)
+{
+    uint32_t active_mask = 0u;
+
+    if (!device_is_ready(gpio_dev)) {
+        return 0u;
+    }
+
+    for (size_t i = 0u; i < ARRAY_SIZE(motor_endswitch_bindings); i++) {
+        const struct motor_endswitch_binding *binding = &motor_endswitch_bindings[i];
+        const gpio_pin_t pins[] = { binding->min_pin, binding->max_pin };
+
+        if ((motor_mask & (1u << binding->motor)) == 0u) {
+            continue;
+        }
+
+        for (size_t pin_index = 0u; pin_index < ARRAY_SIZE(pins); pin_index++) {
+            int state = gpio_pin_get(gpio_dev, pins[pin_index]);
+
+            if (state == 0) {
+                active_mask |= (1u << binding->motor);
+                break;
+            }
+        }
+    }
+
+    return active_mask;
 }
 
 static void stop_motor_now(uint8_t motor)
@@ -687,6 +727,7 @@ static void run_short_all4_confirm_test(const struct device *gpio_dev)
     uint32_t remaining_ms = SHORT_CONFIRM_RUN_MS;
     uint32_t switch_hit_mask = 0u;
     uint32_t switchable_mask = (1u << 0) | (1u << 1) | (1u << 2);
+    uint32_t switch_released_mask = 0u;
 
     printk("Main: SHORT all-4 confirm test start\n");
     printk("Main: goal = write + readback + switch activity within %ums\n",
@@ -727,6 +768,18 @@ static void run_short_all4_confirm_test(const struct device *gpio_dev)
     printk("Main: switch window active for %ums, press any corresponding switch to stop that motor early\n",
            (unsigned)SHORT_CONFIRM_RUN_MS);
 
+    if (device_is_ready(gpio_dev)) {
+        uint32_t initially_active_mask = motor_endswitch_active_mask(gpio_dev, switchable_mask);
+
+        if (initially_active_mask != 0u) {
+            printk("Main: initial active switch mask=0x%02x; those motors will ignore current low state until released\n",
+                   (unsigned)initially_active_mask);
+        }
+        switch_released_mask = switchable_mask & ~initially_active_mask;
+    } else {
+        switch_released_mask = switchable_mask;
+    }
+
     while (remaining_ms > 0u) {
         gpio_pin_t active_pin = 0u;
         uint8_t active_motor = 0u;
@@ -734,9 +787,16 @@ static void run_short_all4_confirm_test(const struct device *gpio_dev)
             ? MOTOR0_ENDSWITCH_POLL_MS
             : remaining_ms;
 
+        if (device_is_ready(gpio_dev)) {
+            uint32_t active_mask = motor_endswitch_active_mask(gpio_dev, switchable_mask);
+            uint32_t released_now_mask = switchable_mask & ~active_mask;
+
+            switch_released_mask |= released_now_mask;
+        }
+
         if (device_is_ready(gpio_dev) &&
             switchable_mask != 0u &&
-            motor_endswitch_active(gpio_dev, switchable_mask, &active_motor, &active_pin)) {
+            motor_endswitch_active(gpio_dev, switchable_mask & switch_released_mask, &active_motor, &active_pin)) {
             const char *active_label = "UNKNOWN";
 
             for (size_t i = 0u; i < ARRAY_SIZE(motor_endswitch_bindings); i++) {
@@ -761,6 +821,7 @@ static void run_short_all4_confirm_test(const struct device *gpio_dev)
             stop_motor_now(active_motor);
             switch_hit_mask |= (1u << active_motor);
             switchable_mask &= ~(1u << active_motor);
+                 switch_released_mask &= ~(1u << active_motor);
             continue;
         }
 
@@ -895,6 +956,62 @@ static void run_short_primary_stopped_readback_test(void)
 {
     printk("Main: SHORT primary stopped-readback mode active\n");
     run_register_log_probe();
+}
+
+static void run_all_together_test(const struct device *gpio_dev)
+{
+    printk("Main: ALL TOGETHER test mode active\n");
+    printk("Main: Pico1 local LCD should keep showing live sonic distance during this run\n");
+    printk("Main: phase 1/2 = proven live all-4 motor run\n");
+    run_all4_live_quad_readback_test();
+    k_msleep(ENDSWITCH_TEST_GAP_MS);
+
+    printk("Main: phase 2/2 = switch-aware confirmation\n");
+    run_short_all4_confirm_test(gpio_dev);
+}
+
+static void run_lcd_sonic_test(void)
+{
+    char line_buf[LCD_TEXT_MAX_LEN + 1u];
+    uint16_t distance_mm = 0u;
+    uint16_t last_good_distance_mm = 0u;
+    bool have_good_distance = false;
+    enum DBC_Error err;
+
+    printk("Main: LCD + sonic test mode active\n");
+
+    if (!select_spi_target_with_settle(DBCDRV_SPI_TARGET_PRIMARY_PICO,
+                                       "Main:",
+                                       "lcd sonic target")) {
+        printk("Main: LCD + sonic test target select failed\n");
+        return;
+    }
+
+    (void)lcd_service_clear(0u);
+    (void)lcd_service_print(0u, 0u, 0u, "DISTANCE");
+    (void)lcd_service_print(0u, 0u, 8u, "        ");
+    (void)lcd_service_print(0u, 1u, 0u, "starting...");
+    k_msleep(200u);
+
+    while (true) {
+        err = ultrasonic_service_get_distance_mm(0u, &distance_mm);
+
+        if (err == DBC_OK) {
+            last_good_distance_mm = distance_mm;
+            have_good_distance = true;
+            (void)snprintf(line_buf, sizeof(line_buf), "%4u mm     ", (unsigned)distance_mm);
+            (void)lcd_service_print(0u, 1u, 0u, line_buf);
+        } else if (have_good_distance) {
+            (void)snprintf(line_buf, sizeof(line_buf), "%4u mm     ", (unsigned)last_good_distance_mm);
+            (void)lcd_service_print(0u, 1u, 0u, line_buf);
+        }
+
+        /* Re-send both lines every cycle so occasional dropped LCD DBAL frames
+         * do not leave the display stuck with only the header. */
+        (void)lcd_service_print(0u, 0u, 0u, "DISTANCE");
+        (void)lcd_service_print(0u, 0u, 8u, "        ");
+        k_msleep(100u);
+    }
 }
 
 static bool run_quad_simultaneous_cycle_custom(uint32_t run_ms,
@@ -1923,6 +2040,16 @@ int main(void)
 
 #if DBUS_SHORT_ALL4_CONFIRM_TEST
     run_short_all4_confirm_test(probe_gpio);
+    return 0;
+#endif
+
+#if DBUS_ALL_TOGETHER_TEST
+    run_all_together_test(probe_gpio);
+    return 0;
+#endif
+
+#if DBUS_LCD_SONIC_TEST
+    run_lcd_sonic_test();
     return 0;
 #endif
 

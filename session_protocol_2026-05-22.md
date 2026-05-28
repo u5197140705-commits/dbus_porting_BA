@@ -467,3 +467,60 @@ The session state is now stronger and narrower:
 - adding passive series resistors on the MISO branches did not resolve that remaining failure
 - the remaining issue is pinned specifically to Pico1's MISO electrical path, and the next fix likely needs active isolation rather than a passive resistor-only network
 - future reflashing convenience is now improved by the Pico USB `BOOTSEL` command and the Windows helper scripts for Pico1/Pico2
+
+## LCD + Sonic Validation on Pico1
+- The RW612 `LCD_SONIC_TEST` path was rerun after updating Pico1 to the new sniffer build `dbal_motor_v1_onehot_v3_isoD_v23_2026-05-28`.
+- Pico1 logs then confirmed end-to-end LCD DBAL handling on real hardware:
+  - `svc=0x7102 cmd=0x0002` with `lcd print row=1 col=0 text='starting...'`
+  - `svc=0x7102 cmd=0x0002` with `lcd print row=0 col=0 text='LCD UPDATE'`
+  - `svc=0x7102 cmd=0x0001` with `lcd clear`
+  - `svc=0x7102 cmd=0x0002` with `lcd print row=1 col=0 text='   0 mm'`
+- The user visually confirmed that the LCD now shows `LCD UPDATE ...`.
+- Interpretation:
+  - the earlier stuck-display problem was not in RW612 service generation
+  - the root cause was Pico1 dropping DBAL frames longer than 8 bytes in the GPIO sniff path
+  - after allowing the sniffer to pass DBAL-length frames into `process_dbal_frame()`, the LCD path worked on the physical module
+- Remaining nuance:
+  - the legacy `fw=MAIN_HWSSEL_V22_2026-05-22` banner still appears in the heartbeat log, but the active Pico firmware version string is `dbal_motor_v1_onehot_v3_isoD_v23_2026-05-28`, which confirms the new image is running
+
+## 2026-05-28 LCD + Sonic Follow-Up Fixes
+- Pico ultrasonic timing was hardened after mixed `0 mm` and impossible large values appeared during the LCD+sonic mode.
+- Pico-side changes:
+  - moved ultrasonic echo timestamping from the busy main loop into GPIO edge IRQ handling
+  - added plausibility filtering for distance readings
+  - reduced the trigger period from `100 ms` to `60 ms`
+  - shortened stale-value hold from `3` missed cycles to `2`
+- Effect of the Pico changes:
+  - bogus spikes such as `41000 mm` stopped
+  - the sensor value became correct again and started updating more responsively
+- RW612 LCD mode was then simplified and hardened:
+  - build marker advanced to `LCD_SONIC_TEST_V2_2026_05_28`
+  - alternating `SONIC TEST` / `LCD UPDATE` header text was removed
+  - LCD clear-on-every-cycle behavior was removed
+  - the display now continuously re-sends a fixed `DISTANCE` header and a live value line
+- RW612 hot-path logging was reduced for the LCD/sonic loop:
+  - routine DBAL event send `printk` spam was disabled
+  - `spi_abstraction` debug transceive logs were dropped from the hot path
+- Effect of the RW612 changes:
+  - visible LCD refresh improved from very slow multi-second stalls to roughly one update every ~2 seconds in bench observation
+  - RW612 UART confirmed stable live reads such as `575 mm`, `583 mm`, `579 mm`, `588 mm`
+- Remaining display issue after those fixes:
+  - the LCD still showed `DISTANCE       Y` because the RW612 LCD service truncates each print to `LCD_TEXT_MAX_LEN = 13`, so a single padded header write did not fully erase the old `READY` tail from the Pico boot text
+- Latest local fix prepared:
+  - row 0 is now written as two separate DBAL prints: `DISTANCE` at column 0 plus spaces at column 8, so all 16 columns on the top row are explicitly refreshed despite the 13-character service limit
+
+## 2026-05-28 Stable Sonic LCD State And Integrated Test Prep
+- Final LCD/sonic stabilization result on Pico1:
+  - Pico1 now drives the LCD locally from the sonic measurement instead of depending on the RW612 read-plus-DBAL round trip for visible value updates
+  - local LCD refresh was capped to `150 ms`, which targets a readable `5-10 Hz` update rate
+  - RW612 no longer writes `err=1` to the LCD; it keeps the last good distance on transient read failures
+- User confirmed the distance display now behaves correctly and requested an integrated next step.
+- The next active RW612 image was therefore switched away from standalone `LCD_SONIC_TEST_V2` and into a combined bench mode:
+  - build marker `ALL_TOGETHER_V1_2026_05_28`
+  - mode label `ALL_TOGETHER_V1`
+  - RW612 runs the existing all-4 short confirmation plus endstop-aware motor test path
+  - Pico1 keeps the already-proven local sonic distance display on the LCD during that run
+- Intended integrated behavior of `ALL_TOGETHER_V1`:
+  - all 4 motors run in the short confirmation flow
+  - configured end switches can stop the mapped motors early
+  - Pico1 LCD continues showing live sonic distance concurrently

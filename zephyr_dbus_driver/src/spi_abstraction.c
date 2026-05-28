@@ -6,7 +6,7 @@
 #include <zephyr/drivers/gpio.h>
 #include "dbus_driver_public.h"
 
-LOG_MODULE_REGISTER(spi_abstraction, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(spi_abstraction, LOG_LEVEL_ERR);
 
 // Get the SPI device from device tree
 // Assuming flexcomm1 is the first instance of "nxp,lpc-spi" compatible device

@@ -16,6 +16,7 @@ static struct k_mutex dbal_bus_mutex;
 static atomic_t dbal_is_locked = ATOMIC_INIT(0); // Atomic flag to track lock status
 
 #define DBAL_INLINE_TX_IDLE_US 50u
+#define DBAL_VERBOSE_TX_LOGS 0
 
 // Helper function to calculate CRC-8
 static uint8_t calculate_crc8(const uint8_t *data, uint8_t len) {
@@ -208,8 +209,10 @@ bool dbal_send_query_response(uint16_t service_id, uint16_t command_id, const ui
 // Placeholder for sending events
 bool dbal_send_event(uint16_t service_id, uint16_t command_id, const uint8_t* data, uint8_t data_len)
 {
+#if DBAL_VERBOSE_TX_LOGS
     printk("DBAL: Sending Event (ServiceId: 0x%04x, CommandId: 0x%04x, DataLen: %d)\n",
            service_id, command_id, data_len);
+#endif
     return dbal_io_dbus_handler_send(&g_dbal_main_instance, DBAL_TYPE_EVENT, service_id, command_id, data, data_len, 0U);
 }
 
@@ -618,7 +621,9 @@ static bool __attribute__((unused)) dbal_io_dbus_handler_send(struct dbal_instan
                              * CS in software, so leave a visible idle gap before the
                              * next mirror write or readback transaction starts. */
                             k_usleep(DBAL_INLINE_TX_IDLE_US);
+#if DBAL_VERBOSE_TX_LOGS
                             printk("DBAL: SPI message sent inline (Len: %u).\n", inst->TransmitDataLen);
+#endif
                             dbal_clear_io_transmit_buffer(inst);
                             ret_val = true;
                         } else {
@@ -643,7 +648,9 @@ static bool __attribute__((unused)) dbal_check_for_next_msgs_to_send_and_trigger
 static void __attribute__((unused)) dbal_prepare_tx_entry(const struct dbal_instance* const inst, uint8_t tx_index, uint8_t data_len) {
     // Simplified: In a real implementation, this would set up a transmit entry
     // in a queue or a state machine. For now, we'll just log it.
+#if DBAL_VERBOSE_TX_LOGS
     printk("DBAL: Preparing TX entry for index %u with data length %u\n", tx_index, data_len);
+#endif
 }
 static uint8_t __attribute__((unused)) dbal_get_tx_index(const struct dbal_instance* const inst, uint8_t frame_type) {
     // Simplified: In a real implementation, this would return an index based on frame_type

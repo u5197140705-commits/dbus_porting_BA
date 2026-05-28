@@ -37,7 +37,7 @@ static enum DBCDRV_SpiTarget dbus_spi_target = DBCDRV_SPI_TARGET_PRIMARY_PICO;
 static bool dbus_secondary_cs_initialized = false;
 
 static struct spi_config dbus_spi_cfg = {
-    .frequency = 10000, // 10 kHz clock to give Pico more response processing time
+    .frequency = 100000, // 100 kHz keeps the debug-era readback heuristics but avoids the very slow LCD/sonic refresh
     .operation = SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_TRANSFER_MSB,
     .slave = 0,
     /* Flexcomm HW SSEL0 on GPIO6, manual CS only on GPIO10. */
@@ -1099,6 +1099,10 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
 enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 {
     const size_t frame_len = DBC_SPI_HDR_SIZE + sizeof(uint32_t);
+    bool sonic_fast_path = ((uint16_t)addr >= 0x5100u) && ((uint16_t)addr < 0x5104u);
+    uint32_t cs_hold_us = sonic_fast_path ? 500u : DBCDRV_SPI_CS_HOLD_US;
+    uint8_t dummy_retries = sonic_fast_path ? 12u : DBCDRV_SPI_DUMMY_RETRIES;
+    uint32_t dummy_gap_us = sonic_fast_path ? 100u : DBCDRV_SPI_DUMMY_GAP_US;
     uint8_t tx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t dummy_tx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
@@ -1136,7 +1140,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 
     ret = dbus_drv_spi_transceive_bytewise(tx_buffer, rx_buffer, sizeof(tx_buffer));
 
-    k_usleep(DBCDRV_SPI_CS_HOLD_US);
+    k_usleep(cs_hold_us);
     if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
         LOG_ERR("DBCDRV_readReg32: failed to deassert CS for %s Pico",
                 dbus_drv_get_target_name(dbus_spi_target));
@@ -1151,7 +1155,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     memcpy(cumulative_rx, rx_buffer, frame_len);
     cumulative_len = frame_len;
 
-    for (uint8_t attempt = 1u; attempt <= DBCDRV_SPI_DUMMY_RETRIES; attempt++) {
+    for (uint8_t attempt = 1u; attempt <= dummy_retries; attempt++) {
         /* After the initial READ command, send pure dummy clocks so the Pico
          * can return the already-queued response frame without parsing a fresh
          * command on every retry. */
@@ -1167,7 +1171,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 
         ret = dbus_drv_spi_transceive_bytewise(dummy_tx, data_rx, sizeof(dummy_tx));
 
-        k_usleep(DBCDRV_SPI_CS_HOLD_US);
+        k_usleep(cs_hold_us);
         if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
             LOG_ERR("DBCDRV_readReg32: failed to deassert dummy CS for %s Pico",
                     dbus_drv_get_target_name(dbus_spi_target));
@@ -1253,7 +1257,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         #endif
         }
 
-        k_usleep(DBCDRV_SPI_DUMMY_GAP_US);
+        k_usleep(dummy_gap_us);
     }
 
     if (!have_match && have_interleaved_candidate) {
@@ -1278,7 +1282,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         LOG_ERR("DBCDRV_readReg32 summary: addr=0x%x target=%s result=error attempts=%u",
                 addr,
                 dbus_drv_get_target_name(dbus_spi_target),
-                (unsigned)DBCDRV_SPI_DUMMY_RETRIES);
+            (unsigned)dummy_retries);
         LOG_HEXDUMP_INF(&cumulative_rx[tail_offset], tail_len, "DBCDRV_readReg32 fail tail raw:");
         LOG_HEXDUMP_INF(&decoded_tail[tail_offset], tail_len, "DBCDRV_readReg32 fail tail decoded:");
         dbus_drv_log_interleaved_lane_tails(cumulative_rx, cumulative_len, frame_len);
@@ -1295,9 +1299,11 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
             ((uint32_t)matched_data[1] << 8) |
             (uint32_t)matched_data[0];
 
-    LOG_INF("DBCDRV_readReg32 summary: addr=0x%x target=%s result=ok value=0x%08x",
-            addr,
-            dbus_drv_get_target_name(dbus_spi_target),
-            *data);
+    if (!sonic_fast_path) {
+        LOG_INF("DBCDRV_readReg32 summary: addr=0x%x target=%s result=ok value=0x%08x",
+                addr,
+                dbus_drv_get_target_name(dbus_spi_target),
+                *data);
+    }
     return DBC_OK;
 }

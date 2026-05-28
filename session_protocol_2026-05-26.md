@@ -109,3 +109,18 @@ This is the key outcome of the session.
 - Motor1 `MIN` has been moved from bad `GPIO3` to `GPIO15`, and the switch now works there.
 - The newest image restores a short settle delay after each SPI target switch.
 - With that change plus the GPIO15 remap, the full setup worked perfectly three times in a row and is the current known-good state.
+
+## 2026-05-28 Recovery Checkpoint
+- A later regression prevented all motors from moving even though RW612 still logged successful direct register writes.
+- Hardware was revalidated independently because Pico startup self-test pulses still moved the motors locally.
+- Multiple current-head RW612/Pico reconstructions failed to restore motion.
+- Physical four-motor motion returned only after restoring the exact May 20 firmware snapshot from commit `2fd321d` on all three devices:
+  - RW612 ELF: `AUTO_TEST_ALL4_V1_2026_05_20`
+  - Pico1 UF2 from the same snapshot
+  - Pico2 UF2 from the same snapshot
+- Conclusion: the root problem is a software regression introduced after the May 20 known-good snapshot, not a newly broken motor power path or a basic wiring failure.
+- Saved exact working artifacts in the current workspace:
+  - `helper/known_good_2026-05-28/rw612_auto_test_all4_2fd321d.elf`
+  - `helper/known_good_2026-05-28/pico_spi_slave_test_pico1_2fd321d.uf2`
+  - `helper/known_good_2026-05-28/pico_spi_slave_test_pico2_2fd321d.uf2`
+- The restored May 20 RW612 quad test is the current simple all-4 baseline; it already uses switch guarding for motors with configured end-switch inputs during the simultaneous run.

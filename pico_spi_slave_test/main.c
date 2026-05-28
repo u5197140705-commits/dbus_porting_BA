@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define PICO_FIRMWARE_VERSION "dbal_motor_v1_onehot_v3_isoD_v22_2026-05-22"
+#ifndef PICO_FIRMWARE_VERSION
+#define PICO_FIRMWARE_VERSION "dbal_motor_v1_onehot_v3_isoD_v23_2026-05-28"
+#endif
 
 /* Non-blocking deferred log buffer: process_rx_frame must never call printf
  * directly — USB CDC printf blocks for milliseconds, which stalls the SPI
@@ -18,9 +20,11 @@
 #define DLOG_MSG_LEN 96u
 #define LOG_IDLE_FLUSH_US 5000u
 #define DLOG_FLUSH_BUDGET 4u
-#define PICO_RUNTIME_LOG_FLUSH 0
+#define PICO_RUNTIME_LOG_FLUSH 1
 #define PICO_HEARTBEAT_ENABLE 1
+#ifndef PICO_STARTUP_SELF_TEST
 #define PICO_STARTUP_SELF_TEST 0
+#endif
 #define PICO_DIAG_FORCE_MOTOR0_ONLY 0
 /* Build this firmware separately for each Pico side:
  * - PICO_NODE_SLOT=1 => owns logical motors 0 (A) and 2 (B)
@@ -161,8 +165,16 @@ static void led_update_from_distance(uint32_t dist_mm);
 #define SONIC_REG_DISTANCE_OFFSET 0x00u
 
 #define SONIC_SENSOR_COUNT 1u
-#define SONIC_TRIGGER_PERIOD_US 100000u
+#define SONIC_TRIGGER_PERIOD_US 60000u
 #define SONIC_ECHO_TIMEOUT_US   30000u
+#define SONIC_MIN_DISTANCE_MM     20u
+#define SONIC_MAX_DISTANCE_MM   4000u
+#define SONIC_TIMEOUT_HOLD_CYCLES 2u
+#define SONIC_LCD_REFRESH_MS    150u
+
+#ifndef PICO_LOCAL_SONIC_LCD_REFRESH
+#define PICO_LOCAL_SONIC_LCD_REFRESH 1
+#endif
 
 #define MOTOR_STATUS_ENABLED   0x00000001u
 #define MOTOR_STATUS_AVAILABLE 0x00000002u
@@ -230,7 +242,7 @@ static volatile uint32_t rx_stream_byte_count = 0u;
 static volatile uint32_t frame8_fail_dump_count = 0u;
 static uint8_t last_failed_raw_frame[FRAME_SIZE] = {0};
 static uint32_t rx_last_byte_us = 0u;
-static uint8_t sniff_frame[FRAME_SIZE] = {0};
+static uint8_t sniff_frame[DBAL_MAX_FRAME_SIZE] = {0};
 static uint8_t sniff_len = 0u;
 static uint8_t sniff_byte = 0u;
 static uint8_t sniff_bit_count = 0u;
@@ -266,6 +278,8 @@ typedef enum {
 static bit_transform_t tx_transform = TRANSFORM_ROL1;
 
 static bool process_rx_frame(void);
+static bool process_dbal_frame(size_t count);
+static void lcd_print(uint8_t row, uint8_t col, const char *text, uint8_t text_len);
 static bool addr_is_valid(uint16_t addr);
 static void motor_write(uint16_t addr, uint32_t value);
 static uint32_t motor_read(uint16_t addr);
@@ -283,6 +297,15 @@ static void sniff_process_frame(void)
     last_frame_len = sniff_len;
 
     bool missing_tail_byte = false;
+
+    if (sniff_len > FRAME_SIZE) {
+        memcpy(rx_frame_raw, sniff_frame, sniff_len);
+        if (!process_dbal_frame(sniff_len)) {
+            frame_other_total++;
+            memcpy(last_failed_raw_frame, sniff_frame, FRAME_SIZE);
+        }
+        return;
+    }
 
     if (sniff_len < (FRAME_SIZE - 1u)) {
         if (sniff_len > 0u) {
@@ -384,7 +407,7 @@ static inline void sniff_update(void)
         sniff_byte = (uint8_t)((sniff_byte << 1u) | (gpio_get(PIN_MOSI) ? 1u : 0u));
         sniff_bit_count++;
         if (sniff_bit_count == 8u) {
-            if (sniff_len < FRAME_SIZE) {
+            if (sniff_len < DBAL_MAX_FRAME_SIZE) {
                 sniff_frame[sniff_len++] = sniff_byte;
             }
             sniff_byte = 0u;
@@ -481,9 +504,56 @@ typedef enum {
 } sonic_state_t;
 
 static sonic_state_t sonic_state = SONIC_IDLE;
-static uint32_t sonic_last_trigger_us = 0u;
-static uint32_t sonic_echo_start_us = 0u;
+static volatile uint32_t sonic_last_trigger_us = 0u;
+static volatile uint32_t sonic_echo_start_us = 0u;
+static volatile uint32_t sonic_echo_pulse_us = 0u;
+static volatile bool sonic_echo_ready = false;
 static uint32_t sonic_distance_mm = 0u;
+static uint32_t sonic_last_good_distance_mm = 0u;
+static uint8_t sonic_timeout_streak = 0u;
+static uint32_t sonic_lcd_last_refresh_ms = 0u;
+static uint32_t sonic_lcd_last_distance_mm = UINT32_MAX;
+
+static void sonic_lcd_refresh(bool force)
+{
+#if PICO_LOCAL_SONIC_LCD_REFRESH && (PICO_NODE_SLOT == 1)
+    char line_buf[17];
+    uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+    uint32_t elapsed_ms = (uint32_t)(now_ms - sonic_lcd_last_refresh_ms);
+
+    if (!force && elapsed_ms < SONIC_LCD_REFRESH_MS) {
+        return;
+    }
+
+    if (!force &&
+        sonic_distance_mm == sonic_lcd_last_distance_mm &&
+        elapsed_ms < (SONIC_LCD_REFRESH_MS * 4u)) {
+        return;
+    }
+
+    snprintf(line_buf, sizeof(line_buf), "%4lu mm        ", (unsigned long)sonic_distance_mm);
+    lcd_print(0u, 0u, "DISTANCE        ", 16u);
+    lcd_print(1u, 0u, line_buf, (uint8_t)strlen(line_buf));
+    sonic_lcd_last_refresh_ms = now_ms;
+    sonic_lcd_last_distance_mm = sonic_distance_mm;
+#else
+    (void)force;
+#endif
+}
+
+static void sonic_publish_distance(uint32_t distance_mm)
+{
+    sonic_distance_mm = distance_mm;
+    reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+    led_update_from_distance(sonic_distance_mm);
+    sonic_lcd_refresh(false);
+}
+
+static bool sonic_distance_is_plausible(uint32_t distance_mm)
+{
+    return (distance_mm >= SONIC_MIN_DISTANCE_MM) &&
+           (distance_mm <= SONIC_MAX_DISTANCE_MM);
+}
 
 static void lcd_pulse_enable(void)
 {
@@ -587,7 +657,12 @@ static void lcd_init_1602(void)
     lcd_cmd(0x0Cu);
     lcd_cmd(0x06u);
     lcd_clear();
+#if PICO_LOCAL_SONIC_LCD_REFRESH && (PICO_NODE_SLOT == 1)
+    lcd_print(0u, 0u, "DISTANCE        ", 16u);
+    lcd_print(1u, 0u, "starting...      ", 16u);
+#else
     lcd_print(0u, 0u, "DBAL SPI READY", 14u);
+#endif
 }
 
 static void sonic_init(void)
@@ -602,14 +677,21 @@ static void sonic_init(void)
 
     sonic_state = SONIC_IDLE;
     sonic_last_trigger_us = time_us_32();
+    sonic_echo_start_us = 0u;
+    sonic_echo_pulse_us = 0u;
+    sonic_echo_ready = false;
     sonic_distance_mm = 0u;
-    reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
+    sonic_last_good_distance_mm = 0u;
+    sonic_timeout_streak = 0u;
+    sonic_lcd_last_refresh_ms = 0u;
+    sonic_lcd_last_distance_mm = UINT32_MAX;
+    sonic_publish_distance(sonic_distance_mm);
+    sonic_lcd_refresh(true);
 }
 
 static void sonic_poll(void)
 {
     uint32_t now_us = time_us_32();
-    bool echo_high = gpio_get(PIN_SONIC_ECHO);
 
     switch (sonic_state) {
         case SONIC_IDLE:
@@ -618,33 +700,46 @@ static void sonic_poll(void)
                 busy_wait_us_32(10u);
                 gpio_put(PIN_SONIC_TRIG, 0);
                 sonic_last_trigger_us = time_us_32();
+                sonic_echo_ready = false;
                 sonic_state = SONIC_WAIT_RISE;
             }
             break;
 
         case SONIC_WAIT_RISE:
-            if (echo_high) {
-                sonic_echo_start_us = now_us;
-                sonic_state = SONIC_WAIT_FALL;
-            } else if ((uint32_t)(now_us - sonic_last_trigger_us) >= SONIC_ECHO_TIMEOUT_US) {
-                sonic_distance_mm = 0u;
-                reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
-                led_update_from_distance(sonic_distance_mm);
+            if ((uint32_t)(now_us - sonic_last_trigger_us) >= SONIC_ECHO_TIMEOUT_US) {
+                sonic_timeout_streak++;
+                if (sonic_timeout_streak >= SONIC_TIMEOUT_HOLD_CYCLES) {
+                    sonic_last_good_distance_mm = 0u;
+                    sonic_publish_distance(0u);
+                } else {
+                    sonic_publish_distance(sonic_last_good_distance_mm);
+                }
                 sonic_state = SONIC_IDLE;
             }
             break;
 
         case SONIC_WAIT_FALL:
-            if (!echo_high) {
-                uint32_t pulse_us = (uint32_t)(now_us - sonic_echo_start_us);
-                sonic_distance_mm = (pulse_us * 343u) / 2000u;
-                reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
-                led_update_from_distance(sonic_distance_mm);
+            if (sonic_echo_ready) {
+                uint32_t pulse_us = sonic_echo_pulse_us;
+                uint32_t distance_mm = (pulse_us * 343u) / 2000u;
+
+                sonic_echo_ready = false;
+                if (sonic_distance_is_plausible(distance_mm)) {
+                    sonic_last_good_distance_mm = distance_mm;
+                    sonic_timeout_streak = 0u;
+                    sonic_publish_distance(distance_mm);
+                } else {
+                    sonic_publish_distance(sonic_last_good_distance_mm);
+                }
                 sonic_state = SONIC_IDLE;
             } else if ((uint32_t)(now_us - sonic_echo_start_us) >= SONIC_ECHO_TIMEOUT_US) {
-                sonic_distance_mm = 0u;
-                reg_write((uint16_t)(SONIC_REG_BASE + SONIC_REG_DISTANCE_OFFSET), sonic_distance_mm);
-                led_update_from_distance(sonic_distance_mm);
+                sonic_timeout_streak++;
+                if (sonic_timeout_streak >= SONIC_TIMEOUT_HOLD_CYCLES) {
+                    sonic_last_good_distance_mm = 0u;
+                    sonic_publish_distance(0u);
+                } else {
+                    sonic_publish_distance(sonic_last_good_distance_mm);
+                }
                 sonic_state = SONIC_IDLE;
             }
             break;
@@ -1378,6 +1473,7 @@ static bool process_dbal_frame(size_t count)
                     if (data_len < 1u) {
                         continue;
                     }
+                    dlog("[DBAL] lcd clear\n");
                     lcd_clear();
                     return true;
                 }
@@ -1386,6 +1482,9 @@ static bool process_dbal_frame(size_t count)
                     if (data_len < 3u) {
                         continue;
                     }
+                    dlog("[DBAL] lcd cursor row=%u col=%u\n",
+                         (unsigned)decoded[data_start + 1u],
+                         (unsigned)decoded[data_start + 2u]);
                     lcd_set_cursor(decoded[data_start + 1u], decoded[data_start + 2u]);
                     return true;
                 }
@@ -1398,6 +1497,12 @@ static bool process_dbal_frame(size_t count)
                         uint8_t row = decoded[data_start + 1u];
                         uint8_t col = decoded[data_start + 2u];
                         uint8_t text_len = (uint8_t)(data_len - 3u);
+                        dlog("[DBAL] lcd print row=%u col=%u len=%u text='%.*s'\n",
+                             (unsigned)row,
+                             (unsigned)col,
+                             (unsigned)text_len,
+                             (int)text_len,
+                             (const char *)&decoded[data_start + 3u]);
                         lcd_print(row, col, (const char *)&decoded[data_start + 3u], text_len);
                     }
                     return true;
@@ -1645,21 +1750,31 @@ static inline void mark_spi_activity(void)
 
 static void spi_slave_set_miso_active(bool active)
 {
-    /* When this slave is inactive, make MISO a plain high-impedance input with
-     * no pulls so a powered sibling Pico cannot be loaded by this pad state. */
-    if (active) {
-        gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-        gpio_set_oeover(PIN_MISO, GPIO_OVERRIDE_NORMAL);
-        return;
-    }
-
-    gpio_init(PIN_MISO);
-    gpio_set_dir(PIN_MISO, GPIO_IN);
-    gpio_disable_pulls(PIN_MISO);
+    /* Keep MISO in SPI function at all times. The last known-good all-4 motor
+     * state used this behavior, and toggling MISO away from SPI has previously
+     * broken the slave receiver on this link. */
+    (void)active;
+    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
 }
 
 static void cs_gpio_irq_handler(uint gpio, uint32_t events)
 {
+    if (gpio == PIN_SONIC_ECHO) {
+        uint32_t now_us = time_us_32();
+
+        if ((events & GPIO_IRQ_EDGE_RISE) != 0u && sonic_state == SONIC_WAIT_RISE) {
+            sonic_echo_start_us = now_us;
+            sonic_state = SONIC_WAIT_FALL;
+            sonic_echo_ready = false;
+        }
+
+        if ((events & GPIO_IRQ_EDGE_FALL) != 0u && sonic_state == SONIC_WAIT_FALL) {
+            sonic_echo_pulse_us = (uint32_t)(now_us - sonic_echo_start_us);
+            sonic_echo_ready = true;
+        }
+        return;
+    }
+
     if (gpio != PIN_CS) {
         return;
     }
@@ -1772,12 +1887,16 @@ static void service_spi_frame(spi_inst_t *spi)
             }
         }
 
-        /* PL022 RX capture on this link is not reliable enough to decode
-         * commands. Keep the byte count only as a diagnostic and drop the raw
-         * bytes; sniff_update() already decoded the authoritative frame while
-         * CS was active. */
+        /* Exact 8-byte register frames used by the RW612 motor path were
+         * previously decoded successfully from the PL022 RX FIFO at cs_end.
+         * Keep sniff decoding for longer DBAL traffic, but restore direct
+         * frame decoding here for 8-byte register transactions. */
         last_frame_len = (uint32_t)rx_index;
-        if (rx_index > 0u) {
+        if (rx_index == FRAME_SIZE) {
+            frame8_total++;
+            (void)process_rx_frame();
+            rx_index = 0u;
+        } else if (rx_index > 0u) {
             frame_other_total++;
             rx_index = 0u;
         }
@@ -1961,6 +2080,9 @@ int main(void)
                                        GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
                                        true,
                                        &cs_gpio_irq_handler);
+    gpio_set_irq_enabled(PIN_SONIC_ECHO,
+                         GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
+                         true);
 
     /* Brief startup indicator only — keep delay minimal so Pico is ready
      * before the SPI master (RW612) begins its first exchange. */
