@@ -34,11 +34,11 @@ add_executable(pico_spi_slave_test_pico2_shadowtrace
 target_compile_definitions(pico_spi_slave_test_pico2_shadowtrace PRIVATE
     PICO_NODE_SLOT=2
     PICO_PREFER_CS_START_READ_REARM=0
-    PICO_FORCE_FULL_TX_PRELOAD=1
     PICO_SPI_CPHA_SETTING=SPI_CPHA_1
     PICO_TX_TRANSFORM_SETTING=1
     PICO_EXACT8_AUTO_TRANSFORM=1
-    PICO_FIRMWARE_VERSION="dbal_motor_v1_onehot_v3_isoD_v44_pico2_txrol1_2026-07-02"
+    PICO_READ_RESPONSE_REPEAT_FRAMES=1
+    PICO_FIRMWARE_VERSION="dbal_motor_v1_onehot_v3_isoD_v50_pico2_pico1txprogress_2026-07-02"
 )
 
 add_executable(pico_spi_slave_test_selftest

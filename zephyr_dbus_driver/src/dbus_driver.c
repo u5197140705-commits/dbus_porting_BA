@@ -1215,6 +1215,12 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 {
     const size_t frame_len = DBC_SPI_HDR_SIZE + sizeof(uint32_t);
     bool sonic_fast_path = ((uint16_t)addr >= 0x5100u) && ((uint16_t)addr < 0x5104u);
+    bool log_secondary_read = (dbus_spi_target == DBCDRV_SPI_TARGET_SECONDARY_PICO) &&
+                              (((uint16_t)addr == 0x5010u) ||
+                               ((uint16_t)addr == 0x5014u) ||
+                               ((uint16_t)addr == 0x5030u) ||
+                               ((uint16_t)addr == 0x5034u));
+    bool defer_secondary_direct_match = log_secondary_read;
     uint32_t cs_hold_us = sonic_fast_path ? 500u : DBCDRV_SPI_CS_HOLD_US;
     uint8_t dummy_retries = sonic_fast_path ? 12u : DBCDRV_SPI_DUMMY_RETRIES;
     uint32_t dummy_gap_us = sonic_fast_path ? 100u : DBCDRV_SPI_DUMMY_GAP_US;
@@ -1267,6 +1273,16 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         return DBC_ERROR;
     }
 
+    if (log_secondary_read) {
+        LOG_INF("DBCDRV_readReg32 cmd target=%s addr=0x%04x tx=%02x %02x %02x %02x %02x %02x %02x %02x rx=%02x %02x %02x %02x %02x %02x %02x %02x",
+                dbus_drv_get_target_name(dbus_spi_target),
+                (unsigned)addr,
+                tx_buffer[0], tx_buffer[1], tx_buffer[2], tx_buffer[3],
+                tx_buffer[4], tx_buffer[5], tx_buffer[6], tx_buffer[7],
+                rx_buffer[0], rx_buffer[1], rx_buffer[2], rx_buffer[3],
+                rx_buffer[4], rx_buffer[5], rx_buffer[6], rx_buffer[7]);
+    }
+
     memcpy(cumulative_rx, rx_buffer, frame_len);
     cumulative_len = frame_len;
 
@@ -1301,6 +1317,17 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
             return DBC_ERROR;
         }
 
+        if (log_secondary_read && (attempt <= 8u)) {
+            LOG_INF("DBCDRV_readReg32 dummy target=%s addr=0x%04x attempt=%u tx=%02x %02x %02x %02x %02x %02x %02x %02x rx=%02x %02x %02x %02x %02x %02x %02x %02x",
+                dbus_drv_get_target_name(dbus_spi_target),
+                (unsigned)addr,
+                (unsigned)attempt,
+                dummy_tx[0], dummy_tx[1], dummy_tx[2], dummy_tx[3],
+                dummy_tx[4], dummy_tx[5], dummy_tx[6], dummy_tx[7],
+                data_rx[0], data_rx[1], data_rx[2], data_rx[3],
+                data_rx[4], data_rx[5], data_rx[6], data_rx[7]);
+        }
+
         memcpy(&cumulative_rx[cumulative_len], data_rx, frame_len);
         cumulative_len += frame_len;
 
@@ -1308,37 +1335,39 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
             LOG_HEXDUMP_INF(data_rx, sizeof(data_rx), "DBCDRV_readReg32 retry RX:");
         }
 
-        if (dbus_drv_extract_read_response(data_rx,
-                                           sizeof(data_rx),
-                                           expected_addr_high,
-                                           expected_addr_low,
-                                           matched_data) ||
-            dbus_drv_extract_read_response_autodecode(data_rx,
-                                                      sizeof(data_rx),
-                                                      expected_addr_high,
-                                                      expected_addr_low,
-                                                      matched_data)) {
-            have_match = true;
-            break;
-        }
+        if (!defer_secondary_direct_match || attempt >= 8u) {
+            if (dbus_drv_extract_read_response(data_rx,
+                                               sizeof(data_rx),
+                                               expected_addr_high,
+                                               expected_addr_low,
+                                               matched_data) ||
+                dbus_drv_extract_read_response_autodecode(data_rx,
+                                                          sizeof(data_rx),
+                                                          expected_addr_high,
+                                                          expected_addr_low,
+                                                          matched_data)) {
+                have_match = true;
+                break;
+            }
 
-        if (dbus_drv_extract_read_response(cumulative_rx,
-                                           cumulative_len,
-                                           expected_addr_high,
-                                           expected_addr_low,
-                                           matched_data) ||
-            dbus_drv_extract_read_response_autodecode(cumulative_rx,
-                                                      cumulative_len,
-                                                      expected_addr_high,
-                                                      expected_addr_low,
-                                                      matched_data) ||
-            dbus_drv_extract_read_response_bitshifted(cumulative_rx,
-                                                      cumulative_len,
-                                                      expected_addr_high,
-                                                      expected_addr_low,
-                                                      matched_data)) {
-            have_match = true;
-            break;
+            if (dbus_drv_extract_read_response(cumulative_rx,
+                                               cumulative_len,
+                                               expected_addr_high,
+                                               expected_addr_low,
+                                               matched_data) ||
+                dbus_drv_extract_read_response_autodecode(cumulative_rx,
+                                                          cumulative_len,
+                                                          expected_addr_high,
+                                                          expected_addr_low,
+                                                          matched_data) ||
+                dbus_drv_extract_read_response_bitshifted(cumulative_rx,
+                                                          cumulative_len,
+                                                          expected_addr_high,
+                                                          expected_addr_low,
+                                                          matched_data)) {
+                have_match = true;
+                break;
+            }
         }
 
         if (dbus_drv_extract_read_response_interleaved_byte_lanes(cumulative_rx,
