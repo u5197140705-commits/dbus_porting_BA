@@ -728,3 +728,66 @@ Next bench discriminator:
   response, and fewer first-read failures followed by second-read success.
 - If reads regress to all `ff`, response retirement is too early and should move from
   “queued full frame” to “observed CS after full queue”.
+
+---
+
+## Continuation Update — RW612 Speed-Write Submit Proof
+
+New bench evidence from the RW612-side `DBCDRV_writeReg32()` probe established that the
+master is composing and submitting correct full 8-byte motor-speed write frames for the
+secondary Pico path.
+
+Observed write-submit proof:
+- `seq=5 target=secondary addr=0x5014 data=0x000001f4`
+  `tx=60 50 14 01 f4 01 00 00`
+- `seq=6 target=secondary addr=0x5034 data=0x0000044c`
+  `tx=60 50 34 01 4c 04 00 00`
+- zero-value speed writes were also fully formed earlier in the sequence:
+  - `0x5014 -> tx=60 50 14 01 00 00 00 00`
+  - `0x5034 -> tx=60 50 34 01 00 00 00 00`
+
+Why this matters:
+- these logs remove the current RW612 write-builder as the main suspect for the stale
+  later motor-speed values
+- the failing slots are not explained by RW612 sending only 7 bytes, corrupting the
+  payload locally, or swapping the little-endian payload bytes before `spi_transceive()`
+- this matches the earlier Pico-side conclusion from `v34` and `v35`: the remaining
+  defect is deeper than local WRITE7 promotion and should now be treated as a bus /
+  transaction-delivery or response-path problem
+
+Important identity lesson from the same run:
+- the runtime banner still printed the old fallback strings
+  - `Hello from Zephyr DBus Driver project! [QUAD_SIMUL_V1]`
+  - `RW612 build marker: QUAD_SIMUL_V1_2026_06_10`
+- but the new targeted write-submit logs were present in the same boot, which proves
+  the flashed image contained the new `DBCDRV_writeReg32 speed seq=...` instrumentation
+- therefore, in this branch the banner/marker text is not a trustworthy identity check
+  by itself; the presence of the targeted probe log is the better proof of which RW612
+  binary is actually running
+
+Readback behavior from the same run:
+- all four post-command enable reads timed out after `32` attempts
+  - primary: `0x5000`, `0x5020`
+  - secondary: `0x5030`, `0x5010`
+- this was an all-4 live quad mode run, so it should not be mixed into the narrower
+  secondary-only alias-probe conclusions without care
+- even so, it reinforces the present split:
+  - write submission can look locally correct on RW612
+  - read/response completion can still fail completely in the active runtime mode
+
+Updated conclusion:
+- the current RW612 speed-write probe falsifies the hypothesis that bad secondary
+  speed readback is caused by malformed 8-byte write submission from `DBCDRV_writeReg32()`
+- the next useful discriminator remains downstream of write construction: actual bus
+  delivery/CS timing, Pico authoritative write receipt, or the read-response path
+
+Additional key learnings from this run:
+16. The RW612 master can submit fully correct 8-byte speed-write frames for `0x5014`
+    and `0x5034` while later readback still fails, so write construction is no longer
+    the leading hypothesis.
+17. In this build setup, the boot banner and `RW612_BUILD_MARKER` fallback strings can
+    remain stale even when new targeted instrumentation is active; probe-specific logs
+    are a more reliable flashed-image discriminator.
+18. A mixed all-4 quad run can show total read timeout even while RW612-side write TX
+    bytes are correct, which sharpens the separation between write-submit proof and
+    readback-path health.

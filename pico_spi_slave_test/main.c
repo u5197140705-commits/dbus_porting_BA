@@ -54,6 +54,15 @@
 #ifndef PICO_FORCE_FULL_TX_PRELOAD
 #define PICO_FORCE_FULL_TX_PRELOAD 0
 #endif
+#ifndef PICO_SPI_CPHA_SETTING
+#define PICO_SPI_CPHA_SETTING SPI_CPHA_0
+#endif
+#ifndef PICO_TX_TRANSFORM_SETTING
+#define PICO_TX_TRANSFORM_SETTING 1
+#endif
+#ifndef PICO_EXACT8_AUTO_TRANSFORM
+#define PICO_EXACT8_AUTO_TRANSFORM 0
+#endif
 #define PICO_DIAG_FORCE_MOTOR0_ONLY 0
 /* Build this firmware separately for each Pico side:
  * - PICO_NODE_SLOT=1 => owns logical motors 0 (A) and 2 (B)
@@ -62,8 +71,13 @@
 #ifndef PICO_NODE_SLOT
 #define PICO_NODE_SLOT 1
 #endif
+#if PICO_NODE_SLOT == 2
+#define CS_END_DRAIN_TIMEOUT_US 500u
+#define CS_END_DRAIN_IDLE_US 2u
+#else
 #define CS_END_DRAIN_TIMEOUT_US 200u
 #define CS_END_DRAIN_IDLE_US 1u
+#endif
 #define RX_ACCUM_GAP_RESET_US 3000u
 typedef struct { char msg[DLOG_MSG_LEN]; } dlog_entry_t;
 static dlog_entry_t dlog_buf[DLOG_ENTRIES];
@@ -324,6 +338,10 @@ static uint8_t last_read_rsp_wire[FRAME_SIZE] = {0};
 static volatile uint32_t last_read_rsp_count = 0u;
 static volatile uint16_t last_read_rsp_addr = 0u;
 static volatile uint32_t last_read_rsp_value = 0u;
+static volatile uint32_t last_read_decode_motor1_count = 0u;
+static volatile uint32_t last_read_decode_motor3_count = 0u;
+static volatile uint32_t pending_rsp_replace_count = 0u;
+static volatile uint32_t pending_rsp_replace_diff_addr_count = 0u;
 static volatile uint32_t last_cs_end_preload_count = 0u;
 static volatile uint32_t last_cs_start_queue_count = 0u;
 static volatile uint32_t current_active_tx_pushes = 0u;
@@ -358,6 +376,49 @@ static volatile uint32_t frame8_read_count = 0u;
 static volatile uint32_t frame8_motor_write_count = 0u;
 static volatile uint32_t frame8_stream_try_count = 0u;
 static volatile uint32_t frame8_stream_ok_count = 0u;
+static volatile uint32_t frame7_read_promote_count = 0u;
+static volatile uint32_t frame7_speed_write_promote_count = 0u;
+static volatile uint32_t frame7_speed_write_motor1_count = 0u;
+static volatile uint32_t frame7_speed_write_motor3_count = 0u;
+static volatile uint32_t frame7_write_fifo_count = 0u;
+static volatile uint32_t frame7_write_sniff_count = 0u;
+static volatile uint32_t frame7_write_tail_drop_count = 0u;
+static volatile uint32_t frame7_write_decode_count = 0u;
+static volatile uint32_t partial_len1_count = 0u;
+static volatile uint32_t partial_len2_count = 0u;
+static volatile uint32_t partial_len3_count = 0u;
+static volatile uint32_t partial_len4_count = 0u;
+static volatile uint32_t partial_len5_count = 0u;
+static volatile uint32_t partial_len6_count = 0u;
+static volatile uint32_t partial_len7_count = 0u;
+static volatile uint32_t partial_len2_4000_count = 0u;
+static volatile uint32_t partial_len2_4050_count = 0u;
+static volatile uint32_t partial_len2_6000_count = 0u;
+static volatile uint32_t partial_len2_6050_count = 0u;
+static volatile uint32_t partial_len2_other_count = 0u;
+static volatile uint32_t stale_rx1_drop_count = 0u;
+static volatile uint32_t stale_rx1_00_count = 0u;
+static volatile uint32_t stale_rx1_40_count = 0u;
+static volatile uint32_t stale_rx1_50_count = 0u;
+static volatile uint32_t stale_rx1_60_count = 0u;
+static volatile uint32_t stale_rx1_01_count = 0u;
+static volatile uint32_t stale_rx1_a0_count = 0u;
+static volatile uint32_t stale_rx1_other_count = 0u;
+static volatile uint16_t last_write7_addr = 0u;
+static volatile uint32_t last_write7_value = 0u;
+static uint8_t last_write7_fifo_raw[FRAME_SIZE - 1u] = {0};
+static uint8_t last_write7_sniff_raw[FRAME_SIZE - 1u] = {0};
+static uint8_t last_partial_frame_raw[FRAME_SIZE - 1u] = {0};
+static uint8_t last_partial_len2_raw[2] = {0};
+static uint8_t last_partial_len2_other_raw[2] = {0};
+static volatile uint8_t last_write7_tail_byte = 0u;
+static volatile uint8_t last_stale_rx1_byte = 0u;
+static volatile uint8_t last_partial_frame_len = 0u;
+static volatile uint16_t last_write7_decode_addr = 0u;
+static volatile uint32_t last_write7_decode_value = 0u;
+static volatile uint8_t last_write7_decode_rotation = 0u;
+static volatile uint8_t last_write7_decode_transform = 0u;
+static bool pending_write7_tail_byte = false;
 static uint8_t rx_stream_window[FRAME_SIZE] = {0};
 static uint32_t rx_stream_fill = 0u;
 static volatile uint32_t rx_stream_byte_count = 0u;
@@ -398,12 +459,20 @@ typedef enum {
     TRANSFORM_SERIAL_ROR1,
 } bit_transform_t;
 
-static bit_transform_t tx_transform = TRANSFORM_ROL1;
+static bit_transform_t tx_transform = (bit_transform_t)PICO_TX_TRANSFORM_SETTING;
 
 static bool process_rx_frame(void);
 static bool process_dbal_frame(size_t count);
 static void lcd_print(uint8_t row, uint8_t col, const char *text, uint8_t text_len);
 static bool addr_is_valid(uint16_t addr);
+static bool raw_frame_is_safe_read_near_match(const uint8_t *raw_frame, size_t len);
+static bool raw_frame_is_safe_motor_speed_write_near_match(const uint8_t *raw_frame, size_t len);
+static bool decode_write7_candidate(const uint8_t *raw_frame,
+                                    uint16_t *addr,
+                                    uint32_t *value,
+                                    bit_transform_t *transform,
+                                    uint8_t *rotation);
+static bool decode_frame_with_transform(const uint8_t *raw_frame, uint8_t *decoded_frame, bit_transform_t transform);
 static void motor_write(uint16_t addr, uint32_t value);
 static uint32_t motor_read(uint16_t addr);
 static inline bool cs_is_active(void);
@@ -417,6 +486,14 @@ static void prepare_read_response_frame(uint16_t addr, uint32_t value);
 
 static void retire_pending_read_response(void)
 {
+    dlog("[PICO] RETIRE_READ addr=0x%04x val=0x%08lx txi=%u prequeued=%u retire_on_end=%u bytes=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+         (unsigned)last_read_rsp_addr,
+         (unsigned long)last_read_rsp_value,
+         (unsigned)tx_index,
+         tx_frame_prequeued ? 1u : 0u,
+         tx_read_response_retire_on_cs_end ? 1u : 0u,
+         tx_frame_wire[0], tx_frame_wire[1], tx_frame_wire[2], tx_frame_wire[3],
+         tx_frame_wire[4], tx_frame_wire[5], tx_frame_wire[6], tx_frame_wire[7]);
     tx_read_response_pending = false;
     tx_read_response_retire_on_cs_end = false;
     tx_frame_prequeued = false;
@@ -455,6 +532,69 @@ static void sniff_process_frame(void)
             frame_other_total++;
         }
         return;
+    }
+
+    if (raw_frame_is_safe_read_near_match(sniff_frame, sniff_len)) {
+        dlog("[PICO] SNIFF_READ7 pad0 raw=%02x %02x %02x %02x %02x %02x %02x\n",
+             sniff_frame[0], sniff_frame[1], sniff_frame[2], sniff_frame[3],
+             sniff_frame[4], sniff_frame[5], sniff_frame[6]);
+        memcpy(rx_frame_raw, sniff_frame, sniff_len);
+        rx_frame_raw[FRAME_SIZE - 1u] = 0x00u;
+        frame8_total++;
+        frame7_read_promote_count++;
+        if (process_rx_frame()) {
+            frame8_stream_ok_count++;
+        } else {
+            frame_other_total++;
+        }
+        return;
+    }
+
+    if (raw_frame_is_safe_motor_speed_write_near_match(sniff_frame, sniff_len)) {
+        uint16_t addr = (uint16_t)(((uint16_t)sniff_frame[1] << 8) | sniff_frame[2]);
+        uint32_t value = (uint32_t)sniff_frame[4] |
+                         ((uint32_t)sniff_frame[5] << 8) |
+                         ((uint32_t)sniff_frame[6] << 16);
+        dlog("[PICO] SNIFF_WRITE7 pad0 raw=%02x %02x %02x %02x %02x %02x %02x\n",
+             sniff_frame[0], sniff_frame[1], sniff_frame[2], sniff_frame[3],
+             sniff_frame[4], sniff_frame[5], sniff_frame[6]);
+        frame7_speed_write_promote_count++;
+        frame7_write_sniff_count++;
+        last_write7_addr = addr;
+        last_write7_value = value;
+        memcpy(last_write7_sniff_raw, sniff_frame, FRAME_SIZE - 1u);
+        if (addr == (MOTOR_REG_BASE + (1u * MOTOR_REG_STRIDE) + MOTOR_REG_SPEED_OFFSET)) {
+            frame7_speed_write_motor1_count++;
+        } else if (addr == (MOTOR_REG_BASE + (3u * MOTOR_REG_STRIDE) + MOTOR_REG_SPEED_OFFSET)) {
+            frame7_speed_write_motor3_count++;
+        }
+        return;
+    }
+
+    if (sniff_len == (FRAME_SIZE - 1u)) {
+        uint16_t decoded_addr = 0u;
+        uint32_t decoded_value = 0u;
+        bit_transform_t decoded_transform = TRANSFORM_IDENTITY;
+        uint8_t decoded_rotation = 0u;
+
+        if (decode_write7_candidate(sniff_frame,
+                                    &decoded_addr,
+                                    &decoded_value,
+                                    &decoded_transform,
+                                    &decoded_rotation)) {
+            frame7_write_decode_count++;
+            last_write7_decode_addr = decoded_addr;
+            last_write7_decode_value = decoded_value;
+            last_write7_decode_rotation = decoded_rotation;
+            last_write7_decode_transform = (uint8_t)decoded_transform;
+            dlog("[PICO] SNIFF_WRITE7_DECODE t=%u r=%u raw=%02x %02x %02x %02x %02x %02x %02x -> addr=0x%04x val=0x%08lx\n",
+                 (unsigned)decoded_transform,
+                 (unsigned)decoded_rotation,
+                 sniff_frame[0], sniff_frame[1], sniff_frame[2], sniff_frame[3],
+                 sniff_frame[4], sniff_frame[5], sniff_frame[6],
+                 (unsigned)decoded_addr,
+                 (unsigned long)decoded_value);
+        }
     }
 
     if (sniff_len <= FRAME_SIZE) {
@@ -1157,6 +1297,175 @@ static bool decoded_frame_is_valid(const uint8_t *decoded_frame)
     return true;
 }
 
+static bool raw_frame_is_safe_read_near_match(const uint8_t *raw_frame, size_t len)
+{
+    uint16_t addr;
+
+    if (len != (FRAME_SIZE - 1u)) {
+        return false;
+    }
+
+    if (raw_frame[0] != DBUS_CMD_READ) {
+        return false;
+    }
+
+    addr = (uint16_t)(((uint16_t)raw_frame[1] << 8) | raw_frame[2]);
+    if (!addr_is_valid(addr)) {
+        return false;
+    }
+
+    if (raw_frame[3] != 0x01u) {
+        return false;
+    }
+
+    return raw_frame[4] == 0x00u &&
+           raw_frame[5] == 0x00u &&
+           raw_frame[6] == 0x00u;
+}
+
+static bool raw_frame_is_safe_motor_speed_write_near_match(const uint8_t *raw_frame, size_t len)
+{
+    uint16_t addr;
+
+    if (len != (FRAME_SIZE - 1u)) {
+        return false;
+    }
+
+    if (raw_frame[0] != DBUS_CMD_WRITE) {
+        return false;
+    }
+
+    addr = (uint16_t)(((uint16_t)raw_frame[1] << 8) | raw_frame[2]);
+    if (!is_motor_speed_addr(addr)) {
+        return false;
+    }
+
+    if (raw_frame[3] != 0x01u) {
+        return false;
+    }
+
+    return true;
+}
+
+static bool decode_write7_candidate(const uint8_t *raw_frame,
+                                    uint16_t *addr,
+                                    uint32_t *value,
+                                    bit_transform_t *transform,
+                                    uint8_t *rotation)
+{
+    uint8_t padded[FRAME_SIZE] = {0};
+    uint8_t rotated[FRAME_SIZE];
+    uint8_t decoded[FRAME_SIZE];
+    const bit_transform_t transforms[] = {
+        TRANSFORM_IDENTITY,
+        TRANSFORM_ROL1,
+        TRANSFORM_ROR1,
+        TRANSFORM_SERIAL_ROL1,
+        TRANSFORM_SERIAL_ROR1,
+    };
+
+    memcpy(padded, raw_frame, FRAME_SIZE - 1u);
+
+    for (uint8_t raw_rotation = 0u; raw_rotation < FRAME_SIZE; raw_rotation++) {
+        for (size_t i = 0u; i < FRAME_SIZE; i++) {
+            rotated[i] = padded[(i + raw_rotation) % FRAME_SIZE];
+        }
+
+        for (size_t transform_index = 0u; transform_index < (sizeof(transforms) / sizeof(transforms[0])); transform_index++) {
+            bit_transform_t current_transform = transforms[transform_index];
+
+            if (!decode_frame_with_transform(rotated, decoded, current_transform)) {
+                continue;
+            }
+
+            if (decoded[0] != DBUS_CMD_WRITE) {
+                continue;
+            }
+
+            *addr = (uint16_t)(((uint16_t)decoded[1] << 8) | decoded[2]);
+            if (!is_motor_speed_addr(*addr)) {
+                continue;
+            }
+
+            *value = (uint32_t)decoded[4] |
+                     ((uint32_t)decoded[5] << 8) |
+                     ((uint32_t)decoded[6] << 16) |
+                     ((uint32_t)decoded[7] << 24);
+            *transform = current_transform;
+            *rotation = raw_rotation;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool classify_failed_read8_candidate(const uint8_t *raw_frame,
+                                            uint16_t *addr,
+                                            bit_transform_t *transform,
+                                            uint8_t *rotation,
+                                            uint8_t *cmd,
+                                            uint8_t *len_words)
+{
+    uint8_t rotated[FRAME_SIZE];
+    uint8_t decoded[FRAME_SIZE];
+    const bit_transform_t transforms[] = {
+        TRANSFORM_IDENTITY,
+        TRANSFORM_ROL1,
+        TRANSFORM_ROR1,
+        TRANSFORM_SERIAL_ROL1,
+        TRANSFORM_SERIAL_ROR1,
+    };
+
+    for (uint8_t raw_rotation = 0u; raw_rotation < FRAME_SIZE; raw_rotation++) {
+        for (size_t i = 0u; i < FRAME_SIZE; i++) {
+            rotated[i] = raw_frame[(i + raw_rotation) % FRAME_SIZE];
+        }
+
+        for (size_t transform_index = 0u; transform_index < (sizeof(transforms) / sizeof(transforms[0])); transform_index++) {
+            bit_transform_t current_transform = transforms[transform_index];
+
+            if (current_transform == TRANSFORM_SERIAL_ROR1) {
+                decoded[0] = (uint8_t)(rotated[0] >> 1);
+                for (size_t i = 1; i < FRAME_SIZE; i++) {
+                    decoded[i] = (uint8_t)((rotated[i] >> 1) | ((rotated[i - 1] & 0x01u) << 7));
+                }
+            } else if (current_transform == TRANSFORM_SERIAL_ROL1) {
+                for (size_t i = 0; i < (FRAME_SIZE - 1u); i++) {
+                    decoded[i] = (uint8_t)((rotated[i] << 1) | (rotated[i + 1] >> 7));
+                }
+                decoded[FRAME_SIZE - 1u] = (uint8_t)(rotated[FRAME_SIZE - 1u] << 1);
+            } else {
+                for (size_t i = 0; i < FRAME_SIZE; i++) {
+                    decoded[i] = apply_transform(rotated[i], current_transform);
+                }
+            }
+
+            *cmd = (uint8_t)(decoded[0] & 0x60u);
+            *addr = (uint16_t)(((uint16_t)decoded[1] << 8) | decoded[2]);
+            *len_words = decoded[3];
+
+            if (*cmd != DBUS_CMD_READ && *cmd != DBUS_CMD_READ_SHIFTED) {
+                continue;
+            }
+
+            if (!addr_is_valid(*addr)) {
+                continue;
+            }
+
+            if (*len_words != 1u) {
+                continue;
+            }
+
+            *transform = current_transform;
+            *rotation = raw_rotation;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static bool decode_frame_with_transform(const uint8_t *raw_frame, uint8_t *decoded_frame, bit_transform_t transform)
 {
     if (transform == TRANSFORM_SERIAL_ROR1) {
@@ -1184,6 +1493,28 @@ static bool decode_rx_frame_auto(const uint8_t *raw_frame, uint8_t *decoded_fram
         *detected = TRANSFORM_IDENTITY;
         return true;
     }
+
+#if PICO_EXACT8_AUTO_TRANSFORM
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_SERIAL_ROR1)) {
+        *detected = TRANSFORM_SERIAL_ROR1;
+        return true;
+    }
+
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_ROR1)) {
+        *detected = TRANSFORM_ROR1;
+        return true;
+    }
+
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_SERIAL_ROL1)) {
+        *detected = TRANSFORM_SERIAL_ROL1;
+        return true;
+    }
+
+    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_ROL1)) {
+        *detected = TRANSFORM_ROL1;
+        return true;
+    }
+#endif
 
     return false;
 }
@@ -1324,12 +1655,36 @@ static uint32_t motor_read(uint16_t addr)
     }
 }
 
-/* Current capture logs show RW612 receiving the Pico's prepared bytes nearly
- * verbatim. Treat tx_frame_desired as the actual on-wire frame and copy it
- * unchanged into tx_frame_wire. */
 static void prepare_tx_frame_wire(void)
 {
-    prepare_tx_frame_identity();
+    switch (tx_transform) {
+        case TRANSFORM_IDENTITY:
+            prepare_tx_frame_identity();
+            break;
+        case TRANSFORM_SERIAL_ROR1:
+            tx_frame_wire[0] = (uint8_t)(tx_frame_desired[0] >> 1u);
+            for (size_t i = 1u; i < FRAME_SIZE; i++) {
+                tx_frame_wire[i] = (uint8_t)((tx_frame_desired[i] >> 1u) |
+                                             ((tx_frame_desired[i - 1u] & 0x01u) << 7u));
+            }
+            break;
+        case TRANSFORM_SERIAL_ROL1:
+            for (size_t i = 0u; i < (FRAME_SIZE - 1u); i++) {
+                tx_frame_wire[i] = (uint8_t)((tx_frame_desired[i] << 1u) |
+                                             (tx_frame_desired[i + 1u] >> 7u));
+            }
+            tx_frame_wire[FRAME_SIZE - 1u] = (uint8_t)(tx_frame_desired[FRAME_SIZE - 1u] << 1u);
+            break;
+        case TRANSFORM_ROL1:
+        case TRANSFORM_ROR1:
+            for (size_t i = 0u; i < FRAME_SIZE; i++) {
+                tx_frame_wire[i] = apply_transform(tx_frame_desired[i], tx_transform);
+            }
+            break;
+        default:
+            prepare_tx_frame_identity();
+            break;
+    }
 }
 
 static void prepare_tx_frame_identity(void)
@@ -1357,6 +1712,8 @@ static void prepare_read_response_frame(uint16_t addr, uint32_t value)
 {
     uint8_t next_frame[FRAME_SIZE] = {0};
     bool same_pending_response;
+    bool replacing_pending_response;
+    bool replacing_different_addr;
 
     next_frame[0] = DBUS_RSP_MARKER;
     next_frame[1] = (uint8_t)(addr >> 8);
@@ -1370,6 +1727,16 @@ static void prepare_read_response_frame(uint16_t addr, uint32_t value)
     same_pending_response = tx_read_response_pending &&
                             tx_index < FRAME_SIZE &&
                             (memcmp(last_read_rsp_desired, next_frame, FRAME_SIZE) == 0);
+    replacing_pending_response = tx_read_response_pending && !same_pending_response;
+    replacing_different_addr = tx_read_response_pending &&
+                               (((uint16_t)last_read_rsp_addr) != addr);
+
+    if (replacing_pending_response) {
+        pending_rsp_replace_count++;
+    }
+    if (replacing_different_addr) {
+        pending_rsp_replace_diff_addr_count++;
+    }
 
     memcpy(tx_frame_desired, next_frame, FRAME_SIZE);
     prepare_tx_frame_wire();
@@ -1390,10 +1757,12 @@ static void prepare_read_response_frame(uint16_t addr, uint32_t value)
         trace_last_prep_addr = addr;
         trace_last_prep_value = value;
     }
-    dlog("[PICO] PREP_READ addr=0x%04x val=0x%08lx same=%u txi=%u bytes=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+        dlog("[PICO] PREP_READ addr=0x%04x val=0x%08lx same=%u repl=%u diffaddr=%u txi=%u bytes=%02x %02x %02x %02x %02x %02x %02x %02x\n",
          (unsigned)addr,
          (unsigned long)value,
          same_pending_response ? 1u : 0u,
+            replacing_pending_response ? 1u : 0u,
+            replacing_different_addr ? 1u : 0u,
          (unsigned)tx_index,
          tx_frame_wire[0], tx_frame_wire[1], tx_frame_wire[2], tx_frame_wire[3],
          tx_frame_wire[4], tx_frame_wire[5], tx_frame_wire[6], tx_frame_wire[7]);
@@ -1403,6 +1772,12 @@ static void prepare_read_response_frame(uint16_t addr, uint32_t value)
         tx_index = 0u;
         tx_frame_prequeued = false;
         tx_force_rearm_on_next_cs_start = PICO_PREFER_CS_START_READ_REARM ? true : false;
+        dlog("[PICO] PREP_READ_ARM addr=0x%04x force_rearm=%u pending=%u bytes=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+             (unsigned)addr,
+             tx_force_rearm_on_next_cs_start ? 1u : 0u,
+             tx_read_response_pending ? 1u : 0u,
+             tx_frame_wire[0], tx_frame_wire[1], tx_frame_wire[2], tx_frame_wire[3],
+             tx_frame_wire[4], tx_frame_wire[5], tx_frame_wire[6], tx_frame_wire[7]);
     }
 }
 
@@ -1669,6 +2044,11 @@ static bool process_rx_frame(void)
     uint8_t rotated[FRAME_SIZE];
     bit_transform_t detected = TRANSFORM_ROL1;
     uint8_t detected_rotation = 0u;
+    uint16_t failed_read_addr = 0u;
+    bit_transform_t failed_read_transform = TRANSFORM_IDENTITY;
+    uint8_t failed_read_rotation = 0u;
+    uint8_t failed_read_cmd = 0u;
+    uint8_t failed_read_len_words = 0u;
 
     for (uint8_t rotation = 0u; rotation < FRAME_SIZE; rotation++) {
         for (size_t i = 0u; i < FRAME_SIZE; i++) {
@@ -1691,6 +2071,21 @@ static bool process_rx_frame(void)
                rx_frame_raw[4], rx_frame_raw[5], rx_frame_raw[6], rx_frame_raw[7]);
     }
     memcpy(last_failed_raw_frame, rx_frame_raw, FRAME_SIZE);
+    if (classify_failed_read8_candidate(rx_frame_raw,
+                                        &failed_read_addr,
+                                        &failed_read_transform,
+                                        &failed_read_rotation,
+                                        &failed_read_cmd,
+                                        &failed_read_len_words)) {
+        dlog("[PICO] FAILED_READ_CAND cmd=0x%02x addr=0x%04x len=%u t=%u rot=%u raw=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+             failed_read_cmd,
+             (unsigned)failed_read_addr,
+             (unsigned)failed_read_len_words,
+             (unsigned)failed_read_transform,
+             (unsigned)failed_read_rotation,
+             rx_frame_raw[0], rx_frame_raw[1], rx_frame_raw[2], rx_frame_raw[3],
+             rx_frame_raw[4], rx_frame_raw[5], rx_frame_raw[6], rx_frame_raw[7]);
+    }
        dlog("[PICO] FAILED raw: %02x %02x %02x %02x %02x %02x %02x %02x\n",
            rx_frame_raw[0], rx_frame_raw[1], rx_frame_raw[2], rx_frame_raw[3],
            rx_frame_raw[4], rx_frame_raw[5], rx_frame_raw[6], rx_frame_raw[7]);
@@ -1772,6 +2167,11 @@ frame_decoded:
     if (cmd == DBUS_CMD_READ) {
         uint32_t value = reg_read(addr);
         frame8_read_count++;
+        if (addr == (MOTOR_REG_BASE + (1u * MOTOR_REG_STRIDE) + MOTOR_REG_SPEED_OFFSET)) {
+            last_read_decode_motor1_count++;
+        } else if (addr == (MOTOR_REG_BASE + (3u * MOTOR_REG_STRIDE) + MOTOR_REG_SPEED_OFFSET)) {
+            last_read_decode_motor3_count++;
+        }
         if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
             value = motor_read(addr);
         }
@@ -1798,6 +2198,11 @@ frame_decoded:
         last_read_rsp_count++;
         last_read_rsp_addr = addr;
         last_read_rsp_value = value;
+        dlog("[PICO] READ_STAGE addr=0x%04x val=0x%08lx pending_before=%u txi=%u\n",
+             (unsigned)addr,
+             (unsigned long)value,
+             tx_read_response_pending ? 1u : 0u,
+             (unsigned)tx_index);
         prepare_read_response_frame(addr, value);
         return true;
     }
@@ -2111,9 +2516,68 @@ static void service_spi_frame(spi_inst_t *spi)
         last_frame_len = (uint32_t)rx_index;
         if (rx_index == FRAME_SIZE) {
             frame8_total++;
+            pending_write7_tail_byte = false;
             (void)process_rx_frame();
             rx_index = 0u;
         } else if (rx_index > 0u) {
+            last_partial_frame_len = (uint8_t)rx_index;
+            memset(last_partial_frame_raw, 0, sizeof(last_partial_frame_raw));
+            if (rx_index <= (FRAME_SIZE - 1u)) {
+                memcpy(last_partial_frame_raw, rx_frame_raw, rx_index);
+            }
+
+            switch (rx_index) {
+            case 1u:
+                partial_len1_count++;
+                break;
+            case 2u:
+                partial_len2_count++;
+                last_partial_len2_raw[0] = rx_frame_raw[0];
+                last_partial_len2_raw[1] = rx_frame_raw[1];
+                dlog("[PICO] PARTIAL2 raw=%02x %02x\n", rx_frame_raw[0], rx_frame_raw[1]);
+                if (rx_frame_raw[0] == 0x40u && rx_frame_raw[1] == 0x00u) {
+                    partial_len2_4000_count++;
+                } else if (rx_frame_raw[0] == 0x40u && rx_frame_raw[1] == 0x50u) {
+                    partial_len2_4050_count++;
+                } else if (rx_frame_raw[0] == 0x60u && rx_frame_raw[1] == 0x00u) {
+                    partial_len2_6000_count++;
+                } else if (rx_frame_raw[0] == 0x60u && rx_frame_raw[1] == 0x50u) {
+                    partial_len2_6050_count++;
+                } else {
+                    partial_len2_other_count++;
+                    last_partial_len2_other_raw[0] = rx_frame_raw[0];
+                    last_partial_len2_other_raw[1] = rx_frame_raw[1];
+                }
+                break;
+            case 3u:
+                partial_len3_count++;
+                break;
+            case 4u:
+                partial_len4_count++;
+                break;
+            case 5u:
+                partial_len5_count++;
+                break;
+            case 6u:
+                partial_len6_count++;
+                break;
+            case 7u:
+                partial_len7_count++;
+                break;
+            default:
+                break;
+            }
+
+            if (rx_index == (FRAME_SIZE - 1u) && rx_frame_raw[0] == DBUS_CMD_WRITE) {
+                frame7_write_fifo_count++;
+                memcpy(last_write7_fifo_raw, rx_frame_raw, FRAME_SIZE - 1u);
+                pending_write7_tail_byte = true;
+                dlog("[PICO] FIFO_WRITE7 raw=%02x %02x %02x %02x %02x %02x %02x\n",
+                     rx_frame_raw[0], rx_frame_raw[1], rx_frame_raw[2], rx_frame_raw[3],
+                     rx_frame_raw[4], rx_frame_raw[5], rx_frame_raw[6]);
+            } else {
+                pending_write7_tail_byte = false;
+            }
             frame_other_total++;
             rx_index = 0u;
         }
@@ -2140,18 +2604,65 @@ static void service_spi_frame(spi_inst_t *spi)
         } else {
             last_cs_end_preload_count = 0u;
             tx_frame_prequeued = false;
-            dlog("[PICO] CS_END defer_read pending=1 txi=%u\n", (unsigned)tx_index);
+            dlog("[PICO] CS_END defer_read pending=1 txi=%u bytes=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+                 (unsigned)tx_index,
+                 tx_frame_wire[0], tx_frame_wire[1], tx_frame_wire[2], tx_frame_wire[3],
+                 tx_frame_wire[4], tx_frame_wire[5], tx_frame_wire[6], tx_frame_wire[7]);
         }
     }
 
     if (cs_start_pending) {
         cs_start_pending = false;
         if (rx_index != 0u) {
-            dlog("[PICO] CS_START dropping stale rx_index=%u last_byte_us=%lu\n",
-                 (unsigned)rx_index,
-                 (unsigned long)rx_last_byte_us);
+            if (pending_write7_tail_byte && rx_index == 1u) {
+                frame7_write_tail_drop_count++;
+                last_write7_tail_byte = rx_frame_raw[0];
+                dlog("[PICO] CS_START write7_tail byte=%02x prev=%02x %02x %02x %02x %02x %02x %02x\n",
+                     rx_frame_raw[0],
+                     last_write7_fifo_raw[0], last_write7_fifo_raw[1], last_write7_fifo_raw[2],
+                     last_write7_fifo_raw[3], last_write7_fifo_raw[4], last_write7_fifo_raw[5],
+                     last_write7_fifo_raw[6]);
+            }
+            if (rx_index == 1u) {
+                uint8_t stale_byte = rx_frame_raw[0];
+
+                stale_rx1_drop_count++;
+                last_stale_rx1_byte = stale_byte;
+                switch (stale_byte) {
+                case 0x00u:
+                    stale_rx1_00_count++;
+                    break;
+                case 0x40u:
+                    stale_rx1_40_count++;
+                    break;
+                case 0x50u:
+                    stale_rx1_50_count++;
+                    break;
+                case 0x60u:
+                    stale_rx1_60_count++;
+                    break;
+                case 0x01u:
+                    stale_rx1_01_count++;
+                    break;
+                case 0xA0u:
+                    stale_rx1_a0_count++;
+                    break;
+                default:
+                    stale_rx1_other_count++;
+                    break;
+                }
+
+                dlog("[PICO] CS_START dropping stale rx_index=1 byte=%02x last_byte_us=%lu\n",
+                     stale_byte,
+                     (unsigned long)rx_last_byte_us);
+            } else {
+                dlog("[PICO] CS_START dropping stale rx_index=%u last_byte_us=%lu\n",
+                     (unsigned)rx_index,
+                     (unsigned long)rx_last_byte_us);
+            }
             rx_index = 0u;
         }
+        pending_write7_tail_byte = false;
         /* Preserve any bytes already accepted during the cs_end preload. If we
          * rearm here, we flush that prefix right before the master clocks the
          * frame. Also do not blindly advance tx_index to 8: on this link the
@@ -2167,10 +2678,12 @@ static void service_spi_frame(spi_inst_t *spi)
             spi_slave_rearm(spi);
           tx_index = 0u;
             tx_frame_prequeued = false;
-            dlog("[PICO] CS_START rearm force=%u pending_read=%u txi=%u\n",
+              dlog("[PICO] CS_START rearm force=%u pending_read=%u txi=%u bytes=%02x %02x %02x %02x %02x %02x %02x %02x\n",
                  tx_force_rearm_on_next_cs_start ? 1u : 0u,
                  tx_read_response_pending ? 1u : 0u,
-                 (unsigned)tx_index);
+                  (unsigned)tx_index,
+                  tx_frame_wire[0], tx_frame_wire[1], tx_frame_wire[2], tx_frame_wire[3],
+                  tx_frame_wire[4], tx_frame_wire[5], tx_frame_wire[6], tx_frame_wire[7]);
             tx_force_rearm_on_next_cs_start = false;
         }
 #endif
@@ -2181,11 +2694,13 @@ static void service_spi_frame(spi_inst_t *spi)
         last_cs_start_queue_count = (uint32_t)spi_slave_fill_tx_frame_now(spi);
     #endif
         tx_frame_prequeued = (last_cs_start_queue_count == FRAME_SIZE);
-        dlog("[PICO] CS_START queue=%lu pending=%u prequeued=%u txi=%u\n",
+           dlog("[PICO] CS_START queue=%lu pending=%u prequeued=%u txi=%u bytes=%02x %02x %02x %02x %02x %02x %02x %02x\n",
              (unsigned long)last_cs_start_queue_count,
              tx_read_response_pending ? 1u : 0u,
              tx_frame_prequeued ? 1u : 0u,
-             (unsigned)tx_index);
+               (unsigned)tx_index,
+               tx_frame_wire[0], tx_frame_wire[1], tx_frame_wire[2], tx_frame_wire[3],
+               tx_frame_wire[4], tx_frame_wire[5], tx_frame_wire[6], tx_frame_wire[7]);
     }
 
     if (cs_is_active() || ((hw->sr & 0x10u) != 0u)) {
@@ -2293,8 +2808,10 @@ int main(void)
     }
 
     spi_init(spi0, 1000 * 1000);
-    /* Match the active RW612 register-write path (Mode 0). */
-    spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    /* Default path uses Mode 0. Pico2 experiments can override CPHA to test
+     * whether command-capture collapse is caused by a phase mismatch at the
+     * slave front-end. */
+    spi_set_format(spi0, 8, SPI_CPOL_0, PICO_SPI_CPHA_SETTING, SPI_MSB_FIRST);
     spi_set_slave(spi0, true);
     
     /* Ensure RX is ready: drain any stale data from FIFO before we start. */
@@ -2412,7 +2929,7 @@ int main(void)
                              }
                          }
                          if (gpe_pos == 0) { snprintf(gpe_str, sizeof(gpe_str), "(none)"); }
-                                                                                                 printf("[Pico SPI Slave] alive fw=%s version=%s cs=%u rx=%u tx=%u rxt=%lu scke=%lu most=%lu gpe_mask=0x%08lx gpe=[%s] f8=%lu f8ok=%lu f8w=%lu f8r=%lu f8mw=%lu f8s=%lu f8sok=%lu lfr=%02x%02x%02x%02x%02x%02x%02x%02x lf8_cmd=0x%02x lf8_addr=0x%04x lf8_val=0x%08lx txd=%02x%02x%02x%02x%02x%02x%02x%02x txw=%02x%02x%02x%02x%02x%02x%02x%02x lrrn=%lu lrra=0x%04x lrrv=0x%08lx lrrd=%02x%02x%02x%02x%02x%02x%02x%02x lrrw=%02x%02x%02x%02x%02x%02x%02x%02x qend=%lu qstart=%lu txfall=%lu txrise=%lu txact=%lu fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld mA_idx=%u mA_en=%u mA_spd=%ld mB_idx=%u mB_en=%u mB_spd=%ld\n",
+                                                                                                                                                                                                 printf("[Pico SPI Slave] alive fw=%s version=%s cs=%u rx=%u tx=%u rxt=%lu scke=%lu most=%lu gpe_mask=0x%08lx gpe=[%s] f8=%lu f8ok=%lu f8w=%lu f8r=%lu f8mw=%lu f8s=%lu f8sok=%lu fr7=%lu fw7=%lu fw71=%lu fw73=%lu fwf7=%lu fws7=%lu fwt=%lu fwd7=%lu pl1=%lu pl2=%lu pl3=%lu pl4=%lu pl5=%lu pl6=%lu pl7=%lu p24000=%lu p24050=%lu p26000=%lu p26050=%lu p2oth=%lu lp2raw=%02x%02x lp2othraw=%02x%02x lpflen=%u lpfraw=%02x%02x%02x%02x%02x%02x%02x s1=%lu s100=%lu s140=%lu s150=%lu s160=%lu s101=%lu s1a0=%lu s1oth=%lu ls1=0x%02x lwtb=0x%02x lw7a=0x%04x lw7v=0x%08lx lwd7a=0x%04x lwd7v=0x%08lx lwd7r=%u lwd7t=%u rd1=%lu rd3=%lu rpl=%lu rplda=%lu lfr=%02x%02x%02x%02x%02x%02x%02x%02x lf8_cmd=0x%02x lf8_addr=0x%04x lf8_val=0x%08lx txd=%02x%02x%02x%02x%02x%02x%02x%02x txw=%02x%02x%02x%02x%02x%02x%02x%02x lrrn=%lu lrra=0x%04x lrrv=0x%08lx lrrd=%02x%02x%02x%02x%02x%02x%02x%02x lrrw=%02x%02x%02x%02x%02x%02x%02x%02x qend=%lu qstart=%lu txfall=%lu txrise=%lu txact=%lu fdb=%lu foth=%lu lflen=%lu csf=%lu csr=%lu men=%lu mspd=%lu last_svc=0x%04x last_cmd=0x%04x last_idx=%u last_val=%ld mA_idx=%u mA_en=%u mA_spd=%ld mB_idx=%u mB_en=%u mB_spd=%ld\n",
                      FW_ID_MAIN,
                    PICO_FIRMWARE_VERSION,
                    cs_active ? 1u : 0u,
@@ -2430,6 +2947,52 @@ int main(void)
                                  (unsigned long)frame8_motor_write_count,
                                  (unsigned long)frame8_stream_try_count,
                                  (unsigned long)frame8_stream_ok_count,
+                                 (unsigned long)frame7_read_promote_count,
+                                 (unsigned long)frame7_speed_write_promote_count,
+                                 (unsigned long)frame7_speed_write_motor1_count,
+                                 (unsigned long)frame7_speed_write_motor3_count,
+                                 (unsigned long)frame7_write_fifo_count,
+                                 (unsigned long)frame7_write_sniff_count,
+                                 (unsigned long)frame7_write_tail_drop_count,
+                                 (unsigned long)frame7_write_decode_count,
+                                 (unsigned long)partial_len1_count,
+                                 (unsigned long)partial_len2_count,
+                                 (unsigned long)partial_len3_count,
+                                 (unsigned long)partial_len4_count,
+                                 (unsigned long)partial_len5_count,
+                                 (unsigned long)partial_len6_count,
+                                 (unsigned long)partial_len7_count,
+                                 (unsigned long)partial_len2_4000_count,
+                                 (unsigned long)partial_len2_4050_count,
+                                 (unsigned long)partial_len2_6000_count,
+                                 (unsigned long)partial_len2_6050_count,
+                                 (unsigned long)partial_len2_other_count,
+                                 last_partial_len2_raw[0], last_partial_len2_raw[1],
+                                 last_partial_len2_other_raw[0], last_partial_len2_other_raw[1],
+                                 (unsigned)last_partial_frame_len,
+                                 last_partial_frame_raw[0], last_partial_frame_raw[1], last_partial_frame_raw[2],
+                                 last_partial_frame_raw[3], last_partial_frame_raw[4], last_partial_frame_raw[5],
+                                 last_partial_frame_raw[6],
+                                 (unsigned long)stale_rx1_drop_count,
+                                 (unsigned long)stale_rx1_00_count,
+                                 (unsigned long)stale_rx1_40_count,
+                                 (unsigned long)stale_rx1_50_count,
+                                 (unsigned long)stale_rx1_60_count,
+                                 (unsigned long)stale_rx1_01_count,
+                                 (unsigned long)stale_rx1_a0_count,
+                                 (unsigned long)stale_rx1_other_count,
+                                 (unsigned)last_stale_rx1_byte,
+                                 (unsigned)last_write7_tail_byte,
+                                 (unsigned)last_write7_addr,
+                                 (unsigned long)last_write7_value,
+                                 (unsigned)last_write7_decode_addr,
+                                 (unsigned long)last_write7_decode_value,
+                                 (unsigned)last_write7_decode_rotation,
+                                 (unsigned)last_write7_decode_transform,
+                                 (unsigned long)last_read_decode_motor1_count,
+                                 (unsigned long)last_read_decode_motor3_count,
+                                 (unsigned long)pending_rsp_replace_count,
+                                 (unsigned long)pending_rsp_replace_diff_addr_count,
                                  (unsigned)last_failed_raw_frame[0],
                                  (unsigned)last_failed_raw_frame[1],
                                  (unsigned)last_failed_raw_frame[2],
