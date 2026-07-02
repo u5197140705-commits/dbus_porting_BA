@@ -17,6 +17,27 @@ add_executable(pico_spi_slave_test_pico2
 )
 target_compile_definitions(pico_spi_slave_test_pico2 PRIVATE PICO_NODE_SLOT=2)
 
+add_executable(pico_spi_slave_test_pico2_speedtrace
+    main.c
+)
+target_compile_definitions(pico_spi_slave_test_pico2_speedtrace PRIVATE
+    PICO_NODE_SLOT=2
+    PICO_SPEED_TRACE=1
+    PICO_HEARTBEAT_ENABLE=0
+    PICO_LOG_IDLE_FLUSH_US=500000u
+    PICO_FIRMWARE_VERSION="dbal_motor_v1_onehot_v3_isoD_v23_pico2_speedtrace_idle_2026-07-03"
+)
+
+add_executable(pico_spi_slave_test_pico2_shadowtrace
+    main.c
+)
+target_compile_definitions(pico_spi_slave_test_pico2_shadowtrace PRIVATE
+    PICO_NODE_SLOT=2
+    PICO_PREFER_CS_START_READ_REARM=0
+    PICO_FORCE_FULL_TX_PRELOAD=1
+    PICO_FIRMWARE_VERSION="dbal_motor_v1_onehot_v3_isoD_v28_pico2_comalive_rspdelay_2026-07-02"
+)
+
 add_executable(pico_spi_slave_test_selftest
     main.c
 )
@@ -44,6 +65,12 @@ pico_enable_stdio_usb(pico_spi_slave_test 1)
 pico_enable_stdio_uart(pico_spi_slave_test_pico2 0)
 pico_enable_stdio_usb(pico_spi_slave_test_pico2 1)
 
+pico_enable_stdio_uart(pico_spi_slave_test_pico2_speedtrace 0)
+pico_enable_stdio_usb(pico_spi_slave_test_pico2_speedtrace 1)
+
+pico_enable_stdio_uart(pico_spi_slave_test_pico2_shadowtrace 0)
+pico_enable_stdio_usb(pico_spi_slave_test_pico2_shadowtrace 1)
+
 pico_enable_stdio_uart(pico_spi_slave_test_selftest 0)
 pico_enable_stdio_usb(pico_spi_slave_test_selftest 1)
 
@@ -61,6 +88,20 @@ target_link_libraries(pico_spi_slave_test
 )
 
 target_link_libraries(pico_spi_slave_test_pico2
+    pico_stdlib
+    hardware_spi
+    hardware_gpio
+    hardware_pwm
+)
+
+target_link_libraries(pico_spi_slave_test_pico2_speedtrace
+    pico_stdlib
+    hardware_spi
+    hardware_gpio
+    hardware_pwm
+)
+
+target_link_libraries(pico_spi_slave_test_pico2_shadowtrace
     pico_stdlib
     hardware_spi
     hardware_gpio
@@ -90,6 +131,8 @@ target_link_libraries(pico_spi_slave_debug
 
 pico_add_extra_outputs(pico_spi_slave_test)
 pico_add_extra_outputs(pico_spi_slave_test_pico2)
+pico_add_extra_outputs(pico_spi_slave_test_pico2_speedtrace)
+pico_add_extra_outputs(pico_spi_slave_test_pico2_shadowtrace)
 pico_add_extra_outputs(pico_spi_slave_test_selftest)
 pico_add_extra_outputs(pico_spi_slave_test_pico2_selftest)
 pico_add_extra_outputs(pico_spi_slave_debug)

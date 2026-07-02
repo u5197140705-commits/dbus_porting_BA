@@ -12,18 +12,47 @@
 #define PICO_FIRMWARE_VERSION "dbal_motor_v1_onehot_v3_isoD_v23_2026-05-28"
 #endif
 
+#ifndef PICO_SPEED_TRACE
+#define PICO_SPEED_TRACE 0
+#endif
+
 /* Non-blocking deferred log buffer: process_rx_frame must never call printf
  * directly — USB CDC printf blocks for milliseconds, which stalls the SPI
  * tight loop and causes TX FIFO underflow. Store messages here instead;
  * main loop flushes them between SPI calls. */
 #define DLOG_ENTRIES 128u
 #define DLOG_MSG_LEN 96u
-#define LOG_IDLE_FLUSH_US 5000u
+#ifndef PICO_LOG_IDLE_FLUSH_US
+#define PICO_LOG_IDLE_FLUSH_US 5000u
+#endif
 #define DLOG_FLUSH_BUDGET 4u
+#ifndef PICO_RUNTIME_LOG_FLUSH
 #define PICO_RUNTIME_LOG_FLUSH 1
+#endif
+#ifndef PICO_HEARTBEAT_ENABLE
 #define PICO_HEARTBEAT_ENABLE 1
+#endif
 #ifndef PICO_STARTUP_SELF_TEST
 #define PICO_STARTUP_SELF_TEST 0
+#endif
+#ifndef PICO_USB_CONSOLE_ENABLE
+#define PICO_USB_CONSOLE_ENABLE 1
+#endif
+#ifndef PICO_PREFER_CS_START_READ_REARM
+#if PICO_NODE_SLOT == 2
+#define PICO_PREFER_CS_START_READ_REARM 1
+#else
+#define PICO_PREFER_CS_START_READ_REARM 0
+#endif
+#endif
+#ifndef PICO_FORCE_FIXED_READ_VALUE
+#define PICO_FORCE_FIXED_READ_VALUE 0u
+#endif
+#ifndef PICO_DIAG_DEFAULT_TX_PATTERN
+#define PICO_DIAG_DEFAULT_TX_PATTERN 0
+#endif
+#ifndef PICO_FORCE_FULL_TX_PRELOAD
+#define PICO_FORCE_FULL_TX_PRELOAD 0
 #endif
 #define PICO_DIAG_FORCE_MOTOR0_ONLY 0
 /* Build this firmware separately for each Pico side:
@@ -44,7 +73,29 @@ static uint32_t last_spi_activity_us = 0u;
 static char usb_cmd_buf[16];
 static size_t usb_cmd_len = 0u;
 
+#define SPEED_TRACE_ENTRIES 64u
+typedef struct {
+    char kind;
+    uint16_t addr;
+    uint32_t value;
+    uint32_t aux;
+} speed_trace_entry_t;
+
+static speed_trace_entry_t speed_trace_buf[SPEED_TRACE_ENTRIES];
+static unsigned int speed_trace_head = 0u;
+static unsigned int speed_trace_tail = 0u;
+static volatile uint32_t trace_last_write_addr = 0u;
+static volatile uint32_t trace_last_write_value = 0u;
+static volatile uint32_t trace_last_read_addr = 0u;
+static volatile uint32_t trace_last_read_value = 0u;
+static volatile uint32_t trace_last_prep_addr = 0u;
+static volatile uint32_t trace_last_prep_value = 0u;
+
 static void dlog(const char *fmt, ...) {
+#if PICO_SPEED_TRACE
+    (void)fmt;
+    return;
+#else
     unsigned int next = (dlog_head + 1u) % DLOG_ENTRIES;
     if (next == dlog_tail) return;  /* buffer full, drop entry */
     va_list args;
@@ -53,6 +104,7 @@ static void dlog(const char *fmt, ...) {
     dlog_buf[dlog_head].msg[DLOG_MSG_LEN - 1u] = '\0';
     va_end(args);
     dlog_head = next;
+#endif
 }
 
 static void dlog_flush_limited(unsigned int budget) {
@@ -60,6 +112,64 @@ static void dlog_flush_limited(unsigned int budget) {
     while (dlog_tail != dlog_head && budget > 0u) {
         printf("%s", dlog_buf[dlog_tail].msg);
         dlog_tail = (dlog_tail + 1u) % DLOG_ENTRIES;
+        budget--;
+    }
+#else
+    (void)budget;
+#endif
+}
+
+static void speed_trace_push(char kind, uint16_t addr, uint32_t value, uint32_t aux)
+{
+#if PICO_SPEED_TRACE
+    unsigned int next = (speed_trace_head + 1u) % SPEED_TRACE_ENTRIES;
+
+    if (next == speed_trace_tail) {
+        return;
+    }
+
+    speed_trace_buf[speed_trace_head].kind = kind;
+    speed_trace_buf[speed_trace_head].addr = addr;
+    speed_trace_buf[speed_trace_head].value = value;
+    speed_trace_buf[speed_trace_head].aux = aux;
+    speed_trace_head = next;
+#else
+    (void)kind;
+    (void)addr;
+    (void)value;
+    (void)aux;
+#endif
+}
+
+static void speed_trace_flush_limited(unsigned int budget)
+{
+#if PICO_SPEED_TRACE && PICO_RUNTIME_LOG_FLUSH
+    while (speed_trace_tail != speed_trace_head && budget > 0u) {
+        const speed_trace_entry_t *entry = &speed_trace_buf[speed_trace_tail];
+
+        switch (entry->kind) {
+        case 'W':
+            printf("[PICO] W %04x=%08lx raw=%08lx\n",
+                   (unsigned)entry->addr,
+                   (unsigned long)entry->value,
+                   (unsigned long)entry->aux);
+            break;
+        case 'R':
+            printf("[PICO] R %04x=%08lx\n",
+                   (unsigned)entry->addr,
+                   (unsigned long)entry->value);
+            break;
+        case 'P':
+            printf("[PICO] P %04x=%08lx same=%lu\n",
+                   (unsigned)entry->addr,
+                   (unsigned long)entry->value,
+                   (unsigned long)entry->aux);
+            break;
+        default:
+            break;
+        }
+
+        speed_trace_tail = (speed_trace_tail + 1u) % SPEED_TRACE_ENTRIES;
         budget--;
     }
 #else
@@ -164,6 +274,16 @@ static void led_update_from_distance(uint32_t dist_mm);
 #define SONIC_REG_STRIDE          0x04u
 #define SONIC_REG_DISTANCE_OFFSET 0x00u
 
+#define TRACE_REG_BASE            0x5120u
+#define TRACE_REG_LAST_WRITE_ADDR 0x00u
+#define TRACE_REG_LAST_WRITE_VAL  0x04u
+#define TRACE_REG_LAST_READ_ADDR  0x08u
+#define TRACE_REG_LAST_READ_VAL   0x0Cu
+#define TRACE_REG_LAST_PREP_ADDR  0x10u
+#define TRACE_REG_LAST_PREP_VAL   0x14u
+#define TRACE_REG_COUNTS0         0x18u
+#define TRACE_REG_COUNTS1         0x1Cu
+
 #define SONIC_SENSOR_COUNT 1u
 #define SONIC_TRIGGER_PERIOD_US 60000u
 #define SONIC_ECHO_TIMEOUT_US   30000u
@@ -215,6 +335,8 @@ static size_t rx_index = 0;
 static size_t tx_index = 0;
 static bool tx_frame_prequeued = false;
 static bool tx_read_response_pending = false;
+static bool tx_read_response_retire_on_cs_end = false;
+static bool tx_force_rearm_on_next_cs_start = false;
 static volatile bool cs_active_flag = false;
 static volatile bool cs_start_pending = false;
 static volatile bool cs_end_pending = false;
@@ -252,6 +374,7 @@ static volatile uint16_t last_service_id = 0u;
 static volatile uint16_t last_command_id = 0u;
 static volatile uint8_t last_motor_index = 0u;
 static volatile int32_t last_motor_value = 0;
+static volatile uint32_t speed_trace_seq = 0u;
 static volatile uint32_t sck_edge_count = 0u;
 static volatile uint32_t mosi_toggle_count = 0u;
 static volatile uint8_t last_frame8_cmd = 0u;
@@ -292,11 +415,57 @@ static void prepare_tx_frame_identity(void);
 static void set_default_tx_pattern(void);
 static void prepare_read_response_frame(uint16_t addr, uint32_t value);
 
+static void retire_pending_read_response(void)
+{
+    tx_read_response_pending = false;
+    tx_read_response_retire_on_cs_end = false;
+    tx_frame_prequeued = false;
+    set_default_tx_pattern();
+    tx_index = 0u;
+}
+
+static bool is_motor_speed_addr(uint16_t addr)
+{
+    return (addr == (MOTOR_REG_BASE + (1u * MOTOR_REG_STRIDE) + MOTOR_REG_SPEED_OFFSET)) ||
+           (addr == (MOTOR_REG_BASE + (3u * MOTOR_REG_STRIDE) + MOTOR_REG_SPEED_OFFSET));
+}
+
 static void sniff_process_frame(void)
 {
     last_frame_len = sniff_len;
 
     bool missing_tail_byte = false;
+
+    /* RW612 8-byte register traffic should be owned by the cs_end RX-FIFO
+     * decode path. On Pico2 bench, the PL022 path can repeatedly retain only
+     * one stale byte while the GPIO sniffer sees complete 8-byte command
+     * frames. Promote only exact 8-byte sniff captures through the same
+     * validator/decoder; 7-byte near-frames remain diagnostic-only because
+     * they can carry shifted data and corrupt register state. */
+    if (sniff_len == FRAME_SIZE) {
+        dlog("[PICO] SNIFF_SHORT len=%u raw=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+             (unsigned)sniff_len,
+             sniff_frame[0], sniff_frame[1], sniff_frame[2], sniff_frame[3],
+             sniff_frame[4], sniff_frame[5], sniff_frame[6], sniff_frame[7]);
+        memcpy(rx_frame_raw, sniff_frame, FRAME_SIZE);
+        frame8_total++;
+        if (process_rx_frame()) {
+            frame8_stream_ok_count++;
+        } else {
+            frame_other_total++;
+        }
+        return;
+    }
+
+    if (sniff_len <= FRAME_SIZE) {
+        if (sniff_len >= (FRAME_SIZE - 1u)) {
+            dlog("[PICO] SNIFF_SHORT len=%u raw=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+                 (unsigned)sniff_len,
+                 sniff_frame[0], sniff_frame[1], sniff_frame[2], sniff_frame[3],
+                 sniff_frame[4], sniff_frame[5], sniff_frame[6], sniff_frame[7]);
+        }
+        return;
+    }
 
     if (sniff_len > FRAME_SIZE) {
         memcpy(rx_frame_raw, sniff_frame, sniff_len);
@@ -305,71 +474,6 @@ static void sniff_process_frame(void)
             memcpy(last_failed_raw_frame, sniff_frame, FRAME_SIZE);
         }
         return;
-    }
-
-    if (sniff_len < (FRAME_SIZE - 1u)) {
-        if (sniff_len > 0u) {
-            frame_other_total++;
-        }
-        return;
-    }
-
-    if (sniff_len == (FRAME_SIZE - 1u)) {
-        missing_tail_byte = true;
-    }
-
-    uint8_t cmd = sniff_frame[0];
-    uint16_t addr = ((uint16_t)sniff_frame[1] << 8) | sniff_frame[2];
-    uint8_t len_words = sniff_frame[3];
-
-    if ((cmd != DBUS_CMD_WRITE && cmd != DBUS_CMD_READ) || len_words != 1u || !addr_is_valid(addr)) {
-        frame_other_total++;
-        memcpy(last_failed_raw_frame, sniff_frame, FRAME_SIZE);
-        return;
-    }
-
-    frame8_total++;
-    frame8_decode_ok_count++;
-    last_frame8_cmd = cmd;
-    last_frame8_addr = addr;
-
-    if (cmd == DBUS_CMD_WRITE) {
-        uint32_t value =
-            (uint32_t)sniff_frame[4] |
-            ((uint32_t)sniff_frame[5] << 8) |
-            ((uint32_t)sniff_frame[6] << 16) |
-            ((uint32_t)(missing_tail_byte ? 0u : sniff_frame[7]) << 24);
-        last_frame8_value = value;
-        frame8_write_count++;
-        if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
-            frame8_motor_write_count++;
-        }
-        motor_write(addr, value);
-        reg_write(addr, value);
-        set_default_tx_pattern();
-        tx_read_response_pending = false;
-        /* Only prepare the next frame here. The actual SPI rearm/preload must
-         * wait until cs_end drain completes so we do not flush/reseed the SSP
-         * while BSY may still reflect the just-finished transaction. */
-        tx_frame_prequeued = false;
-                if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
-                    last_motor_cmd_ms = to_ms_since_boot(get_absolute_time());
-                    motor_deadman_fired = false;
-                }
-        return;
-    }
-
-    if (cmd == DBUS_CMD_READ) {
-        uint32_t value = reg_read(addr);
-        if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
-            value = motor_read(addr);
-        }
-        last_frame8_value = value;
-        frame8_read_count++;
-        last_read_rsp_count++;
-        last_read_rsp_addr = addr;
-        last_read_rsp_value = value;
-        prepare_read_response_frame(addr, value);
     }
 }
 
@@ -451,6 +555,7 @@ static void handle_rx_byte(uint8_t rx_byte)
     rx_stream_byte_count++;
     frame8_stream_try_count++;
 }
+
 
 static uint motor_pwma_slice = 0u;
 static uint motor_pwma_channel = 0u;
@@ -997,20 +1102,47 @@ static bool addr_is_valid(uint16_t addr)
         return true;
     }
 
+    if (addr >= TRACE_REG_BASE &&
+        addr < (TRACE_REG_BASE + 0x20u)) {
+        return true;
+    }
+
     return false;
+}
+
+static uint32_t trace_reg_read(uint16_t addr)
+{
+    switch ((uint16_t)(addr - TRACE_REG_BASE)) {
+        case TRACE_REG_LAST_WRITE_ADDR:
+            return trace_last_write_addr;
+        case TRACE_REG_LAST_WRITE_VAL:
+            return trace_last_write_value;
+        case TRACE_REG_LAST_READ_ADDR:
+            return trace_last_read_addr;
+        case TRACE_REG_LAST_READ_VAL:
+            return trace_last_read_value;
+        case TRACE_REG_LAST_PREP_ADDR:
+            return trace_last_prep_addr;
+        case TRACE_REG_LAST_PREP_VAL:
+            return trace_last_prep_value;
+        case TRACE_REG_COUNTS0:
+            return (frame8_write_count & 0xFFFFu) | ((frame8_read_count & 0xFFFFu) << 16);
+        case TRACE_REG_COUNTS1:
+            return (last_read_rsp_count & 0xFFFFu) | ((frame8_decode_ok_count & 0xFFFFu) << 16);
+        default:
+            return 0u;
+    }
 }
 
 static bool decoded_frame_is_valid(const uint8_t *decoded_frame)
 {
-    uint8_t cmd = decoded_frame[0] & 0x60u;
+    uint8_t cmd = decoded_frame[0];
     uint8_t len_words = decoded_frame[3];
     uint16_t addr = ((uint16_t)decoded_frame[1] << 8) | decoded_frame[2];
 
-    if (cmd == DBUS_CMD_READ_SHIFTED) {
-        cmd = DBUS_CMD_READ;
-    }
-
-    if (cmd != DBUS_CMD_READ && cmd != DBUS_CMD_WRITE) {
+    if (cmd != DBUS_CMD_READ &&
+        cmd != DBUS_CMD_READ_SHIFTED &&
+        cmd != DBUS_CMD_WRITE) {
         return false;
     }
 
@@ -1019,7 +1151,7 @@ static bool decoded_frame_is_valid(const uint8_t *decoded_frame)
     }
 
     if (len_words != 1u) {
-        dlog("[DBAL] len_anom cmd=0x%02x addr=0x%04x len=%u\n", cmd, addr, (unsigned)len_words);
+        return false;
     }
 
     return true;
@@ -1053,31 +1185,16 @@ static bool decode_rx_frame_auto(const uint8_t *raw_frame, uint8_t *decoded_fram
         return true;
     }
 
-    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_ROL1)) {
-        *detected = TRANSFORM_ROL1;
-        return true;
-    }
-
-    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_ROR1)) {
-        *detected = TRANSFORM_ROR1;
-        return true;
-    }
-
-    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_SERIAL_ROR1)) {
-        *detected = TRANSFORM_SERIAL_ROR1;
-        return true;
-    }
-
-    if (decode_frame_with_transform(raw_frame, decoded_frame, TRANSFORM_SERIAL_ROL1)) {
-        *detected = TRANSFORM_SERIAL_ROL1;
-        return true;
-    }
-
     return false;
 }
 
 static uint32_t reg_read(uint16_t addr)
 {
+    if (addr >= TRACE_REG_BASE &&
+        addr < (TRACE_REG_BASE + 0x20u)) {
+        return trace_reg_read(addr);
+    }
+
     for (size_t i = 0; i < (sizeof(reg_table) / sizeof(reg_table[0])); i++) {
         if (reg_table[i].used && reg_table[i].addr == addr) {
             return reg_table[i].value;
@@ -1222,9 +1339,17 @@ static void prepare_tx_frame_identity(void)
 
 static void set_default_tx_pattern(void)
 {
+#if PICO_DIAG_DEFAULT_TX_PATTERN
+    static const uint8_t diag_pattern[FRAME_SIZE] = {
+        0xA6u, 0x59u, 0xC3u, 0x3Cu, 0xF0u, 0x0Fu, 0x96u, 0x69u,
+    };
+
+    memcpy(tx_frame_desired, diag_pattern, FRAME_SIZE);
+#else
     for (size_t i = 0; i < FRAME_SIZE; i++) {
         tx_frame_desired[i] = 0xFF;
     }
+#endif
     prepare_tx_frame_wire();
 }
 
@@ -1251,10 +1376,33 @@ static void prepare_read_response_frame(uint16_t addr, uint32_t value)
     memcpy(last_read_rsp_desired, tx_frame_desired, FRAME_SIZE);
     memcpy(last_read_rsp_wire, tx_frame_wire, FRAME_SIZE);
     tx_read_response_pending = true;
+    tx_read_response_retire_on_cs_end = false;
+
+#if PICO_SPEED_TRACE
+    if (is_motor_speed_addr(addr)) {
+        trace_last_prep_addr = addr;
+        trace_last_prep_value = value;
+        speed_trace_seq++;
+        speed_trace_push('P', addr, value, same_pending_response ? 1u : 0u);
+    }
+#else
+    if (is_motor_speed_addr(addr)) {
+        trace_last_prep_addr = addr;
+        trace_last_prep_value = value;
+    }
+    dlog("[PICO] PREP_READ addr=0x%04x val=0x%08lx same=%u txi=%u bytes=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+         (unsigned)addr,
+         (unsigned long)value,
+         same_pending_response ? 1u : 0u,
+         (unsigned)tx_index,
+         tx_frame_wire[0], tx_frame_wire[1], tx_frame_wire[2], tx_frame_wire[3],
+         tx_frame_wire[4], tx_frame_wire[5], tx_frame_wire[6], tx_frame_wire[7]);
+#endif
 
     if (!same_pending_response) {
         tx_index = 0u;
         tx_frame_prequeued = false;
+        tx_force_rearm_on_next_cs_start = PICO_PREFER_CS_START_READ_REARM ? true : false;
     }
 }
 
@@ -1585,6 +1733,24 @@ frame_decoded:
         if (value_decoded == 0u && value_raw != 0u) {
             value = value_raw;
         }
+        if (is_motor_speed_addr(addr)) {
+            trace_last_write_addr = addr;
+            trace_last_write_value = value;
+#if PICO_SPEED_TRACE
+            speed_trace_seq++;
+            speed_trace_push('W', addr, value, value_raw);
+#else
+            dlog("[PICO] FRAME_WRITE addr=0x%04x chosen=0x%08lx decoded=0x%08lx raw=0x%08lx rx=%02x %02x %02x %02x %02x %02x %02x %02x dec=%02x %02x %02x %02x %02x %02x %02x %02x\n",
+                 (unsigned)addr,
+                 (unsigned long)value,
+                 (unsigned long)value_decoded,
+                 (unsigned long)value_raw,
+                 rx_frame_raw[0], rx_frame_raw[1], rx_frame_raw[2], rx_frame_raw[3],
+                 rx_frame_raw[4], rx_frame_raw[5], rx_frame_raw[6], rx_frame_raw[7],
+                 decoded[0], decoded[1], decoded[2], decoded[3],
+                 decoded[4], decoded[5], decoded[6], decoded[7]);
+#endif
+        }
         last_frame8_value = value;
         frame8_write_count++;
         if (addr >= MOTOR_REG_BASE &&
@@ -1599,6 +1765,7 @@ frame_decoded:
         tx_read_response_pending = false;
         tx_index = 0u;
         tx_frame_prequeued = false;
+        tx_force_rearm_on_next_cs_start = true;
         return true;
     }
 
@@ -1608,8 +1775,26 @@ frame_decoded:
         if (addr >= MOTOR_REG_BASE && addr < (MOTOR_REG_BASE + (MOTOR_COUNT * MOTOR_REG_STRIDE))) {
             value = motor_read(addr);
         }
+#if PICO_FORCE_FIXED_READ_VALUE
+        value = PICO_FORCE_FIXED_READ_VALUE;
+#endif
         last_frame8_value = value;
+#if PICO_SPEED_TRACE
+        if (is_motor_speed_addr(addr)) {
+            trace_last_read_addr = addr;
+            trace_last_read_value = value;
+            speed_trace_seq++;
+            speed_trace_push('R', addr, value, 0u);
+        } else {
+            dlog("[PICO] READ addr=0x%04x val=0x%08x\n", addr, value);
+        }
+#else
+        if (is_motor_speed_addr(addr)) {
+            trace_last_read_addr = addr;
+            trace_last_read_value = value;
+        }
         dlog("[PICO] READ addr=0x%04x val=0x%08x\n", addr, value);
+#endif
         last_read_rsp_count++;
         last_read_rsp_addr = addr;
         last_read_rsp_value = value;
@@ -1621,6 +1806,7 @@ frame_decoded:
     tx_read_response_pending = false;
     tx_index = 0u;
     tx_frame_prequeued = false;
+    tx_force_rearm_on_next_cs_start = true;
     return false;
 }
 
@@ -1699,27 +1885,54 @@ static inline size_t spi_slave_fill_tx_frame_now(spi_inst_t *spi)
 
 static inline size_t spi_slave_queue_current_tx_frame(spi_inst_t *spi)
 {
+    size_t queued_index;
+
     /* Preserve progress for a pending read response so repeated RW612 dummy
      * retries can collect bytes 1..7 instead of restarting at byte 0 on
      * every CS pulse. For idle/default traffic, restart from the beginning. */
-    if (!tx_read_response_pending || tx_index >= FRAME_SIZE) {
+    if (!tx_read_response_pending) {
         tx_index = 0u;
     }
 
     /* Count only bytes the SSP reports as accepted. Idle-time preload may
      * only take a prefix of the frame; preserve that prefix and let cs_start
      * plus the active service loop feed the remainder. */
-    return spi_slave_continue_tx_frame(spi);
+    queued_index = spi_slave_continue_tx_frame(spi);
+    if (tx_read_response_pending && tx_index >= FRAME_SIZE) {
+        tx_read_response_retire_on_cs_end = true;
+    }
+    return queued_index;
 }
 
 static inline size_t spi_slave_force_queue_current_tx_frame(spi_inst_t *spi)
 {
     spi_hw_t *hw = spi_get_hw(spi);
+    uint32_t start_us = time_us_32();
 
-    tx_index = 0u;
-    for (size_t i = 0u; i < FRAME_SIZE; i++) {
-        hw->dr = tx_frame_wire[i];
-        tx_index++;
+    /* Blindly writing FRAME_SIZE times to hw->dr without checking
+     * spi_is_writable() can silently drop bytes if the FIFO write pointer
+     * has not settled yet right after spi_slave_rearm() toggles SSE off/on.
+     * A dropped write is not reported by the hardware, so tx_index used to
+     * claim a full queue even though only a prefix (often just byte 0)
+     * actually landed, and the PL022 then held the last driven bit level for
+     * the rest of the transfer. Poll spi_is_writable() like the other
+     * queue helpers so every byte is confirmed before advancing. */
+    if (!tx_read_response_pending) {
+        tx_index = 0u;
+    }
+    while (tx_index < FRAME_SIZE) {
+        if (spi_is_writable(spi)) {
+            hw->dr = tx_frame_wire[tx_index++];
+            continue;
+        }
+        if ((uint32_t)(time_us_32() - start_us) >= 200u) {
+            break;
+        }
+        tight_loop_contents();
+    }
+
+    if (tx_read_response_pending && tx_index >= FRAME_SIZE) {
+        tx_read_response_retire_on_cs_end = true;
     }
 
     return tx_index;
@@ -1856,6 +2069,10 @@ static void service_spi_frame(spi_inst_t *spi)
         uint32_t last_rx_us;
 
         cs_end_pending = false;
+        if (tx_read_response_retire_on_cs_end && tx_read_response_pending && tx_index >= FRAME_SIZE) {
+            retire_pending_read_response();
+        }
+
         /* If the active service loop exited immediately after CS rose, the
          * sniff decoder may not have consumed that final CS-high transition
          * yet. Force one pass here so the just-finished frame prepares the
@@ -1901,39 +2118,74 @@ static void service_spi_frame(spi_inst_t *spi)
             rx_index = 0u;
         }
 
-        /* The just-finished frame has now been sniff-decoded and the drain is
+        /* The just-finished frame has now been decoded and the drain is
          * complete, so it is safe to preload the next TX frame.
          *
-         * Pending read responses need different handling on the two Pico
-         * roles:
-         * - Pico1 (motors 0/2) benefits from cs_end preload so the response is
-         *   already in the SSP before the RW612 starts the next transfer.
-         * - Pico2 (motors 1/3) has shown truncated prefixes when preloaded at
-         *   cs_end, so keep its read responses queued only at cs_start. */
-    #if PICO_NODE_SLOT == 1
-        if (true) {
+         * Keep the conservative Pico2 behavior here: pending read responses
+         * are not preloaded at cs_end, and are instead queued from cs_start
+         * after a rearm. This was the least-bad behavior on bench. */
+        if (!PICO_PREFER_CS_START_READ_REARM || !tx_read_response_pending) {
+              spi_slave_rearm(spi);
+    #if PICO_FORCE_FULL_TX_PRELOAD
+              last_cs_end_preload_count = (uint32_t)spi_slave_force_queue_current_tx_frame(spi);
     #else
-        if (!tx_read_response_pending) {
+              last_cs_end_preload_count = (uint32_t)spi_slave_queue_current_tx_frame(spi);
     #endif
-            spi_slave_rearm(spi);
-            last_cs_end_preload_count = (uint32_t)spi_slave_queue_current_tx_frame(spi);
             tx_frame_prequeued = (last_cs_end_preload_count == FRAME_SIZE);
+            dlog("[PICO] CS_END preload=%lu pending=%u prequeued=%u txi=%u\n",
+                 (unsigned long)last_cs_end_preload_count,
+                 tx_read_response_pending ? 1u : 0u,
+                 tx_frame_prequeued ? 1u : 0u,
+                 (unsigned)tx_index);
         } else {
             last_cs_end_preload_count = 0u;
             tx_frame_prequeued = false;
+            dlog("[PICO] CS_END defer_read pending=1 txi=%u\n", (unsigned)tx_index);
         }
     }
 
     if (cs_start_pending) {
         cs_start_pending = false;
+        if (rx_index != 0u) {
+            dlog("[PICO] CS_START dropping stale rx_index=%u last_byte_us=%lu\n",
+                 (unsigned)rx_index,
+                 (unsigned long)rx_last_byte_us);
+            rx_index = 0u;
+        }
         /* Preserve any bytes already accepted during the cs_end preload. If we
          * rearm here, we flush that prefix right before the master clocks the
          * frame. Also do not blindly advance tx_index to 8: on this link the
          * SSP may only accept one start-of-frame byte immediately, and the
          * active loop must be allowed to feed the remaining tail. */
+#if PICO_NODE_SLOT == 2
+        if (tx_force_rearm_on_next_cs_start ||
+            (PICO_PREFER_CS_START_READ_REARM && tx_read_response_pending)) {
+            /* On the isolated RW612<->Pico2 readback path, trusting any
+             * queued SSP prefix across CS pulses still produces circularly
+             * shifted or stale replies. Start each pending read response from
+             * a freshly rearmed FIFO and byte 0. */
+            spi_slave_rearm(spi);
+          tx_index = 0u;
+            tx_frame_prequeued = false;
+            dlog("[PICO] CS_START rearm force=%u pending_read=%u txi=%u\n",
+                 tx_force_rearm_on_next_cs_start ? 1u : 0u,
+                 tx_read_response_pending ? 1u : 0u,
+                 (unsigned)tx_index);
+            tx_force_rearm_on_next_cs_start = false;
+        }
+#endif
         mark_spi_activity();
+    #if PICO_FORCE_FULL_TX_PRELOAD
+        last_cs_start_queue_count = (uint32_t)spi_slave_force_queue_current_tx_frame(spi);
+    #else
         last_cs_start_queue_count = (uint32_t)spi_slave_fill_tx_frame_now(spi);
+    #endif
         tx_frame_prequeued = (last_cs_start_queue_count == FRAME_SIZE);
+        dlog("[PICO] CS_START queue=%lu pending=%u prequeued=%u txi=%u\n",
+             (unsigned long)last_cs_start_queue_count,
+             tx_read_response_pending ? 1u : 0u,
+             tx_frame_prequeued ? 1u : 0u,
+             (unsigned)tx_index);
     }
 
     if (cs_is_active() || ((hw->sr & 0x10u) != 0u)) {
@@ -2114,11 +2366,12 @@ int main(void)
         now_ms = to_ms_since_boot(get_absolute_time());
 
         if (PICO_RUNTIME_LOG_FLUSH &&
-            !cs_active && rx_index == 0 && (uint32_t)(now_us - last_spi_activity_us) >= LOG_IDLE_FLUSH_US) {
+            !cs_active && rx_index == 0 && (uint32_t)(now_us - last_spi_activity_us) >= PICO_LOG_IDLE_FLUSH_US) {
             dlog_flush_limited(DLOG_FLUSH_BUDGET);
+            speed_trace_flush_limited(DLOG_FLUSH_BUDGET);
         }
 
-        if (!cs_active && rx_index == 0u) {
+        if (PICO_USB_CONSOLE_ENABLE && !cs_active && rx_index == 0u) {
             usb_console_poll();
         }
 
