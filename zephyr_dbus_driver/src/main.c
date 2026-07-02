@@ -20,17 +20,27 @@
 #define MOTOR_REG_ENABLE_OFFSET   0x0u
 #define MOTOR_REG_SPEED_OFFSET    0x4u
 
+#define TRACE_REG_BASE            0x5120u
+#define TRACE_REG_LAST_WRITE_ADDR (TRACE_REG_BASE + 0x00u)
+#define TRACE_REG_LAST_WRITE_VAL  (TRACE_REG_BASE + 0x04u)
+#define TRACE_REG_LAST_READ_ADDR  (TRACE_REG_BASE + 0x08u)
+#define TRACE_REG_LAST_READ_VAL   (TRACE_REG_BASE + 0x0Cu)
+#define TRACE_REG_LAST_PREP_ADDR  (TRACE_REG_BASE + 0x10u)
+#define TRACE_REG_LAST_PREP_VAL   (TRACE_REG_BASE + 0x14u)
+#define TRACE_REG_COUNTS0         (TRACE_REG_BASE + 0x18u)
+#define TRACE_REG_COUNTS1         (TRACE_REG_BASE + 0x1Cu)
+
 #define DBAL_TEST_SERVICE_ID   0x7001u
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
-#define RW612_BUILD_MARKER "RW612 build marker: AUTO_TEST_ALL4_V1_2026_05_20"
+#define RW612_BUILD_MARKER "RW612 build marker: PICO2_ALIAS_PROBE_V1_SPEEDGAP_2026_07_02"
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 1u
 #endif
 
 #ifndef DBUS_ENABLE_AUTO_MOTOR_TEST
-#define DBUS_ENABLE_AUTO_MOTOR_TEST 1
+#define DBUS_ENABLE_AUTO_MOTOR_TEST 0
 #endif
 
 #ifndef DBUS_CONTINUOUS_SECONDARY_TEST
@@ -64,7 +74,7 @@
  * This removes cross-target side effects and guarantees the known
  * Flexcomm SCK-gate condition while measuring Pico2 RX behavior. */
 #ifndef DBUS_FORCE_SECONDARY_ONLY
-#define DBUS_FORCE_SECONDARY_ONLY 0
+#define DBUS_FORCE_SECONDARY_ONLY 1
 #endif
 
 #ifndef DBUS_SKIP_GPIO_PROBES
@@ -72,7 +82,7 @@
 #endif
 
 #ifndef DBUS_ENABLE_READBACK_PROBE
-#define DBUS_ENABLE_READBACK_PROBE 0
+#define DBUS_ENABLE_READBACK_PROBE 1
 #endif
 
 #ifndef DBUS_READBACK_PROBE_PRIMARY_ONLY
@@ -175,6 +185,64 @@ static enum DBC_Error read_motor_reg32(uint8_t motor_index, uint16_t reg_offset,
     return err;
 }
 
+static enum DBC_Error read_reg32_addr(uint16_t addr, uint32_t *value)
+{
+    enum DBC_Error err = DBCDRV_readReg32((enum DBC_RegAddr)addr, value);
+
+    if (err == DBC_OK) {
+        printk("Main: TRACE_REG_READ addr=0x%04x val=0x%08x err=%d\n",
+               (unsigned)addr,
+               (unsigned)*value,
+               err);
+    } else {
+        printk("Main: TRACE_REG_READ addr=0x%04x err=%d\n",
+               (unsigned)addr,
+               err);
+    }
+
+    return err;
+}
+
+static void dump_shadow_trace(const char *tag)
+{
+    uint32_t write_addr = 0u;
+    uint32_t write_val = 0u;
+    uint32_t read_addr = 0u;
+    uint32_t read_val = 0u;
+    uint32_t prep_addr = 0u;
+    uint32_t prep_val = 0u;
+    uint32_t counts0 = 0u;
+    uint32_t counts1 = 0u;
+    enum DBC_Error err = DBC_OK;
+
+    err = read_reg32_addr(TRACE_REG_LAST_WRITE_ADDR, &write_addr);
+    if (err != DBC_OK) {
+        printk("Main: shadow trace %s unavailable at write_addr err=%d\n", tag, err);
+        return;
+    }
+
+    (void)read_reg32_addr(TRACE_REG_LAST_WRITE_VAL, &write_val);
+    (void)read_reg32_addr(TRACE_REG_LAST_READ_ADDR, &read_addr);
+    (void)read_reg32_addr(TRACE_REG_LAST_READ_VAL, &read_val);
+    (void)read_reg32_addr(TRACE_REG_LAST_PREP_ADDR, &prep_addr);
+    (void)read_reg32_addr(TRACE_REG_LAST_PREP_VAL, &prep_val);
+    (void)read_reg32_addr(TRACE_REG_COUNTS0, &counts0);
+    (void)read_reg32_addr(TRACE_REG_COUNTS1, &counts1);
+
+    printk("Main: shadow trace %s W addr=0x%04x val=0x%08x R addr=0x%04x val=0x%08x P addr=0x%04x val=0x%08x counts wr=%u rd=%u rsp=%u dec=%u\n",
+           tag,
+           (unsigned)write_addr,
+           (unsigned)write_val,
+           (unsigned)read_addr,
+           (unsigned)read_val,
+           (unsigned)prep_addr,
+           (unsigned)prep_val,
+           (unsigned)(counts0 & 0xFFFFu),
+           (unsigned)((counts0 >> 16) & 0xFFFFu),
+           (unsigned)(counts1 & 0xFFFFu),
+           (unsigned)((counts1 >> 16) & 0xFFFFu));
+}
+
 static enum DBCDRV_SpiTarget target_for_motor(uint8_t motor_index)
 {
     return ((motor_index & 0x1u) == 0u)
@@ -183,7 +251,7 @@ static enum DBCDRV_SpiTarget target_for_motor(uint8_t motor_index)
 }
 
 
-/* 2-round finite test for all 4 logical motors.
+/* 1-round finite test for all 4 logical motors.
  * Mapping:
  * - motor0 (A) on Pico1 PRIMARY
  * - motor1 (A) on Pico2 SECONDARY
@@ -194,17 +262,17 @@ static enum DBCDRV_SpiTarget target_for_motor(uint8_t motor_index)
  * then performs a full shutdown on all 4 motors. */
 static bool run_dual_motor_simul_cycle(void)
 {
-    static const uint32_t m0_speeds[] = { 220u, 360u };
-    static const uint32_t m1_speeds[] = { 360u, 180u };
-    static const uint32_t m2_speeds[] = { 260u, 300u };
-    static const uint32_t m3_speeds[] = { 320u, 200u };
-    static const uint32_t RUN_MS      = 1200u;
-    static const uint32_t GAP_MS      = 250u;
+    static const uint32_t m0_speeds[] = { 500u };
+    static const uint32_t m1_speeds[] = { 700u };
+    static const uint32_t m2_speeds[] = { 800u };
+    static const uint32_t m3_speeds[] = { 900u };
+    static const uint32_t RUN_MS      = 1000u;
+    static const uint32_t GAP_MS      = 150u;
     const size_t NUM_ROUNDS = ARRAY_SIZE(m0_speeds);
     bool all_ok = true;
     enum DBC_Error target_err;
 
-    printk("Motor Toggle [QUAD_INDIVIDUAL_V1]: Starting %u rounds.\n", (uint32_t)NUM_ROUNDS);
+    printk("Motor Toggle [QUAD_INDIVIDUAL_SHORT_V1]: Starting %u rounds.\n", (uint32_t)NUM_ROUNDS);
 
     for (size_t i = 0u; i < NUM_ROUNDS; i++) {
         enum DBC_Error err;
@@ -274,7 +342,7 @@ static bool run_dual_motor_simul_cycle(void)
         }
     }
 
-    printk("Motor Toggle [QUAD_INDIVIDUAL_V1]: All rounds complete.\n");
+    printk("Motor Toggle [QUAD_INDIVIDUAL_SHORT_V1]: All rounds complete.\n");
 
     /* Final forced shutdown: send enable=0 to all 4 motors with delay
      * to ensure each Pico receives and processes the stop command. */
@@ -505,24 +573,114 @@ static void run_readback_probe(void)
     printk("Main: readback probe overriding secondary-only mode to test Pico1\n");
 #endif
 #elif DBUS_FORCE_SECONDARY_ONLY
-    static const struct {
-        uint8_t motor;
-        uint32_t speed;
-    } probes[] = {
-        { 1u, 0x00000456u },
-    };
 #else
     static const struct {
         uint8_t motor;
         uint32_t speed;
     } probes[] = {
         { 0u, 0x00000123u },
-        { 1u, 0x00000456u },
+        { 2u, 0x00000789u },
+        { 3u, 0x0000044Cu },
+        { 1u, 0x000001F4u },
     };
 #endif
 
     printk("Main: readback probe start\n");
 
+#if DBUS_FORCE_SECONDARY_ONLY && !DBUS_READBACK_PROBE_PRIMARY_ONLY
+    static const struct {
+        uint32_t motor1_speed;
+        uint32_t motor3_speed;
+    } probe_steps[] = {
+        { 0x000001F4u, 0x0000044Cu },
+        { 0x0000044Cu, 0x000001F4u },
+        { 0x000005A0u, 0x000000A5u },
+        { 0x000000A5u, 0x000005A0u },
+    };
+
+    printk("Main: mode=PICO2_ALIAS_PROBE_V1\n");
+    printk("Main: Pico2 alias probe target=secondary (dual-write speed-gap motors 1,3)\n");
+
+    for (size_t i = 0u; i < ARRAY_SIZE(probe_steps); i++) {
+        const uint32_t control_gap_us = 50u;
+        const uint32_t speed_gap_us = 250u;
+        const uint32_t final_settle_us = 200u;
+        uint32_t motor1_read_first = 0u;
+        uint32_t motor1_read_second = 0u;
+        uint32_t motor3_read_first = 0u;
+        uint32_t motor3_read_second = 0u;
+        enum DBC_Error motor1_err_first;
+        enum DBC_Error motor1_err_second;
+        enum DBC_Error motor3_err_first;
+        enum DBC_Error motor3_err_second;
+        enum DBC_Error err;
+
+        err = DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO);
+        printk("Main: alias probe step=%u target err=%d\n",
+               (unsigned)(i + 1u),
+               err);
+        if (err != DBC_OK) {
+            continue;
+        }
+
+        err = write_motor_reg32(1u, MOTOR_REG_ENABLE_OFFSET, 0u);
+        if (err != DBC_OK) {
+            printk("Main: alias probe step=%u motor1 disable err=%d\n",
+                   (unsigned)(i + 1u), err);
+            continue;
+        }
+        k_usleep(control_gap_us);
+
+        err = write_motor_reg32(3u, MOTOR_REG_ENABLE_OFFSET, 0u);
+        if (err != DBC_OK) {
+            printk("Main: alias probe step=%u motor3 disable err=%d\n",
+                   (unsigned)(i + 1u), err);
+            continue;
+        }
+        k_usleep(control_gap_us);
+
+        err = write_motor_reg32(1u, MOTOR_REG_SPEED_OFFSET, probe_steps[i].motor1_speed);
+        if (err != DBC_OK) {
+            printk("Main: alias probe step=%u motor1 speed write err=%d\n",
+                   (unsigned)(i + 1u), err);
+            continue;
+        }
+        k_usleep(speed_gap_us);
+
+        err = write_motor_reg32(3u, MOTOR_REG_SPEED_OFFSET, probe_steps[i].motor3_speed);
+        if (err != DBC_OK) {
+            printk("Main: alias probe step=%u motor3 speed write err=%d\n",
+                   (unsigned)(i + 1u), err);
+            continue;
+        }
+        k_usleep(final_settle_us);
+
+        printk("Main: dual-write step=%u motor1=0x%08x motor3=0x%08x [SPEEDGAP]\n",
+               (unsigned)(i + 1u),
+               (unsigned)probe_steps[i].motor1_speed,
+               (unsigned)probe_steps[i].motor3_speed);
+
+        motor1_err_first = read_motor_reg32(1u, MOTOR_REG_SPEED_OFFSET, &motor1_read_first);
+        motor1_err_second = read_motor_reg32(1u, MOTOR_REG_SPEED_OFFSET, &motor1_read_second);
+        motor3_err_first = read_motor_reg32(3u, MOTOR_REG_SPEED_OFFSET, &motor3_read_first);
+        motor3_err_second = read_motor_reg32(3u, MOTOR_REG_SPEED_OFFSET, &motor3_read_second);
+
+        printk("Main: alias probe step=%u motor1 expected=0x%08x first=0x%08x err1=%d second=0x%08x err2=%d\n",
+               (unsigned)(i + 1u),
+               (unsigned)probe_steps[i].motor1_speed,
+               (unsigned)motor1_read_first,
+               motor1_err_first,
+               (unsigned)motor1_read_second,
+               motor1_err_second);
+        printk("Main: alias probe step=%u motor3 expected=0x%08x first=0x%08x err1=%d second=0x%08x err2=%d\n",
+               (unsigned)(i + 1u),
+               (unsigned)probe_steps[i].motor3_speed,
+               (unsigned)motor3_read_first,
+               motor3_err_first,
+               (unsigned)motor3_read_second,
+               motor3_err_second);
+    }
+#else
     for (size_t i = 0u; i < ARRAY_SIZE(probes); i++) {
         uint32_t read_value = 0u;
         enum DBC_Error err;
@@ -566,6 +724,7 @@ static void run_readback_probe(void)
 
          (void)write_motor_reg32(probes[i].motor, MOTOR_REG_ENABLE_OFFSET, 0u);
     }
+#endif
 
     printk("Main: readback probe end\n");
 #endif
@@ -583,9 +742,9 @@ int main(void)
     enum DBC_Error pulse_err;
     const struct device *probe_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
 
-    printk("Hello from Zephyr DBus Driver project! [AUTO_TEST_ALL4_V1]\n");
+    printk("Hello from Zephyr DBus Driver project! [PICO2_ALIAS_PROBE_V1]\n");
     printk("%s\n", RW612_BUILD_MARKER);
-    printk("Main: mode=AUTO_TEST_ALL4_V1\n");
+    printk("Main: mode=PICO2_ALIAS_PROBE_V1\n");
         printk("Repeatability mode: %u run(s). auto_test=%u\n",
             DBUS_REPEATABILITY_RUNS,
             (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
@@ -682,8 +841,8 @@ int main(void)
                 toggle_ok = run_toggle_cycle_for_target(DBCDRV_SPI_TARGET_SECONDARY_PICO,
                                                         "secondary_only_cycle");
             } else {
-                printk("Main: starting QUAD simultaneous motor test (motor0..motor3)\n");
-                toggle_ok = run_quad_simultaneous_cycle();
+                printk("Main: starting short individual motor test (motor0..motor3, 1s each)\n");
+                toggle_ok = run_dual_motor_simul_cycle();
             }
 
             if (toggle_ok) {

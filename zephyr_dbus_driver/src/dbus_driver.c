@@ -27,9 +27,21 @@ static const struct device *dbus_spi_bus = DEVICE_DT_GET(SPI_DEV_NODE); // Point
 #define DBCDRV_SPI_DUMMY_GAP_US 500u
 #define DBCDRV_LOG_READ_RETRY_HEXDUMPS 0
 #define DBCDRV_LOG_WRITE_HEXDUMPS 0
+#define DBCDRV_LOG_PROVISIONAL_INTERLEAVED 0
+#define DBCDRV_LOG_FAIL_HEXDUMPS 0
+#define DBCDRV_LOG_FAIL_LANE_TAILS 0
 #define DBCDRV_FAIL_DIAG_TAIL_BYTES 32u
 #define DBCDRV_FAIL_DIAG_LANE_TAIL_FRAMES 8u
 #define DBCDRV_FAIL_DIAG_MAX_BYTE_HITS 24u
+
+static bool dbus_drv_is_motor_speed_addr(enum DBC_RegAddr addr)
+{
+    uint16_t raw = (uint16_t)addr;
+
+    return (raw >= 0x5004u) &&
+           (raw < 0x5040u) &&
+           ((raw & 0x000fu) == 0x0004u);
+}
 
 static const struct device *dbus_cs_gpio_dev = DEVICE_DT_GET(DBUS_CS_GPIO_NODE);
 static enum DBCDRV_SpiTarget dbus_spi_target = DBCDRV_SPI_TARGET_PRIMARY_PICO;
@@ -497,7 +509,8 @@ static bool dbus_drv_extract_read_response(const uint8_t *rx_data,
                                            uint8_t expected_addr_low,
                                            uint8_t matched_data[4])
 {
-    for (size_t offset = 0u; (offset + 8u) <= len; offset++) {
+    if (len >= 8u) {
+        for (size_t offset = len - 8u + 1u; offset-- > 0u;) {
         bool addr_high_match = ((rx_data[offset + 1u] & 0x7Fu) == (expected_addr_high & 0x7Fu));
 
         if (rx_data[offset] == DBCDRV_SPI_RSP_MARKER &&
@@ -511,18 +524,11 @@ static bool dbus_drv_extract_read_response(const uint8_t *rx_data,
             return true;
         }
 
-        if (addr_high_match &&
-            rx_data[offset + 2u] == expected_addr_low &&
-            rx_data[offset + 3u] == 0x01u) {
-            matched_data[0] = rx_data[offset + 4u];
-            matched_data[1] = rx_data[offset + 5u];
-            matched_data[2] = rx_data[offset + 6u];
-            matched_data[3] = rx_data[offset + 7u];
-            return true;
-        }
+    }
     }
 
-    for (size_t offset = 0u; (offset + 9u) <= len; offset++) {
+    if (len >= 9u) {
+        for (size_t offset = len - 9u + 1u; offset-- > 0u;) {
         if (((rx_data[offset + 1u] & 0x7Fu) == (DBCDRV_SPI_RSP_MARKER & 0x7Fu)) &&
             ((rx_data[offset + 2u] & 0x7Fu) == (expected_addr_high & 0x7Fu)) &&
             rx_data[offset + 3u] == expected_addr_low &&
@@ -533,6 +539,7 @@ static bool dbus_drv_extract_read_response(const uint8_t *rx_data,
             matched_data[3] = rx_data[offset + 8u];
             return true;
         }
+    }
     }
 
     return false;
@@ -588,7 +595,7 @@ static bool dbus_drv_extract_read_response_autodecode(const uint8_t *rx_data,
         return false;
     }
 
-    for (size_t offset = 0u; (offset + frame_len) <= len; offset++) {
+    for (size_t offset = len - frame_len + 1u; offset-- > 0u;) {
         const uint8_t *window = rx_data + offset;
 
         if (dbus_drv_try_decoded_response(window,
@@ -782,6 +789,60 @@ static bool dbus_drv_extract_read_response_interleaved_byte_lanes(const uint8_t 
     return false;
 }
 
+static bool dbus_drv_extract_read_response_exact_byte_lanes(const uint8_t *rx_data,
+                                                            size_t len,
+                                                            size_t frame_len,
+                                                            uint8_t expected_addr_high,
+                                                            uint8_t expected_addr_low,
+                                                            uint8_t matched_data[4])
+{
+    uint8_t lane_stream[DBCDRV_SPI_DUMMY_RETRIES + 1u] = {0};
+    uint8_t best_data[4] = {0};
+    size_t frame_count;
+    const size_t rsp_len = DBC_SPI_HDR_SIZE + sizeof(uint32_t);
+    size_t best_offset = 0u;
+    bool have_match = false;
+
+    if (frame_len == 0u || len < frame_len) {
+        return false;
+    }
+
+    frame_count = len / frame_len;
+    if (frame_count < rsp_len) {
+        return false;
+    }
+
+    for (size_t lane = 0u; lane < frame_len; lane++) {
+        for (size_t frame = 0u; frame < frame_count; frame++) {
+            lane_stream[frame] = rx_data[(frame * frame_len) + lane];
+        }
+
+        for (size_t offset = frame_count - rsp_len + 1u; offset-- > 0u;) {
+            const uint8_t *window = lane_stream + offset;
+            uint8_t candidate[4] = {0};
+
+            if (dbus_drv_try_decoded_response(window,
+                                              expected_addr_high,
+                                              expected_addr_low,
+                                              candidate)) {
+                if (!have_match || offset > best_offset) {
+                    memcpy(best_data, candidate, sizeof(best_data));
+                    best_offset = offset;
+                    have_match = true;
+                }
+            }
+
+        }
+    }
+
+    if (have_match) {
+        memcpy(matched_data, best_data, sizeof(best_data));
+        return true;
+    }
+
+    return false;
+}
+
 static bool dbus_drv_extract_read_response_interleaved_diagonals(const uint8_t *rx_data,
                                                                  size_t len,
                                                                  size_t frame_len,
@@ -854,6 +915,12 @@ static void dbus_drv_log_interleaved_lane_tails(const uint8_t *rx_data,
                                                 size_t len,
                                                 size_t frame_len)
 {
+#if !DBCDRV_LOG_FAIL_LANE_TAILS
+    (void)rx_data;
+    (void)len;
+    (void)frame_len;
+    return;
+#else
     uint8_t lane_stream[DBCDRV_SPI_DUMMY_RETRIES + 1u] = {0};
     uint8_t decoded_stream[DBCDRV_SPI_DUMMY_RETRIES + 1u] = {0};
     size_t frame_count;
@@ -899,6 +966,74 @@ static void dbus_drv_log_interleaved_lane_tails(const uint8_t *rx_data,
         LOG_HEXDUMP_INF(&lane_stream[tail_offset], tail_len, "DBCDRV_readReg32 fail lane raw:");
         LOG_HEXDUMP_INF(&decoded_stream[tail_offset], tail_len, "DBCDRV_readReg32 fail lane decoded:");
     }
+#endif
+}
+
+static void dbus_drv_log_compact_lane0_tail(const uint8_t *rx_data,
+                                            size_t len,
+                                            size_t frame_len)
+{
+    uint8_t lane_stream[DBCDRV_SPI_DUMMY_RETRIES + 1u] = {0};
+    uint8_t decoded_stream[DBCDRV_SPI_DUMMY_RETRIES + 1u] = {0};
+    size_t frame_count;
+    size_t tail_len;
+    size_t tail_offset;
+
+    if (frame_len == 0u || len < frame_len) {
+        return;
+    }
+
+    frame_count = len / frame_len;
+    if (frame_count == 0u) {
+        return;
+    }
+
+    tail_len = frame_count;
+    if (tail_len > 8u) {
+        tail_len = 8u;
+    }
+    tail_offset = frame_count - tail_len;
+
+    for (size_t frame = 0u; frame < frame_count; frame++) {
+        lane_stream[frame] = rx_data[frame * frame_len];
+    }
+    dbus_drv_decode_serial_ror1_stream(lane_stream, decoded_stream, frame_count);
+
+    if (tail_len == 8u) {
+        LOG_INF("DBCDRV_readReg32 lane0 raw=%02x %02x %02x %02x %02x %02x %02x %02x dec=%02x %02x %02x %02x %02x %02x %02x %02x",
+                lane_stream[tail_offset + 0u],
+                lane_stream[tail_offset + 1u],
+                lane_stream[tail_offset + 2u],
+                lane_stream[tail_offset + 3u],
+                lane_stream[tail_offset + 4u],
+                lane_stream[tail_offset + 5u],
+                lane_stream[tail_offset + 6u],
+                lane_stream[tail_offset + 7u],
+                decoded_stream[tail_offset + 0u],
+                decoded_stream[tail_offset + 1u],
+                decoded_stream[tail_offset + 2u],
+                decoded_stream[tail_offset + 3u],
+                decoded_stream[tail_offset + 4u],
+                decoded_stream[tail_offset + 5u],
+                decoded_stream[tail_offset + 6u],
+                decoded_stream[tail_offset + 7u]);
+    }
+}
+
+static void dbus_drv_log_compact_frame_samples(const uint8_t *rx_data,
+                                               size_t len,
+                                               size_t frame_len)
+{
+    if (frame_len == 0u || len < frame_len) {
+        return;
+    }
+
+    const uint8_t *first = rx_data;
+    const uint8_t *last = rx_data + (len - frame_len);
+
+    LOG_INF("DBCDRV_readReg32 frame0 raw=%02x %02x %02x %02x %02x %02x %02x %02x last raw=%02x %02x %02x %02x %02x %02x %02x %02x",
+            first[0], first[1], first[2], first[3], first[4], first[5], first[6], first[7],
+            last[0], last[1], last[2], last[3], last[4], last[5], last[6], last[7]);
 }
 
 static void dbus_drv_log_expected_byte_hits(const uint8_t *rx_data,
@@ -924,6 +1059,37 @@ static uint8_t dbus_drv_score_provisional_payload(const uint8_t matched_data[4])
 static int dbus_drv_spi_transceive_bytewise(const uint8_t *tx_data,
                                             uint8_t *rx_data,
                                             size_t len)
+{
+    for (size_t i = 0u; i < len; i++) {
+        struct spi_buf tx_buf = {
+            .buf = (void *)&tx_data[i],
+            .len = 1u,
+        };
+        struct spi_buf rx_buf = {
+            .buf = &rx_data[i],
+            .len = 1u,
+        };
+        struct spi_buf_set tx_bufs = {
+            .buffers = &tx_buf,
+            .count = 1,
+        };
+        struct spi_buf_set rx_bufs = {
+            .buffers = &rx_buf,
+            .count = 1,
+        };
+        int ret = spi_transceive(dbus_spi_bus, &dbus_spi_cfg, &tx_bufs, &rx_bufs);
+
+        if (ret < 0) {
+            return ret;
+        }
+    }
+
+    return 0;
+}
+
+static int dbus_drv_spi_transceive_frame(const uint8_t *tx_data,
+                                         uint8_t *rx_data,
+                                         size_t len)
 {
     struct spi_buf tx_buf = {
         .buf = (void *)tx_data,
@@ -1070,7 +1236,7 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
     }
     k_usleep(DBCDRV_SPI_CS_SETUP_US);
 
-    ret = dbus_drv_spi_transceive_bytewise(tx_buffer, rx_buffer, sizeof(tx_buffer));
+    ret = dbus_drv_spi_transceive_frame(tx_buffer, rx_buffer, sizeof(tx_buffer));
 
     k_usleep(DBCDRV_SPI_CS_HOLD_US);
     if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
@@ -1098,6 +1264,7 @@ enum DBC_Error DBCDRV_writeReg32(enum DBC_RegAddr addr, uint32_t data)
 enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
 {
     const size_t frame_len = DBC_SPI_HDR_SIZE + sizeof(uint32_t);
+    bool allow_provisional_interleaved = !dbus_drv_is_motor_speed_addr(addr);
     uint8_t tx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t rx_buffer[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
     uint8_t dummy_tx[DBC_SPI_HDR_SIZE + sizeof(uint32_t)] = {0};
@@ -1151,7 +1318,11 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
     cumulative_len = frame_len;
 
     for (uint8_t attempt = 1u; attempt <= DBCDRV_SPI_DUMMY_RETRIES; attempt++) {
-        DBCDRV_setSpiFrameHdr(addr, sizeof(uint32_t), DBC_CMD_READ, dummy_tx);
+        /* After the initial READ command, clock out the queued Pico reply
+         * with pure dummy bytes instead of reissuing READ headers. Repeating
+         * the READ command on every retry retriggers response preparation and
+         * prevents tail bytes from being drained coherently. */
+        memset(dummy_tx, 0, sizeof(dummy_tx));
         memset(data_rx, 0, sizeof(data_rx));
 
         if (dbus_drv_set_cs_state(dbus_spi_target, true) < 0) {
@@ -1161,7 +1332,7 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
         }
         k_usleep(DBCDRV_SPI_CS_SETUP_US);
 
-        ret = dbus_drv_spi_transceive_bytewise(dummy_tx, data_rx, sizeof(dummy_tx));
+        ret = dbus_drv_spi_transceive_frame(dummy_tx, data_rx, sizeof(dummy_tx));
 
         k_usleep(DBCDRV_SPI_CS_HOLD_US);
         if (dbus_drv_set_cs_state(dbus_spi_target, false) < 0) {
@@ -1218,6 +1389,16 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
             break;
         }
 
+        if (dbus_drv_extract_read_response_exact_byte_lanes(cumulative_rx,
+                                                            cumulative_len,
+                                                            frame_len,
+                                                            expected_addr_high,
+                                                            expected_addr_low,
+                                                            matched_data)) {
+            have_match = true;
+            break;
+        }
+
         if (dbus_drv_extract_read_response_interleaved_byte_lanes(cumulative_rx,
                                                                   cumulative_len,
                                                                   frame_len,
@@ -1238,23 +1419,37 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
                 have_interleaved_candidate = true;
             }
 
-            LOG_INF("DBCDRV_readReg32 provisional interleaved match attempt=%u score=%u payload=%02x %02x %02x %02x",
+        #if DBCDRV_LOG_PROVISIONAL_INTERLEAVED
+                LOG_INF("DBCDRV_readReg32 provisional interleaved match attempt=%u score=%u payload=%02x %02x %02x %02x",
                     (unsigned)attempt,
                     (unsigned)candidate_score,
                     provisional_data[0],
                     provisional_data[1],
                     provisional_data[2],
                     provisional_data[3]);
+        #endif
         }
 
         k_usleep(DBCDRV_SPI_DUMMY_GAP_US);
     }
 
-    if (!have_match && have_interleaved_candidate) {
+    if (!have_match && have_interleaved_candidate && allow_provisional_interleaved) {
         memcpy(matched_data, interleaved_candidate, sizeof(matched_data));
         have_match = true;
+    #if DBCDRV_LOG_PROVISIONAL_INTERLEAVED
         LOG_INF("DBCDRV_readReg32 using best provisional interleaved payload score=%u",
-                (unsigned)interleaved_candidate_score);
+            (unsigned)interleaved_candidate_score);
+    #endif
+    }
+
+    if (!have_match && have_interleaved_candidate && !allow_provisional_interleaved) {
+        LOG_INF("DBCDRV_readReg32 ignoring provisional interleaved payload for motor speed addr=0x%x score=%u payload=%02x %02x %02x %02x",
+                addr,
+                (unsigned)interleaved_candidate_score,
+                interleaved_candidate[0],
+                interleaved_candidate[1],
+                interleaved_candidate[2],
+                interleaved_candidate[3]);
     }
 
     if (!have_match) {
@@ -1271,8 +1466,12 @@ enum DBC_Error DBCDRV_readReg32(enum DBC_RegAddr addr, uint32_t *data)
                 addr,
                 dbus_drv_get_target_name(dbus_spi_target),
                 (unsigned)DBCDRV_SPI_DUMMY_RETRIES);
+        dbus_drv_log_compact_lane0_tail(cumulative_rx, cumulative_len, frame_len);
+        dbus_drv_log_compact_frame_samples(cumulative_rx, cumulative_len, frame_len);
+    #if DBCDRV_LOG_FAIL_HEXDUMPS
         LOG_HEXDUMP_INF(&cumulative_rx[tail_offset], tail_len, "DBCDRV_readReg32 fail tail raw:");
         LOG_HEXDUMP_INF(&decoded_tail[tail_offset], tail_len, "DBCDRV_readReg32 fail tail decoded:");
+    #endif
         dbus_drv_log_interleaved_lane_tails(cumulative_rx, cumulative_len, frame_len);
         dbus_drv_log_expected_byte_hits(cumulative_rx,
                                         cumulative_len,
