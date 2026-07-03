@@ -411,6 +411,48 @@ Notes:
 - use this as the active safe fallback whenever the immediate goal is simply to restore all four moving motors
 - do not treat it as a readback proof; it remains motion/write-path evidence only
 
+### Exact 2fd321d baseline with appended stopped readback
+Purpose:
+- test readback by modifying the true May 20 moving source baseline instead of the later reconstructed RW612 tree
+
+Built artifact:
+- `/home/swied/projects/dbus_porting_BA/helper/exact2fd321d_all4_stopped_readback_v1_2026-07-03.elf`
+
+Expected runtime markers:
+- `Hello from Zephyr DBus Driver project! [EXACT2FD321D_ALL4_STOPPED_READBACK_V1]`
+- `RW612 build marker: EXACT2FD321D_ALL4_STOPPED_READBACK_V1_2026_07_03`
+- `Main: mode=EXACT2FD321D_ALL4_STOPPED_READBACK_V1`
+
+Intentional behavior of this test image:
+- only one motion round is expected
+- the speed set is fixed at the new bench-safe floor / reference set:
+	- motor0: `400`
+	- motor1: `500`
+	- motor2: `800`
+	- motor3: `1100`
+- there is no multi-round speed change in this image by design
+
+Observed result on 2026-07-03:
+- the motors did move in this exact-base variant, which is the first successful proof that the motion path is preserved while stopped readback is appended afterward
+- primary stopped readback passed cleanly:
+	- motor0 enable read back `0x00000000`
+	- motor0 speed read back `0x00000190`
+	- motor2 enable read back `0x00000000`
+	- motor2 speed read back `0x00000320`
+- secondary stopped enable readback also became readable and returned the expected stopped value:
+	- motor1 enable read back `0x00000000`
+	- motor3 enable read back `0x00000000`
+- secondary stopped speed readback still failed for both motors:
+	- motor1 speed read failed at `0x5014`
+	- motor3 speed read failed at `0x5034`
+
+Practical conclusion:
+- yes, the lack of speed change in this exact-base test was intentional
+- this run is an important positive result because it preserves motion while showing a more precise split in readback behavior:
+	- primary stopped readback works
+	- secondary stopped enable readback works
+	- secondary stopped speed readback remains the unresolved part
+
 ---
 
 ## Conventions For Future Entries
