@@ -23,7 +23,7 @@
 #define DBAL_TEST_SERVICE_ID   0x7001u
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
-#define RW612_BUILD_MARKER "RW612 build marker: AUTO_TEST_ALL4_V1_2026_05_20"
+#define RW612_BUILD_MARKER "RW612 build marker: EXACT2FD321D_MOTOR2_ENDSWITCH_NEUTRAL_V1_2026_07_05"
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 1u
@@ -78,6 +78,16 @@
 #ifndef DBUS_READBACK_PROBE_PRIMARY_ONLY
 #define DBUS_READBACK_PROBE_PRIMARY_ONLY 0
 #endif
+
+#define TEST_MOTOR_INDEX           2u
+#define TEST_MOTOR_ENDSWITCH_MIN_PIN  5u
+#define TEST_MOTOR_ENDSWITCH_MAX_PIN  11u
+#define TEST_MOTOR_ENDSWITCH_POLL_MS  10u
+#define TEST_MOTOR_SPEED           800u
+#define TEST_MOTOR_TIMEOUT_MS      10000u
+#define TEST_MOTOR_RETURN_MS       3000u
+#define TEST_MOTOR_GAP_MS          750u
+#define TEST_MOTOR_WRITE_GAP_US    250u
 
 static void pulse_gpio_probe_pin(const struct device *gpio_dev,
                                  gpio_pin_t pin,
@@ -180,6 +190,116 @@ static enum DBCDRV_SpiTarget target_for_motor(uint8_t motor_index)
     return ((motor_index & 0x1u) == 0u)
         ? DBCDRV_SPI_TARGET_PRIMARY_PICO
         : DBCDRV_SPI_TARGET_SECONDARY_PICO;
+}
+
+static bool test_motor_endswitch_active(const struct device *gpio_dev,
+                                        gpio_pin_t *active_pin)
+{
+    int min_state;
+    int max_state;
+
+    if ((gpio_dev == NULL) || !device_is_ready(gpio_dev)) {
+        return false;
+    }
+
+    min_state = gpio_pin_get(gpio_dev, TEST_MOTOR_ENDSWITCH_MIN_PIN);
+    if (min_state == 0) {
+        if (active_pin != NULL) {
+            *active_pin = TEST_MOTOR_ENDSWITCH_MIN_PIN;
+        }
+        return true;
+    }
+
+    max_state = gpio_pin_get(gpio_dev, TEST_MOTOR_ENDSWITCH_MAX_PIN);
+    if (max_state == 0) {
+        if (active_pin != NULL) {
+            *active_pin = TEST_MOTOR_ENDSWITCH_MAX_PIN;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+static bool stop_test_motor_now(void)
+{
+    bool ok = true;
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        if (write_motor_reg32(TEST_MOTOR_INDEX, MOTOR_REG_ENABLE_OFFSET, 0u) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+        if (write_motor_reg32(TEST_MOTOR_INDEX, MOTOR_REG_SPEED_OFFSET, 0u) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+    }
+
+    return ok;
+}
+
+static bool start_test_motor_now(int32_t speed_value)
+{
+    bool ok = true;
+
+    if (!stop_test_motor_now()) {
+        ok = false;
+    }
+
+    k_usleep(TEST_MOTOR_WRITE_GAP_US);
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        if (write_motor_reg32(TEST_MOTOR_INDEX, MOTOR_REG_ENABLE_OFFSET, 1u) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+        if (write_motor_reg32(TEST_MOTOR_INDEX, MOTOR_REG_SPEED_OFFSET, (uint32_t)speed_value) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+    }
+
+    return ok;
+}
+
+static bool start_test_motor_reverse_now(int32_t speed_value)
+{
+    bool ok = true;
+    enum DBC_Error target_err;
+
+    target_err = DBCDRV_setSpiTarget(target_for_motor(TEST_MOTOR_INDEX));
+    if (target_err != DBC_OK) {
+        return false;
+    }
+
+    if (!stop_test_motor_now()) {
+        ok = false;
+    }
+
+    k_msleep(TEST_MOTOR_GAP_MS);
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        if (write_motor_reg32(TEST_MOTOR_INDEX, MOTOR_REG_SPEED_OFFSET, (uint32_t)speed_value) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+    }
+
+    k_usleep(TEST_MOTOR_WRITE_GAP_US);
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        if (write_motor_reg32(TEST_MOTOR_INDEX, MOTOR_REG_ENABLE_OFFSET, 1u) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+        if (write_motor_reg32(TEST_MOTOR_INDEX, MOTOR_REG_SPEED_OFFSET, (uint32_t)speed_value) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+    }
+
+    return ok;
 }
 
 
@@ -385,90 +505,83 @@ static bool run_secondary_only_cycle(void)
     return all_ok;
 }
 
-/* Finite test where all 4 motors are enabled in each round with
- * independent speeds, run concurrently, then stopped together. */
+/* Dedicated single-motor constraint test on the exact moving baseline:
+ * run in one direction until either end-switch trips, then reverse
+ * for 3 seconds to leave the mechanism near a neutral position. */
 static bool run_quad_simultaneous_cycle(void)
 {
-    static const uint32_t m0_speeds[] = { 200u, 650u, 1100u };
-    static const uint32_t m1_speeds[] = { 500u, 1000u, 250u };
-    static const uint32_t m2_speeds[] = { 800u, 300u, 900u };
-    static const uint32_t m3_speeds[] = { 1100u, 750u, 450u };
-    static const uint32_t RUN_MS      = 3000u;
-    static const uint32_t GAP_MS      = 500u;
-    const size_t NUM_ROUNDS = ARRAY_SIZE(m0_speeds);
+    const struct device *probe_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
     bool all_ok = true;
     enum DBC_Error target_err;
+    uint32_t remaining_ms = TEST_MOTOR_TIMEOUT_MS;
+    gpio_pin_t active_pin = 0u;
 
-    printk("Motor Toggle [QUAD_SIMUL_V1]: Starting %u rounds.\n", (uint32_t)NUM_ROUNDS);
-
-    for (size_t i = 0u; i < NUM_ROUNDS; i++) {
-        enum DBC_Error err;
-        const uint32_t speeds[4] = {
-            m0_speeds[i],
-            m1_speeds[i],
-            m2_speeds[i],
-            m3_speeds[i],
-        };
-
-        printk("Motor Toggle [QUAD_SIMUL_V1]: round %u/%u speeds m0=%u m1=%u m2=%u m3=%u\n",
-               (uint32_t)(i + 1u), (uint32_t)NUM_ROUNDS,
-               m0_speeds[i], m1_speeds[i], m2_speeds[i], m3_speeds[i]);
-
-        for (uint8_t motor = 0u; motor < 4u; motor++) {
-            target_err = DBCDRV_setSpiTarget(target_for_motor(motor));
-            if (target_err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u target err=%d\n",
-                       (uint32_t)(i + 1u), motor, target_err);
-                all_ok = false;
-            }
-            k_usleep(100u);
-
-            err = write_motor_reg32(motor, MOTOR_REG_SPEED_OFFSET, speeds[motor]);
-            if (err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u speed err=%d\n",
-                       (uint32_t)(i + 1u), motor, err);
-                all_ok = false;
-            }
-        }
-
-        /* Issue enable commands in a second pass so all motors start closer in time. */
-        for (uint8_t motor = 0u; motor < 4u; motor++) {
-            target_err = DBCDRV_setSpiTarget(target_for_motor(motor));
-            if (target_err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u target-enable err=%d\n",
-                       (uint32_t)(i + 1u), motor, target_err);
-                all_ok = false;
-            }
-            err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 1u);
-            if (err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u enable err=%d\n",
-                       (uint32_t)(i + 1u), motor, err);
-                all_ok = false;
-            }
-        }
-
-        printk("Motor Toggle [QUAD_SIMUL_V1]: all motors running for %ums\n", RUN_MS);
-        k_msleep(RUN_MS);
-
-        for (uint8_t motor = 0u; motor < 4u; motor++) {
-            target_err = DBCDRV_setSpiTarget(target_for_motor(motor));
-            if (target_err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u target-stop err=%d\n",
-                       (uint32_t)(i + 1u), motor, target_err);
-                all_ok = false;
-            }
-            err = write_motor_reg32(motor, MOTOR_REG_ENABLE_OFFSET, 0u);
-            if (err != DBC_OK) {
-                printk("Motor Toggle [QUAD_SIMUL_V1]: round %u motor%u disable err=%d\n",
-                       (uint32_t)(i + 1u), motor, err);
-                all_ok = false;
-            }
-        }
-
-        k_msleep(GAP_MS);
+    if (device_is_ready(probe_gpio)) {
+        (void)gpio_pin_configure(probe_gpio, TEST_MOTOR_ENDSWITCH_MIN_PIN, GPIO_INPUT | GPIO_PULL_UP);
+        (void)gpio_pin_configure(probe_gpio, TEST_MOTOR_ENDSWITCH_MAX_PIN, GPIO_INPUT | GPIO_PULL_UP);
     }
 
-    printk("Motor Toggle [QUAD_SIMUL_V1]: All rounds complete.\n");
+    printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: motor%u forward speed=%u timeout=%u return_ms=%u\n",
+           (unsigned)TEST_MOTOR_INDEX,
+           (unsigned)TEST_MOTOR_SPEED,
+           (unsigned)TEST_MOTOR_TIMEOUT_MS,
+           (unsigned)TEST_MOTOR_RETURN_MS);
+
+    target_err = DBCDRV_setSpiTarget(target_for_motor(TEST_MOTOR_INDEX));
+    if (target_err != DBC_OK) {
+        printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: target err=%d\n", target_err);
+        return false;
+    }
+    k_usleep(100u);
+
+    if (!start_test_motor_now((int32_t)TEST_MOTOR_SPEED)) {
+        all_ok = false;
+    }
+
+    printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: motor%u searching for GPIO%u or GPIO%u\n",
+           (unsigned)TEST_MOTOR_INDEX,
+           (unsigned)TEST_MOTOR_ENDSWITCH_MIN_PIN,
+           (unsigned)TEST_MOTOR_ENDSWITCH_MAX_PIN);
+
+    while (remaining_ms > 0u) {
+        uint32_t sleep_ms = (remaining_ms > TEST_MOTOR_ENDSWITCH_POLL_MS)
+            ? TEST_MOTOR_ENDSWITCH_POLL_MS
+            : remaining_ms;
+
+        if (test_motor_endswitch_active(probe_gpio, &active_pin)) {
+            printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: motor%u hit GPIO%u\n",
+                   (unsigned)TEST_MOTOR_INDEX,
+                   (unsigned)active_pin);
+            break;
+        }
+
+        k_msleep(sleep_ms);
+        remaining_ms -= sleep_ms;
+    }
+
+    if (!stop_test_motor_now()) {
+        all_ok = false;
+    }
+    k_msleep(TEST_MOTOR_GAP_MS);
+
+    if (remaining_ms == 0u) {
+        printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: timeout before end-switch\n");
+        return false;
+    }
+
+    if (!start_test_motor_reverse_now(-(int32_t)TEST_MOTOR_SPEED)) {
+        all_ok = false;
+    }
+
+    printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: reversing for %ums\n",
+           (unsigned)TEST_MOTOR_RETURN_MS);
+    k_msleep(TEST_MOTOR_RETURN_MS);
+
+    if (!stop_test_motor_now()) {
+        all_ok = false;
+    }
+
+    printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: complete\n");
     return all_ok;
 }
 
@@ -571,6 +684,134 @@ static void run_readback_probe(void)
 #endif
 }
 
+static bool run_all4_stopped_readback_check(void)
+{
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } primary_motors[] = {
+        { 0u, 400u },
+        { 2u, 800u },
+    };
+    static const struct {
+        uint8_t motor;
+        uint32_t speed;
+    } secondary_motors[] = {
+        { 1u, 500u },
+        { 3u, 1100u },
+    };
+    bool all_ok = true;
+
+    printk("Main: stopped all-4 readback check start\n");
+
+    if (DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_PRIMARY_PICO) == DBC_OK) {
+        for (size_t i = 0u; i < ARRAY_SIZE(primary_motors); i++) {
+            uint32_t enable_value = 0u;
+            uint32_t speed_value = 0u;
+            enum DBC_Error err;
+
+            err = write_motor_reg32(primary_motors[i].motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+            if (err != DBC_OK) {
+                printk("Main: stopped readback preset motor=%u enable write err=%d\n",
+                       (unsigned)primary_motors[i].motor,
+                       err);
+                all_ok = false;
+                continue;
+            }
+
+            err = write_motor_reg32(primary_motors[i].motor, MOTOR_REG_SPEED_OFFSET, primary_motors[i].speed);
+            if (err != DBC_OK) {
+                printk("Main: stopped readback preset motor=%u speed write err=%d\n",
+                       (unsigned)primary_motors[i].motor,
+                       err);
+                all_ok = false;
+                continue;
+            }
+
+            err = read_motor_reg32(primary_motors[i].motor, MOTOR_REG_ENABLE_OFFSET, &enable_value);
+            if (err != DBC_OK) {
+                printk("Main: stopped readback motor=%u enable err=%d\n",
+                       (unsigned)primary_motors[i].motor,
+                       err);
+                all_ok = false;
+                continue;
+            }
+
+            err = read_motor_reg32(primary_motors[i].motor, MOTOR_REG_SPEED_OFFSET, &speed_value);
+            if (err != DBC_OK) {
+                printk("Main: stopped readback motor=%u speed err=%d\n",
+                       (unsigned)primary_motors[i].motor,
+                       err);
+                all_ok = false;
+                continue;
+            }
+
+            printk("Main: stopped readback motor=%u expected=0x%08x speed=0x%08x enable=0x%08x\n",
+                   (unsigned)primary_motors[i].motor,
+                   (unsigned)primary_motors[i].speed,
+                   (unsigned)speed_value,
+                   (unsigned)enable_value);
+        }
+    } else {
+        all_ok = false;
+    }
+
+    if (DBCDRV_setSpiTarget(DBCDRV_SPI_TARGET_SECONDARY_PICO) == DBC_OK) {
+        for (size_t i = 0u; i < ARRAY_SIZE(secondary_motors); i++) {
+            uint32_t enable_value = 0u;
+            uint32_t speed_value = 0u;
+            enum DBC_Error err;
+
+            err = write_motor_reg32(secondary_motors[i].motor, MOTOR_REG_ENABLE_OFFSET, 0u);
+            if (err != DBC_OK) {
+                printk("Main: stopped readback preset motor=%u enable write err=%d\n",
+                       (unsigned)secondary_motors[i].motor,
+                       err);
+                all_ok = false;
+                continue;
+            }
+
+            err = write_motor_reg32(secondary_motors[i].motor, MOTOR_REG_SPEED_OFFSET, secondary_motors[i].speed);
+            if (err != DBC_OK) {
+                printk("Main: stopped readback preset motor=%u speed write err=%d\n",
+                       (unsigned)secondary_motors[i].motor,
+                       err);
+                all_ok = false;
+                continue;
+            }
+
+            err = read_motor_reg32(secondary_motors[i].motor, MOTOR_REG_ENABLE_OFFSET, &enable_value);
+            if (err != DBC_OK) {
+                printk("Main: stopped readback motor=%u enable err=%d\n",
+                       (unsigned)secondary_motors[i].motor,
+                       err);
+                all_ok = false;
+                continue;
+            }
+
+            err = read_motor_reg32(secondary_motors[i].motor, MOTOR_REG_SPEED_OFFSET, &speed_value);
+            if (err != DBC_OK) {
+                printk("Main: stopped readback motor=%u speed err=%d\n",
+                       (unsigned)secondary_motors[i].motor,
+                       err);
+                all_ok = false;
+                continue;
+            }
+
+            printk("Main: stopped readback motor=%u expected=0x%08x speed=0x%08x enable=0x%08x\n",
+                   (unsigned)secondary_motors[i].motor,
+                   (unsigned)secondary_motors[i].speed,
+                   (unsigned)speed_value,
+                   (unsigned)enable_value);
+        }
+    } else {
+        all_ok = false;
+    }
+
+    printk("Main: stopped all-4 readback check %s\n", all_ok ? "PASS" : "FAIL");
+    return all_ok;
+}
+
 static uint32_t g_secondary_cycle_counter = 0u;
 
 
@@ -583,9 +824,9 @@ int main(void)
     enum DBC_Error pulse_err;
     const struct device *probe_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
 
-    printk("Hello from Zephyr DBus Driver project! [AUTO_TEST_ALL4_V1]\n");
+    printk("Hello from Zephyr DBus Driver project! [EXACT2FD321D_MOTOR2_ENDSWITCH_NEUTRAL_V1]\n");
     printk("%s\n", RW612_BUILD_MARKER);
-    printk("Main: mode=AUTO_TEST_ALL4_V1\n");
+    printk("Main: mode=EXACT2FD321D_MOTOR2_ENDSWITCH_NEUTRAL_V1\n");
         printk("Repeatability mode: %u run(s). auto_test=%u\n",
             DBUS_REPEATABILITY_RUNS,
             (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
@@ -682,7 +923,7 @@ int main(void)
                 toggle_ok = run_toggle_cycle_for_target(DBCDRV_SPI_TARGET_SECONDARY_PICO,
                                                         "secondary_only_cycle");
             } else {
-                printk("Main: starting QUAD simultaneous motor test (motor0..motor3)\n");
+                printk("Main: starting motor2 end-switch neutral test\n");
                 toggle_ok = run_quad_simultaneous_cycle();
             }
 
