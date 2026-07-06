@@ -23,7 +23,7 @@
 #define DBAL_TEST_SERVICE_ID   0x7001u
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
-#define RW612_BUILD_MARKER "RW612 build marker: EXACT2FD321D_MOTOR2_ENDSWITCH_NEUTRAL_V1_2026_07_05"
+#define RW612_BUILD_MARKER "RW612 build marker: EXACT2FD321D_COMBINED_CHAIN_GEAR_V2_2026_07_06"
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 1u
@@ -79,15 +79,27 @@
 #define DBUS_READBACK_PROBE_PRIMARY_ONLY 0
 #endif
 
-#define TEST_MOTOR_INDEX           2u
-#define TEST_MOTOR_ENDSWITCH_MIN_PIN  5u
-#define TEST_MOTOR_ENDSWITCH_MAX_PIN  11u
+#define TEST_MOTOR_INDEX           3u
+#define TEST_MOTOR_ENDSWITCH_MIN_PIN  0u
+#define TEST_MOTOR_ENDSWITCH_MAX_PIN  0u
 #define TEST_MOTOR_ENDSWITCH_POLL_MS  10u
-#define TEST_MOTOR_SPEED           800u
-#define TEST_MOTOR_TIMEOUT_MS      10000u
-#define TEST_MOTOR_RETURN_MS       3000u
+#define TEST_MOTOR_SPEED           1200u
+#define TEST_MOTOR_TIMEOUT_MS      400u
+#define TEST_MOTOR_RETURN_MS       0u
 #define TEST_MOTOR_GAP_MS          750u
 #define TEST_MOTOR_WRITE_GAP_US    250u
+
+#define MOTOR0_MAX_ENDSWITCH_PIN   1u
+#define MOTOR0_MIN_ENDSWITCH_PIN   2u
+#define MOTOR0_ENDSWITCH_POLL_MS   10u
+#define MOTOR0_TEST_SPEED          800u
+#define MOTOR0_TEST_TIMEOUT_MS     10000u
+#define MOTOR0_REVERSE_RUN_MS      3000u
+#define CHAIN_DRIVE_SPEED_MOTOR0   800u
+#define CHAIN_DRIVE_SPEED_MOTOR1   800u
+#define CHAIN_DRIVE_RUN_MS         2000u
+#define PIVOT_DRIVE_SPEED_MOTOR2   800u
+#define PIVOT_DRIVE_RUN_MS         2000u
 
 static void pulse_gpio_probe_pin(const struct device *gpio_dev,
                                  gpio_pin_t pin,
@@ -239,6 +251,62 @@ static bool stop_test_motor_now(void)
     return ok;
 }
 
+static bool stop_motor_generic_now(uint8_t motor_index)
+{
+    bool ok = true;
+    enum DBC_Error target_err;
+
+    target_err = DBCDRV_setSpiTarget(target_for_motor(motor_index));
+    if (target_err != DBC_OK) {
+        return false;
+    }
+
+    k_usleep(TEST_MOTOR_WRITE_GAP_US);
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        if (write_motor_reg32(motor_index, MOTOR_REG_ENABLE_OFFSET, 0u) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+        if (write_motor_reg32(motor_index, MOTOR_REG_SPEED_OFFSET, 0u) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+    }
+
+    return ok;
+}
+
+static bool start_motor_generic_now(uint8_t motor_index, int32_t speed_value)
+{
+    bool ok = true;
+    enum DBC_Error target_err;
+
+    target_err = DBCDRV_setSpiTarget(target_for_motor(motor_index));
+    if (target_err != DBC_OK) {
+        return false;
+    }
+
+    if (!stop_motor_generic_now(motor_index)) {
+        ok = false;
+    }
+
+    k_usleep(TEST_MOTOR_WRITE_GAP_US);
+
+    for (uint8_t attempt = 0u; attempt < 2u; attempt++) {
+        if (write_motor_reg32(motor_index, MOTOR_REG_ENABLE_OFFSET, 1u) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+        if (write_motor_reg32(motor_index, MOTOR_REG_SPEED_OFFSET, (uint32_t)speed_value) != DBC_OK) {
+            ok = false;
+        }
+        k_usleep(TEST_MOTOR_WRITE_GAP_US);
+    }
+
+    return ok;
+}
+
 static bool start_test_motor_now(int32_t speed_value)
 {
     bool ok = true;
@@ -300,6 +368,88 @@ static bool start_test_motor_reverse_now(int32_t speed_value)
     }
 
     return ok;
+}
+
+static bool motor0_max_endswitch_active(const struct device *gpio_dev)
+{
+    int state;
+
+    if ((gpio_dev == NULL) || !device_is_ready(gpio_dev)) {
+        return false;
+    }
+
+    state = gpio_pin_get(gpio_dev, MOTOR0_MAX_ENDSWITCH_PIN);
+    return state == 0;
+}
+
+static bool motor0_min_endswitch_active(const struct device *gpio_dev)
+{
+    int state;
+
+    if ((gpio_dev == NULL) || !device_is_ready(gpio_dev)) {
+        return false;
+    }
+
+    state = gpio_pin_get(gpio_dev, MOTOR0_MIN_ENDSWITCH_PIN);
+    return state == 0;
+}
+
+static bool run_motor3_gear_pulse(void)
+{
+    bool all_ok = true;
+    enum DBC_Error target_err;
+
+    printk("Motor Toggle [MOTOR3_GEAR_PULSE_V1]: motor%u speed=%u pulse_ms=%u\n",
+           (unsigned)TEST_MOTOR_INDEX,
+           (unsigned)TEST_MOTOR_SPEED,
+           (unsigned)TEST_MOTOR_TIMEOUT_MS);
+
+    target_err = DBCDRV_setSpiTarget(target_for_motor(TEST_MOTOR_INDEX));
+    if (target_err != DBC_OK) {
+        printk("Motor Toggle [MOTOR3_GEAR_PULSE_V1]: target err=%d\n", target_err);
+        return false;
+    }
+    k_usleep(100u);
+
+    if (!start_test_motor_now((int32_t)TEST_MOTOR_SPEED)) {
+        all_ok = false;
+    }
+
+    printk("Motor Toggle [MOTOR3_GEAR_PULSE_V1]: motor%u brief shift pulse start\n",
+           (unsigned)TEST_MOTOR_INDEX);
+    k_msleep(TEST_MOTOR_TIMEOUT_MS);
+
+    if (!stop_test_motor_now()) {
+        all_ok = false;
+    }
+
+    printk("Motor Toggle [MOTOR3_GEAR_PULSE_V1]: complete\n");
+    return all_ok;
+}
+
+static bool run_motor3_gear_pulse_reverse(void)
+{
+    bool all_ok = true;
+
+    printk("Motor Toggle [MOTOR3_GEAR_PULSE_REVERSE_V1]: motor%u speed=-%u pulse_ms=%u\n",
+           (unsigned)TEST_MOTOR_INDEX,
+           (unsigned)TEST_MOTOR_SPEED,
+           (unsigned)TEST_MOTOR_TIMEOUT_MS);
+
+    if (!start_motor_generic_now(TEST_MOTOR_INDEX, -(int32_t)TEST_MOTOR_SPEED)) {
+        all_ok = false;
+    }
+
+    printk("Motor Toggle [MOTOR3_GEAR_PULSE_REVERSE_V1]: motor%u reverse shift pulse start\n",
+           (unsigned)TEST_MOTOR_INDEX);
+    k_msleep(TEST_MOTOR_TIMEOUT_MS);
+
+    if (!stop_motor_generic_now(TEST_MOTOR_INDEX)) {
+        all_ok = false;
+    }
+
+    printk("Motor Toggle [MOTOR3_GEAR_PULSE_REVERSE_V1]: complete\n");
+    return all_ok;
 }
 
 
@@ -505,53 +655,56 @@ static bool run_secondary_only_cycle(void)
     return all_ok;
 }
 
-/* Dedicated single-motor constraint test on the exact moving baseline:
- * run in one direction until either end-switch trips, then reverse
- * for 3 seconds to leave the mechanism near a neutral position. */
+/* Dedicated short gear-shift pulse on the exact moving baseline:
+ * run motor3 only very briefly, then stop cleanly without reverse. */
 static bool run_quad_simultaneous_cycle(void)
 {
-    const struct device *probe_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
     bool all_ok = true;
-    enum DBC_Error target_err;
-    uint32_t remaining_ms = TEST_MOTOR_TIMEOUT_MS;
-    gpio_pin_t active_pin = 0u;
+    const struct device *endswitch_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
+    uint32_t remaining_ms = MOTOR0_TEST_TIMEOUT_MS;
 
-    if (device_is_ready(probe_gpio)) {
-        (void)gpio_pin_configure(probe_gpio, TEST_MOTOR_ENDSWITCH_MIN_PIN, GPIO_INPUT | GPIO_PULL_UP);
-        (void)gpio_pin_configure(probe_gpio, TEST_MOTOR_ENDSWITCH_MAX_PIN, GPIO_INPUT | GPIO_PULL_UP);
-    }
+    printk("Main: COMBINED_CHAIN_GEAR_TEST_V2 start\n");
 
-    printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: motor%u forward speed=%u timeout=%u return_ms=%u\n",
-           (unsigned)TEST_MOTOR_INDEX,
-           (unsigned)TEST_MOTOR_SPEED,
-           (unsigned)TEST_MOTOR_TIMEOUT_MS,
-           (unsigned)TEST_MOTOR_RETURN_MS);
-
-    target_err = DBCDRV_setSpiTarget(target_for_motor(TEST_MOTOR_INDEX));
-    if (target_err != DBC_OK) {
-        printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: target err=%d\n", target_err);
+    if (!device_is_ready(endswitch_gpio)) {
+        printk("Main: end-switch GPIO device not ready\n");
         return false;
     }
-    k_usleep(100u);
 
-    if (!start_test_motor_now((int32_t)TEST_MOTOR_SPEED)) {
-        all_ok = false;
+    if (gpio_pin_configure(endswitch_gpio, MOTOR0_MAX_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0) {
+        printk("Main: motor0 max end-switch GPIO%u configure failed\n",
+               (unsigned)MOTOR0_MAX_ENDSWITCH_PIN);
+        return false;
     }
 
-    printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: motor%u searching for GPIO%u or GPIO%u\n",
-           (unsigned)TEST_MOTOR_INDEX,
-           (unsigned)TEST_MOTOR_ENDSWITCH_MIN_PIN,
-           (unsigned)TEST_MOTOR_ENDSWITCH_MAX_PIN);
+    if (gpio_pin_configure(endswitch_gpio, MOTOR0_MIN_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0) {
+        printk("Main: motor0 min end-switch GPIO%u configure failed\n",
+               (unsigned)MOTOR0_MIN_ENDSWITCH_PIN);
+        return false;
+    }
+
+    printk("Main: phase 1/4 motor0 extend toward GPIO%u at speed=%u\n",
+           (unsigned)MOTOR0_MAX_ENDSWITCH_PIN,
+           (unsigned)MOTOR0_TEST_SPEED);
+    if (!start_motor_generic_now(0u, (int32_t)MOTOR0_TEST_SPEED)) {
+        stop_motor_generic_now(0u);
+        return false;
+    }
 
     while (remaining_ms > 0u) {
-        uint32_t sleep_ms = (remaining_ms > TEST_MOTOR_ENDSWITCH_POLL_MS)
-            ? TEST_MOTOR_ENDSWITCH_POLL_MS
+        uint32_t sleep_ms = (remaining_ms > MOTOR0_ENDSWITCH_POLL_MS)
+            ? MOTOR0_ENDSWITCH_POLL_MS
             : remaining_ms;
 
-        if (test_motor_endswitch_active(probe_gpio, &active_pin)) {
-            printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: motor%u hit GPIO%u\n",
-                   (unsigned)TEST_MOTOR_INDEX,
-                   (unsigned)active_pin);
+        if (motor0_max_endswitch_active(endswitch_gpio)) {
+            printk("Main: motor0 hit MAX end-switch on GPIO%u\n",
+                   (unsigned)MOTOR0_MAX_ENDSWITCH_PIN);
+            break;
+        }
+
+        if (motor0_min_endswitch_active(endswitch_gpio)) {
+            printk("Main: motor0 hit MIN end-switch on GPIO%u while expecting MAX\n",
+                   (unsigned)MOTOR0_MIN_ENDSWITCH_PIN);
+            all_ok = false;
             break;
         }
 
@@ -559,29 +712,80 @@ static bool run_quad_simultaneous_cycle(void)
         remaining_ms -= sleep_ms;
     }
 
-    if (!stop_test_motor_now()) {
+    if (!stop_motor_generic_now(0u)) {
         all_ok = false;
     }
-    k_msleep(TEST_MOTOR_GAP_MS);
 
     if (remaining_ms == 0u) {
-        printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: timeout before end-switch\n");
+        printk("Main: motor0 extend TIMEOUT before GPIO%u\n",
+               (unsigned)MOTOR0_MAX_ENDSWITCH_PIN);
         return false;
     }
 
-    if (!start_test_motor_reverse_now(-(int32_t)TEST_MOTOR_SPEED)) {
+    if (!all_ok) {
+        stop_motor_generic_now(0u);
+        return false;
+    }
+
+    k_msleep(TEST_MOTOR_GAP_MS);
+
+    printk("Main: phase 2/4 motor0 reverse for %ums\n",
+           (unsigned)MOTOR0_REVERSE_RUN_MS);
+    if (!start_motor_generic_now(0u, -(int32_t)MOTOR0_TEST_SPEED)) {
+        stop_motor_generic_now(0u);
+        return false;
+    }
+    k_msleep(MOTOR0_REVERSE_RUN_MS);
+    if (!stop_motor_generic_now(0u)) {
         all_ok = false;
     }
 
-    printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: reversing for %ums\n",
-           (unsigned)TEST_MOTOR_RETURN_MS);
-    k_msleep(TEST_MOTOR_RETURN_MS);
+    k_msleep(TEST_MOTOR_GAP_MS);
 
-    if (!stop_test_motor_now()) {
+    printk("Main: phase 3/4 motor3 gear shift pulse\n");
+    if (!run_motor3_gear_pulse()) {
         all_ok = false;
     }
 
-    printk("Motor Toggle [MOTOR2_ENDSWITCH_NEUTRAL_V1]: complete\n");
+    k_msleep(TEST_MOTOR_GAP_MS);
+
+    printk("Main: phase 4/6 drive chain motors motor0+motor1 for %ums\n",
+           (unsigned)CHAIN_DRIVE_RUN_MS);
+    if (!start_motor_generic_now(0u, (int32_t)CHAIN_DRIVE_SPEED_MOTOR0)) {
+        all_ok = false;
+    }
+    if (!start_motor_generic_now(1u, (int32_t)CHAIN_DRIVE_SPEED_MOTOR1)) {
+        all_ok = false;
+    }
+    k_msleep(CHAIN_DRIVE_RUN_MS);
+
+    if (!stop_motor_generic_now(0u)) {
+        all_ok = false;
+    }
+    if (!stop_motor_generic_now(1u)) {
+        all_ok = false;
+    }
+
+    k_msleep(TEST_MOTOR_GAP_MS);
+
+    printk("Main: phase 5/6 pivot with motor2 for %ums\n",
+           (unsigned)PIVOT_DRIVE_RUN_MS);
+    if (!start_motor_generic_now(2u, (int32_t)PIVOT_DRIVE_SPEED_MOTOR2)) {
+        all_ok = false;
+    }
+    k_msleep(PIVOT_DRIVE_RUN_MS);
+    if (!stop_motor_generic_now(2u)) {
+        all_ok = false;
+    }
+
+    k_msleep(TEST_MOTOR_GAP_MS);
+
+    printk("Main: phase 6/6 reverse motor3 gear shift pulse\n");
+    if (!run_motor3_gear_pulse_reverse()) {
+        all_ok = false;
+    }
+
+    printk("Main: COMBINED_CHAIN_GEAR_TEST_V2 complete\n");
     return all_ok;
 }
 
@@ -824,9 +1028,9 @@ int main(void)
     enum DBC_Error pulse_err;
     const struct device *probe_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
 
-    printk("Hello from Zephyr DBus Driver project! [EXACT2FD321D_MOTOR2_ENDSWITCH_NEUTRAL_V1]\n");
+    printk("Hello from Zephyr DBus Driver project! [EXACT2FD321D_COMBINED_CHAIN_GEAR_V2]\n");
     printk("%s\n", RW612_BUILD_MARKER);
-    printk("Main: mode=EXACT2FD321D_MOTOR2_ENDSWITCH_NEUTRAL_V1\n");
+    printk("Main: mode=EXACT2FD321D_COMBINED_CHAIN_GEAR_V2\n");
         printk("Repeatability mode: %u run(s). auto_test=%u\n",
             DBUS_REPEATABILITY_RUNS,
             (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
@@ -923,7 +1127,7 @@ int main(void)
                 toggle_ok = run_toggle_cycle_for_target(DBCDRV_SPI_TARGET_SECONDARY_PICO,
                                                         "secondary_only_cycle");
             } else {
-                printk("Main: starting motor2 end-switch neutral test\n");
+                printk("Main: starting motor3 gear pulse test\n");
                 toggle_ok = run_quad_simultaneous_cycle();
             }
 
