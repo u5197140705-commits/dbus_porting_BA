@@ -436,7 +436,7 @@ static bool run_motor3_gear_pulse_reverse(void)
            (unsigned)TEST_MOTOR_SPEED,
            (unsigned)TEST_MOTOR_TIMEOUT_MS);
 
-    if (!start_motor_generic_now(TEST_MOTOR_INDEX, -(int32_t)TEST_MOTOR_SPEED)) {
+    if (!start_test_motor_reverse_now(-(int32_t)TEST_MOTOR_SPEED)) {
         all_ok = false;
     }
 
@@ -444,7 +444,7 @@ static bool run_motor3_gear_pulse_reverse(void)
            (unsigned)TEST_MOTOR_INDEX);
     k_msleep(TEST_MOTOR_TIMEOUT_MS);
 
-    if (!stop_motor_generic_now(TEST_MOTOR_INDEX)) {
+    if (!stop_test_motor_now()) {
         all_ok = false;
     }
 
