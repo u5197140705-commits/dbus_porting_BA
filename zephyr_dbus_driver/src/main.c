@@ -50,6 +50,8 @@
 #endif
 
 #define CS_PROBE_GPIO_NODE DT_NODELABEL(hsgpio0)
+#define MOTOR0_MAX_ENDSWITCH_GPIO_NODE DT_NODELABEL(hsgpio0)
+#define MOTOR0_MIN_ENDSWITCH_GPIO_NODE DT_NODELABEL(hsgpio1)
 
 /* Set to 1 for a dedicated physical SCK-line probe on RW612 GPIO7.
  * This mode pulses GPIO7 as plain GPIO and exits, so Pico can confirm
@@ -89,8 +91,8 @@
 #define TEST_MOTOR_GAP_MS          750u
 #define TEST_MOTOR_WRITE_GAP_US    250u
 
-#define MOTOR0_MAX_ENDSWITCH_PIN   1u
-#define MOTOR0_MIN_ENDSWITCH_PIN   2u
+#define MOTOR0_MAX_ENDSWITCH_PIN   19u
+#define MOTOR0_MIN_ENDSWITCH_PIN   29u
 #define MOTOR0_ENDSWITCH_POLL_MS   10u
 #define MOTOR0_TEST_SPEED          800u
 #define MOTOR0_TEST_TIMEOUT_MS     10000u
@@ -660,23 +662,29 @@ static bool run_secondary_only_cycle(void)
 static bool run_quad_simultaneous_cycle(void)
 {
     bool all_ok = true;
-    const struct device *endswitch_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
+    const struct device *max_endswitch_gpio = DEVICE_DT_GET(MOTOR0_MAX_ENDSWITCH_GPIO_NODE);
+    const struct device *min_endswitch_gpio = DEVICE_DT_GET(MOTOR0_MIN_ENDSWITCH_GPIO_NODE);
     uint32_t remaining_ms = MOTOR0_TEST_TIMEOUT_MS;
 
     printk("Main: COMBINED_CHAIN_GEAR_TEST_V2 start\n");
 
-    if (!device_is_ready(endswitch_gpio)) {
-        printk("Main: end-switch GPIO device not ready\n");
+    if (!device_is_ready(max_endswitch_gpio)) {
+        printk("Main: motor0 max end-switch GPIO device not ready\n");
         return false;
     }
 
-    if (gpio_pin_configure(endswitch_gpio, MOTOR0_MAX_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0) {
+    if (!device_is_ready(min_endswitch_gpio)) {
+        printk("Main: motor0 min end-switch GPIO device not ready\n");
+        return false;
+    }
+
+    if (gpio_pin_configure(max_endswitch_gpio, MOTOR0_MAX_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0) {
         printk("Main: motor0 max end-switch GPIO%u configure failed\n",
                (unsigned)MOTOR0_MAX_ENDSWITCH_PIN);
         return false;
     }
 
-    if (gpio_pin_configure(endswitch_gpio, MOTOR0_MIN_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0) {
+    if (gpio_pin_configure(min_endswitch_gpio, MOTOR0_MIN_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0) {
         printk("Main: motor0 min end-switch GPIO%u configure failed\n",
                (unsigned)MOTOR0_MIN_ENDSWITCH_PIN);
         return false;
@@ -695,13 +703,13 @@ static bool run_quad_simultaneous_cycle(void)
             ? MOTOR0_ENDSWITCH_POLL_MS
             : remaining_ms;
 
-        if (motor0_max_endswitch_active(endswitch_gpio)) {
+         if (motor0_max_endswitch_active(max_endswitch_gpio)) {
             printk("Main: motor0 hit MAX end-switch on GPIO%u\n",
                    (unsigned)MOTOR0_MAX_ENDSWITCH_PIN);
             break;
         }
 
-        if (motor0_min_endswitch_active(endswitch_gpio)) {
+         if (motor0_min_endswitch_active(min_endswitch_gpio)) {
             printk("Main: motor0 hit MIN end-switch on GPIO%u while expecting MAX\n",
                    (unsigned)MOTOR0_MIN_ENDSWITCH_PIN);
             all_ok = false;

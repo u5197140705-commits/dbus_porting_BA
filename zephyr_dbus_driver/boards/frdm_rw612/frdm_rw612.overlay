@@ -16,7 +16,14 @@
 
 &hsgpio0 {
     status = "okay";
-    pinctrl-0 = <&pinmux_dbus_cs_gpio10>;
+    pinctrl-0 = <&pinmux_dbus_cs_gpio10
+                 &pinmux_endswitch_gpio19>;
+    pinctrl-names = "default";
+};
+
+&hsgpio1 {
+    status = "okay";
+    pinctrl-0 = <&pinmux_endswitch_gpio61>;
     pinctrl-names = "default";
 };
 
@@ -25,6 +32,20 @@
     pinmux_dbus_cs_gpio10: pinmux_dbus_cs_gpio10 {
         group0 {
             pinmux = <0x30a>; /* GPIO10 as HSGPIO0_10 for secondary Pico CS */
+            slew-rate = "normal";
+        };
+    };
+
+    pinmux_endswitch_gpio19: pinmux_endswitch_gpio19 {
+        group0 {
+            pinmux = <0x313>; /* GPIO19 as HSGPIO0_19 for motor0 end-switch max/end */
+            slew-rate = "normal";
+        };
+    };
+
+    pinmux_endswitch_gpio61: pinmux_endswitch_gpio61 {
+        group0 {
+            pinmux = <0x33d>; /* GPIO61 as HSGPIO1_29 for motor0 end-switch min/home */
             slew-rate = "normal";
         };
     };
