@@ -17,6 +17,8 @@
 &hsgpio0 {
     status = "okay";
     pinctrl-0 = <&pinmux_dbus_cs_gpio10
+                 &pinmux_button_gpio16
+                 &pinmux_button_gpio17
                  &pinmux_endswitch_gpio19>;
     pinctrl-names = "default";
 };
@@ -32,6 +34,20 @@
     pinmux_dbus_cs_gpio10: pinmux_dbus_cs_gpio10 {
         group0 {
             pinmux = <0x30a>; /* GPIO10 as HSGPIO0_10 for secondary Pico CS */
+            slew-rate = "normal";
+        };
+    };
+
+    pinmux_button_gpio16: pinmux_button_gpio16 {
+        group0 {
+            pinmux = <0x310>; /* GPIO16 as HSGPIO0_16 for alternate trigger button */
+            slew-rate = "normal";
+        };
+    };
+
+    pinmux_button_gpio17: pinmux_button_gpio17 {
+        group0 {
+            pinmux = <0x311>; /* GPIO17 as HSGPIO0_17 for combined-test trigger button */
             slew-rate = "normal";
         };
     };

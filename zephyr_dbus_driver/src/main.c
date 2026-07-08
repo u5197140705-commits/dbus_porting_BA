@@ -23,7 +23,7 @@
 #define DBAL_TEST_SERVICE_ID   0x7001u
 #define DBAL_TEST_COMMAND_ID   0x0001u
 
-#define RW612_BUILD_MARKER "RW612 build marker: EXACT2FD321D_COMBINED_CHAIN_GEAR_V2_2026_07_06"
+#define RW612_BUILD_MARKER "RW612 build marker: EXACT2FD321D_COMBINED_CHAIN_GEAR_V2_RESET_AND_BUTTONS_GPIO16_17_2026_07_08"
 
 #ifndef DBUS_REPEATABILITY_RUNS
 #define DBUS_REPEATABILITY_RUNS 1u
@@ -50,6 +50,7 @@
 #endif
 
 #define CS_PROBE_GPIO_NODE DT_NODELABEL(hsgpio0)
+#define TEST_TRIGGER_BUTTON_GPIO_NODE DT_NODELABEL(hsgpio0)
 #define MOTOR0_MAX_ENDSWITCH_GPIO_NODE DT_NODELABEL(hsgpio0)
 #define MOTOR0_MIN_ENDSWITCH_GPIO_NODE DT_NODELABEL(hsgpio1)
 
@@ -93,6 +94,9 @@
 
 #define MOTOR0_MAX_ENDSWITCH_PIN   19u
 #define MOTOR0_MIN_ENDSWITCH_PIN   29u
+#define TEST_TRIGGER_BUTTON_PIN_0  16u
+#define TEST_TRIGGER_BUTTON_PIN_1  17u
+#define TEST_TRIGGER_POLL_MS       25u
 #define MOTOR0_ENDSWITCH_POLL_MS   10u
 #define MOTOR0_TEST_SPEED          800u
 #define MOTOR0_TEST_TIMEOUT_MS     10000u
@@ -394,6 +398,72 @@ static bool motor0_min_endswitch_active(const struct device *gpio_dev)
 
     state = gpio_pin_get(gpio_dev, MOTOR0_MIN_ENDSWITCH_PIN);
     return state == 0;
+}
+
+static bool test_trigger_button_active(const struct device *gpio_dev,
+                                       gpio_pin_t *active_pin)
+{
+    int state;
+
+    if ((gpio_dev == NULL) || !device_is_ready(gpio_dev)) {
+        return false;
+    }
+
+    state = gpio_pin_get(gpio_dev, TEST_TRIGGER_BUTTON_PIN_0);
+    if (state == 0) {
+        if (active_pin != NULL) {
+            *active_pin = TEST_TRIGGER_BUTTON_PIN_0;
+        }
+        return true;
+    }
+
+    state = gpio_pin_get(gpio_dev, TEST_TRIGGER_BUTTON_PIN_1);
+    if (state == 0) {
+        if (active_pin != NULL) {
+            *active_pin = TEST_TRIGGER_BUTTON_PIN_1;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+static bool wait_for_test_trigger_button(const struct device *gpio_dev)
+{
+    gpio_pin_t active_pin = 0u;
+
+    if ((gpio_dev == NULL) || !device_is_ready(gpio_dev)) {
+        return false;
+    }
+
+    if (gpio_pin_configure(gpio_dev, TEST_TRIGGER_BUTTON_PIN_0, GPIO_INPUT | GPIO_PULL_UP) < 0) {
+        printk("Main: test trigger button GPIO%u configure failed\n",
+               (unsigned)TEST_TRIGGER_BUTTON_PIN_0);
+        return false;
+    }
+
+    if (gpio_pin_configure(gpio_dev, TEST_TRIGGER_BUTTON_PIN_1, GPIO_INPUT | GPIO_PULL_UP) < 0) {
+        printk("Main: test trigger button GPIO%u configure failed\n",
+               (unsigned)TEST_TRIGGER_BUTTON_PIN_1);
+        return false;
+    }
+
+        printk("Main: waiting for trigger button on GPIO%u/GPIO%u (active-low)\n",
+           (unsigned)TEST_TRIGGER_BUTTON_PIN_0,
+            (unsigned)TEST_TRIGGER_BUTTON_PIN_1);
+
+    while (!test_trigger_button_active(gpio_dev, &active_pin)) {
+        k_msleep(TEST_TRIGGER_POLL_MS);
+    }
+
+    k_msleep(50u);
+    if (!test_trigger_button_active(gpio_dev, &active_pin)) {
+        return wait_for_test_trigger_button(gpio_dev);
+    }
+
+    printk("Main: trigger button pressed on GPIO%u -> start\n",
+           (unsigned)active_pin);
+    return true;
 }
 
 static bool run_motor3_gear_pulse(void)
@@ -1035,10 +1105,11 @@ int main(void)
     enum DBC_Error target_err;
     enum DBC_Error pulse_err;
     const struct device *probe_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
+    const struct device *trigger_button_gpio = DEVICE_DT_GET(TEST_TRIGGER_BUTTON_GPIO_NODE);
 
-    printk("Hello from Zephyr DBus Driver project! [EXACT2FD321D_COMBINED_CHAIN_GEAR_V2]\n");
+    printk("Hello from Zephyr DBus Driver project! [EXACT2FD321D_COMBINED_CHAIN_GEAR_V2_RESET_AND_BUTTONS_GPIO16_17]\n");
     printk("%s\n", RW612_BUILD_MARKER);
-    printk("Main: mode=EXACT2FD321D_COMBINED_CHAIN_GEAR_V2\n");
+    printk("Main: mode=EXACT2FD321D_COMBINED_CHAIN_GEAR_V2_RESET_AND_BUTTONS_GPIO16_17\n");
         printk("Repeatability mode: %u run(s). auto_test=%u\n",
             DBUS_REPEATABILITY_RUNS,
             (unsigned)DBUS_ENABLE_AUTO_MOTOR_TEST);
@@ -1125,17 +1196,25 @@ int main(void)
     printk("Main: boot-time pre-disable done\n");
 
     if (DBUS_ENABLE_AUTO_MOTOR_TEST) {
+        if (!device_is_ready(trigger_button_gpio)) {
+            printk("Main: trigger button GPIO device not ready\n");
+            return -1;
+        }
+
+        run_pass = 0u;
+        run_fail = 0u;
+
         for (uint32_t run = 1u; run <= DBUS_REPEATABILITY_RUNS; run++) {
             bool toggle_ok;
 
-            printk("\n==== Repeat Run %u/%u ====\n", run, DBUS_REPEATABILITY_RUNS);
+            printk("\n==== Reset-Triggered Run %u/%u ====\n", run, DBUS_REPEATABILITY_RUNS);
 
             if (DBUS_FORCE_SECONDARY_ONLY) {
                 printk("Main: starting secondary-only motor test (motor1,motor3)\n");
                 toggle_ok = run_toggle_cycle_for_target(DBCDRV_SPI_TARGET_SECONDARY_PICO,
                                                         "secondary_only_cycle");
             } else {
-                printk("Main: starting motor3 gear pulse test\n");
+                printk("Main: starting combined chain/gear test from reset\n");
                 toggle_ok = run_quad_simultaneous_cycle();
             }
 
@@ -1144,18 +1223,56 @@ int main(void)
             } else {
                 run_fail++;
             }
-            printk("Main: RUN %u RESULT: %s\n", run, toggle_ok ? "PASS" : "FAIL");
+            printk("Main: RESET RUN %u RESULT: %s\n", run, toggle_ok ? "PASS" : "FAIL");
             k_msleep(50);
+        }
+
+        printk("\n==== Reset Summary ====\n");
+        printk("Total runs: %u\n", DBUS_REPEATABILITY_RUNS);
+        printk("PASS: %u\n", run_pass);
+        printk("FAIL: %u\n", run_fail);
+        printk("Overall: %s\n", (run_fail == 0u) ? "PASS" : "FAIL");
+
+        while (1) {
+            if (!wait_for_test_trigger_button(trigger_button_gpio)) {
+                return -1;
+            }
+
+            run_pass = 0u;
+            run_fail = 0u;
+
+            for (uint32_t run = 1u; run <= DBUS_REPEATABILITY_RUNS; run++) {
+                bool toggle_ok;
+
+                printk("\n==== Repeat Run %u/%u ====\n", run, DBUS_REPEATABILITY_RUNS);
+
+                if (DBUS_FORCE_SECONDARY_ONLY) {
+                    printk("Main: starting secondary-only motor test (motor1,motor3)\n");
+                    toggle_ok = run_toggle_cycle_for_target(DBCDRV_SPI_TARGET_SECONDARY_PICO,
+                                                            "secondary_only_cycle");
+                } else {
+                    printk("Main: starting combined chain/gear test\n");
+                    toggle_ok = run_quad_simultaneous_cycle();
+                }
+
+                if (toggle_ok) {
+                    run_pass++;
+                } else {
+                    run_fail++;
+                }
+                printk("Main: RUN %u RESULT: %s\n", run, toggle_ok ? "PASS" : "FAIL");
+                k_msleep(50);
+            }
+
+            printk("\n==== Repeatability Summary ====\n");
+            printk("Total runs: %u\n", DBUS_REPEATABILITY_RUNS);
+            printk("PASS: %u\n", run_pass);
+            printk("FAIL: %u\n", run_fail);
+            printk("Overall: %s\n", (run_fail == 0u) ? "PASS" : "FAIL");
         }
     } else {
         printk("Main: auto motor test disabled (DBUS_ENABLE_AUTO_MOTOR_TEST=0)\n");
     }
-
-    printk("\n==== Repeatability Summary ====\n");
-    printk("Total runs: %u\n", DBUS_REPEATABILITY_RUNS);
-    printk("PASS: %u\n", run_pass);
-    printk("FAIL: %u\n", run_fail);
-    printk("Overall: %s\n", (run_fail == 0u) ? "PASS" : "FAIL");
 
 #if DBUS_CONTINUOUS_SECONDARY_TEST
     printk("Main: entering continuous secondary SPI test mode\n");
