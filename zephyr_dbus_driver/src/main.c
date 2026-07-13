@@ -94,18 +94,39 @@
 
 #define MOTOR0_MAX_ENDSWITCH_PIN   19u
 #define MOTOR0_MIN_ENDSWITCH_PIN   29u
+#define MOTOR1_MIN_ENDSWITCH_PIN   15u
+#define MOTOR1_MAX_ENDSWITCH_PIN   4u
+#define MOTOR2_MIN_ENDSWITCH_PIN   5u
+#define MOTOR2_MAX_ENDSWITCH_PIN   11u
 #define TEST_TRIGGER_BUTTON_PIN_0  16u
 #define TEST_TRIGGER_BUTTON_PIN_1  17u
 #define TEST_TRIGGER_POLL_MS       25u
 #define MOTOR0_ENDSWITCH_POLL_MS   10u
 #define MOTOR0_TEST_SPEED          800u
 #define MOTOR0_TEST_TIMEOUT_MS     10000u
+#define MOTOR12_TEST_TIMEOUT_MS    10000u
+#define MOTOR12_TEST_SPEED_MOTOR1  800u
+#define MOTOR12_TEST_SPEED_MOTOR2  800u
 #define MOTOR0_REVERSE_RUN_MS      3000u
 #define CHAIN_DRIVE_SPEED_MOTOR0   800u
 #define CHAIN_DRIVE_SPEED_MOTOR1   800u
 #define CHAIN_DRIVE_RUN_MS         2000u
 #define PIVOT_DRIVE_SPEED_MOTOR2   800u
 #define PIVOT_DRIVE_RUN_MS         2000u
+
+enum manual_trigger_mode {
+    MANUAL_TRIGGER_MODE_COMBINED = 0,
+    MANUAL_TRIGGER_MODE_MOTOR12_ENDSWITCH,
+};
+
+struct manual_trigger_event {
+    gpio_pin_t pin;
+    enum manual_trigger_mode mode;
+};
+
+static bool run_quad_simultaneous_cycle(void);
+static bool run_toggle_cycle_for_target(enum DBCDRV_SpiTarget target, const char *label);
+static bool run_motor12_endswitch_cycle(void);
 
 static void pulse_gpio_probe_pin(const struct device *gpio_dev,
                                  gpio_pin_t pin,
@@ -400,8 +421,38 @@ static bool motor0_min_endswitch_active(const struct device *gpio_dev)
     return state == 0;
 }
 
+static bool motor_endswitch_active(const struct device *gpio_dev,
+                                   gpio_pin_t min_pin,
+                                   gpio_pin_t max_pin,
+                                   gpio_pin_t *active_pin)
+{
+    int state;
+
+    if ((gpio_dev == NULL) || !device_is_ready(gpio_dev)) {
+        return false;
+    }
+
+    state = gpio_pin_get(gpio_dev, min_pin);
+    if (state == 0) {
+        if (active_pin != NULL) {
+            *active_pin = min_pin;
+        }
+        return true;
+    }
+
+    state = gpio_pin_get(gpio_dev, max_pin);
+    if (state == 0) {
+        if (active_pin != NULL) {
+            *active_pin = max_pin;
+        }
+        return true;
+    }
+
+    return false;
+}
+
 static bool test_trigger_button_active(const struct device *gpio_dev,
-                                       gpio_pin_t *active_pin)
+                                       struct manual_trigger_event *event)
 {
     int state;
 
@@ -411,16 +462,18 @@ static bool test_trigger_button_active(const struct device *gpio_dev,
 
     state = gpio_pin_get(gpio_dev, TEST_TRIGGER_BUTTON_PIN_0);
     if (state == 0) {
-        if (active_pin != NULL) {
-            *active_pin = TEST_TRIGGER_BUTTON_PIN_0;
+        if (event != NULL) {
+            event->pin = TEST_TRIGGER_BUTTON_PIN_0;
+            event->mode = MANUAL_TRIGGER_MODE_MOTOR12_ENDSWITCH;
         }
         return true;
     }
 
     state = gpio_pin_get(gpio_dev, TEST_TRIGGER_BUTTON_PIN_1);
     if (state == 0) {
-        if (active_pin != NULL) {
-            *active_pin = TEST_TRIGGER_BUTTON_PIN_1;
+        if (event != NULL) {
+            event->pin = TEST_TRIGGER_BUTTON_PIN_1;
+            event->mode = MANUAL_TRIGGER_MODE_COMBINED;
         }
         return true;
     }
@@ -428,9 +481,10 @@ static bool test_trigger_button_active(const struct device *gpio_dev,
     return false;
 }
 
-static bool wait_for_test_trigger_button(const struct device *gpio_dev)
+static bool wait_for_test_trigger_button(const struct device *gpio_dev,
+                                         struct manual_trigger_event *event)
 {
-    gpio_pin_t active_pin = 0u;
+    struct manual_trigger_event active_event = { 0u, MANUAL_TRIGGER_MODE_COMBINED };
 
     if ((gpio_dev == NULL) || !device_is_ready(gpio_dev)) {
         return false;
@@ -452,18 +506,125 @@ static bool wait_for_test_trigger_button(const struct device *gpio_dev)
            (unsigned)TEST_TRIGGER_BUTTON_PIN_0,
             (unsigned)TEST_TRIGGER_BUTTON_PIN_1);
 
-    while (!test_trigger_button_active(gpio_dev, &active_pin)) {
+    while (!test_trigger_button_active(gpio_dev, &active_event)) {
         k_msleep(TEST_TRIGGER_POLL_MS);
     }
 
     k_msleep(50u);
-    if (!test_trigger_button_active(gpio_dev, &active_pin)) {
-        return wait_for_test_trigger_button(gpio_dev);
+    if (!test_trigger_button_active(gpio_dev, &active_event)) {
+        return wait_for_test_trigger_button(gpio_dev, event);
     }
 
-    printk("Main: trigger button pressed on GPIO%u -> start\n",
-           (unsigned)active_pin);
+    if (event != NULL) {
+        *event = active_event;
+    }
+
+    printk("Main: trigger button pressed on GPIO%u -> mode=%s\n",
+           (unsigned)active_event.pin,
+           (active_event.mode == MANUAL_TRIGGER_MODE_COMBINED)
+               ? "combined_chain_gear"
+               : "secondary_only");
     return true;
+}
+
+static bool run_manual_trigger_mode(enum manual_trigger_mode mode)
+{
+    if (mode == MANUAL_TRIGGER_MODE_MOTOR12_ENDSWITCH) {
+        printk("Main: starting manual motor1+2 endswitch test from GPIO%u\n",
+               (unsigned)TEST_TRIGGER_BUTTON_PIN_0);
+        return run_motor12_endswitch_cycle();
+    }
+
+    printk("Main: starting manual combined chain/gear test from GPIO%u\n",
+           (unsigned)TEST_TRIGGER_BUTTON_PIN_1);
+    return run_quad_simultaneous_cycle();
+}
+
+static bool run_motor12_endswitch_cycle(void)
+{
+    const struct device *endswitch_gpio = DEVICE_DT_GET(CS_PROBE_GPIO_NODE);
+    uint32_t remaining_ms = MOTOR12_TEST_TIMEOUT_MS;
+    bool all_ok = true;
+    bool motor1_running = false;
+    bool motor2_running = false;
+
+    printk("Main: MOTOR12_ENDSWITCH_TEST start\n");
+
+    if (!device_is_ready(endswitch_gpio)) {
+        printk("Main: motor1+2 end-switch GPIO device not ready\n");
+        return false;
+    }
+
+    if (gpio_pin_configure(endswitch_gpio, MOTOR1_MIN_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0 ||
+        gpio_pin_configure(endswitch_gpio, MOTOR1_MAX_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0 ||
+        gpio_pin_configure(endswitch_gpio, MOTOR2_MIN_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0 ||
+        gpio_pin_configure(endswitch_gpio, MOTOR2_MAX_ENDSWITCH_PIN, GPIO_INPUT | GPIO_PULL_UP) < 0) {
+        printk("Main: motor1+2 end-switch GPIO configure failed\n");
+        return false;
+    }
+
+    if (!start_motor_generic_now(1u, (int32_t)MOTOR12_TEST_SPEED_MOTOR1)) {
+        all_ok = false;
+    } else {
+        motor1_running = true;
+    }
+
+    if (!start_motor_generic_now(2u, (int32_t)MOTOR12_TEST_SPEED_MOTOR2)) {
+        all_ok = false;
+    } else {
+        motor2_running = true;
+    }
+
+    while ((motor1_running || motor2_running) && (remaining_ms > 0u)) {
+        gpio_pin_t active_pin = 0u;
+        uint32_t sleep_ms = (remaining_ms > MOTOR0_ENDSWITCH_POLL_MS)
+            ? MOTOR0_ENDSWITCH_POLL_MS
+            : remaining_ms;
+
+        if (motor1_running && motor_endswitch_active(endswitch_gpio,
+                                                     MOTOR1_MIN_ENDSWITCH_PIN,
+                                                     MOTOR1_MAX_ENDSWITCH_PIN,
+                                                     &active_pin)) {
+            printk("Main: motor1 hit end-switch on GPIO%u\n", (unsigned)active_pin);
+            if (!stop_motor_generic_now(1u)) {
+                all_ok = false;
+            }
+            motor1_running = false;
+        }
+
+        if (motor2_running && motor_endswitch_active(endswitch_gpio,
+                                                     MOTOR2_MIN_ENDSWITCH_PIN,
+                                                     MOTOR2_MAX_ENDSWITCH_PIN,
+                                                     &active_pin)) {
+            printk("Main: motor2 hit end-switch on GPIO%u\n", (unsigned)active_pin);
+            if (!stop_motor_generic_now(2u)) {
+                all_ok = false;
+            }
+            motor2_running = false;
+        }
+
+        if (!(motor1_running || motor2_running)) {
+            break;
+        }
+
+        k_msleep(sleep_ms);
+        remaining_ms -= sleep_ms;
+    }
+
+    if (motor1_running) {
+        printk("Main: motor1 TIMEOUT before end-switch\n");
+        (void)stop_motor_generic_now(1u);
+        all_ok = false;
+    }
+
+    if (motor2_running) {
+        printk("Main: motor2 TIMEOUT before end-switch\n");
+        (void)stop_motor_generic_now(2u);
+        all_ok = false;
+    }
+
+    printk("Main: MOTOR12_ENDSWITCH_TEST %s\n", all_ok ? "PASS" : "FAIL");
+    return all_ok;
 }
 
 static bool run_motor3_gear_pulse(void)
@@ -1234,7 +1395,9 @@ int main(void)
         printk("Overall: %s\n", (run_fail == 0u) ? "PASS" : "FAIL");
 
         while (1) {
-            if (!wait_for_test_trigger_button(trigger_button_gpio)) {
+            struct manual_trigger_event trigger_event = { 0u, MANUAL_TRIGGER_MODE_COMBINED };
+
+            if (!wait_for_test_trigger_button(trigger_button_gpio, &trigger_event)) {
                 return -1;
             }
 
@@ -1251,8 +1414,7 @@ int main(void)
                     toggle_ok = run_toggle_cycle_for_target(DBCDRV_SPI_TARGET_SECONDARY_PICO,
                                                             "secondary_only_cycle");
                 } else {
-                    printk("Main: starting combined chain/gear test\n");
-                    toggle_ok = run_quad_simultaneous_cycle();
+                    toggle_ok = run_manual_trigger_mode(trigger_event.mode);
                 }
 
                 if (toggle_ok) {
