@@ -547,6 +547,10 @@ static bool run_motor12_endswitch_cycle(void)
     bool all_ok = true;
     bool motor1_running = false;
     bool motor2_running = false;
+    bool motor1_hit = false;
+    bool motor2_hit = false;
+    gpio_pin_t motor1_hit_pin = 0u;
+    gpio_pin_t motor2_hit_pin = 0u;
 
     printk("Main: MOTOR12_ENDSWITCH_TEST start\n");
 
@@ -589,6 +593,8 @@ static bool run_motor12_endswitch_cycle(void)
             if (!stop_motor_generic_now(1u)) {
                 all_ok = false;
             }
+            motor1_hit = true;
+            motor1_hit_pin = active_pin;
             motor1_running = false;
         }
 
@@ -600,6 +606,8 @@ static bool run_motor12_endswitch_cycle(void)
             if (!stop_motor_generic_now(2u)) {
                 all_ok = false;
             }
+            motor2_hit = true;
+            motor2_hit_pin = active_pin;
             motor2_running = false;
         }
 
@@ -621,6 +629,44 @@ static bool run_motor12_endswitch_cycle(void)
         printk("Main: motor2 TIMEOUT before end-switch\n");
         (void)stop_motor_generic_now(2u);
         all_ok = false;
+    }
+
+    if (motor1_hit) {
+        int32_t reverse_speed = (motor1_hit_pin == MOTOR1_MAX_ENDSWITCH_PIN)
+            ? -(int32_t)MOTOR12_TEST_SPEED_MOTOR1
+            : (int32_t)MOTOR12_TEST_SPEED_MOTOR1;
+
+        k_msleep(TEST_MOTOR_GAP_MS);
+        printk("Main: motor1 reverse for %ums after GPIO%u\n",
+               (unsigned)MOTOR0_REVERSE_RUN_MS,
+               (unsigned)motor1_hit_pin);
+        if (!start_motor_generic_now(1u, reverse_speed)) {
+            all_ok = false;
+        } else {
+            k_msleep(MOTOR0_REVERSE_RUN_MS);
+        }
+        if (!stop_motor_generic_now(1u)) {
+            all_ok = false;
+        }
+    }
+
+    if (motor2_hit) {
+        int32_t reverse_speed = (motor2_hit_pin == MOTOR2_MAX_ENDSWITCH_PIN)
+            ? -(int32_t)MOTOR12_TEST_SPEED_MOTOR2
+            : (int32_t)MOTOR12_TEST_SPEED_MOTOR2;
+
+        k_msleep(TEST_MOTOR_GAP_MS);
+        printk("Main: motor2 reverse for %ums after GPIO%u\n",
+               (unsigned)MOTOR0_REVERSE_RUN_MS,
+               (unsigned)motor2_hit_pin);
+        if (!start_motor_generic_now(2u, reverse_speed)) {
+            all_ok = false;
+        } else {
+            k_msleep(MOTOR0_REVERSE_RUN_MS);
+        }
+        if (!stop_motor_generic_now(2u)) {
+            all_ok = false;
+        }
     }
 
     printk("Main: MOTOR12_ENDSWITCH_TEST %s\n", all_ok ? "PASS" : "FAIL");
